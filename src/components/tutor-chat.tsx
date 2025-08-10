@@ -1,3 +1,4 @@
+
 "use client";
 
 import { chatWithTutorAction, ChatWithTutorInput } from "@/app/actions";
@@ -9,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect } from "react";
+import { useAuth } from '@/hooks/use-auth';
+import { marked } from 'marked';
+
 
 interface TutorChatProps {
   content: string;
@@ -25,6 +29,8 @@ export function TutorChat({ content }: TutorChatProps) {
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,17 +63,35 @@ export function TutorChat({ content }: TutorChatProps) {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+        setTimeout(() => {
+            const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
+            if (viewport) {
+                viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+            }
+        }, 100);
     }
   }, [history]);
+  
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return names[0][0] + names[names.length - 1][0];
+    }
+    return name.substring(0, 2);
+  }
 
   return (
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="space-y-4 p-4">
+        <div className="space-y-4 p-4 pr-6">
+         {history.length === 0 && (
+            <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 h-full">
+                <GraduationCap className="w-12 h-12 mb-4" />
+                <h3 className="text-lg font-semibold">AI Tutor</h3>
+                <p className="text-sm">Ask me anything about the study material you've provided. I'm here to help you understand it better!</p>
+            </div>
+         )}
           {history.map((message, index) => (
             <div
               key={index}
@@ -83,17 +107,18 @@ export function TutorChat({ content }: TutorChatProps) {
               )}
               <div
                 className={cn(
-                  "max-w-xs rounded-lg p-3 text-sm",
+                  "max-w-md rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-1",
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 )}
+                dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
               >
-                {message.content}
               </div>
               {message.role === "user" && (
                 <Avatar className="h-8 w-8">
-                   <AvatarFallback><User className="size-4" /></AvatarFallback>
+                   <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
+                   <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
                 </Avatar>
               )}
             </div>
@@ -117,9 +142,10 @@ export function TutorChat({ content }: TutorChatProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about your material..."
-            disabled={isTyping}
+            disabled={isTyping || !content}
+            title={!content ? "Please analyze some material first" : ""}
           />
-          <Button type="submit" disabled={isTyping || !input.trim()}>
+          <Button type="submit" disabled={isTyping || !input.trim() || !content}>
             {isTyping ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

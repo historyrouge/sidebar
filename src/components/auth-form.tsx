@@ -20,6 +20,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { FirebaseError } from "firebase/app";
 
 
 const formSchema = z.object({
@@ -62,6 +63,25 @@ export function AuthForm({ type }: AuthFormProps) {
     },
   });
 
+  const getFriendlyErrorMessage = (error: FirebaseError) => {
+    switch (error.code) {
+      case 'auth/user-not-found':
+        return 'No user found with this email. Please sign up instead.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/email-already-in-use':
+        return 'This email is already in use. Please sign in or use a different email.';
+      case 'auth/weak-password':
+        return 'The password is too weak. Please use a stronger password.';
+      case 'auth/invalid-email':
+        return 'The email address is not valid. Please enter a valid email.';
+      case 'auth/popup-closed-by-user':
+        return 'Google Sign-In was cancelled. Please try again.';
+      default:
+        return error.message;
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
@@ -74,7 +94,7 @@ export function AuthForm({ type }: AuthFormProps) {
     } catch (error: any) {
         toast({
             title: "Authentication Failed",
-            description: error.message,
+            description: getFriendlyErrorMessage(error),
             variant: "destructive",
         });
     } finally {
@@ -90,7 +110,7 @@ export function AuthForm({ type }: AuthFormProps) {
     } catch (error: any) {
       toast({
         title: "Google Sign-In Failed",
-        description: error.message,
+        description: getFriendlyErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -143,7 +163,7 @@ export function AuthForm({ type }: AuthFormProps) {
           </div>
         </div>
 
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+        <Button variant="outline" className="w-full" type="button" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
             {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
             Google
         </Button>

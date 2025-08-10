@@ -9,8 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Code, Loader2, Send, User } from "lucide-react";
-import React, { useState, useTransition, useRef, useEffect } from "react";
+import { Bot, Code, Loader2, Send } from "lucide-react";
+import React, { useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 
 type Message = {
@@ -115,12 +115,12 @@ export function CodeAgentChat({
                 )}
                 <div
                     className={cn(
-                    "max-w-2xl rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
+                    "max-w-2xl rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2 prose-pre:bg-card prose-pre:text-card-foreground",
                     message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-card border"
                     )}
-                    dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked.parse(message.content) : message.content }}
+                    dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
                 />
                 
                 {message.role === "user" && (

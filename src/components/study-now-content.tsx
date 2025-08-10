@@ -142,17 +142,22 @@ export function StudyNowContent() {
   };
 
   const handleSave = useCallback(async () => {
-    if (isSaving || !content || imageDataUri) return;
+    if (isSaving || (!content && !imageDataUri)) return;
     
     startSaving(async () => {
+      // For now, we only save text-based content. Image saving can be a future feature.
+      if (imageDataUri) {
+        toast({ title: "Note", description: "Image saving is not yet supported. Only the text prompt will be saved." });
+      }
+
       const result = await saveStudyMaterialAction(content, title || 'Untitled Material', materialId);
       if (result.error) {
         toast({ title: "Failed to save", description: result.error, variant: 'destructive' });
       } else if (result.data) {
-        setMaterialId(result.data.id);
         if (!materialId) {
           router.replace(`/study-now?id=${result.data.id}`);
         }
+        setMaterialId(result.data.id);
         toast({ title: "Material Saved", description: "Your changes have been saved." });
       }
     });
@@ -303,6 +308,7 @@ export function StudyNowContent() {
     setFlashcards(null);
     setQuiz(null);
     setSummary(null);
+    if(imageInputRef.current) imageInputRef.current.value = "";
     router.replace('/study-now');
   }
 
@@ -378,7 +384,7 @@ export function StudyNowContent() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-lg font-semibold"
-                disabled={!!imageDataUri || isLoadingMaterial}
+                disabled={isLoadingMaterial}
               />
               {isLoadingMaterial ? (
                 <div className="flex flex-col flex-1 gap-4">
@@ -423,12 +429,10 @@ export function StudyNowContent() {
                     Upload Image
                 </Button>
               </div>
-               {!imageDataUri && (
-                 <Button variant="secondary" onClick={handleSave} disabled={isSaving || isLoadingMaterial || !content.trim()}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    {materialId ? 'Save Changes' : 'Save'}
-                 </Button>
-               )}
+               <Button variant="secondary" onClick={handleSave} disabled={isSaving || isLoadingMaterial || (!content.trim() && !imageDataUri)}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {materialId ? 'Save Changes' : 'Save'}
+               </Button>
               <input
                 type="file"
                 ref={fileInputRef}
