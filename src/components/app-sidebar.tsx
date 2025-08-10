@@ -3,6 +3,7 @@
 
 import {
   BookOpen,
+  Code,
   GraduationCap,
   HelpCircle,
   Info,
@@ -28,6 +29,7 @@ import { usePathname } from "next/navigation";
 const menuItems = [
     { name: "New Chat", icon: <MessageSquare className="size-4" />, href: "/" },
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
+    { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
 ];

@@ -8,6 +8,7 @@ import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generat
 import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
+import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agent";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc } from "firebase/firestore";
@@ -183,6 +184,19 @@ export async function generalChatAction(
     }
 }
 
+export async function codeAgentAction(
+    input: CodeAgentInput
+    ): Promise<ActionResult<CodeAgentOutput>> {
+    try {
+        const output = await codeAgent(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
+
 export async function textToSpeechAction(
   input: TextToSpeechInput
 ): Promise<ActionResult<TextToSpeechOutput>> {
@@ -208,5 +222,5 @@ export async function summarizeContentAction(
 }
 
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput };
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, CodeAgentInput, CodeAgentOutput };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
