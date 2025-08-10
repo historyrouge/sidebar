@@ -19,20 +19,23 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const menuItems = [
-    { name: "New Chat", icon: <PlusCircle className="size-4" /> },
-    { name: "Your Material", icon: <Library className="size-4" /> },
-    { name: "eBooks", icon: <BookOpen className="size-4" /> },
+    { name: "New Chat", icon: <PlusCircle className="size-4" />, href: "/" },
+    { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
+    { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
 ];
 
 const footerMenuItems = [
-    { name: "Help", icon: <HelpCircle className="size-4" /> },
-    { name: "About Us", icon: <Info className="size-4" /> },
+    { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
+    { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
 ]
 
 export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
+  const pathname = usePathname();
 
   const handleMobileClick = () => {
     setOpenMobile(false);
@@ -54,10 +57,14 @@ export function AppSidebar() {
         <SidebarMenu>
             {menuItems.map((item) => (
                 <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton tooltip={item.name} isActive={item.name === 'New Chat'} className="justify-start" onClick={handleMobileClick}>
-                        {item.icon}
-                        <span>{item.name}</span>
-                    </SidebarMenuButton>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <SidebarMenuButton asChild tooltip={item.name} isActive={pathname === item.href} className="justify-start" onClick={handleMobileClick}>
+                          <a>
+                            {item.icon}
+                            <span>{item.name}</span>
+                          </a>
+                      </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
             ))}
         </SidebarMenu>
@@ -66,10 +73,14 @@ export function AppSidebar() {
         <SidebarMenu>
            {footerMenuItems.map((item) => (
                 <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton tooltip={item.name} className="justify-start" onClick={handleMobileClick}>
-                        {item.icon}
-                        <span>{item.name}</span>
-                    </SidebarMenuButton>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <SidebarMenuButton asChild tooltip={item.name} isActive={pathname === item.href} className="justify-start" onClick={handleMobileClick}>
+                          <a>
+                            {item.icon}
+                            <span>{item.name}</span>
+                          </a>
+                      </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
            ))}
         </SidebarMenu>
