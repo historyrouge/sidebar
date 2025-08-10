@@ -7,7 +7,9 @@ import {
   HelpCircle,
   Info,
   Library,
+  MessageSquare,
   PlusCircle,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,14 +25,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menuItems = [
-    { name: "New Chat", icon: <PlusCircle className="size-4" />, href: "/" },
+    { name: "New Chat", icon: <MessageSquare className="size-4" />, href: "/" },
+    { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
 ];
 
 const footerMenuItems = [
     { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
-    { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
+    { name:- "About Us", icon: <Info className="size-4" />, href: "/about" },
 ]
 
 export function AppSidebar() {

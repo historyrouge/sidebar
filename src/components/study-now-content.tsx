@@ -21,7 +21,7 @@ import { TutorChat } from "./tutor-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
 
-export function MainContent() {
+export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);

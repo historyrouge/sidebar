@@ -1,3 +1,4 @@
+
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
@@ -5,6 +6,7 @@ import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flo
 import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
 import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
+import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
 
 type ActionResult<T> = {
   data?: T;
@@ -69,6 +71,18 @@ export async function helpChatAction(
       console.error(e);
       return { error: e.message || "An unknown error occurred." };
     }
-  }
+}
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput };
+export async function generalChatAction(
+    input: GeneralChatInput
+    ): Promise<ActionResult<GeneralChatOutput>> {
+    try {
+        const output = await generalChat(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput };
