@@ -1,6 +1,7 @@
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
+import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flows/chat-tutor";
 import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
 import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
 
@@ -45,4 +46,16 @@ export async function generateQuizAction(
   }
 }
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput };
+export async function chatWithTutorAction(
+  input: ChatWithTutorInput
+): Promise<ActionResult<ChatWithTutorOutput>> {
+  try {
+    const output = await chatWithTutor(input);
+    return { data: output };
+  } catch (e: any) {
+    console.error(e);
+    return { error: e.message || "An unknown error occurred." };
+  }
+}
+
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput };

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput } from "@/app/actions";
 import { analyzeContentAction, generateFlashcardsAction, generateQuizAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import React, { useState, useTransition, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { TutorChat } from "./tutor-chat";
 
 export function MainContent() {
   const [content, setContent] = useState("");
@@ -185,10 +186,11 @@ export function MainContent() {
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="analysis">Analysis</TabsTrigger>
                     <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
                     <TabsTrigger value="quiz">Quiz</TabsTrigger>
+                    <TabsTrigger value="tutor">Tutor</TabsTrigger>
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
@@ -235,6 +237,9 @@ export function MainContent() {
                           <Button onClick={handleGenerateQuiz}>Generate Quiz</Button>
                         </div>
                       )}
+                    </TabsContent>
+                    <TabsContent value="tutor" className="h-full">
+                      <TutorChat content={content} />
                     </TabsContent>
                   </ScrollArea>
                 </Tabs>
