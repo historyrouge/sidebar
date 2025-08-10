@@ -30,7 +30,7 @@ export function MainContent() {
   const [isAnalyzing, startAnalyzing] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +110,15 @@ export function MainContent() {
   };
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz;
+  
+  const getInitials = (name?: string | null) => {
+    if (!name) return "SS";
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return names[0][0] + names[names.length - 1][0];
+    }
+    return name.substring(0, 2);
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -121,8 +130,8 @@ export function MainContent() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-9 w-9 cursor-pointer">
-              <AvatarImage src="https://placehold.co/100x100.png" alt="@user" />
-              <AvatarFallback>SS</AvatarFallback>
+              <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
+              <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
