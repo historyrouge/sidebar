@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput } from "@/app/actions";
@@ -17,6 +18,7 @@ import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { TutorChat } from "./tutor-chat";
+import { useAuth } from "@/hooks/use-auth";
 
 export function MainContent() {
   const [content, setContent] = useState("");
@@ -28,6 +30,7 @@ export function MainContent() {
   const [isAnalyzing, startAnalyzing] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
+  const { logout } = useAuth();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,7 +132,7 @@ export function MainContent() {
             <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
