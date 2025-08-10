@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp, Loader2, Wand2 } from "lucide-react";
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 
@@ -28,6 +28,7 @@ export function MainContent() {
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
 
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAnalyze = async () => {
     if (content.trim().length < 50) {
@@ -73,6 +74,34 @@ export function MainContent() {
         setActiveTab("quiz");
       }
     });
+  };
+  
+  const handleFileUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          setContent(text);
+          toast({
+            title: "File loaded",
+            description: "The file content has been loaded into the text area.",
+          });
+        };
+        reader.readAsText(file);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a .txt file.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz;
@@ -122,10 +151,17 @@ export function MainContent() {
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze Content
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={handleFileUploadClick}>
                 <FileUp className="mr-2 h-4 w-4" />
                 Upload Document
               </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".txt"
+              />
             </CardFooter>
           </Card>
 
