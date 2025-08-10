@@ -12,13 +12,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Wand2 } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2 } from "lucide-react";
 import React, { useState, useTransition, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { TutorChat } from "./tutor-chat";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "next-themes";
 
 export function MainContent() {
   const [content, setContent] = useState("");
@@ -31,6 +32,7 @@ export function MainContent() {
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,23 +129,38 @@ export function MainContent() {
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Avatar className="h-9 w-9 cursor-pointer">
-              <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
-              <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{user?.displayName || "My Account"}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => logout()}>Log out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-4">
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-9 w-9 cursor-pointer">
+                  <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
+                  <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       </header>
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
         <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
@@ -275,5 +292,3 @@ export function MainContent() {
     </div>
   );
 }
-
-    

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { HelpChatbot } from '@/components/help-chatbot';
 
 export default function HelpPage() {
     return (
@@ -27,26 +28,37 @@ export default function HelpPage() {
                             </div>
                         </header>
                         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Help & Support</CardTitle>
-                                    <CardDescription>Find answers to your questions.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                   <div>
-                                        <h3 className="font-semibold">How do I analyze content?</h3>
-                                        <p className="text-muted-foreground">Paste your study material into the text area on the main page and click "Analyze Content". The AI will identify key concepts and potential questions.</p>
-                                   </div>
-                                    <div>
-                                        <h3 className="font-semibold">How do I generate flashcards or quizzes?</h3>
-                                        <p className="text-muted-foreground">After analyzing your content, tabs for "Flashcards" and "Quiz" will appear. Click on the respective tab and then click the "Generate" button.</p>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold">How do I use the AI Tutor?</h3>
-                                        <p className="text-muted-foreground">After analyzing content, go to the "Tutor" tab. You can ask questions about the material you provided, and the AI will provide explanations.</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <div className="grid gap-6 lg:grid-cols-2">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Frequently Asked Questions</CardTitle>
+                                        <CardDescription>Find answers to common questions.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                       <div>
+                                            <h3 className="font-semibold">How do I analyze content?</h3>
+                                            <p className="text-muted-foreground">Paste your study material into the text area on the main page and click "Analyze Content". The AI will identify key concepts and potential questions.</p>
+                                       </div>
+                                        <div>
+                                            <h3 className="font-semibold">How do I generate flashcards or quizzes?</h3>
+                                            <p className="text-muted-foreground">After analyzing your content, tabs for "Flashcards" and "Quiz" will appear. Click on the respective tab and then click the "Generate" button.</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold">How do I use the AI Tutor?</h3>
+                                            <p className="text-muted-foreground">After analyzing content, go to the "Tutor" tab. You can ask questions about the material you provided, and the AI will provide explanations.</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>AI Help Assistant</CardTitle>
+                                        <CardDescription>Ask our AI assistant anything about the app.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <HelpChatbot />
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </main>
                     </div>
                 </SidebarInset>
