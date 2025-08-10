@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -24,6 +24,7 @@ import { useSearchParams } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
+import Link from "next/link";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -285,10 +286,18 @@ export function StudyNowContent() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
+                <Link href="/profile" passHref>
+                    <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                    </DropdownMenuItem>
+                </Link>
+                <Link href="/settings" passHref>
+                    <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                    </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
                     <LogOut className="mr-2 h-4 w-4" />

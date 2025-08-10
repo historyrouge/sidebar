@@ -14,6 +14,7 @@ import { Bot, GraduationCap, Loader2, LogOut, Moon, Send, Settings, Sun, User } 
 import { useTheme } from "next-themes";
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { SidebarTrigger } from "./ui/sidebar";
+import Link from "next/link";
 
 type Message = {
   role: "user" | "model";
@@ -104,10 +105,18 @@ export function ChatContent() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
+                <Link href="/profile" passHref>
+                    <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                    </DropdownMenuItem>
+                </Link>
+                <Link href="/settings" passHref>
+                    <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                    </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
                     <LogOut className="mr-2 h-4 w-4" />

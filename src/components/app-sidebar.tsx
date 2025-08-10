@@ -8,8 +8,9 @@ import {
   Info,
   Library,
   MessageSquare,
-  PlusCircle,
+  Settings,
   Sparkles,
+  User,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,8 +33,10 @@ const menuItems = [
 ];
 
 const footerMenuItems = [
+    { name: "Profile", icon: <User className="size-4" />, href: "/profile" },
+    { name: "Settings", icon: <Settings className="size-4" />, href: "/settings" },
     { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
-    { name:- "About Us", icon: <Info className="size-4" />, href: "/about" },
+    { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
 ]
 
 export function AppSidebar() {
