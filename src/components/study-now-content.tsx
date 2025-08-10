@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput } from "@/app/actions";
-import { analyzeContentAction, generateFlashcardsAction, generateQuizAction } from "@/app/actions";
+import { analyzeContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,23 +12,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2 } from "lucide-react";
-import React, { useState, useTransition, useRef } from "react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save } from "lucide-react";
+import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { TutorChat } from "./tutor-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
+import { useSearchParams } from "next/navigation";
+import { Input } from "./ui/input";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
+  const [title, setTitle] = useState("");
+  const [materialId, setMaterialId] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
   
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
+  const [isSaving, startSaving] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const { user, logout } = useAuth();
@@ -36,17 +41,56 @@ export function StudyNowContent() {
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const id = searchParams.get('id');
+    if (id) {
+      startAnalyzing(async () => {
+        const result = await getStudyMaterialByIdAction(id);
+        if (result.error) {
+          toast({ title: "Failed to load material", description: result.error, variant: "destructive" });
+        } else if (result.data) {
+          setContent(result.data.content);
+          setTitle(result.data.title);
+          setMaterialId(id);
+          // Automatically run analysis on loaded content
+          const analysisResult = await analyzeContentAction(result.data.content);
+           if (analysisResult.error) {
+            toast({ title: "Analysis Failed", description: analysisResult.error, variant: "destructive" });
+          } else {
+            setAnalysis(analysisResult.data);
+            setActiveTab("analysis");
+          }
+        }
+      });
+    }
+  }, [searchParams, toast]);
 
   const handleAnalyze = async () => {
     if (content.trim().length < 50) {
       toast({
         title: "Content too short",
-        description: "Please provide more content for a better analysis.",
+        description: "Please provide at least 50 characters for a better analysis.",
         variant: "destructive",
       });
       return;
     }
     startAnalyzing(async () => {
+      // Save material first if it's new
+      if (!materialId) {
+        const saveResult = await saveStudyMaterialAction(content, title || "Untitled Material");
+        if (saveResult.error) {
+            toast({ title: "Could not save material", description: saveResult.error, variant: "destructive" });
+            return;
+        }
+        if (saveResult.data) {
+            setMaterialId(saveResult.data.id);
+            if (!title) setTitle("Untitled Material");
+            toast({ title: "Material Saved", description: "Your study material has been saved." });
+        }
+      }
+
       const result = await analyzeContentAction(content);
       if (result.error) {
         toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
@@ -58,6 +102,21 @@ export function StudyNowContent() {
       }
     });
   };
+
+  const handleSave = useCallback(async () => {
+    if (isSaving || !content) return;
+    
+    startSaving(async () => {
+      const result = await saveStudyMaterialAction(content, title || 'Untitled');
+      if (result.error) {
+        toast({ title: "Failed to save", description: result.error, variant: 'destructive' });
+      } else if (result.data) {
+        setMaterialId(result.data.id);
+        toast({ title: "Material Saved", description: "Your changes have been saved." });
+      }
+    });
+  }, [content, title, isSaving, toast]);
+
 
   const handleGenerateFlashcards = async () => {
     startGeneratingFlashcards(async () => {
@@ -95,9 +154,14 @@ export function StudyNowContent() {
         reader.onload = (e) => {
           const text = e.target?.result as string;
           setContent(text);
+          setTitle(file.name.replace('.txt', ''));
+          setMaterialId(null);
+          setAnalysis(null);
+          setFlashcards(null);
+          setQuiz(null);
           toast({
             title: "File loaded",
-            description: "The file content has been loaded into the text area.",
+            description: "The file content has been loaded. Click Analyze to save and begin.",
           });
         };
         reader.readAsText(file);
@@ -167,9 +231,15 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste your text or upload a document to get started.</CardDescription>
+              <CardDescription>Paste text, upload a document, or load a saved session.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1">
+            <CardContent className="flex-1 flex flex-col gap-4">
+              <Input 
+                placeholder="Enter a title for your material..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-lg font-semibold"
+              />
               <Textarea
                 placeholder="Paste your study content here... (min. 50 characters)"
                 className="h-full min-h-[300px] resize-none"
@@ -180,12 +250,18 @@ export function StudyNowContent() {
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
               <Button onClick={handleAnalyze} disabled={isLoading || content.trim().length < 50}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                Analyze Content
+                Analyze & Save
               </Button>
               <Button variant="outline" onClick={handleFileUploadClick} disabled={isLoading}>
                 <FileUp className="mr-2 h-4 w-4" />
-                Upload Document
+                Upload .txt
               </Button>
+               {materialId && (
+                 <Button variant="secondary" onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save Changes
+                 </Button>
+               )}
               <input
                 type="file"
                 ref={fileInputRef}
@@ -215,7 +291,7 @@ export function StudyNowContent() {
                     <Wand2 className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-semibold">Ready to Learn?</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Your AI-generated study tools will appear here.
+                      Analyze your material to generate study tools.
                     </p>
                   </div>
                 </div>
