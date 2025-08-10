@@ -15,6 +15,7 @@ import { FileUp, Loader2, Wand2 } from "lucide-react";
 import React, { useState, useTransition, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 export function MainContent() {
   const [content, setContent] = useState("");
@@ -219,14 +220,16 @@ export function MainContent() {
                     </TabsContent>
                     <TabsContent value="quiz" className="h-full">
                        {isGeneratingQuiz ? <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : quiz ? (
-                        <div className="space-y-4 pr-4">
+                        <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
                           {quiz.map((q, i) => (
-                            <div key={i}>
-                               <p className="font-medium">{i + 1}. {q}</p>
-                               <Textarea placeholder="Your answer..." className="mt-2" />
-                            </div>
+                            <AccordionItem value={`item-${i}`} key={i}>
+                                <AccordionTrigger className="text-left font-medium">{i + 1}. {q.question}</AccordionTrigger>
+                                <AccordionContent>
+                                    <p className="text-muted-foreground">{q.answer}</p>
+                                </AccordionContent>
+                            </AccordionItem>
                           ))}
-                        </div>
+                        </Accordion>
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <Button onClick={handleGenerateQuiz}>Generate Quiz</Button>

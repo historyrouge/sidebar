@@ -20,7 +20,12 @@ const GenerateQuizzesInputSchema = z.object({
 export type GenerateQuizzesInput = z.infer<typeof GenerateQuizzesInputSchema>;
 
 const GenerateQuizzesOutputSchema = z.object({
-  quizzes: z.array(z.string()).describe('The generated quizzes.'),
+  quizzes: z.array(
+    z.object({
+      question: z.string().describe('The question text.'),
+      answer: z.string().describe('The correct answer to the question.'),
+    })
+  ).describe('The generated quizzes.'),
 });
 
 export type GenerateQuizzesOutput = z.infer<typeof GenerateQuizzesOutputSchema>;
@@ -33,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizzesPrompt',
   input: {schema: GenerateQuizzesInputSchema},
   output: {schema: GenerateQuizzesOutputSchema},
-  prompt: `You are a quiz generator. Generate a variety of quiz questions from the following content. Vary the question format.
+  prompt: `You are a quiz generator. Generate a variety of quiz questions from the following content. Vary the question format. For each question, provide the question and the correct answer.
 
 Content: {{{content}}}`,
 });

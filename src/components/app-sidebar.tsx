@@ -17,8 +17,8 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar";
 
 const subjects = [
   {
@@ -39,7 +39,12 @@ const subjects = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
+
+  const handleMobileClick = () => {
+    setOpenMobile(false);
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -66,6 +71,7 @@ export function AppSidebar() {
                     tooltip={unit}
                     isActive={index === 0}
                     className="justify-start"
+                    onClick={handleMobileClick}
                   >
                     <FileText />
                     <span>{unit}</span>
@@ -75,7 +81,7 @@ export function AppSidebar() {
             </SidebarGroup>
           ))}
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Add Subject" className="justify-start text-muted-foreground">
+            <SidebarMenuButton tooltip="Add Subject" className="justify-start text-muted-foreground" onClick={handleMobileClick}>
               <PlusCircle />
               <span>Add Subject</span>
             </SidebarMenuButton>
@@ -85,7 +91,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <SidebarMenu>
            <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings" className="justify-start">
+            <SidebarMenuButton tooltip="Settings" className="justify-start" onClick={handleMobileClick}>
               <Settings />
               <span>Settings</span>
             </SidebarMenuButton>
