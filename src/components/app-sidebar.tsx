@@ -1,11 +1,13 @@
+
 "use client";
 
 import {
-  Book,
-  FileText,
+  BookOpen,
   GraduationCap,
+  HelpCircle,
+  Info,
+  Library,
   PlusCircle,
-  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -15,28 +17,19 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  useSidebar,
 } from "@/components/ui/sidebar";
+import { useSidebar } from "./ui/sidebar";
 
-const subjects = [
-  {
-    name: "Quantum Physics",
-    icon: <Book className="size-4" />,
-    units: ["Introduction to Quantum Mechanics", "Quantum Computing"],
-  },
-  {
-    name: "History of Rome",
-    icon: <Book className="size-4" />,
-    units: ["The Roman Republic", "The Roman Empire"],
-  },
-  {
-    name: "Organic Chemistry",
-    icon: <Book className="size-4" />,
-    units: ["Alkanes and Cycloalkanes", "Stereochemistry"],
-  },
+const menuItems = [
+    { name: "New Chat", icon: <PlusCircle className="size-4" /> },
+    { name: "Your Material", icon: <Library className="size-4" /> },
+    { name: "eBooks", icon: <BookOpen className="size-4" /> },
 ];
+
+const footerMenuItems = [
+    { name: "Help", icon: <HelpCircle className="size-4" /> },
+    { name: "About Us", icon: <Info className="size-4" /> },
+]
 
 export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
@@ -59,43 +52,26 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {subjects.map((subject) => (
-            <SidebarGroup key={subject.name}>
-              <SidebarGroupLabel className="flex items-center gap-2">
-                {subject.icon}
-                <span>{subject.name}</span>
-              </SidebarGroupLabel>
-              {subject.units.map((unit, index) => (
-                <SidebarMenuItem key={unit}>
-                  <SidebarMenuButton
-                    tooltip={unit}
-                    isActive={index === 0}
-                    className="justify-start"
-                    onClick={handleMobileClick}
-                  >
-                    <FileText />
-                    <span>{unit}</span>
-                  </SidebarMenuButton>
+            {menuItems.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton tooltip={item.name} isActive={item.name === 'New Chat'} className="justify-start" onClick={handleMobileClick}>
+                        {item.icon}
+                        <span>{item.name}</span>
+                    </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarGroup>
-          ))}
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Add Subject" className="justify-start text-muted-foreground" onClick={handleMobileClick}>
-              <PlusCircle />
-              <span>Add Subject</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
         <SidebarMenu>
-           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings" className="justify-start" onClick={handleMobileClick}>
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+           {footerMenuItems.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton tooltip={item.name} className="justify-start" onClick={handleMobileClick}>
+                        {item.icon}
+                        <span>{item.name}</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+           ))}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
