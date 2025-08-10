@@ -2,6 +2,7 @@
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
+import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flows/chat-tutor";
 import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
 import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
@@ -98,6 +99,18 @@ export async function analyzeContentAction(
   }
 }
 
+export async function analyzeImageContentAction(
+    input: AnalyzeImageContentInput
+): Promise<ActionResult<AnalyzeImageContentOutputFlow>> {
+    try {
+        const output = await analyzeImageContent(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
 export async function generateFlashcardsAction(
   content: string
 ): Promise<ActionResult<GenerateFlashcardsOutput>> {
@@ -159,3 +172,4 @@ export async function generalChatAction(
 }
 
 export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput };
+export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;

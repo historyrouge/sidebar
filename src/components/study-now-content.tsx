@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput } from "@/app/actions";
-import { analyzeContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -22,6 +22,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
 import { useSearchParams } from "next/navigation";
 import { Input } from "./ui/input";
+import Image from "next/image";
+import imageToDataUri from "image-to-data-uri";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -31,6 +33,8 @@ export function StudyNowContent() {
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
   
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
   const [isSaving, startSaving] = useTransition();
@@ -41,6 +45,7 @@ export function StudyNowContent() {
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -68,6 +73,11 @@ export function StudyNowContent() {
   }, [searchParams, toast]);
 
   const handleAnalyze = async () => {
+    if (imageDataUri) {
+      handleAnalyzeImage();
+      return;
+    }
+
     if (content.trim().length < 50) {
       toast({
         title: "Content too short",
@@ -103,8 +113,23 @@ export function StudyNowContent() {
     });
   };
 
+  const handleAnalyzeImage = async () => {
+    if (!imageDataUri) return;
+    startAnalyzing(async () => {
+        const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
+        if (result.error) {
+            toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
+        } else {
+            setAnalysis(result.data as AnalyzeContentOutput);
+            setFlashcards(null);
+            setQuiz(null);
+            setActiveTab("analysis");
+        }
+    });
+  };
+
   const handleSave = useCallback(async () => {
-    if (isSaving || !content) return;
+    if (isSaving || !content || imageDataUri) return;
     
     startSaving(async () => {
       const result = await saveStudyMaterialAction(content, title || 'Untitled');
@@ -115,12 +140,14 @@ export function StudyNowContent() {
         toast({ title: "Material Saved", description: "Your changes have been saved." });
       }
     });
-  }, [content, title, isSaving, toast]);
+  }, [content, title, isSaving, toast, imageDataUri]);
 
 
   const handleGenerateFlashcards = async () => {
+    if (!analysis) return;
     startGeneratingFlashcards(async () => {
-      const result = await generateFlashcardsAction(content);
+      const flashcardContent = `Key Concepts: ${analysis.keyConcepts.join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+      const result = await generateFlashcardsAction(flashcardContent);
       if (result.error) {
         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -131,8 +158,10 @@ export function StudyNowContent() {
   };
 
   const handleGenerateQuiz = async () => {
+    if (!analysis) return;
     startGeneratingQuiz(async () => {
-      const result = await generateQuizAction(content);
+      const quizContent = `Key Concepts: ${analysis.keyConcepts.join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+      const result = await generateQuizAction(quizContent);
       if (result.error) {
         toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -144,6 +173,10 @@ export function StudyNowContent() {
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleImageUploadClick = () => {
+    imageInputRef.current?.click();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,6 +192,7 @@ export function StudyNowContent() {
           setAnalysis(null);
           setFlashcards(null);
           setQuiz(null);
+          setImageDataUri(null);
           toast({
             title: "File loaded",
             description: "The file content has been loaded. Click Analyze to save and begin.",
@@ -174,6 +208,44 @@ export function StudyNowContent() {
       }
     }
   };
+
+  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        if (file.type.startsWith("image/")) {
+            try {
+                const dataUri = await imageToDataUri(URL.createObjectURL(file));
+                setImageDataUri(dataUri);
+                setContent(""); // Clear text content
+                setTitle(file.name);
+                setMaterialId(null);
+                setAnalysis(null);
+                setFlashcards(null);
+                setQuiz(null);
+                toast({
+                  title: "Image loaded",
+                  description: "You can add a text prompt to guide the analysis.",
+                });
+            } catch (error) {
+                toast({ title: "Image processing failed", description: "Could not read the image file.", variant: "destructive" });
+            }
+        } else {
+            toast({
+              title: "Invalid file type",
+              description: "Please upload an image file (e.g., PNG, JPG).",
+              variant: "destructive",
+            });
+        }
+    }
+  };
+
+  const clearImage = () => {
+    setImageDataUri(null);
+    setTitle("");
+    setAnalysis(null);
+    setFlashcards(null);
+    setQuiz(null);
+  }
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz;
   
@@ -231,7 +303,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or load a saved session.</CardDescription>
+              <CardDescription>Paste text, upload a document, or upload an image.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input 
@@ -239,24 +311,46 @@ export function StudyNowContent() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-lg font-semibold"
+                disabled={!!imageDataUri}
               />
-              <Textarea
-                placeholder="Paste your study content here... (min. 50 characters)"
-                className="h-full min-h-[300px] resize-none"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
+              {imageDataUri ? (
+                <div className="relative flex-1">
+                    <Image src={imageDataUri} alt="Uploaded content" layout="fill" objectFit="contain" className="rounded-md border" />
+                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+              ) : (
+                <Textarea
+                    placeholder="Paste your study content here... (min. 50 characters)"
+                    className="h-full min-h-[300px] resize-none"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                />
+              )}
+               {imageDataUri && (
+                 <Textarea
+                    placeholder="Add an optional prompt to guide the AI..."
+                    className="h-24 resize-none"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                />
+               )}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
-              <Button onClick={handleAnalyze} disabled={isLoading || content.trim().length < 50}>
+              <Button onClick={handleAnalyze} disabled={isLoading || (!imageDataUri && content.trim().length < 50)}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                Analyze & Save
+                Analyze
               </Button>
               <Button variant="outline" onClick={handleFileUploadClick} disabled={isLoading}>
                 <FileUp className="mr-2 h-4 w-4" />
                 Upload .txt
               </Button>
-               {materialId && (
+              <Button variant="outline" onClick={handleImageUploadClick} disabled={isLoading}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Upload Image
+              </Button>
+               {materialId && !imageDataUri && (
                  <Button variant="secondary" onClick={handleSave} disabled={isSaving}>
                   {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save Changes
@@ -268,6 +362,13 @@ export function StudyNowContent() {
                 onChange={handleFileChange}
                 className="hidden"
                 accept=".txt"
+              />
+              <input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageFileChange}
+                className="hidden"
+                accept="image/*"
               />
             </CardFooter>
           </Card>
@@ -356,7 +457,7 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={content} />
+                      <TutorChat content={analysis ? `Image Content: ${title}. Key Concepts: ${analysis.keyConcepts.join(', ')}. Potential Questions: ${analysis.potentialQuestions.join(' ')}` : content} />
                     </TabsContent>
                   </ScrollArea>
                 </Tabs>
