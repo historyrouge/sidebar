@@ -8,6 +8,7 @@ import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generat
 import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
+import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { StudyMaterial, StudyMaterialWithId } from "@/lib/types";
@@ -171,5 +172,17 @@ export async function generalChatAction(
     }
 }
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput };
+export async function textToSpeechAction(
+  input: TextToSpeechInput
+): Promise<ActionResult<TextToSpeechOutput>> {
+  try {
+    const output = await textToSpeech(input);
+    return { data: output };
+  } catch (e: any) {
+    console.error(e);
+    return { error: e.message || "An unknown error occurred." };
+  }
+}
+
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;

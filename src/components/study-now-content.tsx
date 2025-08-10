@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction, textToSpeechAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2 } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -35,6 +35,9 @@ export function StudyNowContent() {
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
+
 
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
@@ -179,6 +182,29 @@ export function StudyNowContent() {
   const handleImageUploadClick = () => {
     imageInputRef.current?.click();
   };
+
+  const handleTextToSpeech = async (text: string, id: string) => {
+    if (isSynthesizing === id) {
+      setAudioDataUri(null);
+      setIsSynthesizing(null);
+      return;
+    }
+    setIsSynthesizing(id);
+    setAudioDataUri(null);
+    try {
+      const result = await textToSpeechAction({ text });
+      if (result.error) {
+        toast({ title: 'Audio Generation Failed', description: result.error, variant: 'destructive' });
+        setIsSynthesizing(null);
+      } else if (result.data) {
+        setAudioDataUri(result.data.audioDataUri);
+      }
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+      setIsSynthesizing(null);
+    }
+  };
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -417,17 +443,44 @@ export function StudyNowContent() {
                   <TabsContent value="analysis" className="h-full">
                       <div className="space-y-6 pr-4">
                         <div>
-                          <h3 className="text-lg font-semibold">Key Concepts</h3>
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold">Key Concepts</h3>
+                             <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleTextToSpeech(analysis.keyConcepts.join('. '), 'key-concepts')}
+                                disabled={!!isSynthesizing}
+                            >
+                                {isSynthesizing === 'key-concepts' ? <Loader2 className="animate-spin" /> : <Volume2 />}
+                            </Button>
+                          </div>
                           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
                             {analysis.keyConcepts.map((concept, i) => <li key={i}>{concept}</li>)}
                           </ul>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold">Potential Questions</h3>
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold">Potential Questions</h3>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleTextToSpeech(analysis.potentialQuestions.join('. '), 'potential-questions')}
+                                disabled={!!isSynthesizing}
+                            >
+                                {isSynthesizing === 'potential-questions' ? <Loader2 className="animate-spin" /> : <Volume2 />}
+                            </Button>
+                          </div>
                           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
                             {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
                           </ul>
                         </div>
+                         {audioDataUri && isSynthesizing && (
+                            <div className="mt-4">
+                                <audio controls autoPlay src={audioDataUri} onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+                        )}
                       </div>
                     </TabsContent>
                     <TabsContent value="flashcards" className="h-full">
