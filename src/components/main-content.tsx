@@ -121,11 +121,11 @@ export function MainContent() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+    <div className="flex h-screen flex-col bg-muted/20">
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Study Session</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -134,8 +134,8 @@ export function MainContent() {
               <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>{user?.displayName || "My Account"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Billing</DropdownMenuItem>
@@ -145,9 +145,9 @@ export function MainContent() {
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-          <Card className="flex flex-col">
+      <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+        <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+          <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
               <CardDescription>Paste your text or upload a document to get started.</CardDescription>
@@ -160,12 +160,12 @@ export function MainContent() {
                 onChange={(e) => setContent(e.target.value)}
               />
             </CardContent>
-            <CardFooter className="flex-col items-stretch gap-2 sm:flex-row">
+            <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
               <Button onClick={handleAnalyze} disabled={isLoading || content.trim().length < 50}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze Content
               </Button>
-              <Button variant="outline" onClick={handleFileUploadClick}>
+              <Button variant="outline" onClick={handleFileUploadClick} disabled={isLoading}>
                 <FileUp className="mr-2 h-4 w-4" />
                 Upload Document
               </Button>
@@ -179,22 +179,28 @@ export function MainContent() {
             </CardFooter>
           </Card>
 
-          <Card className="flex flex-col">
+          <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>AI-Powered Study Tools</CardTitle>
               <CardDescription>Generated concepts, flashcards, and quizzes will appear here.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
-              {isLoading && !analysis ? (
-                <div className="space-y-4">
+              {isAnalyzing && !analysis ? (
+                <div className="space-y-4 p-1">
                   <Skeleton className="h-8 w-1/3" />
                   <Skeleton className="h-20 w-full" />
                   <Skeleton className="h-8 w-1/3" />
                   <Skeleton className="h-20 w-full" />
                 </div>
               ) : !analysis ? (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed">
-                  <p className="text-center text-muted-foreground">Your analysis will appear here.</p>
+                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
+                  <div className="text-center">
+                    <Wand2 className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">Ready to Learn?</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Your AI-generated study tools will appear here.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
@@ -206,47 +212,53 @@ export function MainContent() {
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
-                      <div className="space-y-4 pr-4">
+                      <div className="space-y-6 pr-4">
                         <div>
                           <h3 className="text-lg font-semibold">Key Concepts</h3>
-                          <ul className="mt-2 list-disc space-y-1 pl-5">
+                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
                             {analysis.keyConcepts.map((concept, i) => <li key={i}>{concept}</li>)}
                           </ul>
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold">Potential Questions</h3>
-                          <ul className="mt-2 list-disc space-y-1 pl-5">
+                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
                             {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
                           </ul>
                         </div>
                       </div>
                     </TabsContent>
                     <TabsContent value="flashcards" className="h-full">
-                      {isGeneratingFlashcards ? <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {isGeneratingFlashcards ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
+                        <div className="grid grid-cols-1 gap-4 pr-4 @md:grid-cols-2">
                           {flashcards.map((card, i) => <Flashcard key={i} front={card.front} back={card.back} />)}
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
-                          <Button onClick={handleGenerateFlashcards}>Generate Flashcards</Button>
+                          <Button onClick={handleGenerateFlashcards} disabled={isGeneratingFlashcards}>
+                            {isGeneratingFlashcards ? <Loader2 className="mr-2 animate-spin"/> : null}
+                            Generate Flashcards
+                          </Button>
                         </div>
                       )}
                     </TabsContent>
                     <TabsContent value="quiz" className="h-full">
-                       {isGeneratingQuiz ? <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : quiz ? (
+                       {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : quiz ? (
                         <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
                           {quiz.map((q, i) => (
-                            <AccordionItem value={`item-${i}`} key={i}>
-                                <AccordionTrigger className="text-left font-medium">{i + 1}. {q.question}</AccordionTrigger>
+                            <AccordionItem value={`item-${i}`} key={i} className="rounded-md border bg-background px-4">
+                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">{i + 1}. {q.question}</AccordionTrigger>
                                 <AccordionContent>
-                                    <p className="text-muted-foreground">{q.answer}</p>
+                                    <p className="pb-4 text-muted-foreground">{q.answer}</p>
                                 </AccordionContent>
                             </AccordionItem>
                           ))}
                         </Accordion>
                       ) : (
                         <div className="flex h-full items-center justify-center">
-                          <Button onClick={handleGenerateQuiz}>Generate Quiz</Button>
+                           <Button onClick={handleGenerateQuiz} disabled={isGeneratingQuiz}>
+                            {isGeneratingQuiz ? <Loader2 className="mr-2 animate-spin"/> : null}
+                            Generate Quiz
+                          </Button>
                         </div>
                       )}
                     </TabsContent>
@@ -263,3 +275,5 @@ export function MainContent() {
     </div>
   );
 }
+
+    
