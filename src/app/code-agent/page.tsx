@@ -4,7 +4,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { ProtectedRoute } from "@/components/protected-route";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { CodeAgentChat } from "@/components/code-agent-chat";
+import { CodeAgentChatView } from "@/components/code-agent-chat-view";
 
 export default function CodeAgentPage() {
   return (
@@ -12,7 +12,7 @@ export default function CodeAgentPage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <CodeAgentChat />
+          <CodeAgentChatView />
         </SidebarInset>
       </SidebarProvider>
     </ProtectedRoute>

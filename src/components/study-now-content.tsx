@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./
 import { TutorChat } from "./tutor-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
@@ -43,6 +43,7 @@ export function StudyNowContent() {
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
   const [isSaving, startSaving] = useTransition();
+  const [isLoadingMaterial, startLoadingMaterial] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const [isGeneratingSummary, startGeneratingSummary] = useTransition();
@@ -53,12 +54,13 @@ export function StudyNowContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
       setMaterialId(id);
-      startAnalyzing(async () => {
+      startLoadingMaterial(async () => {
         const result = await getStudyMaterialByIdAction(id);
         if (result.error) {
           toast({ title: "Failed to load material", description: result.error, variant: "destructive" });
@@ -67,13 +69,15 @@ export function StudyNowContent() {
           setTitle(result.data.title);
           setMaterialId(id);
           // Automatically run analysis on loaded content
-          const analysisResult = await analyzeContentAction(result.data.content);
-           if (analysisResult.error) {
-            toast({ title: "Analysis Failed", description: analysisResult.error, variant: "destructive" });
-          } else {
-            setAnalysis(analysisResult.data);
-            setActiveTab("analysis");
-          }
+          startAnalyzing(async () => {
+            const analysisResult = await analyzeContentAction(result.data.content);
+            if (analysisResult.error) {
+              toast({ title: "Analysis Failed", description: analysisResult.error, variant: "destructive" });
+            } else {
+              setAnalysis(analysisResult.data);
+              setActiveTab("analysis");
+            }
+          });
         }
       });
     }
@@ -99,12 +103,12 @@ export function StudyNowContent() {
         const saveResult = await saveStudyMaterialAction(content, title || "Untitled Material");
         if (saveResult.error) {
             toast({ title: "Could not save material", description: saveResult.error, variant: "destructive" });
-            return;
-        }
-        if (saveResult.data) {
+            // continue with analysis even if save fails
+        } else if (saveResult.data) {
             setMaterialId(saveResult.data.id);
             if (!title) setTitle("Untitled Material");
             toast({ title: "Material Saved", description: "Your study material has been saved." });
+            router.replace(`/study-now?id=${saveResult.data.id}`);
         }
       }
 
@@ -141,15 +145,18 @@ export function StudyNowContent() {
     if (isSaving || !content || imageDataUri) return;
     
     startSaving(async () => {
-      const result = await saveStudyMaterialAction(content, title || 'Untitled', materialId);
+      const result = await saveStudyMaterialAction(content, title || 'Untitled Material', materialId);
       if (result.error) {
         toast({ title: "Failed to save", description: result.error, variant: 'destructive' });
       } else if (result.data) {
         setMaterialId(result.data.id);
+        if (!materialId) {
+          router.replace(`/study-now?id=${result.data.id}`);
+        }
         toast({ title: "Material Saved", description: "Your changes have been saved." });
       }
     });
-  }, [content, title, isSaving, toast, imageDataUri, materialId]);
+  }, [content, title, isSaving, toast, imageDataUri, materialId, router]);
 
 
   const handleGenerateFlashcards = async () => {
@@ -239,6 +246,7 @@ export function StudyNowContent() {
           setQuiz(null);
           setSummary(null);
           setImageDataUri(null);
+          router.replace('/study-now');
           toast({
             title: "File loaded",
             description: "The file content has been loaded. Click Analyze to save and begin.",
@@ -269,6 +277,7 @@ export function StudyNowContent() {
                 setFlashcards(null);
                 setQuiz(null);
                 setSummary(null);
+                router.replace('/study-now');
                 toast({
                   title: "Image loaded",
                   description: "You can add a text prompt to guide the analysis.",
@@ -294,6 +303,7 @@ export function StudyNowContent() {
     setFlashcards(null);
     setQuiz(null);
     setSummary(null);
+    router.replace('/study-now');
   }
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
@@ -368,9 +378,13 @@ export function StudyNowContent() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-lg font-semibold"
-                disabled={!!imageDataUri}
+                disabled={!!imageDataUri || isLoadingMaterial}
               />
-              {imageDataUri ? (
+              {isLoadingMaterial ? (
+                <div className="flex flex-col flex-1 gap-4">
+                    <Skeleton className="w-full h-full" />
+                </div>
+              ) : imageDataUri ? (
                 <div className="relative flex-1">
                     <Image src={imageDataUri} alt="Uploaded content" layout="fill" objectFit="contain" className="rounded-md border" />
                     <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}>
@@ -395,22 +409,24 @@ export function StudyNowContent() {
                )}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
-              <Button onClick={handleAnalyze} disabled={isLoading || (!imageDataUri && content.trim().length < 50)}>
+              <Button onClick={handleAnalyze} disabled={isLoading || isLoadingMaterial || (!imageDataUri && content.trim().length < 50)}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze
               </Button>
-              <Button variant="outline" onClick={handleFileUploadClick} disabled={isLoading}>
-                <FileUp className="mr-2 h-4 w-4" />
-                Upload .txt
-              </Button>
-              <Button variant="outline" onClick={handleImageUploadClick} disabled={isLoading}>
-                <ImageIcon className="mr-2 h-4 w-4" />
-                Upload Image
-              </Button>
-               {materialId && !imageDataUri && (
-                 <Button variant="secondary" onClick={handleSave} disabled={isSaving}>
+              <div className="flex items-stretch gap-2">
+                <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading || isLoadingMaterial}>
+                    <FileUp className="mr-2 h-4 w-4" />
+                    Upload .txt
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={handleImageUploadClick} disabled={isLoading || isLoadingMaterial}>
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Upload Image
+                </Button>
+              </div>
+               {!imageDataUri && (
+                 <Button variant="secondary" onClick={handleSave} disabled={isSaving || isLoadingMaterial || !content.trim()}>
                   {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save Changes
+                    {materialId ? 'Save Changes' : 'Save'}
                  </Button>
                )}
               <input
@@ -444,8 +460,8 @@ export function StudyNowContent() {
                   <Skeleton className="h-20 w-full" />
                 </div>
               ) : !analysis ? (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
-                  <div className="text-center">
+                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
+                  <div className="text-center p-8">
                     <Wand2 className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-semibold">Ready to Learn?</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -477,7 +493,7 @@ export function StudyNowContent() {
                                 {isSynthesizing === 'key-concepts' ? <Loader2 className="animate-spin" /> : <Volume2 />}
                             </Button>
                           </div>
-                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
+                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
                             {analysis.keyConcepts.map((concept, i) => <li key={i}>{concept}</li>)}
                           </ul>
                         </div>
@@ -493,7 +509,7 @@ export function StudyNowContent() {
                                 {isSynthesizing === 'potential-questions' ? <Loader2 className="animate-spin" /> : <Volume2 />}
                             </Button>
                           </div>
-                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
+                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
                             {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
                           </ul>
                         </div>
@@ -520,7 +536,7 @@ export function StudyNowContent() {
                                     {isSynthesizing === 'summary' ? <Loader2 className="animate-spin" /> : <Volume2 />}
                                 </Button>
                             </div>
-                           <p className="text-sm leading-relaxed">{summary.summary}</p>
+                           <p className="text-sm leading-relaxed text-muted-foreground">{summary.summary}</p>
                            {audioDataUri && isSynthesizing === 'summary' && (
                             <div className="mt-4">
                                 <audio controls autoPlay src={audioDataUri} onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>

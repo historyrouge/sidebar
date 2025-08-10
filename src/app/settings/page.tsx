@@ -12,9 +12,11 @@ import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
+    const { logout } = useAuth();
 
     return (
         <ProtectedRoute>
@@ -34,7 +36,7 @@ export default function SettingsPage() {
                             </div>
                         </header>
                         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-                            <div className="max-w-xl mx-auto grid gap-6">
+                            <div className="max-w-2xl mx-auto grid gap-6">
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>Appearance</CardTitle>
@@ -59,17 +61,32 @@ export default function SettingsPage() {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>Notifications</CardTitle>
-                                        <CardDescription>Manage how you receive notifications.</CardDescription>
+                                        <CardDescription>Manage how you receive notifications from us.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <Label htmlFor="email-notifications">Email Notifications</Label>
-                                            <Switch id="email-notifications" />
+                                            <Label htmlFor="email-notifications" className="flex flex-col gap-1">
+                                                <span>Email Notifications</span>
+                                                <span className="text-xs text-muted-foreground">Receive updates and news.</span>
+                                            </Label>
+                                            <Switch id="email-notifications" disabled />
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <Label htmlFor="push-notifications">Push Notifications</Label>
+                                            <Label htmlFor="push-notifications" className="flex flex-col gap-1">
+                                                <span>Push Notifications</span>
+                                                <span className="text-xs text-muted-foreground">Get notified in your browser.</span>
+                                            </Label>
                                             <Switch id="push-notifications" disabled />
                                         </div>
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Account</CardTitle>
+                                        <CardDescription>Manage your account settings.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Button variant="destructive" onClick={() => logout()}>Log out</Button>
                                     </CardContent>
                                 </Card>
                             </div>

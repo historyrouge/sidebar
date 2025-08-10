@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowLeft, User as UserIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -41,7 +41,7 @@ export default function ProfilePage() {
                             </div>
                         </header>
                         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-                            <Card className="max-w-xl mx-auto">
+                            <Card className="max-w-2xl mx-auto">
                                 <CardHeader>
                                     <CardTitle>Your Profile</CardTitle>
                                     <CardDescription>View and manage your profile information.</CardDescription>
@@ -58,7 +58,7 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                     <div className="flex justify-end">
-                                        <Button variant="outline">Edit Profile</Button>
+                                        <Button variant="outline" disabled>Edit Profile (coming soon)</Button>
                                     </div>
                                 </CardContent>
                             </Card>

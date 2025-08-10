@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -27,13 +28,13 @@ export default function EbooksPage() {
                             </div>
                         </header>
                         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-                            <Card>
+                            <Card className="max-w-3xl mx-auto">
                                 <CardHeader>
                                     <CardTitle>eBooks Collection</CardTitle>
                                     <CardDescription>Browse and read from your digital library.</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                                    <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/50">
                                         <BookOpenCheck className="w-16 h-16 text-muted-foreground" />
                                         <p className="mt-4 text-muted-foreground">eBooks feature coming soon!</p>
                                     </div>

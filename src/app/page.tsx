@@ -2,7 +2,7 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { ChatContent } from "@/components/chat-content";
+import { ChatView } from "@/components/chat-view";
 import { ProtectedRoute } from "@/components/protected-route";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -12,7 +12,7 @@ export default function Home() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <ChatContent />
+          <ChatView />
         </SidebarInset>
       </SidebarProvider>
     </ProtectedRoute>

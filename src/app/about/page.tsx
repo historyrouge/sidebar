@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -27,12 +28,12 @@ export default function AboutPage() {
                             </div>
                         </header>
                         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-                            <Card>
+                            <Card className="max-w-3xl mx-auto">
                                 <CardHeader>
                                     <CardTitle>About ScholarSage</CardTitle>
                                     <CardDescription>Learn more about our mission and team.</CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
+                                <CardContent className="space-y-4 text-muted-foreground">
                                     <p>ScholarSage is an AI-powered study tool designed to help students learn smarter, not harder. Our mission is to make learning more accessible, engaging, and effective for everyone.</p>
                                     <p>Our team is passionate about education and technology, and we believe that by combining the two, we can create a powerful tool that empowers students to achieve their academic goals.</p>
                                 </CardContent>
