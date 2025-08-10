@@ -79,7 +79,7 @@ export function ChatContent() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-muted/20">
+    <div className="flex h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
@@ -156,7 +156,7 @@ export function ChatContent() {
                         "max-w-lg rounded-lg p-3 text-sm",
                         message.role === "user"
                             ? "bg-primary text-primary-foreground"
-                            : "bg-background border"
+                            : "bg-card border"
                         )}
                     >
                         {message.content}
@@ -174,7 +174,7 @@ export function ChatContent() {
                     <Avatar className="h-9 w-9">
                         <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
-                    <div className="max-w-lg rounded-lg p-3 text-sm bg-background border flex items-center gap-2">
+                    <div className="max-w-lg rounded-lg p-3 text-sm bg-card border flex items-center gap-2">
                         <Loader2 className="size-4 animate-spin" />
                         <span>Thinking...</span>
                     </div>
@@ -182,14 +182,14 @@ export function ChatContent() {
                 )}
                 </div>
             </ScrollArea>
-            <div className="absolute bottom-0 left-0 w-full bg-muted/20 border-t p-4">
+            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background to-transparent border-t p-4">
                  <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-3xl mx-auto">
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Message ScholarSage..."
                         disabled={isTyping}
-                        className="h-12 text-base"
+                        className="h-12 text-base shadow-sm"
                     />
                     <Button type="submit" size="icon" className="h-12 w-12" disabled={isTyping || !input.trim()}>
                         {isTyping ? (
