@@ -33,10 +33,25 @@ type AuthFormProps = {
   type: "login" | "signup";
 };
 
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.9 2.25-5.45 2.25-4.42 0-8.03-3.67-8.03-8.15s3.61-8.15 8.03-8.15c2.45 0 4.05.92 4.9 1.82l2.75-2.75C19.05 1.82 16.25 0 12.48 0 5.88 0 0 5.88 0 12.48s5.88 12.48 12.48 12.48c6.92 0 11.7-4.7 11.7-12.05 0-.76-.08-1.48-.2-2.18z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+
 export function AuthForm({ type }: AuthFormProps) {
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -64,6 +79,22 @@ export function AuthForm({ type }: AuthFormProps) {
         });
     } finally {
         setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push("/");
+    } catch (error: any) {
+      toast({
+        title: "Google Sign-In Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -96,9 +127,25 @@ export function AuthForm({ type }: AuthFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={loading || googleLoading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {type === "login" ? "Sign In" : "Sign Up"}
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+            {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
+            Google
         </Button>
 
         <div className="mt-4 text-center text-sm">
@@ -122,4 +169,3 @@ export function AuthForm({ type }: AuthFormProps) {
     </Form>
   );
 }
-
