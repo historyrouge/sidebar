@@ -9,7 +9,8 @@ import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quiz
 import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { StudyMaterial, StudyMaterialWithId } from "@/lib/types";
 
@@ -21,7 +22,8 @@ type ActionResult<T> = {
 
 export async function saveStudyMaterialAction(
     content: string, 
-    title: string
+    title: string,
+    materialId?: string | null
   ): Promise<ActionResult<{ id: string }>> {
     const user = auth.currentUser;
     if (!user) {
@@ -29,15 +31,24 @@ export async function saveStudyMaterialAction(
     }
   
     try {
-      const docRef = await addDoc(collection(db, "studyMaterials"), {
-        userId: user.uid,
-        title: title,
-        content: content,
-        createdAt: serverTimestamp(),
-      });
-      return { data: { id: docRef.id } };
+      if (materialId) {
+        const docRef = doc(db, "studyMaterials", materialId);
+        await updateDoc(docRef, {
+            title: title,
+            content: content
+        });
+        return { data: { id: materialId } };
+      } else {
+        const docRef = await addDoc(collection(db, "studyMaterials"), {
+            userId: user.uid,
+            title: title,
+            content: content,
+            createdAt: serverTimestamp(),
+        });
+        return { data: { id: docRef.id } };
+      }
     } catch (e: any) {
-      console.error("Error adding document: ", e);
+      console.error("Error saving document: ", e);
       return { error: e.message || "Failed to save study material." };
     }
 }
@@ -184,5 +195,18 @@ export async function textToSpeechAction(
   }
 }
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput };
+export async function summarizeContentAction(
+    input: SummarizeContentInput
+    ): Promise<ActionResult<SummarizeContentOutput>> {
+    try {
+        const output = await summarizeContent(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
+
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;

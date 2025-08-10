@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction, textToSpeechAction } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction, textToSpeechAction, summarizeContentAction } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2 } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2, Pilcrow } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -33,6 +33,7 @@ export function StudyNowContent() {
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
+  const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function StudyNowContent() {
   const [isSaving, startSaving] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
+  const [isGeneratingSummary, startGeneratingSummary] = useTransition();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
@@ -55,6 +57,7 @@ export function StudyNowContent() {
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
+      setMaterialId(id);
       startAnalyzing(async () => {
         const result = await getStudyMaterialByIdAction(id);
         if (result.error) {
@@ -112,6 +115,7 @@ export function StudyNowContent() {
         setAnalysis(result.data);
         setFlashcards(null);
         setQuiz(null);
+        setSummary(null);
         setActiveTab("analysis");
       }
     });
@@ -127,6 +131,7 @@ export function StudyNowContent() {
             setAnalysis(result.data as AnalyzeContentOutput);
             setFlashcards(null);
             setQuiz(null);
+            setSummary(null);
             setActiveTab("analysis");
         }
     });
@@ -136,7 +141,7 @@ export function StudyNowContent() {
     if (isSaving || !content || imageDataUri) return;
     
     startSaving(async () => {
-      const result = await saveStudyMaterialAction(content, title || 'Untitled');
+      const result = await saveStudyMaterialAction(content, title || 'Untitled', materialId);
       if (result.error) {
         toast({ title: "Failed to save", description: result.error, variant: 'destructive' });
       } else if (result.data) {
@@ -144,7 +149,7 @@ export function StudyNowContent() {
         toast({ title: "Material Saved", description: "Your changes have been saved." });
       }
     });
-  }, [content, title, isSaving, toast, imageDataUri]);
+  }, [content, title, isSaving, toast, imageDataUri, materialId]);
 
 
   const handleGenerateFlashcards = async () => {
@@ -174,6 +179,19 @@ export function StudyNowContent() {
       }
     });
   };
+
+  const handleGenerateSummary = async () => {
+    if (!content) return;
+    startGeneratingSummary(async () => {
+        const result = await summarizeContentAction({ content });
+        if (result.error) {
+            toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
+        } else {
+            setSummary(result.data);
+            setActiveTab("summary");
+        }
+    });
+};
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
@@ -219,6 +237,7 @@ export function StudyNowContent() {
           setAnalysis(null);
           setFlashcards(null);
           setQuiz(null);
+          setSummary(null);
           setImageDataUri(null);
           toast({
             title: "File loaded",
@@ -249,6 +268,7 @@ export function StudyNowContent() {
                 setAnalysis(null);
                 setFlashcards(null);
                 setQuiz(null);
+                setSummary(null);
                 toast({
                   title: "Image loaded",
                   description: "You can add a text prompt to guide the analysis.",
@@ -269,12 +289,14 @@ export function StudyNowContent() {
   const clearImage = () => {
     setImageDataUri(null);
     setTitle("");
+    setContent("");
     setAnalysis(null);
     setFlashcards(null);
     setQuiz(null);
+    setSummary(null);
   }
 
-  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz;
+  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
   
   const getInitials = (name?: string | null) => {
     if (!name) return "SS";
@@ -433,8 +455,9 @@ export function StudyNowContent() {
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                    <TabsTrigger value="summary">Summary</TabsTrigger>
                     <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
                     <TabsTrigger value="quiz">Quiz</TabsTrigger>
                     <TabsTrigger value="tutor">Tutor</TabsTrigger>
@@ -482,6 +505,38 @@ export function StudyNowContent() {
                             </div>
                         )}
                       </div>
+                    </TabsContent>
+                    <TabsContent value="summary" className="h-full">
+                       {isGeneratingSummary ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating summary...</p></div> : summary ? (
+                        <div className="space-y-4 pr-4">
+                           <div className="flex justify-between items-center">
+                                <h3 className="text-lg font-semibold">Summary</h3>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleTextToSpeech(summary.summary, 'summary')}
+                                    disabled={!!isSynthesizing}
+                                >
+                                    {isSynthesizing === 'summary' ? <Loader2 className="animate-spin" /> : <Volume2 />}
+                                </Button>
+                            </div>
+                           <p className="text-sm leading-relaxed">{summary.summary}</p>
+                           {audioDataUri && isSynthesizing === 'summary' && (
+                            <div className="mt-4">
+                                <audio controls autoPlay src={audioDataUri} onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+                        )}
+                        </div>
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                           <Button onClick={handleGenerateSummary} disabled={isGeneratingSummary || imageDataUri !== null}>
+                             <Pilcrow className="mr-2 h-4 w-4" />
+                            Generate Summary
+                          </Button>
+                        </div>
+                      )}
                     </TabsContent>
                     <TabsContent value="flashcards" className="h-full">
                       {isGeneratingFlashcards ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
