@@ -41,23 +41,26 @@ TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
-    {...props}
-    // By default, Tabs.Content removes inactive tabs from the DOM.
-    // This optimization prevents that behavior to keep the content of all tabs mounted.
-    // It makes switching between tabs with heavy content faster.
-    forceMount={true} 
-    hidden={props.value !== React.useContext(TabsPrimitive.Context).value}
-  >
-    {children}
-  </TabsPrimitive.Content>
-))
+>(({ className, children, ...props }, ref) => {
+    const context = React.useContext(TabsPrimitive.TabsContext);
+    return (
+        <TabsPrimitive.Content
+            ref={ref}
+            className={cn(
+            "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            className
+            )}
+            {...props}
+            // By default, Tabs.Content removes inactive tabs from the DOM.
+            // This optimization prevents that behavior to keep the content of all tabs mounted.
+            // It makes switching between tabs with heavy content faster.
+            forceMount={true} 
+            hidden={props.value !== context.value}
+        >
+            {children}
+        </TabsPrimitive.Content>
+    )
+})
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }
