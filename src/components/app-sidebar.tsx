@@ -25,7 +25,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Progress } from "@/components/ui/progress";
 
 const menuItems = [
     { name: "New Chat", icon: <MessageSquare className="size-4" />, href: "/" },
@@ -46,9 +48,61 @@ const footerMenuItems = [
 export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const router = useRouter();
+  const [loadingHref, setLoadingHref] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  const handleMobileClick = () => {
+  useEffect(() => {
+    if (loadingHref) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            router.push(loadingHref);
+            setLoadingHref(null);
+            setProgress(0);
+            return 100;
+          }
+          return prev + 20;
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [loadingHref, router]);
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLButtonElement>, href: string) => {
+    if (pathname === href) {
+        e.preventDefault();
+        return;
+    }
+    e.preventDefault();
+    setLoadingHref(href);
+    setProgress(0);
     setOpenMobile(false);
+  };
+
+  const renderMenuItems = (items: typeof menuItems) => {
+    return items.map((item) => (
+        <SidebarMenuItem key={item.name}>
+            <Link href={item.href} passHref legacyBehavior>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.name}
+                isActive={pathname === item.href}
+                className="justify-start"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleLinkClick(e, item.href)}
+              >
+                  <a>
+                    {item.icon}
+                    <span>{item.name}</span>
+                    {loadingHref === item.href && (
+                        <Progress value={progress} className="w-10 h-1 ml-auto" />
+                    )}
+                  </a>
+              </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
+    ));
   }
 
   return (
@@ -65,34 +119,12 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-            {menuItems.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <SidebarMenuButton asChild tooltip={item.name} isActive={pathname === item.href} className="justify-start" onClick={handleMobileClick}>
-                          <a>
-                            {item.icon}
-                            <span>{item.name}</span>
-                          </a>
-                      </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            ))}
+            {renderMenuItems(menuItems)}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
         <SidebarMenu>
-           {footerMenuItems.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <SidebarMenuButton asChild tooltip={item.name} isActive={pathname === item.href} className="justify-start" onClick={handleMobileClick}>
-                          <a>
-                            {item.icon}
-                            <span>{item.name}</span>
-                          </a>
-                      </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-           ))}
+           {renderMenuItems(footerMenuItems)}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
