@@ -16,14 +16,16 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
+  UserCredential,
+  getAdditionalUserInfo,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, pass: string) => Promise<any>;
-  signIn: (email: string, pass: string) => Promise<any>;
+  signUp: (email: string, pass: string) => Promise<UserCredential>;
+  signIn: (email: string, pass: string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<any>;
   logout: () => Promise<any>;
 }
@@ -51,12 +53,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
       prompt: 'select_account'
     });
-    return signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    const additionalUserInfo = getAdditionalUserInfo(result);
+    return { ...result, additionalUserInfo };
   }
 
   const logout = () => {

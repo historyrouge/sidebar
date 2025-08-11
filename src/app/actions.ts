@@ -11,7 +11,7 @@ import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/gen
 import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agent";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { StudyMaterial, StudyMaterialWithId } from "@/lib/types";
 
@@ -20,6 +20,21 @@ type ActionResult<T> = {
   data?: T;
   error?: string;
 };
+
+export async function updateUserProfile(profileData: { name: string; college: string; favoriteSubject: string; }) {
+    const user = auth.currentUser;
+    if (!user) {
+        return { error: "You must be logged in to update your profile." };
+    }
+
+    try {
+        await setDoc(doc(db, "users", user.uid), profileData, { merge: true });
+        return { data: { success: true } };
+    } catch (e: any) {
+        console.error("Error updating user profile: ", e);
+        return { error: e.message || "Failed to update profile." };
+    }
+}
 
 export async function saveStudyMaterialAction(
     content: string, 

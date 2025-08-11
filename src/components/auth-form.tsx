@@ -88,10 +88,11 @@ export function AuthForm({ type }: AuthFormProps) {
     try {
       if (type === "signup") {
         await signUp(values.email, values.password);
+        router.push("/onboarding");
       } else {
         await signIn(values.email, values.password);
+        router.push("/");
       }
-      router.push("/");
     } catch (error: any) {
         toast({
             title: "Authentication Failed",
@@ -106,8 +107,13 @@ export function AuthForm({ type }: AuthFormProps) {
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
     try {
-      await signInWithGoogle();
-      router.push("/");
+      const result = await signInWithGoogle();
+      // Check if the user is new to redirect to onboarding
+      if (result.additionalUserInfo?.isNewUser) {
+        router.push("/onboarding");
+      } else {
+        router.push("/");
+      }
     } catch (error: any) {
       toast({
         title: "Google Sign-In Failed",
