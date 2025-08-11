@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2, Pilcrow } from "lucide-react";
+import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2, Pilcrow, CheckCircle2, Circle } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -25,6 +25,7 @@ import { Input } from "./ui/input";
 import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -579,7 +580,14 @@ export function StudyNowContent() {
                             <AccordionItem value={`item-${i}`} key={i} className="rounded-md border bg-background px-4">
                                 <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">{i + 1}. {q.question}</AccordionTrigger>
                                 <AccordionContent>
-                                    <p className="pb-4 text-muted-foreground">{q.answer}</p>
+                                    <div className="space-y-2 pb-4">
+                                        {q.options.map((option, optionIndex) => (
+                                            <div key={optionIndex} className={cn("flex items-center gap-3 text-sm", option === q.answer ? "font-semibold text-primary" : "text-muted-foreground")}>
+                                               {option === q.answer ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4" />}
+                                               <span>{option}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                           ))}
