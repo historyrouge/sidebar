@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -40,7 +41,7 @@ TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
@@ -48,7 +49,14 @@ const TabsContent = React.forwardRef<
       className
     )}
     {...props}
-  />
+    // By default, Tabs.Content removes inactive tabs from the DOM.
+    // This optimization prevents that behavior to keep the content of all tabs mounted.
+    // It makes switching between tabs with heavy content faster.
+    forceMount={true} 
+    hidden={props.value !== React.useContext(TabsPrimitive.Context).value}
+  >
+    {children}
+  </TabsPrimitive.Content>
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
