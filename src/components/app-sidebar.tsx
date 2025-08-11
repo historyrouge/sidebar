@@ -54,9 +54,8 @@ export function AppSidebar() {
   const renderMenuItems = (items: typeof menuItems) => {
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
-            <Link href={item.href} passHref legacyBehavior>
+            <Link href={item.href}>
               <SidebarMenuButton
-                as="a"
                 tooltip={item.name}
                 isActive={pathname === item.href}
                 className="justify-start"
