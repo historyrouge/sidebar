@@ -11,3 +11,9 @@ export interface StudyMaterial {
 export interface StudyMaterialWithId extends StudyMaterial {
     id: string;
 }
+
+export interface UserProfile {
+    name: string;
+    college: string;
+    favoriteSubject: string;
+}

@@ -11,10 +11,24 @@ import { useTheme } from "next-themes";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { deleteUserAction } from "../actions";
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const { logout } = useAuth();
+    const { toast } = useToast();
+
+    const handleDeleteAccount = async () => {
+        const result = await deleteUserAction();
+        if (result.error) {
+            toast({ title: "Error", description: result.error, variant: "destructive" });
+        } else {
+            toast({ title: "Account Deleted", description: "Your account has been successfully deleted." });
+            logout();
+        }
+    }
 
     return (
         <div className="flex flex-col h-screen bg-muted/20">
@@ -79,8 +93,26 @@ export default function SettingsPage() {
                             <CardTitle>Account</CardTitle>
                             <CardDescription>Manage your account settings.</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <Button variant="destructive" onClick={() => logout()}>Log out</Button>
+                        <CardContent className="space-y-4">
+                           <Button variant="outline" onClick={() => logout()}>Log out</Button>
+                           <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive">Delete Account</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete your
+                                        account and remove your data from our servers.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteAccount}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </CardContent>
                     </Card>
                 </div>

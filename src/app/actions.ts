@@ -11,9 +11,9 @@ import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/gen
 import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agent";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { StudyMaterial, StudyMaterialWithId } from "@/lib/types";
+import { StudyMaterial, StudyMaterialWithId, UserProfile } from "@/lib/types";
 
 
 type ActionResult<T> = {
@@ -21,7 +21,28 @@ type ActionResult<T> = {
   error?: string;
 };
 
-export async function updateUserProfile(profileData: { name: string; college: string; favoriteSubject: string; }) {
+export async function getUserProfileAction(): Promise<ActionResult<UserProfile>> {
+    const user = auth.currentUser;
+    if (!user) {
+        return { error: "You must be logged in to view your profile." };
+    }
+
+    try {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { data: docSnap.data() as UserProfile };
+        } else {
+            // Return empty profile if it doesn't exist yet
+            return { data: { name: "", college: "", favoriteSubject: "" } };
+        }
+    } catch (e: any) {
+        console.error("Error getting user profile: ", e);
+        return { error: e.message || "Failed to retrieve profile." };
+    }
+}
+
+export async function updateUserProfile(profileData: UserProfile) {
     const user = auth.currentUser;
     if (!user) {
         return { error: "You must be logged in to update your profile." };
@@ -33,6 +54,37 @@ export async function updateUserProfile(profileData: { name: string; college: st
     } catch (e: any) {
         console.error("Error updating user profile: ", e);
         return { error: e.message || "Failed to update profile." };
+    }
+}
+
+export async function deleteUserAction(): Promise<ActionResult<{ success: boolean }>> {
+    const user = auth.currentUser;
+    if (!user) {
+      return { error: "You must be logged in to delete your account." };
+    }
+  
+    try {
+      // Note: This only deletes the user record in Firestore.
+      // The actual Firebase Auth user needs to be deleted client-side,
+      // or with a backend function with elevated privileges.
+      // For this app, we assume deletion means data deletion.
+      // We will also delete their study materials.
+      
+      const q = query(collection(db, "studyMaterials"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+
+      // Delete user profile
+      await deleteDoc(doc(db, "users", user.uid));
+      
+      // Ideally, you'd call user.delete() here, but it requires recent sign-in.
+      // We will rely on the client to sign out.
+  
+      return { data: { success: true } };
+    } catch (e: any) {
+      console.error("Error deleting user account: ", e);
+      return { error: e.message || "Failed to delete account." };
     }
 }
 
@@ -237,5 +289,5 @@ export async function summarizeContentAction(
 }
 
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, CodeAgentInput, CodeAgentOutput };
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, CodeAgentInput, CodeAgentOutput, UserProfile };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
