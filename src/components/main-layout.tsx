@@ -1,13 +1,21 @@
 
 "use client";
 
-import { ProtectedRoute } from "@/components/protected-route";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "./app-sidebar";
+import { SidebarInset, SidebarProvider } from "./ui/sidebar";
+import { ProtectedRoute } from "./protected-route";
+import { NextNProgressClient } from "./nprogress-client";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-      <div className="min-h-screen">
-        {children}
-      </div>
+    <ProtectedRoute>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <NextNProgressClient />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </ProtectedRoute>
   );
 }
