@@ -78,7 +78,7 @@ export function AppSidebar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <GraduationCap className="size-5" />
           </div>
-          <h1 className="text-lg font-semibold">ScholarSage</h1>
+          <h1 className="text-lg font-semibold">sidebar</h1>
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
