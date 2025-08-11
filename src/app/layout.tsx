@@ -1,6 +1,7 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
+import './nprogress.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '@/hooks/use-auth';
@@ -9,6 +10,7 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset } from '@/components/ui/sidebar';
+import { NextNProgressClient } from '@/components/nprogress-client';
 
 export const metadata: Metadata = {
   title: 'ScholarSage',
@@ -39,6 +41,7 @@ export default function RootLayout({
                     <SidebarProvider>
                         <AppSidebar />
                         <SidebarInset>
+                            <NextNProgressClient />
                             {children}
                         </SidebarInset>
                     </SidebarProvider>

@@ -25,9 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Progress } from "@/components/ui/progress";
+import { usePathname } from "next/navigation";
 
 const menuItems = [
     { name: "New Chat", icon: <MessageSquare className="size-4" />, href: "/" },
@@ -46,38 +44,10 @@ const footerMenuItems = [
 ]
 
 export function AppSidebar() {
-  const { state, setOpenMobile } = useSidebar();
+  const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const router = useRouter();
-  const [loadingHref, setLoadingHref] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    if (loadingHref) {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            router.push(loadingHref);
-            setLoadingHref(null);
-            setProgress(0);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 50);
-      return () => clearInterval(interval);
-    }
-  }, [loadingHref, router]);
-
-  const handleLinkClick = (e: React.MouseEvent<HTMLButtonElement>, href: string) => {
-    if (pathname === href) {
-        e.preventDefault();
-        return;
-    }
-    e.preventDefault();
-    setLoadingHref(href);
-    setProgress(0);
+  const handleLinkClick = () => {
     setOpenMobile(false);
   };
 
@@ -86,19 +56,14 @@ export function AppSidebar() {
         <SidebarMenuItem key={item.name}>
             <Link href={item.href} passHref legacyBehavior>
               <SidebarMenuButton
-                asChild
+                as="a"
                 tooltip={item.name}
                 isActive={pathname === item.href}
                 className="justify-start"
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleLinkClick(e, item.href)}
+                onClick={handleLinkClick}
               >
-                  <a>
-                    {item.icon}
-                    <span>{item.name}</span>
-                    {loadingHref === item.href && (
-                        <Progress value={progress} className="w-10 h-1 ml-auto" />
-                    )}
-                  </a>
+                  {item.icon}
+                  <span>{item.name}</span>
               </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
@@ -108,14 +73,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <GraduationCap className="size-5" />
           </div>
-          {state === "expanded" && (
-            <h1 className="text-lg font-semibold">ScholarSage</h1>
-          )}
-        </div>
+          <h1 className="text-lg font-semibold">ScholarSage</h1>
+        </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
