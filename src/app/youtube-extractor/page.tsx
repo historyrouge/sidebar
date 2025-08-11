@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, SummarizeContentOutput } from "@/app/actions";
-import { analyzeContentAction, generateFlashcardsAction, generateQuizAction, summarizeContentAction, textToSpeechAction } from "@/app/actions";
+import { analyzeContentAction, generateFlashcardsAction, generateQuizAction, summarizeContentAction, textToSpeechAction, getYoutubeTranscriptAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,14 +44,19 @@ export default function YouTubeExtractorPage() {
             toast({ title: "Please enter a YouTube URL", variant: "destructive" });
             return;
         }
-        startExtracting(() => {
-            // Placeholder for actual YouTube transcript extraction
-            // In a real app, you would use a library or API to fetch the transcript
-            setTimeout(() => {
-                const placeholderTranscript = "This is a placeholder transcript for the YouTube video. In a real application, this would be the full text extracted from the video's audio track. This allows students to quickly get the content of a video in text format, which can then be analyzed, summarized, and used to create study materials like flashcards and quizzes. The process involves taking a YouTube video URL, sending it to a backend service that can access YouTube's transcript API, and then returning the text content to the user for further processing with the AI tools available in ScholarSage.";
-                setTranscript(placeholderTranscript);
-                toast({ title: "Transcript extracted (Placeholder)", description: "You can now analyze the content." });
-            }, 1500);
+        startExtracting(async () => {
+            setTranscript('');
+            setAnalysis(null);
+            setFlashcards(null);
+            setQuiz(null);
+            setSummary(null);
+            const result = await getYoutubeTranscriptAction({ videoUrl: youtubeUrl });
+            if (result.error) {
+                toast({ title: "Extraction Failed", description: result.error, variant: "destructive" });
+            } else if (result.data) {
+                setTranscript(result.data.transcript);
+                toast({ title: "Transcript extracted!", description: "You can now analyze the content." });
+            }
         });
     };
 
@@ -134,7 +139,7 @@ export default function YouTubeExtractorPage() {
         }
       };
     
-    const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
+    const isLoading = isExtracting || isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
 
     return (
         <div className="flex flex-col h-screen bg-muted/20">
@@ -190,7 +195,7 @@ export default function YouTubeExtractorPage() {
                             </Button>
                         </CardHeader>
                         <CardContent className="flex-1">
-                          {!transcript ? (
+                          {!transcript && !isExtracting ? (
                             <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
                                 <div className="text-center p-8">
                                     <Youtube className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -199,6 +204,10 @@ export default function YouTubeExtractorPage() {
                                     Paste a YouTube link and click "Extract" to begin.
                                     </p>
                                 </div>
+                            </div>
+                           ) : isExtracting ? (
+                             <div className="flex h-full items-center justify-center gap-2 text-muted-foreground">
+                                <Loader2 className="animate-spin" /> <p>Extracting transcript...</p>
                             </div>
                           ) : isAnalyzing && !analysis ? (
                             <div className="space-y-4 p-1">
@@ -357,5 +366,3 @@ export default function YouTubeExtractorPage() {
         </div>
     );
 }
-
-    
