@@ -68,7 +68,8 @@ export function AuthForm({ type }: AuthFormProps) {
       case 'auth/user-not-found':
         return 'No user found with this email. Please sign up instead.';
       case 'auth/wrong-password':
-        return 'Incorrect password. Please try again.';
+      case 'auth/invalid-credential':
+        return 'Incorrect email or password. Please try again.';
       case 'auth/email-already-in-use':
         return 'This email is already in use. Please sign in or use a different email.';
       case 'auth/weak-password':
