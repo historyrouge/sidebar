@@ -13,6 +13,7 @@ import {
   Settings,
   Sparkles,
   User,
+  Youtube,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ const menuItems = [
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
     { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
+    { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
 ];
