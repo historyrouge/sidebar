@@ -577,7 +577,7 @@ export function StudyNowContent() {
                        {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : quiz ? (
                         <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
                           {quiz.map((q, i) => (
-                            <AccordionItem value={`item-${i}`} key={i} className="rounded-md border bg-background px-4">
+                            <AccordionItem value={`item-${i}`} key={q.question} className="rounded-md border bg-background px-4">
                                 <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">{i + 1}. {q.question}</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-2 pb-4">
@@ -602,7 +602,7 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? `Image Content: ${title}. Key Concepts: ${analysis.keyConcepts.join(', ')}. Potential Questions: ${analysis.potentialQuestions.join(' ')}` : content} />
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
                     </TabsContent>
                   </ScrollArea>
                 </Tabs>

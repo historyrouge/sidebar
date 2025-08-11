@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User } from "lucide-react";
-import React, { useState, useTransition, useRef, useEffect } from "react";
+import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { useAuth } from '@/hooks/use-auth';
 import { marked } from 'marked';
 
@@ -21,6 +21,7 @@ interface TutorChatProps {
 type Message = {
   role: "user" | "model";
   content: string;
+  htmlContent?: string;
 };
 
 export function TutorChat({ content }: TutorChatProps) {
@@ -41,9 +42,10 @@ export function TutorChat({ content }: TutorChatProps) {
     setInput("");
 
     startTyping(async () => {
+      const chatHistory = history.map(({ role, content }) => ({ role, content }));
       const chatInput: ChatWithTutorInput = {
         content,
-        history: [...history, userMessage],
+        history: [...chatHistory, { role: "user", content: input }],
       };
       const result = await chatWithTutorAction(chatInput);
 
@@ -55,7 +57,11 @@ export function TutorChat({ content }: TutorChatProps) {
         });
         setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
       } else if (result.data) {
-        const modelMessage: Message = { role: "model", content: result.data.response };
+        const modelMessage: Message = { 
+          role: "model", 
+          content: result.data.response,
+          htmlContent: marked(result.data.response) as string,
+        };
         setHistory((prev) => [...prev, modelMessage]);
       }
     });
@@ -112,7 +118,7 @@ export function TutorChat({ content }: TutorChatProps) {
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 )}
-                dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
+                dangerouslySetInnerHTML={{ __html: message.role === 'model' ? message.htmlContent! : message.content }}
               >
               </div>
               {message.role === "user" && (
