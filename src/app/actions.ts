@@ -230,7 +230,7 @@ export async function summarizeContentAction(
     try {
         const output = await summarizeContent(input);
         return { data: output };
-    } catch (e: any) {
+    } catch (e: any)
         console.error(e);
         return { error: e.message || "An unknown error occurred." };
     }
