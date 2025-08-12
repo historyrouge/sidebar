@@ -3,6 +3,6 @@
 
 import { MainDashboard } from "@/components/main-dashboard";
 
-export function ChatView() {
+export function ChatPage() {
   return <MainDashboard />;
 }
