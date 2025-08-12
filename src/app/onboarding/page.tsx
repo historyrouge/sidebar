@@ -1,7 +1,8 @@
 
 "use client";
+import dynamic from 'next/dynamic';
 
-import { OnboardingForm } from "@/components/onboarding-form";
+const OnboardingForm = dynamic(() => import('@/components/onboarding-form').then(mod => mod.OnboardingForm), { ssr: false, loading: () => <div className="flex h-screen w-full items-center justify-center">Loading...</div> });
 
 export default function OnboardingPage() {
   return (
