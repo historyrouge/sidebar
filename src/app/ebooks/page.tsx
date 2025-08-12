@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { MainLayout } from "@/components/main-layout";
 
 const ebooks = [
     {
@@ -62,7 +63,7 @@ const ebooks = [
       },
 ];
 
-export default function EbooksPage() {
+function EbooksContent() {
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
 
@@ -135,4 +136,12 @@ export default function EbooksPage() {
             </main>
         </div>
     );
+}
+
+export default function EbooksPage() {
+    return (
+        <MainLayout>
+            <EbooksContent />
+        </MainLayout>
+    )
 }

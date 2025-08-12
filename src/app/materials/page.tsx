@@ -11,8 +11,9 @@ import { getStudyMaterialsAction } from "../actions";
 import { StudyMaterialWithId } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { MainLayout } from "@/components/main-layout";
 
-export default function MaterialsPage() {
+function MaterialsContent() {
     const [materials, setMaterials] = useState<StudyMaterialWithId[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -94,4 +95,12 @@ export default function MaterialsPage() {
             </main>
         </div>
     );
+}
+
+export default function MaterialsPage() {
+    return (
+        <MainLayout>
+            <MaterialsContent />
+        </MainLayout>
+    )
 }

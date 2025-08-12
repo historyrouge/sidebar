@@ -14,8 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MainLayout } from "@/components/main-layout";
 
-export default function ProfilePage() {
+function ProfileContent() {
     const { user } = useAuth();
     const { toast } = useToast();
     const [name, setName] = useState("");
@@ -126,4 +127,13 @@ export default function ProfilePage() {
             </main>
         </div>
     );
+}
+
+
+export default function ProfilePage() {
+    return (
+        <MainLayout>
+            <ProfileContent />
+        </MainLayout>
+    )
 }

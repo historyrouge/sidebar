@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { MainLayout } from "@/components/main-layout";
 
-export default function AboutPage() {
+function AboutContent() {
     return (
         <div className="flex flex-col h-screen bg-muted/20">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
@@ -34,5 +35,14 @@ export default function AboutPage() {
                 </Card>
             </main>
         </div>
+    );
+}
+
+
+export default function AboutPage() {
+    return (
+        <MainLayout>
+            <AboutContent />
+        </MainLayout>
     );
 }

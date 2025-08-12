@@ -10,13 +10,14 @@ import { useState, useTransition } from "react";
 import { generateFlashcardsAction, GenerateFlashcardsOutput } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Trash2 } from "lucide-react";
+import { MainLayout } from "@/components/main-layout";
 
 type Flashcard = {
     front: string;
     back: string;
 };
 
-export default function CreateFlashcardsPage() {
+function CreateFlashcardsContent() {
     const [title, setTitle] = useState("");
     const [notes, setNotes] = useState("");
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -145,5 +146,14 @@ export default function CreateFlashcardsPage() {
                 )}
             </main>
         </div>
+    )
+}
+
+
+export default function CreateFlashcardsPage() {
+    return (
+        <MainLayout>
+            <CreateFlashcardsContent />
+        </MainLayout>
     )
 }

@@ -19,8 +19,9 @@ import { useState, useTransition } from "react";
 import { Flashcard } from "@/components/flashcard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { TutorChat } from "@/components/tutor-chat";
+import { MainLayout } from "@/components/main-layout";
 
-export default function YouTubeExtractorPage() {
+function YouTubeExtractorContent() {
     const [youtubeUrl, setYoutubeUrl] = useState("");
     const [transcript, setTranscript] = useState("");
     const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
@@ -357,4 +358,13 @@ export default function YouTubeExtractorPage() {
             </main>
         </div>
     );
+}
+
+
+export default function YouTubeExtractorPage() {
+    return (
+        <MainLayout>
+            <YouTubeExtractorContent />
+        </MainLayout>
+    )
 }

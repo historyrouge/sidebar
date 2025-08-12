@@ -14,8 +14,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { deleteUserAction } from "../actions";
+import { MainLayout } from "@/components/main-layout";
 
-export default function SettingsPage() {
+function SettingsContent() {
     const { theme, setTheme } = useTheme();
     const { logout } = useAuth();
     const { toast } = useToast();
@@ -119,4 +120,12 @@ export default function SettingsPage() {
             </main>
         </div>
     );
+}
+
+export default function SettingsPage() {
+    return (
+        <MainLayout>
+            <SettingsContent />
+        </MainLayout>
+    )
 }
