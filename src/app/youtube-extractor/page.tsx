@@ -357,5 +357,4 @@ export default function YouTubeExtractorPage() {
             </main>
         </div>
     );
-
-    
+}
