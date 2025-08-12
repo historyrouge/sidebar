@@ -7,10 +7,6 @@ import { cn } from "@/lib/utils"
 import { AuthProvider } from '@/hooks/use-auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ProtectedRoute } from '@/components/protected-route';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset } from '@/components/ui/sidebar';
-import { NextNProgressClient } from '@/components/nprogress-client';
 
 export const metadata: Metadata = {
   title: 'ScholarSage',
@@ -38,13 +34,7 @@ export default function RootLayout({
         >
             <AuthProvider>
                 <ProtectedRoute>
-                    <SidebarProvider>
-                        <AppSidebar />
-                        <SidebarInset>
-                            <NextNProgressClient />
-                            {children}
-                        </SidebarInset>
-                    </SidebarProvider>
+                    {children}
                 </ProtectedRoute>
             </AuthProvider>
             <Toaster />
