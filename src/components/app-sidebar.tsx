@@ -16,6 +16,7 @@ import {
   Youtube,
   FilePlus2,
   FileQuestion,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const menuItems = [
     { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
+    { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
 ];
 
 const footerMenuItems = [
@@ -97,7 +99,7 @@ export function AppSidebar() {
             {renderMenuItems(menuItems)}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-2 mt-auto">
+      <SidebarFooter className="mt-auto p-2 pb-4">
         <SidebarMenu>
            {renderMenuItems(footerMenuItems)}
         </SidebarMenu>
