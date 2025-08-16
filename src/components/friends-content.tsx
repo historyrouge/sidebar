@@ -15,6 +15,7 @@ import { useEffect, useState, useTransition } from "react";
 import { getFriendsAction, manageFriendRequestAction, sendFriendRequestAction } from "@/app/actions";
 import type { Friend } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "./ui/skeleton";
 
 export function FriendsContent() {
     const { user, logout } = useAuth();
@@ -36,8 +37,10 @@ export function FriendsContent() {
     };
 
     useEffect(() => {
-        fetchFriends();
-    }, []);
+        if(user) {
+            fetchFriends();
+        }
+    }, [user]);
 
     const handleAddFriend = async () => {
         if (!friendEmail) return;
@@ -48,7 +51,7 @@ export function FriendsContent() {
             } else {
                 toast({ title: "Friend request sent!", description: `Your request to ${friendEmail} has been sent.` });
                 setFriendEmail("");
-                fetchFriends();
+                fetchFriends(); // Refresh the list
             }
         });
     };
@@ -60,7 +63,7 @@ export function FriendsContent() {
                 toast({ title: `Failed to ${action} request`, description: result.error, variant: 'destructive' });
             } else {
                 toast({ title: "Success", description: `Friend request has been ${action}ed.` });
-                fetchFriends();
+                fetchFriends(); // Refresh the list
             }
         });
     }
@@ -78,6 +81,49 @@ export function FriendsContent() {
     const pendingRequests = friends.filter(f => f.status === 'pending');
     const acceptedFriends = friends.filter(f => f.status === 'accepted');
     const requestedFriends = friends.filter(f => f.status === 'requested');
+
+    const renderFriendList = (list: Friend[], type: 'accepted' | 'pending' | 'requested') => {
+        if (isLoading) {
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between"><Skeleton className="h-10 w-full" /></div>
+                    <div className="flex items-center justify-between"><Skeleton className="h-10 w-full" /></div>
+                </div>
+            )
+        }
+
+        if (list.length === 0) {
+            if (type === 'accepted') return <p className="text-muted-foreground">You haven't added any friends yet.</p>;
+            return null;
+        }
+
+        return (
+            <div className="space-y-4">
+                {list.map((friend) => (
+                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                        <div className="flex items-center gap-4">
+                            <Avatar>
+                                <AvatarImage src={friend.photoURL || undefined} alt={friend.name} data-ai-hint="person" />
+                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="font-semibold">{friend.name}</div>
+                                <div className="text-sm text-muted-foreground">{friend.email}</div>
+                            </div>
+                        </div>
+                        {type === 'pending' && (
+                             <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'accept')} disabled={isLoading}><Check className="text-green-500" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'decline')} disabled={isLoading}><X className="text-red-500" /></Button>
+                            </div>
+                        )}
+                         {type === 'accepted' && <Button variant="outline" size="sm" disabled>Start Quiz</Button>}
+                         {type === 'requested' && <Button variant="ghost" size="sm" disabled>Pending</Button>}
+                    </div>
+                ))}
+            </div>
+        )
+    }
 
     return (
         <div className="flex h-screen flex-col bg-background">
@@ -128,7 +174,7 @@ export function FriendsContent() {
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-               <div className="grid gap-6">
+               <div className="grid gap-6 max-w-4xl mx-auto">
                 <Card>
                     <CardHeader>
                         <CardTitle>Add a Friend</CardTitle>
@@ -137,7 +183,9 @@ export function FriendsContent() {
                     <CardContent>
                         <div className="flex items-center gap-2">
                             <Input placeholder="Enter friend's email to add..." value={friendEmail} onChange={(e) => setFriendEmail(e.target.value)} disabled={isLoading} />
-                            <Button onClick={handleAddFriend} disabled={isLoading}><UserPlus className="mr-2"/> Add Friend</Button>
+                            <Button onClick={handleAddFriend} disabled={isLoading}>
+                                {isLoading ? 'Sending...' : <><UserPlus className="mr-2"/> Add Friend</>}
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -148,26 +196,7 @@ export function FriendsContent() {
                             <CardTitle>Pending Requests</CardTitle>
                         </CardHeader>
                         <CardContent>
-                             <div className="space-y-4">
-                                {pendingRequests.map((friend) => (
-                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
-                                        <div className="flex items-center gap-4">
-                                            <Avatar>
-                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
-                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <div className="font-semibold">{friend.name}</div>
-                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'accept')} disabled={isLoading}><Check className="text-green-500" /></Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'decline')} disabled={isLoading}><X className="text-red-500" /></Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                             {renderFriendList(pendingRequests, 'pending')}
                         </CardContent>
                     </Card>
                 )}
@@ -177,27 +206,7 @@ export function FriendsContent() {
                         <CardTitle>Your Friends</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {acceptedFriends.length > 0 ? (
-                             <div className="space-y-4">
-                                {acceptedFriends.map((friend) => (
-                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
-                                        <div className="flex items-center gap-4">
-                                            <Avatar>
-                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
-                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <div className="font-semibold">{friend.name}</div>
-                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
-                                            </div>
-                                        </div>
-                                        <Button variant="outline" size="sm" disabled>Start Quiz</Button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                           <p className="text-muted-foreground">You haven't added any friends yet.</p>
-                        )}
+                       {renderFriendList(acceptedFriends, 'accepted')}
                     </CardContent>
                 </Card>
 
@@ -207,23 +216,7 @@ export function FriendsContent() {
                             <CardTitle>Sent Requests</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {requestedFriends.map((friend) => (
-                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
-                                        <div className="flex items-center gap-4">
-                                            <Avatar>
-                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
-                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <div className="font-semibold">{friend.name}</div>
-                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
-                                            </div>
-                                        </div>
-                                        <Button variant="ghost" size="sm" disabled>Pending</Button>
-                                    </div>
-                                ))}
-                            </div>
+                            {renderFriendList(requestedFriends, 'requested')}
                         </CardContent>
                     </Card>
                 )}
