@@ -78,6 +78,8 @@ export function AuthForm({ type }: AuthFormProps) {
         return 'The email address is not valid. Please enter a valid email.';
       case 'auth/popup-closed-by-user':
         return 'Google Sign-In was cancelled. Please try again.';
+      case 'auth/unauthorized-domain':
+        return 'This domain is not authorized for authentication. Please add it to the authorized domains list in your Firebase project settings.';
       default:
         return error.message;
     }
