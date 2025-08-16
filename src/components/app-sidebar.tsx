@@ -14,7 +14,8 @@ import {
   Sparkles,
   User,
   Youtube,
-  FilePlus2
+  FilePlus2,
+  FileQuestion,
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const menuItems = [
     { name: "Chat", icon: <MessageSquare className="size-4" />, href: "/" },
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
+    { name: "Quiz", icon: <FileQuestion className="size-4" />, href: "/quiz" },
     { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
     { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
