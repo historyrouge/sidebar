@@ -4,10 +4,7 @@ import { headers } from 'next/headers';
 
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-if (!admin.apps.length) {
-    if (!serviceAccount) {
-        throw new Error('Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT environment variable.');
-    }
+if (!admin.apps.length && serviceAccount) {
     admin.initializeApp({
         credential: admin.credential.cert(JSON.parse(serviceAccount)),
         databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
