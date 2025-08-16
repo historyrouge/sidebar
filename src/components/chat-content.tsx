@@ -102,7 +102,7 @@ export function ChatContent({
                     <div className="bg-primary/10 p-4 rounded-full">
                         <GraduationCap className="w-10 h-10 text-primary" />
                     </div>
-                    <h2 className="mt-6 text-2xl font-semibold">How can I help you today?</h2>
+                    <h2 className="mt-6 text-2xl font-semibold">Hi {user?.displayName?.split(' ')[0] || 'there'}!</h2>
                     <p className="text-muted-foreground mt-2 max-w-md">
                         Ask me anything! From general knowledge questions to brainstorming ideas. I'm here to help you learn and explore.
                     </p>
