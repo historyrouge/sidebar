@@ -97,7 +97,7 @@ export function AppSidebar() {
             {renderMenuItems(menuItems)}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-2">
         <SidebarMenu>
            {renderMenuItems(footerMenuItems)}
         </SidebarMenu>
