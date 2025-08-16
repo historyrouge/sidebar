@@ -42,14 +42,11 @@ const menuItems = [
     { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
-];
-
-const footerMenuItems = [
     { name: "Profile", icon: <User className="size-4" />, href: "/profile" },
     { name: "Settings", icon: <Settings className="size-4" />, href: "/settings" },
     { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
     { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
-]
+];
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
@@ -94,16 +91,11 @@ export function AppSidebar() {
             </Button>
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 flex-grow">
         <SidebarMenu>
             {renderMenuItems(menuItems)}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="mt-auto p-2 pb-4">
-        <SidebarMenu>
-           {renderMenuItems(footerMenuItems)}
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
