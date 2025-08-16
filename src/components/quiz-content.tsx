@@ -12,10 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Moon, Settings, Sun, User, FileQuestion } from "lucide-react";
+import { LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { SidebarTrigger } from "./ui/sidebar";
+import { QuizGenerator } from "./quiz-generator";
 
 export function QuizContent() {
     const { user, logout } = useAuth();
@@ -78,14 +79,8 @@ export function QuizContent() {
                     </DropdownMenu>
                 </div>
             </header>
-            <main className="flex flex-1 flex-col items-center justify-center p-4 text-center">
-                <div className="bg-primary/10 p-4 rounded-full">
-                    <FileQuestion className="w-12 h-12 text-primary" />
-                </div>
-                <h2 className="mt-6 text-2xl font-semibold">Quiz Section</h2>
-                <p className="text-muted-foreground mt-2 max-w-md">
-                    This section is under construction. Quizzes generated from your study materials will appear here.
-                </p>
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                <QuizGenerator />
             </main>
         </div>
     );
