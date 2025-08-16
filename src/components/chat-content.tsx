@@ -104,7 +104,7 @@ export function ChatContent({
                     </div>
                     <h2 className="mt-6 text-2xl font-semibold">Hi {user?.displayName?.split(' ')[0] || 'there'}!</h2>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        Ask me anything! From general knowledge questions to brainstorming ideas. I'm here to help you learn and explore.
+                        How can I help you today?
                     </p>
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
                         {suggestionPrompts.map(prompt => (
