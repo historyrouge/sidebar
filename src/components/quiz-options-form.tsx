@@ -47,6 +47,7 @@ export function QuizOptionsForm() {
             const result = await generateQuizAction({
                 content,
                 difficulty: difficulty as "easy" | "medium" | "hard",
+                numQuestions: parseInt(numQuestions),
             });
             if (result.error) {
                 toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
@@ -117,6 +118,9 @@ export function QuizOptionsForm() {
                                     <SelectItem value="10">10 Questions</SelectItem>
                                     <SelectItem value="15">15 Questions</SelectItem>
                                     <SelectItem value="20">20 Questions</SelectItem>
+                                    <SelectItem value="25">25 Questions</SelectItem>
+                                    <SelectItem value="50">50 Questions</SelectItem>
+                                    <SelectItem value="100">100 Questions</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

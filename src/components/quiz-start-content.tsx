@@ -15,9 +15,14 @@ type QuizData = {
     }
 }
 
+type Answers = {
+    [key: number]: string;
+}
+
 export function QuizStartContent() {
     const [quizData, setQuizData] = useState<QuizData | null>(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [answers, setAnswers] = useState<Answers>({});
     const router = useRouter();
     const { toast } = useToast();
 
@@ -27,8 +32,8 @@ export function QuizStartContent() {
             if (savedQuiz) {
                 const parsedData: QuizData = JSON.parse(savedQuiz);
                 // Trim the quiz to the selected number of questions
-                parsedData.quizzes = parsedData.quizzes.slice(0, parsedData.options.numQuestions);
-                setQuizData(parsedData);
+                const trimmedQuizzes = parsedData.quizzes.slice(0, parsedData.options.numQuestions);
+                setQuizData({...parsedData, quizzes: trimmedQuizzes });
             } else {
                 router.push('/quiz');
                 toast({ title: "No quiz found.", description: "Please generate a quiz first.", variant: "destructive" });
@@ -40,21 +45,37 @@ export function QuizStartContent() {
     }, [router, toast]);
 
     const handleAnswer = (answer: string) => {
-        // Here you would handle the answer logic, e.g., check if correct, store score, etc.
-        console.log(`Answered with: ${answer}`);
-        // For now, just move to the next question.
+        setAnswers(prev => ({ ...prev, [currentQuestionIndex]: answer }));
+    };
+
+    const handleNext = () => {
         if (quizData && currentQuestionIndex < quizData.quizzes.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
-        } else {
-            // Quiz finished
-            alert("Quiz finished!");
-            // You might want to navigate to a results page here.
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(prev => prev - 1);
         }
     };
     
+    const handleSubmit = () => {
+        // Here you would calculate the score and show the results.
+        // For now, we just show an alert.
+        const score = quizData?.quizzes.reduce((acc, quiz, index) => {
+            if (answers[index] === quiz.answer) {
+                return acc + 1;
+            }
+            return acc;
+        }, 0)
+        alert(`Quiz finished! Your score: ${score}/${quizData?.quizzes.length}`);
+        router.push("/quiz");
+    }
+
     const handleTimeUp = () => {
         alert("Time's up!");
-        // Navigate to results page or show score.
+        handleSubmit();
     }
 
     if (!quizData) {
@@ -62,6 +83,10 @@ export function QuizStartContent() {
     }
 
     const currentQuestion = quizData.quizzes[currentQuestionIndex];
+    if (!currentQuestion) {
+        return <div className="flex h-screen w-full items-center justify-center">Error: Question not found.</div>;
+    }
+
 
     return (
         <QuizInterface 
@@ -71,7 +96,11 @@ export function QuizStartContent() {
             totalQuestions={quizData.quizzes.length}
             questionText={currentQuestion.question}
             options={currentQuestion.options}
+            selectedAnswer={answers[currentQuestionIndex]}
             onAnswer={handleAnswer}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onSubmit={handleSubmit}
             onTimeUp={handleTimeUp}
             autoStart
         />

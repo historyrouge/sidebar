@@ -6,6 +6,7 @@ import { Clock, BookOpen, Hash, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 type QuizInterfaceProps = {
   subject?: string;
@@ -16,9 +17,11 @@ type QuizInterfaceProps = {
   autoStart?: boolean;
   questionText?: string;
   options?: string[];
+  selectedAnswer?: string;
   onAnswer?: (answer: string) => void;
   onNext?: () => void;
   onPrev?: () => void;
+  onSubmit?: () => void;
   isDemo?: boolean;
 };
 
@@ -41,10 +44,12 @@ export default function QuizInterface(props: QuizInterfaceProps) {
     autoStart = true,
     questionText = "What is 2 + 2?",
     options = ["2", "3", "4", "5"],
+    selectedAnswer,
     onAnswer,
     onTimeUp,
     onNext,
     onPrev,
+    onSubmit,
     isDemo = false,
   } = props;
 
@@ -92,8 +97,10 @@ export default function QuizInterface(props: QuizInterfaceProps) {
     return Math.max(0, Math.min(100, (currentQuestion / totalQuestions) * 100));
   }, [currentQuestion, totalQuestions]);
 
+  const isLastQuestion = currentQuestion === totalQuestions;
+
   return (
-    <div className="min-h-screen bg-muted/20 text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-50 backdrop-blur bg-background/80 border-b">
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -104,20 +111,10 @@ export default function QuizInterface(props: QuizInterfaceProps) {
                 size="sm"
                 variant={running ? "secondary" : "default"}
                 onClick={() => setRunning((s) => !s)}
-                className="rounded-2xl"
+                className="rounded-full px-4"
               >
                 {running ? "Pause" : "Resume"}
               </Button>
-              {isDemo && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setRemaining(durationSec)}
-                  className="rounded-2xl"
-                >
-                  Reset
-                </Button>
-              )}
             </div>
           </div>
 
@@ -135,31 +132,34 @@ export default function QuizInterface(props: QuizInterfaceProps) {
             </div>
           </div>
         </div>
-        <div className="mx-auto max-w-5xl px-4 pb-3">
-          <Progress value={progress} className="h-2 rounded-full" />
+        <div className="h-1 w-full bg-muted">
+          <Progress value={progress} className="h-1 rounded-none bg-primary" />
         </div>
       </div>
 
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
           >
-            <Card className="rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-3">Question {currentQuestion}</h2>
-                <p className="text-foreground/90 mb-6 font-medium">{questionText}</p>
+            <Card className="rounded-2xl shadow-lg border-0 bg-card">
+              <CardContent className="p-8">
+                <h2 className="text-xl font-semibold mb-2">Question {currentQuestion}</h2>
+                <p className="text-foreground/90 mb-8 text-lg">{questionText}</p>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {options.map((opt, idx) => (
                     <Button
                       key={idx}
                       variant="outline"
-                      className="w-full h-auto py-3 justify-start rounded-xl"
+                      className={cn(
+                        "w-full h-auto py-4 justify-start rounded-xl text-base border-border/50 hover:bg-primary/10 hover:border-primary",
+                        selectedAnswer === opt && "bg-primary/20 border-primary"
+                        )}
                       onClick={() => onAnswer?.(opt)}
                     >
                       {opt}
@@ -167,24 +167,30 @@ export default function QuizInterface(props: QuizInterfaceProps) {
                   ))}
                 </div>
 
-                {isDemo && (
-                  <div className="flex items-center gap-3 mt-6">
-                    <Button onClick={onPrev} variant="secondary" className="rounded-2xl">
-                      <ArrowLeft className="mr-2" />
-                      Previous
-                    </Button>
-                    <Button onClick={onNext} className="rounded-2xl">
-                      Next
-                      <ArrowRight className="ml-2" />
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
 
-        <div className="mt-6">
+        <div className="mt-8 flex justify-between items-center">
+            <Button onClick={onPrev} variant="secondary" disabled={currentQuestion === 1}>
+                <ArrowLeft className="mr-2" />
+                Previous
+            </Button>
+
+             {isLastQuestion ? (
+                <Button onClick={onSubmit} size="lg" className="bg-green-600 hover:bg-green-700">
+                    Submit Quiz
+                </Button>
+            ) : (
+                <Button onClick={onNext}>
+                    Next
+                    <ArrowRight className="ml-2" />
+                </Button>
+            )}
+        </div>
+
+        <div className="mt-8">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
             <span>Question Progress</span>
             <span>
