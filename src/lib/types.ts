@@ -13,9 +13,12 @@ export interface StudyMaterialWithId extends StudyMaterial {
 }
 
 export interface UserProfile {
+    uid: string;
     name: string;
+    email: string;
     college: string;
     favoriteSubject: string;
+    photoURL?: string;
 }
 
 export interface Friend {

@@ -12,8 +12,9 @@ import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agen
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from "@/ai/flows/youtube-transcript";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc, writeBatch, documentId, and } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { getAuthenticatedUser } from "@/lib/firebase-admin";
 import { StudyMaterial, StudyMaterialWithId, UserProfile, Friend } from "@/lib/types";
 
 
@@ -23,36 +24,174 @@ type ActionResult<T> = {
 };
 
 export async function sendFriendRequestAction(email: string): Promise<ActionResult<{ success: boolean }>> {
-    // This is a placeholder implementation.
-    // In a real application, you would need a robust way to get the
-    // currently authenticated user on the server.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to send friend requests." };
+        }
+
+        if (currentUser.email === email) {
+            return { error: "You cannot send a friend request to yourself." };
+        }
+
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { error: "User with that email address not found." };
+        }
+
+        const targetUserDoc = querySnapshot.docs[0];
+        const targetUserId = targetUserDoc.id;
+
+        const currentUserFriendsRef = collection(db, `users/${currentUser.uid}/friends`);
+        const targetUserFriendsRef = collection(db, `users/${targetUserId}/friends`);
+
+        // Check if they are already friends or a request is pending
+        const existingFriendship = await getDoc(doc(currentUserFriendsRef, targetUserId));
+        if (existingFriendship.exists()) {
+             const status = existingFriendship.data().status;
+             if (status === 'accepted') return { error: "You are already friends with this user." };
+             if (status === 'pending') return { error: "You have already received a request from this user." };
+             if (status === 'requested') return { error: "You have already sent a request to this user." };
+        }
+
+        const batch = writeBatch(db);
+
+        // Add to sender's friends list with 'requested' status
+        batch.set(doc(currentUserFriendsRef, targetUserId), { 
+            status: 'requested',
+            email: targetUserDoc.data().email,
+            name: targetUserDoc.data().name,
+            photoURL: targetUserDoc.data().photoURL || ''
+        });
+
+        // Add to receiver's friends list with 'pending' status
+        batch.set(doc(targetUserFriendsRef, currentUser.uid), {
+             status: 'pending',
+             email: currentUser.email,
+             name: currentUser.name,
+             photoURL: currentUser.picture || ''
+        });
+
+        await batch.commit();
+
+        return { data: { success: true } };
+
+    } catch (e: any) {
+        console.error("sendFriendRequestAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
+
 
 export async function manageFriendRequestAction(friendId: string, action: 'accept' | 'decline'): Promise<ActionResult<{ success: boolean }>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to manage friend requests." };
+        }
+
+        const currentUserFriendsRef = collection(db, `users/${currentUser.uid}/friends`);
+        const targetUserFriendsRef = collection(db, `users/${friendId}/friends`);
+
+        const batch = writeBatch(db);
+
+        if (action === 'accept') {
+            batch.update(doc(currentUserFriendsRef, friendId), { status: 'accepted' });
+            batch.update(doc(targetUserFriendsRef, currentUser.uid), { status: 'accepted' });
+        } else { // decline
+            batch.delete(doc(currentUserFriendsRef, friendId));
+            batch.delete(doc(targetUserFriendsRef, currentUser.uid));
+        }
+
+        await batch.commit();
+        return { data: { success: true } };
+    } catch (e: any) {
+        console.error("manageFriendRequestAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
-
 export async function getFriendsAction(): Promise<ActionResult<Friend[]>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to view friends." };
+        }
+        
+        const friendsRef = collection(db, `users/${currentUser.uid}/friends`);
+        const snapshot = await getDocs(friendsRef);
+        
+        const friends = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Friend[];
+
+        return { data: friends };
+    } catch (e: any) {
+        console.error("getFriendsAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 export async function getUserProfileAction(): Promise<ActionResult<UserProfile>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to view your profile." };
+        }
+        const userRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(userRef);
+
+        if (!docSnap.exists()) {
+            return { error: "User profile not found." };
+        }
+
+        return { data: docSnap.data() as UserProfile };
+    } catch (e: any) {
+        console.error("getUserProfileAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
-export async function updateUserProfile(profileData: UserProfile) {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+export async function updateUserProfile(profileData: Partial<UserProfile>) {
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to update your profile." };
+        }
+        const userRef = doc(db, "users", currentUser.uid);
+        await updateDoc(userRef, profileData);
+        return { data: { success: true } };
+
+    } catch (e: any) {
+        console.error("updateUserProfile error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 export async function deleteUserAction(): Promise<ActionResult<{ success: boolean }>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to delete your account." };
+        }
+        // This is a simplified deletion. A full implementation would need to handle
+        // removing the user from friend lists, deleting their content, etc.
+        // It might be better handled by a Firebase Function.
+        const userRef = doc(db, "users", currentUser.uid);
+        await deleteDoc(userRef);
+        
+        // Note: This does NOT delete the user from Firebase Auth.
+        // That requires the Admin SDK and is best done in a secure backend environment.
+
+        return { data: { success: true } };
+    } catch (e: any) {
+        console.error("deleteUserAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 export async function saveStudyMaterialAction(
@@ -60,18 +199,80 @@ export async function saveStudyMaterialAction(
     title: string,
     materialId?: string | null
   ): Promise<ActionResult<{ id: string }>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to save materials." };
+        }
+
+        const materialsRef = collection(db, "studyMaterials");
+        
+        if (materialId) {
+            const materialRef = doc(db, "studyMaterials", materialId);
+            const docSnap = await getDoc(materialRef);
+            if (docSnap.exists() && docSnap.data().userId === currentUser.uid) {
+                await updateDoc(materialRef, { content, title });
+                return { data: { id: materialId } };
+            } else {
+                // If it doesn't exist or user doesn't own it, create a new one.
+                 const newDocRef = await addDoc(materialsRef, {
+                    userId: currentUser.uid,
+                    content,
+                    title,
+                    createdAt: serverTimestamp()
+                });
+                return { data: { id: newDocRef.id } };
+            }
+        } else {
+             const newDocRef = await addDoc(materialsRef, {
+                userId: currentUser.uid,
+                content,
+                title,
+                createdAt: serverTimestamp()
+            });
+            return { data: { id: newDocRef.id } };
+        }
+
+    } catch (e: any) {
+        console.error("saveStudyMaterialAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
   
 export async function getStudyMaterialsAction(): Promise<ActionResult<StudyMaterialWithId[]>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+   try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to view materials." };
+        }
+        const q = query(collection(db, "studyMaterials"), where("userId", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        const materials = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StudyMaterialWithId[];
+        return { data: materials };
+    } catch (e: any) {
+        console.error("getStudyMaterialsAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 export async function getStudyMaterialByIdAction(id: string): Promise<ActionResult<StudyMaterial>> {
-    // This is a placeholder implementation.
-    return { error: "This feature is not yet implemented." };
+    try {
+        const currentUser = await getAuthenticatedUser();
+        if (!currentUser) {
+            return { error: "You must be logged in to view materials." };
+        }
+        const materialRef = doc(db, "studyMaterials", id);
+        const docSnap = await getDoc(materialRef);
+
+        if (!docSnap.exists() || docSnap.data().userId !== currentUser.uid) {
+            return { error: "Material not found or you do not have permission to view it." };
+        }
+
+        return { data: docSnap.data() as StudyMaterial };
+    } catch (e: any) {
+        console.error("getStudyMaterialByIdAction error:", e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 

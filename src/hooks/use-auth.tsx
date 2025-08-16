@@ -7,6 +7,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
 import {
   onAuthStateChanged,
@@ -15,19 +16,18 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   UserCredential,
   getAdditionalUserInfo,
   GithubAuthProvider,
+  updateProfile,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "./use-toast";
 import { useRouter } from "next/navigation";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { UserProfile } from "@/lib/types";
-
 
 interface AuthContextType {
   user: User | null;
@@ -37,27 +37,11 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   logout: () => Promise<any>;
+  getIdToken: () => Promise<string | null>;
+  updateUserProfileInAuth: (displayName: string, photoURL?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const handleNewUser = async (user: User) => {
-    const userRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(userRef);
-    if (!docSnap.exists()) {
-        // Create user document in Firestore
-        const profile: UserProfile = {
-            name: user.displayName || "ScholarSage User",
-            college: "",
-            favoriteSubject: ""
-        };
-        await setDoc(userRef, {
-            ...profile,
-            email: user.email,
-            photoURL: user.photoURL,
-        });
-    }
-}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -65,6 +49,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
 
+  const handleNewUser = useCallback(async (user: User, additionalInfo?: {name?: string, college?: string, favoriteSubject?: string}) => {
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+        const profile: UserProfile = {
+            uid: user.uid,
+            name: additionalInfo?.name || user.displayName || "ScholarSage User",
+            email: user.email!,
+            college: additionalInfo?.college || "",
+            favoriteSubject: additionalInfo?.favoriteSubject || ""
+        };
+        await setDoc(userRef, {
+            ...profile,
+            photoURL: user.photoURL,
+        });
+        return true; // Indicates a new user was created
+    }
+    return false; // Indicates an existing user
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -80,11 +83,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .then(async (result) => {
         if (result) {
           const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
-          await handleNewUser(result.user);
-          if (isNewUser) {
-            router.push('/onboarding');
+          if(isNewUser) {
+             await handleNewUser(result.user);
+             router.push('/onboarding');
           } else {
-            router.push('/');
+             router.push('/');
           }
         }
       })
@@ -95,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             variant: "destructive",
         });
       });
-  }, [router, toast]);
+  }, [router, toast, handleNewUser]);
 
   const signUp = async (email: string, pass: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -118,8 +121,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logout = () => {
+    router.push('/login');
     return signOut(auth);
   };
+  
+  const getIdToken = async () => {
+    if (!auth.currentUser) return null;
+    return await auth.currentUser.getIdToken();
+  }
+
+  const updateUserProfileInAuth = async (displayName: string, photoURL?: string) => {
+    if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName, photoURL });
+        // Manually update the user object to reflect changes immediately
+        setUser({ ...auth.currentUser });
+    }
+  };
+
 
   const value = {
     user,
@@ -129,6 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGoogle,
     signInWithGitHub,
     logout,
+    getIdToken,
+    handleNewUser, // Exposing this for onboarding
+    updateUserProfileInAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -139,5 +160,5 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context;
+  return context as AuthContextType & { handleNewUser: (user: User, additionalInfo?: {name?: string, college?: string, favoriteSubject?: string}) => Promise<boolean> };
 };

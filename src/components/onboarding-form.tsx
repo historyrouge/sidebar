@@ -12,18 +12,16 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { updateUserProfile } from "@/app/actions";
-import { updateProfile } from "firebase/auth";
-
 
 export function OnboardingForm() {
-  const { user } = useAuth();
+  const { user, handleNewUser, updateUserProfileInAuth } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [college, setCollege] = useState("");
   const [name, setName] = useState(user?.displayName || "");
+  const [college, setCollege] = useState("");
   const [favoriteSubject, setFavoriteSubject] = useState("");
 
   const totalSteps = 3;
@@ -65,7 +63,7 @@ export function OnboardingForm() {
     try {
         // Update Firebase Auth profile displayName
         if (user.displayName !== name) {
-            await updateProfile(user, { displayName: name });
+           await updateUserProfileInAuth(name);
         }
 
         const result = await updateUserProfile({
