@@ -2,14 +2,21 @@
 import * as admin from 'firebase-admin';
 import { headers } from 'next/headers';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-
-if (!admin.apps.length && serviceAccount) {
-    admin.initializeApp({
-        credential: admin.credential.cert(JSON.parse(serviceAccount)),
-        databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
-    });
+const initializeFirebaseAdmin = () => {
+    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (serviceAccount && !admin.apps.length) {
+        try {
+            admin.initializeApp({
+                credential: admin.credential.cert(JSON.parse(serviceAccount)),
+                databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
+            });
+        } catch (e: any) {
+            console.error('Firebase admin initialization error', e.stack);
+        }
+    }
 }
+
+initializeFirebaseAdmin();
 
 
 export async function getAuthenticatedUser() {
@@ -17,6 +24,11 @@ export async function getAuthenticatedUser() {
     const idToken = headerList.get('Authorization')?.split('Bearer ')[1];
 
     if (!idToken) {
+        return null;
+    }
+
+    if (!admin.apps.length) {
+        console.error('Firebase admin is not initialized');
         return null;
     }
 
@@ -29,5 +41,13 @@ export async function getAuthenticatedUser() {
     }
 }
 
-export const adminDb = admin.firestore();
-export const adminAuth = admin.auth();
+let db: admin.firestore.Firestore | null = null;
+let auth: admin.auth.Auth | null = null;
+
+if (admin.apps.length) {
+    db = admin.firestore();
+    auth = admin.auth();
+}
+
+export const adminDb = db;
+export const adminAuth = auth;
