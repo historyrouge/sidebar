@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateQuizAction, GenerateQuizzesOutput } from "@/app/actions";
+import { generateQuizAction } from "@/app/actions";
 import { Loader2 } from "lucide-react";
 
 
@@ -47,17 +47,29 @@ export function QuizOptionsForm() {
             const result = await generateQuizAction({
                 content,
                 difficulty: difficulty as "easy" | "medium" | "hard",
-                // numQuestions is not yet supported by the AI flow, but we pass it for future use.
             });
             if (result.error) {
                 toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
             } else if (result.data) {
                 toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..."});
-                // For now, just log the result. The next step will be to redirect to the final quiz page.
-                console.log({
-                    quiz: result.data.quizzes,
-                    options: { difficulty, numQuestions, timeLimit }
-                });
+                try {
+                    const quizData = {
+                        quizzes: result.data.quizzes,
+                        options: {
+                            difficulty,
+                            numQuestions: parseInt(numQuestions),
+                            timeLimit: parseInt(timeLimit) * 60, // convert to seconds
+                        }
+                    };
+                    localStorage.setItem('currentQuiz', JSON.stringify(quizData));
+                    router.push('/quiz/start');
+                } catch (e) {
+                     toast({
+                        title: "Could not start quiz",
+                        description: "There was an error while trying to proceed. Please try again.",
+                        variant: "destructive",
+                    });
+                }
             }
         });
     };
