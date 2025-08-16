@@ -31,6 +31,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 
 const menuItems = [
+    { name: "Chat", icon: <MessageSquare className="size-4" />, href: "/" },
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
     { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
