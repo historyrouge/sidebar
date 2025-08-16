@@ -15,6 +15,7 @@ const GenerateQuizzesInputSchema = z.object({
   content: z
     .string()
     .describe('The content to generate quizzes from.'),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional().describe('The desired difficulty of the quiz.'),
 });
 
 export type GenerateQuizzesInput = z.infer<typeof GenerateQuizzesInputSchema>;
@@ -41,6 +42,10 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateQuizzesInputSchema},
   output: {schema: GenerateQuizzesOutputSchema},
   prompt: `You are a quiz generator. Generate a list of multiple-choice quiz questions from the following content. For each question, provide the question text, an array of 4 different options, and the correct answer.
+
+{{#if difficulty}}
+The quiz should be of {{difficulty}} difficulty.
+{{/if}}
 
 Content: {{{content}}}`,
 });

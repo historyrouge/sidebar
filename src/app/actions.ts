@@ -5,7 +5,7 @@ import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flows/chat-tutor";
 import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
-import { generateQuizzes, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
+import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
 import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agent";
@@ -205,10 +205,10 @@ export async function generateFlashcardsAction(
 }
 
 export async function generateQuizAction(
-  content: string
+  input: GenerateQuizzesInput
 ): Promise<ActionResult<GenerateQuizzesOutput>> {
   try {
-    const output = await generateQuizzes({ content });
+    const output = await generateQuizzes(input);
     return { data: output };
   } catch (e: any) {
     console.error(e);
