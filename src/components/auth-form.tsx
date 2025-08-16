@@ -107,20 +107,14 @@ export function AuthForm({ type }: AuthFormProps) {
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
     try {
-      const result = await signInWithGoogle();
-      // Check if the user is new to redirect to onboarding
-      if (result.additionalUserInfo?.isNewUser) {
-        router.push("/onboarding");
-      } else {
-        router.push("/");
-      }
+      await signInWithGoogle();
+      // The redirect will be handled by the effect in AuthProvider
     } catch (error: any) {
       toast({
         title: "Google Sign-In Failed",
         description: getFriendlyErrorMessage(error),
         variant: "destructive",
       });
-    } finally {
       setGoogleLoading(false);
     }
   }
