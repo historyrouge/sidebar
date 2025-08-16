@@ -5,6 +5,7 @@ import QuizInterface from "./quiz-interface";
 import { GenerateQuizzesOutput } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 
 type QuizData = {
     quizzes: GenerateQuizzesOutput['quizzes'];
@@ -23,6 +24,7 @@ export function QuizStartContent() {
     const [quizData, setQuizData] = useState<QuizData | null>(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Answers>({});
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -31,6 +33,7 @@ export function QuizStartContent() {
             const savedQuiz = localStorage.getItem('currentQuiz');
             if (savedQuiz) {
                 const parsedData: QuizData = JSON.parse(savedQuiz);
+                // Ensure number of questions matches the options
                 const trimmedQuizzes = parsedData.quizzes.slice(0, parsedData.options.numQuestions);
                 setQuizData({...parsedData, quizzes: trimmedQuizzes });
             } else {
@@ -77,6 +80,8 @@ export function QuizStartContent() {
                 answers,
             };
             localStorage.setItem('quizResults', JSON.stringify(resultsData));
+            // Cleanup current quiz from storage
+            localStorage.removeItem('currentQuiz');
             router.push("/quiz/results");
         } catch (error) {
             toast({ title: "Error", description: "Could not save quiz results.", variant: "destructive"});
@@ -99,20 +104,36 @@ export function QuizStartContent() {
 
 
     return (
-        <QuizInterface 
-            subject={quizData.options.difficulty}
-            durationSec={quizData.options.timeLimit}
-            currentQuestion={currentQuestionIndex + 1}
-            totalQuestions={quizData.quizzes.length}
-            questionText={currentQuestion.question}
-            options={currentQuestion.options}
-            selectedAnswer={answers[currentQuestionIndex]}
-            onAnswer={handleAnswer}
-            onNext={handleNext}
-            onPrev={handlePrev}
-            onSubmit={handleSubmit}
-            onTimeUp={handleTimeUp}
-            autoStart
-        />
+        <>
+            <QuizInterface 
+                subject={quizData.options.difficulty}
+                durationSec={quizData.options.timeLimit}
+                currentQuestion={currentQuestionIndex + 1}
+                totalQuestions={quizData.quizzes.length}
+                questionText={currentQuestion.question}
+                options={currentQuestion.options}
+                selectedAnswer={answers[currentQuestionIndex]}
+                onAnswer={handleAnswer}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onSubmit={() => setShowSubmitConfirm(true)}
+                onTimeUp={handleTimeUp}
+                autoStart
+            />
+            <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        You cannot change your answers after submitting.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <Button variant="ghost" onClick={() => setShowSubmitConfirm(false)}>Cancel</Button>
+                    <AlertDialogAction onClick={handleSubmit}>Submit</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }

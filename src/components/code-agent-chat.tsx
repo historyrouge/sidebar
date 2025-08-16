@@ -18,6 +18,13 @@ type Message = {
   content: string;
 };
 
+const suggestionPrompts = [
+    "Write a python function to reverse a string",
+    "Explain the difference between let, const, and var in JavaScript",
+    "How do I create a React component?",
+    "Debug this code: function greet() { console.log(Hello, world!'); }",
+]
+
 export function CodeAgentChat({
     history,
     setHistory,
@@ -37,11 +44,13 @@ export function CodeAgentChat({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent, message?: string) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    const messageToSend = message || input;
+    if (!messageToSend.trim()) return;
 
-    const userMessage: Message = { role: "user", content: input };
+
+    const userMessage: Message = { role: "user", content: messageToSend };
     setHistory((prev) => [...prev, userMessage]);
     setInput("");
 
@@ -77,7 +86,7 @@ export function CodeAgentChat({
   }, [history]);
 
   const getInitials = (name?: string | null) => {
-    if (!name) return "SS";
+    if (!name) return "U";
     const names = name.split(' ');
     if (names.length > 1) {
       return names[0][0] + names[names.length - 1][0];
@@ -91,13 +100,25 @@ export function CodeAgentChat({
             <div className="mx-auto max-w-3xl w-full p-4 space-y-6 pb-24">
             {history.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center">
-                    <div className="bg-primary/10 p-4 rounded-full">
-                        <Code className="w-10 h-10 text-primary" />
+                    <div className="bg-primary/10 p-4 rounded-full mb-4">
+                        <Code className="w-12 h-12 text-primary" />
                     </div>
-                    <h2 className="mt-6 text-2xl font-semibold">Code Agent</h2>
+                    <h2 className="mt-6 text-3xl font-semibold">Code Agent</h2>
                     <p className="text-muted-foreground mt-2 max-w-md">
                         Your AI-powered coding assistant. Ask me to write code, debug a function, or explain a complex algorithm.
                     </p>
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+                        {suggestionPrompts.map(prompt => (
+                            <Button 
+                                key={prompt}
+                                variant="outline"
+                                className="text-left justify-start h-auto py-3 px-4 text-sm"
+                                onClick={(e) => handleSendMessage(e, prompt)}
+                                >
+                                    {prompt}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             )}
             {history.map((message, index) => (
@@ -145,7 +166,7 @@ export function CodeAgentChat({
             </div>
         </ScrollArea>
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-4">
-             <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-3xl mx-auto">
+             <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
                 <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}

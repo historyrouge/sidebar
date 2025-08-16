@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
-import { Check, LogOut, Moon, Plus, Settings, Sun, User, UserPlus, X } from "lucide-react";
+import { Check, LogOut, Loader2, Moon, Plus, Settings, Sun, User, UserPlus, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -22,6 +22,7 @@ export function FriendsContent() {
     const { theme, setTheme } = useTheme();
     const [friends, setFriends] = useState<Friend[]>([]);
     const [isLoading, startLoading] = useTransition();
+    const [isActionLoading, startActionLoading] = useTransition();
     const [friendEmail, setFriendEmail] = useState("");
     const { toast } = useToast();
 
@@ -44,7 +45,7 @@ export function FriendsContent() {
 
     const handleAddFriend = async () => {
         if (!friendEmail) return;
-        startLoading(async () => {
+        startActionLoading(async () => {
             const result = await sendFriendRequestAction(friendEmail);
             if (result.error) {
                 toast({ title: "Failed to send request", description: result.error, variant: 'destructive' });
@@ -57,12 +58,12 @@ export function FriendsContent() {
     };
     
     const handleManageRequest = async (friendId: string, action: 'accept' | 'decline') => {
-        startLoading(async () => {
+        startActionLoading(async () => {
             const result = await manageFriendRequestAction(friendId, action);
              if (result.error) {
                 toast({ title: `Failed to ${action} request`, description: result.error, variant: 'destructive' });
             } else {
-                toast({ title: "Success", description: `Friend request has been ${action}ed.` });
+                toast({ title: "Success", description: `Friend request has been ${action === 'accept' ? 'accepted' : 'declined'}.` });
                 fetchFriends(); // Refresh the list
             }
         });
@@ -70,7 +71,7 @@ export function FriendsContent() {
 
 
     const getInitials = (name?: string | null) => {
-        if (!name) return "SS";
+        if (!name) return "U";
         const names = name.split(' ');
         if (names.length > 1) {
             return names[0][0] + names[names.length - 1][0];
@@ -86,22 +87,24 @@ export function FriendsContent() {
         if (isLoading) {
             return (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between"><Skeleton className="h-10 w-full" /></div>
-                    <div className="flex items-center justify-between"><Skeleton className="h-10 w-full" /></div>
+                    <div className="flex items-center justify-between gap-4"><Skeleton className="h-12 w-12 rounded-full" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="flex items-center justify-between gap-4"><Skeleton className="h-12 w-12 rounded-full" /><Skeleton className="h-10 w-full" /></div>
                 </div>
             )
         }
 
         if (list.length === 0) {
-            if (type === 'accepted') return <p className="text-muted-foreground">You haven't added any friends yet.</p>;
+            if (type === 'accepted') return <p className="text-sm text-center text-muted-foreground py-4">You haven't added any friends yet.</p>;
+            if (type === 'pending') return <p className="text-sm text-center text-muted-foreground py-4">No new friend requests.</p>;
+            if (type === 'requested') return <p className="text-sm text-center text-muted-foreground py-4">No pending sent requests.</p>;
             return null;
         }
 
         return (
-            <div className="space-y-4">
+            <div className="space-y-2">
                 {list.map((friend) => (
-                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
-                        <div className="flex items-center gap-4">
+                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
                             <Avatar>
                                 <AvatarImage src={friend.photoURL || undefined} alt={friend.name} data-ai-hint="person" />
                                 <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
@@ -113,8 +116,8 @@ export function FriendsContent() {
                         </div>
                         {type === 'pending' && (
                              <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'accept')} disabled={isLoading}><Check className="text-green-500" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'decline')} disabled={isLoading}><X className="text-red-500" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'accept')} disabled={isActionLoading}><Check className="text-green-500" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'decline')} disabled={isActionLoading}><X className="text-red-500" /></Button>
                             </div>
                         )}
                          {type === 'accepted' && <Button variant="outline" size="sm" disabled>Start Quiz</Button>}
@@ -173,18 +176,18 @@ export function FriendsContent() {
                     </DropdownMenu>
                 </div>
             </header>
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-muted/40">
                <div className="grid gap-6 max-w-4xl mx-auto">
                 <Card>
                     <CardHeader>
                         <CardTitle>Add a Friend</CardTitle>
-                        <CardDescription>Connect with other ScholarSage users to study together.</CardDescription>
+                        <CardDescription>Connect with other ScholarSage users by sending a friend request.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-center gap-2">
-                            <Input placeholder="Enter friend's email to add..." value={friendEmail} onChange={(e) => setFriendEmail(e.target.value)} disabled={isLoading} />
-                            <Button onClick={handleAddFriend} disabled={isLoading}>
-                                {isLoading ? 'Sending...' : <><UserPlus className="mr-2"/> Add Friend</>}
+                        <div className="flex w-full max-w-sm items-center space-x-2">
+                            <Input placeholder="Enter friend's email" value={friendEmail} onChange={(e) => setFriendEmail(e.target.value)} disabled={isActionLoading} />
+                            <Button onClick={handleAddFriend} disabled={isActionLoading || !friendEmail}>
+                                {isActionLoading ? <Loader2 className="mr-2 animate-spin" /> : <UserPlus className="mr-2"/>} Add Friend
                             </Button>
                         </div>
                     </CardContent>
@@ -194,6 +197,7 @@ export function FriendsContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Pending Requests</CardTitle>
+                            <CardDescription>Accept or decline requests from other users.</CardDescription>
                         </CardHeader>
                         <CardContent>
                              {renderFriendList(pendingRequests, 'pending')}
@@ -204,6 +208,7 @@ export function FriendsContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Your Friends</CardTitle>
+                         <CardDescription>Challenge your friends to a quiz!</CardDescription>
                     </CardHeader>
                     <CardContent>
                        {renderFriendList(acceptedFriends, 'accepted')}
@@ -214,6 +219,7 @@ export function FriendsContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Sent Requests</CardTitle>
+                            <CardDescription>These are the requests you've sent that haven't been accepted yet.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {renderFriendList(requestedFriends, 'requested')}

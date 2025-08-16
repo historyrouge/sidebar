@@ -85,7 +85,7 @@ export function ChatContent({
   }, [history]);
 
   const getInitials = (name?: string | null) => {
-    if (!name) return "SS";
+    if (!name) return "U";
     const names = name.split(' ');
     if (names.length > 1) {
       return names[0][0] + names[names.length - 1][0];
@@ -99,19 +99,19 @@ export function ChatContent({
             <div className="mx-auto max-w-3xl w-full p-4 space-y-6 pb-24">
             {history.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center">
-                    <div className="bg-primary/10 p-4 rounded-full">
-                        <GraduationCap className="w-10 h-10 text-primary" />
+                    <div className="bg-primary/10 p-4 rounded-full mb-4">
+                        <GraduationCap className="w-12 h-12 text-primary" />
                     </div>
-                    <h2 className="mt-6 text-2xl font-semibold">Hi there!</h2>
+                    <h2 className="mt-6 text-3xl font-semibold">How can I help you today?</h2>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        How can I help you today?
+                        I'm ScholarSage, your AI assistant. Ask me anything!
                     </p>
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
                         {suggestionPrompts.map(prompt => (
                             <Button 
                                 key={prompt}
                                 variant="outline"
-                                className="text-left justify-start h-auto py-3"
+                                className="text-left justify-start h-auto py-3 px-4 text-sm"
                                 onClick={(e) => handleSendMessage(e, prompt)}
                                 >
                                     {prompt}

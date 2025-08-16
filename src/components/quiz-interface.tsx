@@ -68,7 +68,7 @@ export default function QuizInterface(props: QuizInterfaceProps) {
   }, [durationSec, autoStart]);
 
   useEffect(() => {
-    if (!running || remaining <= 0) return;
+    if (!running || remaining <= 0 || isDemo) return;
     intervalRef.current = window.setInterval(() => {
       setRemaining((r) => {
         if (r <= 1) {
@@ -86,7 +86,7 @@ export default function QuizInterface(props: QuizInterfaceProps) {
         intervalRef.current = null;
       }
     };
-  }, [running, remaining, onTimeUp]);
+  }, [running, remaining, onTimeUp, isDemo]);
 
   const progress = useMemo(() => {
     const used = durationSec - remaining;
@@ -102,11 +102,13 @@ export default function QuizInterface(props: QuizInterfaceProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-50 backdrop-blur bg-background/80 border-b">
-        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5" aria-hidden />
-            <div className="font-semibold tabular-nums">{formatTime(remaining)}</div>
-            <div className="flex items-center gap-2 ml-2">
+        <div className="mx-auto max-w-5xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5" aria-hidden />
+                <div className="font-semibold tabular-nums">{formatTime(remaining)}</div>
+            </div>
+            <div className="flex items-center gap-2 ml-auto sm:ml-2">
               <Button
                 size="sm"
                 variant={running ? "secondary" : "default"}
@@ -183,7 +185,7 @@ export default function QuizInterface(props: QuizInterfaceProps) {
                     Submit Quiz
                 </Button>
             ) : (
-                <Button onClick={onNext}>
+                <Button onClick={onNext} disabled={selectedAnswer === undefined}>
                     Next
                     <ArrowRight className="ml-2" />
                 </Button>
