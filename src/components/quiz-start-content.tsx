@@ -31,7 +31,6 @@ export function QuizStartContent() {
             const savedQuiz = localStorage.getItem('currentQuiz');
             if (savedQuiz) {
                 const parsedData: QuizData = JSON.parse(savedQuiz);
-                // Trim the quiz to the selected number of questions
                 const trimmedQuizzes = parsedData.quizzes.slice(0, parsedData.options.numQuestions);
                 setQuizData({...parsedData, quizzes: trimmedQuizzes });
             } else {
@@ -61,20 +60,31 @@ export function QuizStartContent() {
     };
     
     const handleSubmit = () => {
-        // Here you would calculate the score and show the results.
-        // For now, we just show an alert.
-        const score = quizData?.quizzes.reduce((acc, quiz, index) => {
+        if (!quizData) return;
+
+        const score = quizData.quizzes.reduce((acc, quiz, index) => {
             if (answers[index] === quiz.answer) {
                 return acc + 1;
             }
             return acc;
-        }, 0)
-        alert(`Quiz finished! Your score: ${score}/${quizData?.quizzes.length}`);
-        router.push("/quiz");
+        }, 0);
+        
+        try {
+            const resultsData = {
+                score,
+                totalQuestions: quizData.quizzes.length,
+                quizzes: quizData.quizzes,
+                answers,
+            };
+            localStorage.setItem('quizResults', JSON.stringify(resultsData));
+            router.push("/quiz/results");
+        } catch (error) {
+            toast({ title: "Error", description: "Could not save quiz results.", variant: "destructive"});
+        }
     }
 
     const handleTimeUp = () => {
-        alert("Time's up!");
+        toast({ title: "Time's up!", description: "Submitting your quiz now."});
         handleSubmit();
     }
 
