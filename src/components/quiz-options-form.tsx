@@ -105,34 +105,36 @@ export function QuizOptionsForm() {
                         </RadioGroup>
                     </div>
 
-                    <div className="space-y-4">
-                        <Label className="text-base font-semibold" htmlFor="num-questions">Number of Questions</Label>
-                        <Select value={numQuestions} onValueChange={setNumQuestions}>
-                            <SelectTrigger id="num-questions" className="w-full sm:w-1/2">
-                                <SelectValue placeholder="Select number of questions" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 Questions</SelectItem>
-                                <SelectItem value="10">10 Questions</SelectItem>
-                                <SelectItem value="15">15 Questions</SelectItem>
-                                <SelectItem value="20">20 Questions</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <div className="flex flex-wrap gap-6">
+                        <div className="space-y-2 flex-1 min-w-[150px]">
+                            <Label className="text-base font-semibold" htmlFor="num-questions">Number of Questions</Label>
+                            <Select value={numQuestions} onValueChange={setNumQuestions}>
+                                <SelectTrigger id="num-questions">
+                                    <SelectValue placeholder="Select number of questions" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5 Questions</SelectItem>
+                                    <SelectItem value="10">10 Questions</SelectItem>
+                                    <SelectItem value="15">15 Questions</SelectItem>
+                                    <SelectItem value="20">20 Questions</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    <div className="space-y-4">
-                        <Label className="text-base font-semibold" htmlFor="time-limit">Time Limit</Label>
-                         <Select value={timeLimit} onValueChange={setTimeLimit}>
-                            <SelectTrigger id="time-limit" className="w-full sm:w-1/2">
-                                <SelectValue placeholder="Select time limit" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 Minutes</SelectItem>
-                                <SelectItem value="10">10 Minutes</SelectItem>
-                                <SelectItem value="30">30 Minutes</SelectItem>
-                                <SelectItem value="60">60 Minutes</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div className="space-y-2 flex-1 min-w-[150px]">
+                            <Label className="text-base font-semibold" htmlFor="time-limit">Time Limit</Label>
+                             <Select value={timeLimit} onValueChange={setTimeLimit}>
+                                <SelectTrigger id="time-limit">
+                                    <SelectValue placeholder="Select time limit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5 Minutes</SelectItem>
+                                    <SelectItem value="10">10 Minutes</SelectItem>
+                                    <SelectItem value="30">30 Minutes</SelectItem>
+                                    <SelectItem value="60">60 Minutes</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
