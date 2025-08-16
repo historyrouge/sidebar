@@ -12,15 +12,129 @@ import { codeAgent, CodeAgentInput, CodeAgentOutput } from "@/ai/flows/code-agen
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from "@/ai/flows/youtube-transcript";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { StudyMaterial, StudyMaterialWithId, UserProfile } from "@/lib/types";
+import { StudyMaterial, StudyMaterialWithId, UserProfile, Friend } from "@/lib/types";
 
 
 type ActionResult<T> = {
   data?: T;
   error?: string;
 };
+
+export async function sendFriendRequestAction(email: string): Promise<ActionResult<{ success: boolean }>> {
+    const user = auth.currentUser;
+    if (!user) {
+        return { error: "You must be logged in to send friend requests." };
+    }
+    if (user.email === email) {
+        return { error: "You cannot send a friend request to yourself." };
+    }
+
+    try {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { error: "User with that email not found." };
+        }
+
+        const friendDoc = querySnapshot.docs[0];
+        const friendId = friendDoc.id;
+
+        const batch = writeBatch(db);
+
+        // Add to sender's friends list with 'requested' status
+        const senderFriendRef = doc(db, "users", user.uid, "friends", friendId);
+        batch.set(senderFriendRef, { status: 'requested' });
+
+        // Add to receiver's friends list with 'pending' status
+        const receiverFriendRef = doc(db, "users", friendId, "friends", user.uid);
+        batch.set(receiverFriendRef, { status: 'pending' });
+
+        await batch.commit();
+
+        return { data: { success: true } };
+
+    } catch (e: any) {
+        console.error("Error sending friend request: ", e);
+        return { error: e.message || "Failed to send friend request." };
+    }
+}
+
+export async function manageFriendRequestAction(friendId: string, action: 'accept' | 'decline'): Promise<ActionResult<{ success: boolean }>> {
+    const user = auth.currentUser;
+    if (!user) {
+        return { error: "You must be logged in." };
+    }
+
+    try {
+        const batch = writeBatch(db);
+
+        const currentUserFriendRef = doc(db, "users", user.uid, "friends", friendId);
+        const friendUserFriendRef = doc(db, "users", friendId, "friends", user.uid);
+
+        if (action === 'accept') {
+            batch.update(currentUserFriendRef, { status: 'accepted' });
+            batch.update(friendUserFriendRef, { status: 'accepted' });
+        } else { // decline
+            batch.delete(currentUserFriendRef);
+            batch.delete(friendUserFriendRef);
+        }
+
+        await batch.commit();
+        return { data: { success: true } };
+
+    } catch (e: any) {
+        console.error("Error managing friend request: ", e);
+        return { error: e.message || "Failed to manage friend request." };
+    }
+}
+
+
+export async function getFriendsAction(): Promise<ActionResult<Friend[]>> {
+    const user = auth.currentUser;
+    if (!user) {
+      return { error: "You must be logged in to see your friends." };
+    }
+  
+    try {
+      const friendsRef = collection(db, "users", user.uid, "friends");
+      const friendsSnapshot = await getDocs(friendsRef);
+      
+      if (friendsSnapshot.empty) {
+        return { data: [] };
+      }
+      
+      const friendPromises = friendsSnapshot.docs.map(async (friendDoc) => {
+        const friendId = friendDoc.id;
+        const friendStatus = friendDoc.data().status;
+
+        const userDocRef = doc(db, "users", friendId);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            return {
+                id: friendId,
+                name: userData.name || `User ${friendId.substring(0,5)}`,
+                email: userData.email,
+                photoURL: userData.photoURL,
+                status: friendStatus,
+            };
+        }
+        return null;
+      });
+  
+      const friends = (await Promise.all(friendPromises)).filter(f => f !== null) as Friend[];
+      
+      return { data: friends };
+    } catch (e: any) {
+      console.error("Error getting friends: ", e);
+      return { error: e.message || "Failed to retrieve friends." };
+    }
+}
 
 export async function getUserProfileAction(): Promise<ActionResult<UserProfile>> {
     const user = auth.currentUser;
@@ -34,8 +148,14 @@ export async function getUserProfileAction(): Promise<ActionResult<UserProfile>>
         if (docSnap.exists()) {
             return { data: docSnap.data() as UserProfile };
         } else {
-            // Return empty profile if it doesn't exist yet
-            return { data: { name: "", college: "", favoriteSubject: "" } };
+            // Create a default profile if it doesn't exist
+            const defaultProfile: UserProfile = {
+                name: user.displayName || "ScholarSage User",
+                college: "",
+                favoriteSubject: ""
+            };
+             await setDoc(docRef, defaultProfile);
+            return { data: defaultProfile };
         }
     } catch (e: any) {
         console.error("Error getting user profile: ", e);
@@ -302,5 +422,5 @@ export async function getYoutubeTranscriptAction(
 }
 
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, CodeAgentInput, CodeAgentOutput, UserProfile, GetYoutubeTranscriptOutput };
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, CodeAgentInput, CodeAgentOutput, UserProfile, GetYoutubeTranscriptOutput, Friend };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;

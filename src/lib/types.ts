@@ -17,3 +17,11 @@ export interface UserProfile {
     college: string;
     favoriteSubject: string;
 }
+
+export interface Friend {
+    id: string; // The UID of the friend
+    name: string;
+    email: string;
+    photoURL?: string;
+    status: 'pending' | 'accepted' | 'requested';
+}

@@ -6,21 +6,65 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Moon, Plus, Settings, Sun, User, UserPlus } from "lucide-react";
+import { Check, LogOut, Moon, Plus, Settings, Sun, User, UserPlus, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Input } from "./ui/input";
-
-const friends = [
-    { name: "John Doe", email: "john@example.com", avatar: "https://placehold.co/100x100.png" },
-    { name: "Jane Smith", email: "jane@example.com", avatar: "https://placehold.co/100x100.png" },
-    { name: "Sam Wilson", email: "sam@example.com", avatar: "https://placehold.co/100x100.png" },
-];
+import { useEffect, useState, useTransition } from "react";
+import { getFriendsAction, manageFriendRequestAction, sendFriendRequestAction } from "@/app/actions";
+import type { Friend } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export function FriendsContent() {
     const { user, logout } = useAuth();
     const { theme, setTheme } = useTheme();
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [isLoading, startLoading] = useTransition();
+    const [friendEmail, setFriendEmail] = useState("");
+    const { toast } = useToast();
+
+    const fetchFriends = async () => {
+        startLoading(async () => {
+            const result = await getFriendsAction();
+            if (result.error) {
+                toast({ title: "Error fetching friends", description: result.error, variant: 'destructive' });
+            } else {
+                setFriends(result.data || []);
+            }
+        });
+    };
+
+    useEffect(() => {
+        fetchFriends();
+    }, []);
+
+    const handleAddFriend = async () => {
+        if (!friendEmail) return;
+        startLoading(async () => {
+            const result = await sendFriendRequestAction(friendEmail);
+            if (result.error) {
+                toast({ title: "Failed to send request", description: result.error, variant: 'destructive' });
+            } else {
+                toast({ title: "Friend request sent!", description: `Your request to ${friendEmail} has been sent.` });
+                setFriendEmail("");
+                fetchFriends();
+            }
+        });
+    };
+    
+    const handleManageRequest = async (friendId: string, action: 'accept' | 'decline') => {
+        startLoading(async () => {
+            const result = await manageFriendRequestAction(friendId, action);
+             if (result.error) {
+                toast({ title: `Failed to ${action} request`, description: result.error, variant: 'destructive' });
+            } else {
+                toast({ title: "Success", description: `Friend request has been ${action}ed.` });
+                fetchFriends();
+            }
+        });
+    }
+
 
     const getInitials = (name?: string | null) => {
         if (!name) return "SS";
@@ -31,6 +75,10 @@ export function FriendsContent() {
         return name.substring(0, 2);
     }
     
+    const pendingRequests = friends.filter(f => f.status === 'pending');
+    const acceptedFriends = friends.filter(f => f.status === 'accepted');
+    const requestedFriends = friends.filter(f => f.status === 'requested');
+
     return (
         <div className="flex h-screen flex-col bg-background">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
@@ -80,35 +128,107 @@ export function FriendsContent() {
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-               <Card>
-                <CardHeader>
-                    <CardTitle>Friend List</CardTitle>
-                    <CardDescription>Manage your connections and see who you can study with.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Input placeholder="Enter friend's email to add..." />
-                        <Button><UserPlus className="mr-2"/> Add Friend</Button>
-                    </div>
-                    <div className="space-y-4">
-                        {friends.map((friend) => (
-                             <div key={friend.email} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
-                                <div className="flex items-center gap-4">
-                                    <Avatar>
-                                        <AvatarImage src={friend.avatar} alt={friend.name} data-ai-hint="person" />
-                                        <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="font-semibold">{friend.name}</div>
-                                        <div className="text-sm text-muted-foreground">{friend.email}</div>
+               <div className="grid gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Add a Friend</CardTitle>
+                        <CardDescription>Connect with other ScholarSage users to study together.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center gap-2">
+                            <Input placeholder="Enter friend's email to add..." value={friendEmail} onChange={(e) => setFriendEmail(e.target.value)} disabled={isLoading} />
+                            <Button onClick={handleAddFriend} disabled={isLoading}><UserPlus className="mr-2"/> Add Friend</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {pendingRequests.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Pending Requests</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="space-y-4">
+                                {pendingRequests.map((friend) => (
+                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+                                        <div className="flex items-center gap-4">
+                                            <Avatar>
+                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
+                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">{friend.name}</div>
+                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'accept')} disabled={isLoading}><Check className="text-green-500" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleManageRequest(friend.id, 'decline')} disabled={isLoading}><X className="text-red-500" /></Button>
+                                        </div>
                                     </div>
-                                </div>
-                                <Button variant="ghost" size="sm">Remove</Button>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </CardContent>
-               </Card>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Your Friends</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {acceptedFriends.length > 0 ? (
+                             <div className="space-y-4">
+                                {acceptedFriends.map((friend) => (
+                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+                                        <div className="flex items-center gap-4">
+                                            <Avatar>
+                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
+                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">{friend.name}</div>
+                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
+                                            </div>
+                                        </div>
+                                        <Button variant="outline" size="sm" disabled>Start Quiz</Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                           <p className="text-muted-foreground">You haven't added any friends yet.</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                 {requestedFriends.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Sent Requests</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {requestedFriends.map((friend) => (
+                                    <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+                                        <div className="flex items-center gap-4">
+                                            <Avatar>
+                                                <AvatarImage src={friend.photoURL} alt={friend.name} data-ai-hint="person" />
+                                                <AvatarFallback>{getInitials(friend.name)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">{friend.name}</div>
+                                                <div className="text-sm text-muted-foreground">{friend.email}</div>
+                                            </div>
+                                        </div>
+                                        <Button variant="ghost" size="sm" disabled>Pending</Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+               </div>
             </main>
         </div>
     )

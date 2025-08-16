@@ -22,9 +22,11 @@ import {
   getAdditionalUserInfo,
   GithubAuthProvider,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "./use-toast";
 import { useRouter } from "next/navigation";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { UserProfile } from "@/lib/types";
 
 
 interface AuthContextType {
@@ -38,6 +40,24 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const handleNewUser = async (user: User) => {
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+        // Create user document in Firestore
+        const profile: UserProfile = {
+            name: user.displayName || "ScholarSage User",
+            college: "",
+            favoriteSubject: ""
+        };
+        await setDoc(userRef, {
+            ...profile,
+            email: user.email,
+            photoURL: user.photoURL,
+        });
+    }
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -57,9 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     getRedirectResult(auth)
-      .then((result) => {
+      .then(async (result) => {
         if (result) {
           const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
+          await handleNewUser(result.user);
           if (isNewUser) {
             router.push('/onboarding');
           } else {
@@ -76,8 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
   }, [router, toast]);
 
-  const signUp = (email: string, pass: string) => {
-    return createUserWithEmailAndPassword(auth, email, pass);
+  const signUp = async (email: string, pass: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    await handleNewUser(userCredential.user);
+    return userCredential;
   };
 
   const signIn = (email: string, pass: string) => {
