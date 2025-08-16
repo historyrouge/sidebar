@@ -14,6 +14,7 @@ import {
   Sparkles,
   User,
   Youtube,
+  FilePlus2
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,9 +28,9 @@ import {
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "./ui/button";
 
 const menuItems = [
-    { name: "New Chat", icon: <MessageSquare className="size-4" />, href: "/" },
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
     { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
@@ -74,12 +75,19 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <GraduationCap className="size-5" />
-          </div>
-          <h1 className="text-lg font-semibold">ScholarSage</h1>
-        </Link>
+        <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <GraduationCap className="size-5" />
+                </div>
+                <h1 className="text-lg font-semibold">ScholarSage</h1>
+            </Link>
+            <Button asChild variant="ghost" size="icon" className="group-data-[collapsible=icon]:hidden">
+                <Link href="/" >
+                    <FilePlus2 />
+                </Link>
+            </Button>
+        </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
