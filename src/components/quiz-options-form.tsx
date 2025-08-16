@@ -49,6 +49,7 @@ export function QuizOptionsForm() {
                 difficulty: difficulty as "easy" | "medium" | "hard",
                 numQuestions: parseInt(numQuestions),
             });
+
             if (result.error) {
                 toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
             } else if (result.data) {
@@ -87,10 +88,10 @@ export function QuizOptionsForm() {
                     <CardTitle>Customize Your Quiz</CardTitle>
                     <CardDescription>Set the parameters for your quiz below.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-8">
-                    <div className="space-y-4">
-                        <Label className="text-base font-semibold">Difficulty</Label>
-                        <RadioGroup defaultValue="medium" value={difficulty} onValueChange={setDifficulty} className="flex flex-col sm:flex-row gap-4">
+                <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                        <Label className="font-semibold">Difficulty</Label>
+                        <RadioGroup defaultValue="medium" value={difficulty} onValueChange={setDifficulty} className="flex gap-4">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="easy" id="easy" />
                                 <Label htmlFor="easy">Easy</Label>
@@ -106,9 +107,9 @@ export function QuizOptionsForm() {
                         </RadioGroup>
                     </div>
 
-                    <div className="flex flex-wrap gap-6">
-                        <div className="space-y-2 flex-1 min-w-[150px]">
-                            <Label className="text-base font-semibold" htmlFor="num-questions">Number of Questions</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <Label className="font-semibold" htmlFor="num-questions">Number of Questions</Label>
                             <Select value={numQuestions} onValueChange={setNumQuestions}>
                                 <SelectTrigger id="num-questions">
                                     <SelectValue placeholder="Select number of questions" />
@@ -125,8 +126,8 @@ export function QuizOptionsForm() {
                             </Select>
                         </div>
 
-                        <div className="space-y-2 flex-1 min-w-[150px]">
-                            <Label className="text-base font-semibold" htmlFor="time-limit">Time Limit</Label>
+                        <div className="space-y-3">
+                            <Label className="font-semibold" htmlFor="time-limit">Time Limit</Label>
                              <Select value={timeLimit} onValueChange={setTimeLimit}>
                                 <SelectTrigger id="time-limit">
                                     <SelectValue placeholder="Select time limit" />
