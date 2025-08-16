@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -26,7 +27,7 @@ const GenerateQuizzesOutputSchema = z.object({
       question: z.string().describe('The question text.'),
       options: z.array(z.string()).describe('An array of 4 possible answers for the question.'),
       answer: z.string().describe('The correct answer to the question.'),
-      type: z.literal('multiple-choice').describe('The type of question.'),
+      type: z.string().describe('The type of question. This should always be \'multiple-choice\'.'),
     })
   ).describe('The generated multiple-choice quizzes.'),
 });
