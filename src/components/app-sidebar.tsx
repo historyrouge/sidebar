@@ -60,11 +60,11 @@ export function AppSidebar() {
   const renderMenuItems = (items: typeof menuItems) => {
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
-            <Link href={item.href}>
+            <Link href={item.href} className="w-full">
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start"
+                className="justify-start w-full"
                 onClick={handleLinkClick}
               >
                   {item.icon}
@@ -97,7 +97,7 @@ export function AppSidebar() {
             {renderMenuItems(menuItems)}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 mt-auto">
         <SidebarMenu>
            {renderMenuItems(footerMenuItems)}
         </SidebarMenu>
