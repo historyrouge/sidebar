@@ -20,6 +20,7 @@ import {
   getRedirectResult,
   UserCredential,
   getAdditionalUserInfo,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useToast } from "./use-toast";
@@ -32,6 +33,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string) => Promise<UserCredential>;
   signIn: (email: string, pass: string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGitHub: () => Promise<void>;
   logout: () => Promise<any>;
 }
 
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch((error) => {
         toast({
-            title: "Google Sign-In Failed",
+            title: "Sign-In Failed",
             description: error.message,
             variant: "destructive",
         });
@@ -87,6 +89,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithRedirect(auth, provider);
   }
 
+  const signInWithGitHub = async () => {
+    const provider = new GithubAuthProvider();
+    await signInWithRedirect(auth, provider);
+  }
+
   const logout = () => {
     return signOut(auth);
   };
@@ -97,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithGitHub,
     logout,
   };
 
