@@ -79,24 +79,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         await setDoc(userRef, profile);
         // If the name is still empty, they need to go to onboarding
-        if (!profile.name) {
-            router.push('/onboarding');
-        }
+        router.push('/onboarding');
     }
-    // If user exists, their displayName should be set. If not, they skipped onboarding.
-    else if (!docSnap.data().name) {
+    // If user exists, but their profile name is not set, they might have skipped onboarding.
+    else if (!docSnap.data()?.name) {
         router.push('/onboarding');
     }
   }, [router]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
       if (user) {
         const token = await user.getIdToken(true);
         setCookie("firebaseIdToken", token, 1);
+        setUser(user);
       } else {
         eraseCookie("firebaseIdToken");
+        setUser(null);
       }
       setLoading(false);
     });
@@ -151,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfileInAuth = async (displayName: string, photoURL?: string) => {
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName, photoURL });
-        // Create a new user object to trigger re-render
+        // Create a new user object to trigger re-render in components using the user object
         setUser(Object.assign(Object.create(auth.currentUser), auth.currentUser));
     }
   };
