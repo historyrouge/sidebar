@@ -52,7 +52,12 @@ export const adminAuth = admin.apps.length ? admin.auth() : null;
 // A helper function to ensure db is not null
 export const getDb = () => {
     if (!adminDb) {
-        throw new Error("Firestore is not initialized. Ensure FIREBASE_SERVICE_ACCOUNT is set.");
+        // This check is important for build steps where env var might not be available
+        if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+             throw new Error("Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT environment variable.");
+        }
+        initializeFirebaseAdmin();
+        if(!adminDb) throw new Error("Firestore could not be initialized.");
     }
     return adminDb;
 }
