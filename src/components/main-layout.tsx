@@ -3,7 +3,6 @@
 
 import { AppSidebar } from "./app-sidebar";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
-import { ProtectedRoute } from "./protected-route";
 import { NextNProgressClient } from "./nprogress-client";
 import { usePathname } from "next/navigation";
 
@@ -13,15 +12,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   // Don't render sidebar for the quiz start page
   if (pathname === '/quiz/start') {
     return (
-      <ProtectedRoute>
+      <>
         <NextNProgressClient />
         {children}
-      </ProtectedRoute>
+      </>
     )
   }
 
   return (
-    <ProtectedRoute>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -29,6 +27,5 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {children}
         </SidebarInset>
       </SidebarProvider>
-    </ProtectedRoute>
   );
 }
