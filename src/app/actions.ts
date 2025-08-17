@@ -418,7 +418,8 @@ export async function getYoutubeTranscriptAction(
   try {
     const output = await getYoutubeTranscript(input);
     return { data: output };
-  } catch (e: any) {
+  } catch (e: any)
+    {
     console.error(e);
     return { error: e.message || "An unknown error occurred." };
   }
