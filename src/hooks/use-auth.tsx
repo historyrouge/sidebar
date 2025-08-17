@@ -19,9 +19,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
   UserCredential,
-  getAdditionalUserInfo,
-  GithubAuthProvider,
   updateProfile,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "./use-toast";
@@ -63,23 +62,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleNewUser = useCallback(async (user: User) => {
+  const handleNewUser = useCallback(async (user: User, isNewUser: boolean) => {
     const userRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(userRef);
-    if (!docSnap.exists()) {
+    let shouldGoToOnboarding = isNewUser;
+
+    if (!isNewUser) {
+        const docSnap = await getDoc(userRef);
+        // If user exists in auth but not firestore, treat as new
+        if (!docSnap.exists()) {
+          shouldGoToOnboarding = true;
+        }
+    }
+
+    if (shouldGoToOnboarding) {
         const profile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            name: user.displayName || "ScholarSage User",
+            name: user.displayName || "", // Start with empty name to force onboarding
             college: "",
             favoriteSubject: "",
             photoURL: user.photoURL || "",
         };
-        await setDoc(userRef, profile);
-        return true; // Indicates a new user was created
+        await setDoc(userRef, profile, { merge: true });
+        router.push('/onboarding');
+    } else {
+        router.push('/');
     }
-    return false; // Indicates an existing user
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -93,19 +102,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
-          const isNewUser = await handleNewUser(result.user);
-          if(isNewUser) {
-             router.push('/onboarding');
-          } else {
-             router.push('/');
-          }
+          const { _tokenResponse } = result as any;
+          const isNewUser = _tokenResponse?.isNewUser || false;
+          await handleNewUser(result.user, isNewUser);
         }
       })
       .catch((error) => {
@@ -115,24 +117,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             variant: "destructive",
         });
       });
-  }, [router, toast, handleNewUser]);
+
+
+    return () => unsubscribe();
+  }, [handleNewUser, toast]);
 
   const signUp = async (email: string, pass: string) => {
+    setLoading(true);
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    await handleNewUser(userCredential.user);
+    await handleNewUser(userCredential.user, true);
     return userCredential;
   };
 
-  const signIn = (email: string, pass: string) => {
+  const signIn = async (email: string, pass: string) => {
+    setLoading(true);
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
   const signInWithGoogle = async () => {
+    setLoading(true);
     const provider = new GoogleAuthProvider();
     await signInWithRedirect(auth, provider);
   }
 
   const signInWithGitHub = async () => {
+    setLoading(true);
     const provider = new GithubAuthProvider();
     await signInWithRedirect(auth, provider);
   }

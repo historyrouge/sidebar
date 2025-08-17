@@ -4,11 +4,21 @@
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import { useEffect, Suspense } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 function NProgressComponent() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const { loading: authLoading } = useAuth();
   
+    useEffect(() => {
+        if (authLoading) {
+            NProgress.start();
+        } else {
+            NProgress.done();
+        }
+    }, [authLoading]);
+
     useEffect(() => {
       NProgress.done();
     }, [pathname, searchParams]);
@@ -18,28 +28,16 @@ function NProgressComponent() {
 
 
 export function NextNProgressClient() {
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
-    // This is to handle the initial page load
-    NProgress.done();
+    if (authLoading) {
+        NProgress.start();
+    } else {
+        NProgress.done();
+    }
+  }, [authLoading]);
 
-    //This is a workaround for a bug in Next.js where the progress bar
-    //doesn't always stop on route change.
-    const mutationObserver = new MutationObserver((mutations) => {
-        const url = document.location.href;
-        const oldUrl = mutations[0]?.target?.baseURI;
-        if (url !== oldUrl) {
-            NProgress.done();
-        }
-    });
-
-    mutationObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-    });
-
-
-  }, []);
 
   return <Suspense fallback={null}><NProgressComponent /></Suspense>;
 }
