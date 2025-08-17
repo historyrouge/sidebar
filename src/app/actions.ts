@@ -39,11 +39,12 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            return { error: "User with that email address not found." };
+            return { error: `User with email "${email}" not found. Please ensure you have entered the correct email.` };
         }
 
         const targetUserDoc = querySnapshot.docs[0];
         const targetUserId = targetUserDoc.id;
+        const targetUserData = targetUserDoc.data();
 
         const currentUserFriendsRef = collection(db, `users/${currentUser.uid}/friends`);
         const targetUserFriendsRef = collection(db, `users/${targetUserId}/friends`);
@@ -62,9 +63,9 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
         // Add to sender's friends list with 'requested' status
         batch.set(doc(currentUserFriendsRef, targetUserId), { 
             status: 'requested',
-            email: targetUserDoc.data().email,
-            name: targetUserDoc.data().name,
-            photoURL: targetUserDoc.data().photoURL || ''
+            email: targetUserData.email,
+            name: targetUserData.name,
+            photoURL: targetUserData.photoURL || ''
         });
 
         // Add to receiver's friends list with 'pending' status
@@ -81,6 +82,9 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
 
     } catch (e: any) {
         console.error("sendFriendRequestAction error:", e);
+        if (e.code === 'failed-precondition') {
+             return { error: "To enable this search, please create a composite index in your Firestore database. You can do this by visiting the link provided in the Firestore console error logs." };
+        }
         return { error: e.message || "An unknown error occurred." };
     }
 }
@@ -211,7 +215,7 @@ export async function saveStudyMaterialAction(
             const materialRef = doc(db, "studyMaterials", materialId);
             const docSnap = await getDoc(materialRef);
             if (docSnap.exists() && docSnap.data().userId === currentUser.uid) {
-                await updateDoc(materialRef, { content, title });
+                await updateDoc(materialRef, { content, title, updatedAt: serverTimestamp() });
                 return { data: { id: materialId } };
             } else {
                 // If it doesn't exist or user doesn't own it, create a new one.
@@ -219,7 +223,8 @@ export async function saveStudyMaterialAction(
                     userId: currentUser.uid,
                     content,
                     title,
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
                 });
                 return { data: { id: newDocRef.id } };
             }
@@ -228,7 +233,8 @@ export async function saveStudyMaterialAction(
                 userId: currentUser.uid,
                 content,
                 title,
-                createdAt: serverTimestamp()
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             });
             return { data: { id: newDocRef.id } };
         }
