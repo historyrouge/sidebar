@@ -1,7 +1,6 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/firebase'; // Assuming you have this configured
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
@@ -21,5 +20,5 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: '/:path*',
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

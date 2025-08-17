@@ -1,4 +1,5 @@
 
+
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
@@ -13,7 +14,7 @@ import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from "@/ai/flows/youtube-transcript";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, setDoc, deleteDoc, writeBatch, documentId, and } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase-admin";
 import { getAuthenticatedUser } from "@/lib/firebase-admin";
 import { StudyMaterial, StudyMaterialWithId, UserProfile, Friend } from "@/lib/types";
 
@@ -34,6 +35,7 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
             return { error: "You cannot send a friend request to yourself." };
         }
 
+        const db = getDb();
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("email", "==", email));
         const querySnapshot = await getDocs(q);
@@ -72,7 +74,7 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
         batch.set(doc(targetUserFriendsRef, currentUser.uid), {
              status: 'pending',
              email: currentUser.email,
-             name: currentUser.name,
+             name: currentUser.name || "ScholarSage User",
              photoURL: currentUser.picture || ''
         });
 
@@ -96,7 +98,7 @@ export async function manageFriendRequestAction(friendId: string, action: 'accep
         if (!currentUser) {
             return { error: "You must be logged in to manage friend requests." };
         }
-
+        const db = getDb();
         const currentUserFriendsRef = collection(db, `users/${currentUser.uid}/friends`);
         const targetUserFriendsRef = collection(db, `users/${friendId}/friends`);
 
@@ -125,6 +127,7 @@ export async function getFriendsAction(): Promise<ActionResult<Friend[]>> {
             return { error: "You must be logged in to view friends." };
         }
         
+        const db = getDb();
         const friendsRef = collection(db, `users/${currentUser.uid}/friends`);
         const snapshot = await getDocs(friendsRef);
         
@@ -146,6 +149,7 @@ export async function getUserProfileAction(): Promise<ActionResult<UserProfile>>
         if (!currentUser) {
             return { error: "You must be logged in to view your profile." };
         }
+        const db = getDb();
         const userRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(userRef);
 
@@ -166,6 +170,7 @@ export async function updateUserProfile(profileData: Partial<UserProfile>) {
         if (!currentUser) {
             return { error: "You must be logged in to update your profile." };
         }
+        const db = getDb();
         const userRef = doc(db, "users", currentUser.uid);
         await updateDoc(userRef, profileData);
         return { data: { success: true } };
@@ -182,6 +187,7 @@ export async function deleteUserAction(): Promise<ActionResult<{ success: boolea
         if (!currentUser) {
             return { error: "You must be logged in to delete your account." };
         }
+        const db = getDb();
         // This is a simplified deletion. A full implementation would need to handle
         // removing the user from friend lists, deleting their content, etc.
         // It might be better handled by a Firebase Function.
@@ -209,6 +215,7 @@ export async function saveStudyMaterialAction(
             return { error: "You must be logged in to save materials." };
         }
 
+        const db = getDb();
         const materialsRef = collection(db, "studyMaterials");
         
         if (materialId) {
@@ -251,6 +258,7 @@ export async function getStudyMaterialsAction(): Promise<ActionResult<StudyMater
         if (!currentUser) {
             return { error: "You must be logged in to view materials." };
         }
+        const db = getDb();
         const q = query(collection(db, "studyMaterials"), where("userId", "==", currentUser.uid));
         const querySnapshot = await getDocs(q);
         const materials = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StudyMaterialWithId[];
@@ -267,6 +275,7 @@ export async function getStudyMaterialByIdAction(id: string): Promise<ActionResu
         if (!currentUser) {
             return { error: "You must be logged in to view materials." };
         }
+        const db = getDb();
         const materialRef = doc(db, "studyMaterials", id);
         const docSnap = await getDoc(materialRef);
 

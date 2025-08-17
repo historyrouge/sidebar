@@ -3,8 +3,12 @@ import * as admin from 'firebase-admin';
 import { headers } from 'next/headers';
 
 const initializeFirebaseAdmin = () => {
+    if (admin.apps.length > 0) {
+        return;
+    }
+
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (serviceAccount && !admin.apps.length) {
+    if (serviceAccount) {
         try {
             admin.initializeApp({
                 credential: admin.credential.cert(JSON.parse(serviceAccount)),
@@ -26,10 +30,10 @@ export async function getAuthenticatedUser() {
     if (!idToken) {
         return null;
     }
-
+    
+    // Ensure admin is initialized before trying to use it
     if (!admin.apps.length) {
-        console.error('Firebase admin is not initialized');
-        return null;
+       return null;
     }
 
     try {
@@ -41,13 +45,14 @@ export async function getAuthenticatedUser() {
     }
 }
 
-let db: admin.firestore.Firestore | null = null;
-let auth: admin.auth.Auth | null = null;
 
-if (admin.apps.length) {
-    db = admin.firestore();
-    auth = admin.auth();
+export const adminDb = admin.apps.length ? admin.firestore() : null;
+export const adminAuth = admin.apps.length ? admin.auth() : null;
+
+// A helper function to ensure db is not null
+export const getDb = () => {
+    if (!adminDb) {
+        throw new Error("Firestore is not initialized. Ensure FIREBASE_SERVICE_ACCOUNT is set.");
+    }
+    return adminDb;
 }
-
-export const adminDb = db;
-export const adminAuth = auth;
