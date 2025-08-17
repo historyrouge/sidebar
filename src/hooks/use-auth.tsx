@@ -43,7 +43,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to set a cookie
 const setCookie = (name: string, value: string, days: number) => {
     let expires = "";
     if (days) {
@@ -70,8 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!docSnap.exists()) {
         const profile: UserProfile = {
             uid: user.uid,
-            name: additionalInfo?.name || user.displayName || "ScholarSage User",
             email: user.email!,
+            name: additionalInfo?.name || user.displayName || "ScholarSage User",
             college: additionalInfo?.college || "",
             favoriteSubject: additionalInfo?.favoriteSubject || ""
         };
@@ -88,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const token = await user.getIdToken();
+        const token = await user.getIdToken(true);
         setCookie("firebaseIdToken", token, 1);
       } else {
         eraseCookie("firebaseIdToken");
@@ -169,7 +168,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGitHub,
     logout,
     getIdToken,
-    handleNewUser, // Exposing this for onboarding
     updateUserProfileInAuth,
   };
 

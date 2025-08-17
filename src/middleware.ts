@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   const idToken = request.cookies.get('firebaseIdToken')?.value;
@@ -11,6 +10,10 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('Authorization', `Bearer ${idToken}`);
   }
 
+  // A next-intl workaround to ensure the middleware can be chained.
+  // See: https://github.com/amannn/next-intl/issues/833#issuecomment-1953158211
+  requestHeaders.set('x-url', request.url);
+
   return NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -18,7 +21,6 @@ export async function middleware(request: NextRequest) {
   });
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

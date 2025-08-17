@@ -17,6 +17,8 @@ const initializeFirebaseAdmin = () => {
         } catch (e: any) {
             console.error('Firebase admin initialization error', e.stack);
         }
+    } else {
+        console.warn('FIREBASE_SERVICE_ACCOUNT environment variable not set. Firebase Admin SDK not initialized.');
     }
 }
 
@@ -31,8 +33,8 @@ export async function getAuthenticatedUser() {
         return null;
     }
     
-    // Ensure admin is initialized before trying to use it
-    if (!admin.apps.length) {
+    if (admin.apps.length === 0) {
+       console.error("Firebase Admin SDK is not initialized. Cannot verify ID token.");
        return null;
     }
 
@@ -49,15 +51,13 @@ export async function getAuthenticatedUser() {
 export const adminDb = admin.apps.length ? admin.firestore() : null;
 export const adminAuth = admin.apps.length ? admin.auth() : null;
 
-// A helper function to ensure db is not null
 export const getDb = () => {
     if (!adminDb) {
-        // This check is important for build steps where env var might not be available
         if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
              throw new Error("Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT environment variable.");
         }
         initializeFirebaseAdmin();
-        if(!adminDb) throw new Error("Firestore could not be initialized.");
+        if(!adminDb) throw new Error("Firestore could not be initialized after attempting to re-initialize.");
     }
     return adminDb;
 }
