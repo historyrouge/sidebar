@@ -1,13 +1,11 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import './nprogress.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '@/hooks/use-auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ProtectedRoute } from '@/components/protected-route';
-import { NextNProgressClient } from '@/components/nprogress-client';
 
 export const metadata: Metadata = {
   title: 'ScholarSage',
@@ -34,7 +32,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
             <AuthProvider>
-                <NextNProgressClient />
                 <ProtectedRoute>
                     {children}
                 </ProtectedRoute>
