@@ -24,7 +24,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "./use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { UserProfile } from "@/lib/types";
 
@@ -36,7 +36,6 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   logout: () => Promise<any>;
-  getIdToken: () => Promise<string | null>;
   updateUserProfileInAuth: (displayName: string, photoURL?: string) => Promise<void>;
 }
 
@@ -55,14 +54,17 @@ const setCookie = (name: string, value: string, days: number) => {
 
 const eraseCookie = (name: string) => {   
     if (typeof window === 'undefined') return;
-    document.cookie = name+'=; Max-Age=-99999999;';  
+    document.cookie = name+'=; Max-Age=-99999999; path=/;';  
 }
+
+const publicRoutes = ['/login', '/signup'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleNewUser = useCallback(async (user: User) => {
     const userRef = doc(db, "users", user.uid);
@@ -72,29 +74,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            name: user.displayName || "", 
+            name: user.displayName || "New User", 
             college: "",
             favoriteSubject: "",
             photoURL: user.photoURL || "",
         };
         await setDoc(userRef, profile);
-        router.push('/onboarding');
+        return true; // Indicates a new user was created
     }
-    else if (!docSnap.data()?.name || !user.displayName) {
-        router.push('/onboarding');
-    }
-  }, [router]);
+    return false; // Existing user
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       if (user) {
+        await user.reload();
         const token = await user.getIdToken(true);
         setCookie("firebaseIdToken", token, 1);
         setUser(user);
+        
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        
+        // A user needs onboarding if their profile doesn't exist OR their display name is not set
+        if (!docSnap.exists() || !user.displayName) {
+          router.push('/onboarding');
+        } else if (publicRoutes.includes(pathname)){
+          router.push('/');
+        }
+
       } else {
         eraseCookie("firebaseIdToken");
         setUser(null);
+        if (!publicRoutes.includes(pathname)) {
+            router.push('/login');
+        }
       }
       setLoading(false);
     });
@@ -102,7 +117,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
-          await handleNewUser(result.user);
+          const isNewUser = await handleNewUser(result.user);
+          if(isNewUser) {
+             router.push('/onboarding');
+          } else {
+             router.push('/');
+          }
         }
       })
       .catch((error) => {
@@ -113,9 +133,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       });
 
-
     return () => unsubscribe();
-  }, [handleNewUser, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signUp = async (email: string, pass: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -137,22 +157,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithRedirect(auth, provider);
   }
 
-  const logout = () => {
-    return signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
+    eraseCookie("firebaseIdToken");
+    router.push('/login');
   };
-  
-  const getIdToken = async () => {
-    if (!auth.currentUser) return null;
-    return await auth.currentUser.getIdToken();
-  }
 
   const updateUserProfileInAuth = async (displayName: string, photoURL?: string) => {
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName, photoURL });
-        setUser({ ...auth.currentUser });
+        const refreshedUser = {...auth.currentUser};
+        setUser(refreshedUser);
     }
   };
-
 
   const value = {
     user,
@@ -162,10 +179,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGoogle,
     signInWithGitHub,
     logout,
-    getIdToken,
     updateUserProfileInAuth,
   };
-
+  
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

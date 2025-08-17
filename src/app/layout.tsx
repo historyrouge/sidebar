@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '@/hooks/use-auth';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ProtectedRoute } from '@/components/protected-route';
+import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'ScholarSage',
@@ -32,9 +33,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
             <AuthProvider>
-                <ProtectedRoute>
-                    {children}
-                </ProtectedRoute>
+                {children}
             </AuthProvider>
             <Toaster />
         </ThemeProvider>

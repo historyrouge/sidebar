@@ -27,9 +27,17 @@ initializeFirebaseAdmin();
 
 export async function getAuthenticatedUser() {
     const headerList = headers();
-    const idToken = headerList.get('Authorization')?.split('Bearer ')[1];
+    const authHeader = headerList.get('Authorization');
+
+    if (!authHeader) {
+        console.error("No Authorization header found");
+        return null;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
 
     if (!idToken) {
+        console.error("No token found in Authorization header");
         return null;
     }
     
@@ -42,7 +50,7 @@ export async function getAuthenticatedUser() {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         return decodedToken;
     } catch (error) {
-        console.error('Error verifying token:', error);
+        console.error('Error verifying ID token:', error);
         return null;
     }
 }

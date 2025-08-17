@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('Authorization', `Bearer ${idToken}`);
   }
 
+  // Directly return a new response with the modified headers
   return NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -18,5 +19,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // Match all paths except for static assets and image optimization files
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
