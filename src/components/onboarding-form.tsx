@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 import { updateUserProfile } from "@/app/actions";
 
 export function OnboardingForm() {
-  const { user, handleNewUser, updateUserProfileInAuth } = useAuth();
+  const { user, updateUserProfileInAuth } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -61,11 +61,12 @@ export function OnboardingForm() {
     setLoading(true);
 
     try {
-        // Update Firebase Auth profile displayName
+        // Update Firebase Auth profile displayName if it has changed
         if (user.displayName !== name) {
            await updateUserProfileInAuth(name);
         }
 
+        // Update Firestore profile
         const result = await updateUserProfile({
             name: name,
             college: college,

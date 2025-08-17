@@ -48,16 +48,11 @@ export async function getAuthenticatedUser() {
 }
 
 
-export const adminDb = admin.apps.length ? admin.firestore() : null;
-export const adminAuth = admin.apps.length ? admin.auth() : null;
-
 export const getDb = () => {
-    if (!adminDb) {
-        if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-             throw new Error("Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT environment variable.");
-        }
+    if (admin.apps.length === 0) {
         initializeFirebaseAdmin();
-        if(!adminDb) throw new Error("Firestore could not be initialized after attempting to re-initialize.");
     }
-    return adminDb;
+    // After initialization, admin.apps will have length > 0
+    // and firestore() will be available.
+    return admin.firestore();
 }

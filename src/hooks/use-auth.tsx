@@ -63,21 +63,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleNewUser = useCallback(async (user: User, additionalInfo?: {name?: string, college?: string, favoriteSubject?: string}) => {
+  const handleNewUser = useCallback(async (user: User) => {
     const userRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userRef);
     if (!docSnap.exists()) {
         const profile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            name: additionalInfo?.name || user.displayName || "ScholarSage User",
-            college: additionalInfo?.college || "",
-            favoriteSubject: additionalInfo?.favoriteSubject || ""
+            name: user.displayName || "ScholarSage User",
+            college: "",
+            favoriteSubject: "",
+            photoURL: user.photoURL || "",
         };
-        await setDoc(userRef, {
-            ...profile,
-            photoURL: user.photoURL,
-        });
+        await setDoc(userRef, profile);
         return true; // Indicates a new user was created
     }
     return false; // Indicates an existing user
@@ -102,9 +100,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
-          const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
+          const isNewUser = await handleNewUser(result.user);
           if(isNewUser) {
-             await handleNewUser(result.user);
              router.push('/onboarding');
           } else {
              router.push('/');
@@ -179,5 +176,5 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context as AuthContextType & { handleNewUser: (user: User, additionalInfo?: {name?: string, college?: string, favoriteSubject?: string}) => Promise<boolean> };
+  return context as AuthContextType;
 };
