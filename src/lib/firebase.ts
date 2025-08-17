@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableNetwork, initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   "projectId": "scholarsage-ue2av",
@@ -20,7 +20,10 @@ if (getApps().length === 0) {
   app = getApp();
 }
 
+// Initialize Firestore with network enabled
+const db = initializeFirestore(app, {});
+enableNetwork(db);
+
 const auth = getAuth(app);
-const db = getFirestore(app);
 
 export { app, auth, db };
