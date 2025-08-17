@@ -61,12 +61,8 @@ export function OnboardingForm() {
     setLoading(true);
 
     try {
-        // Update Firebase Auth profile displayName if it has changed
-        if (user.displayName !== name) {
-           await updateUserProfileInAuth(name);
-        }
+        await updateUserProfileInAuth(name);
 
-        // Update Firestore profile
         const result = await updateUserProfile({
             name: name,
             college: college,

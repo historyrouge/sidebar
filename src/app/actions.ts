@@ -1,5 +1,4 @@
 
-
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
@@ -51,7 +50,6 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
         const currentUserFriendsRef = collection(db, `users/${currentUser.uid}/friends`);
         const targetUserFriendsRef = collection(db, `users/${targetUserId}/friends`);
 
-        // Check if they are already friends or a request is pending
         const existingFriendship = await getDoc(doc(currentUserFriendsRef, targetUserId));
         if (existingFriendship.exists()) {
              const status = existingFriendship.data().status;
@@ -62,7 +60,6 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
 
         const batch = writeBatch(db);
 
-        // Add to sender's friends list with 'requested' status
         batch.set(doc(currentUserFriendsRef, targetUserId), { 
             status: 'requested',
             email: targetUserData.email,
@@ -70,7 +67,6 @@ export async function sendFriendRequestAction(email: string): Promise<ActionResu
             photoURL: targetUserData.photoURL || ''
         });
 
-        // Add to receiver's friends list with 'pending' status
         batch.set(doc(targetUserFriendsRef, currentUser.uid), {
              status: 'pending',
              email: currentUser.email,
@@ -188,14 +184,9 @@ export async function deleteUserAction(): Promise<ActionResult<{ success: boolea
             return { error: "You must be logged in to delete your account." };
         }
         const db = getDb();
-        // This is a simplified deletion. A full implementation would need to handle
-        // removing the user from friend lists, deleting their content, etc.
-        // It might be better handled by a Firebase Function.
+
         const userRef = doc(db, "users", currentUser.uid);
         await deleteDoc(userRef);
-        
-        // Note: This does NOT delete the user from Firebase Auth.
-        // That requires the Admin SDK and is best done in a secure backend environment.
 
         return { data: { success: true } };
     } catch (e: any) {
@@ -225,7 +216,6 @@ export async function saveStudyMaterialAction(
                 await updateDoc(materialRef, { content, title, updatedAt: serverTimestamp() });
                 return { data: { id: materialId } };
             } else {
-                // If it doesn't exist or user doesn't own it, create a new one.
                  const newDocRef = await addDoc(materialsRef, {
                     userId: currentUser.uid,
                     content,

@@ -72,17 +72,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            name: user.displayName || "", // Start with displayName from provider or empty
+            name: user.displayName || "", 
             college: "",
             favoriteSubject: "",
             photoURL: user.photoURL || "",
         };
         await setDoc(userRef, profile);
-        // If the name is still empty, they need to go to onboarding
         router.push('/onboarding');
     }
-    // If user exists, but their profile name is not set, they might have skipped onboarding.
-    else if (!docSnap.data()?.name) {
+    else if (!docSnap.data()?.name || !user.displayName) {
         router.push('/onboarding');
     }
   }, [router]);
@@ -151,8 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfileInAuth = async (displayName: string, photoURL?: string) => {
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName, photoURL });
-        // Create a new user object to trigger re-render in components using the user object
-        setUser(Object.assign(Object.create(auth.currentUser), auth.currentUser));
+        setUser({ ...auth.currentUser });
     }
   };
 

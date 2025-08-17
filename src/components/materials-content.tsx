@@ -55,7 +55,7 @@ export function MaterialsContent() {
                             <CardHeader>
                                 <CardTitle className="truncate">{material.title}</CardTitle>
                                 <CardDescription>
-                                    Created {formatDistanceToNow(material.createdAt.toDate(), { addSuffix: true })}
+                                    Updated {formatDistanceToNow(material.updatedAt.toDate(), { addSuffix: true })}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>

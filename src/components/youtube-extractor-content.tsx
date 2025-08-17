@@ -43,7 +43,6 @@ export function YouTubeExtractorContent() {
         }
 
         startSaving(async () => {
-            // Try to create a title from the video URL or use a generic one
             let title = "YouTube Transcript";
             try {
                 const url = new URL(videoUrl);
@@ -111,4 +110,3 @@ export function YouTubeExtractorContent() {
         </div>
     );
 }
-

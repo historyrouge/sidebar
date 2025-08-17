@@ -50,8 +50,6 @@ export async function getAuthenticatedUser() {
 
 export const getDb = () => {
     if (admin.apps.length === 0) {
-        // The above initializeFirebaseAdmin() call should have already run.
-        // If we are here, it means initialization failed.
         throw new Error("Firebase Admin SDK is not initialized.");
     }
     return admin.firestore();

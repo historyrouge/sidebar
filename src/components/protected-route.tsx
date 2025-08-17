@@ -13,7 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (loading) return; // Wait for the auth state to be determined
+    if (loading) return; 
 
     const isPublic = publicRoutes.includes(pathname);
     const isOnboarding = pathname === '/onboarding';
@@ -26,7 +26,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         if (isPublic) {
           router.push('/');
         }
-        // If user is logged in but hasn't completed onboarding (indicated by no displayName)
         else if (!user.displayName && !isOnboarding) {
           router.push('/onboarding');
         }
@@ -34,8 +33,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   }, [user, loading, pathname, router]);
 
-  // While loading, or if a redirect is imminent, show a loading screen.
-  // This prevents content flashing.
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }

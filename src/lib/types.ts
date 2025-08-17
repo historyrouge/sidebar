@@ -6,6 +6,7 @@ export interface StudyMaterial {
     title: string;
     content: string;
     createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 export interface StudyMaterialWithId extends StudyMaterial {

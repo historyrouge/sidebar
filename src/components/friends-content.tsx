@@ -52,7 +52,7 @@ export function FriendsContent() {
             } else {
                 toast({ title: "Friend request sent!", description: `Your request to ${friendEmail} has been sent.` });
                 setFriendEmail("");
-                fetchFriends(); // Refresh the list
+                fetchFriends(); 
             }
         });
     };
@@ -64,7 +64,7 @@ export function FriendsContent() {
                 toast({ title: `Failed to ${action} request`, description: result.error, variant: 'destructive' });
             } else {
                 toast({ title: "Success", description: `Friend request has been ${action === 'accept' ? 'accepted' : 'declined'}.` });
-                fetchFriends(); // Refresh the list
+                fetchFriends(); 
             }
         });
     }

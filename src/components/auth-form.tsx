@@ -107,7 +107,7 @@ export function AuthForm({ type }: AuthFormProps) {
     try {
       if (type === "signup") {
         await signUp(values.email, values.password);
-        router.push("/onboarding");
+        // router.push("/onboarding"); // this will be handled by the protected route now
       } else {
         await signIn(values.email, values.password);
         router.push("/");
