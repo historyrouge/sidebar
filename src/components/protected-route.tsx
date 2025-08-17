@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const publicRoutes = ['/login', '/signup'];
@@ -13,38 +13,44 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading) {
-      const isPublic = publicRoutes.includes(pathname);
-      const isOnboarding = pathname === '/onboarding';
+    if (loading) return; // Wait for the auth state to be determined
 
-      if (!user && !isPublic) {
-        router.push('/login');
-      }
-      
-      if (user && isPublic) {
-        router.push('/');
-      }
+    const isPublic = publicRoutes.includes(pathname);
+    const isOnboarding = pathname === '/onboarding';
 
-      if (user && !isOnboarding && !user.displayName) {
-        router.push('/onboarding');
-      }
+    if (!user && !isPublic) {
+      router.push('/login');
     }
+    
+    if (user) {
+        if (isPublic) {
+          router.push('/');
+        }
+        // If user is logged in but hasn't completed onboarding (indicated by no displayName)
+        else if (!user.displayName && !isOnboarding) {
+          router.push('/onboarding');
+        }
+    }
+
   }, [user, loading, pathname, router]);
 
+  // While loading, or if a redirect is imminent, show a loading screen.
+  // This prevents content flashing.
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
-
-  // Prevent rendering children if a redirect is imminent
+  
   const isPublic = publicRoutes.includes(pathname);
   if (!user && !isPublic) {
-    return <div className="flex h-screen w-full items-center justify-center">Redirecting...</div>;
+    return <div className="flex h-screen w-full items-center justify-center">Redirecting to login...</div>;
   }
+
   if (user && isPublic) {
-     return <div className="flex h-screen w-full items-center justify-center">Redirecting...</div>;
+    return <div className="flex h-screen w-full items-center justify-center">Redirecting to dashboard...</div>;
   }
-  if (user && pathname !== '/onboarding' && !user.displayName) {
-     return <div className="flex h-screen w-full items-center justify-center">Redirecting...</div>;
+
+  if (user && !user.displayName && pathname !== '/onboarding') {
+    return <div className="flex h-screen w-full items-center justify-center">Redirecting to onboarding...</div>;
   }
 
   return <>{children}</>;

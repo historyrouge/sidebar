@@ -43,6 +43,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const setCookie = (name: string, value: string, days: number) => {
+    if (typeof window === 'undefined') return;
     let expires = "";
     if (days) {
         const date = new Date();
@@ -53,6 +54,7 @@ const setCookie = (name: string, value: string, days: number) => {
 }
 
 const eraseCookie = (name: string) => {   
+    if (typeof window === 'undefined') return;
     document.cookie = name+'=; Max-Age=-99999999;';  
 }
 
@@ -62,31 +64,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleNewUser = useCallback(async (user: User, isNewUser: boolean) => {
+  const handleNewUser = useCallback(async (user: User) => {
     const userRef = doc(db, "users", user.uid);
-    let shouldGoToOnboarding = isNewUser;
+    const docSnap = await getDoc(userRef);
 
-    if (!isNewUser) {
-        const docSnap = await getDoc(userRef);
-        // If user exists in auth but not firestore, treat as new
-        if (!docSnap.exists()) {
-          shouldGoToOnboarding = true;
-        }
-    }
-
-    if (shouldGoToOnboarding) {
+    if (!docSnap.exists()) {
         const profile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            name: user.displayName || "", // Start with empty name to force onboarding
+            name: user.displayName || "", // Start with displayName from provider or empty
             college: "",
             favoriteSubject: "",
             photoURL: user.photoURL || "",
         };
-        await setDoc(userRef, profile, { merge: true });
+        await setDoc(userRef, profile);
+        // If the name is still empty, they need to go to onboarding
+        if (!profile.name) {
+            router.push('/onboarding');
+        }
+    }
+    // If user exists, their displayName should be set. If not, they skipped onboarding.
+    else if (!docSnap.data().name) {
         router.push('/onboarding');
-    } else {
-        router.push('/');
     }
   }, [router]);
 
@@ -101,13 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     });
-
+    
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
-          const { _tokenResponse } = result as any;
-          const isNewUser = _tokenResponse?.isNewUser || false;
-          await handleNewUser(result.user, isNewUser);
+          await handleNewUser(result.user);
         }
       })
       .catch((error) => {
@@ -123,31 +120,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [handleNewUser, toast]);
 
   const signUp = async (email: string, pass: string) => {
-    setLoading(true);
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    await handleNewUser(userCredential.user, true);
+    await handleNewUser(userCredential.user);
     return userCredential;
   };
 
   const signIn = async (email: string, pass: string) => {
-    setLoading(true);
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
   const signInWithGoogle = async () => {
-    setLoading(true);
     const provider = new GoogleAuthProvider();
     await signInWithRedirect(auth, provider);
   }
 
   const signInWithGitHub = async () => {
-    setLoading(true);
     const provider = new GithubAuthProvider();
     await signInWithRedirect(auth, provider);
   }
 
   const logout = () => {
-    router.push('/login');
     return signOut(auth);
   };
   
@@ -159,8 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfileInAuth = async (displayName: string, photoURL?: string) => {
     if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName, photoURL });
-        // Manually update the user object to reflect changes immediately
-        setUser({ ...auth.currentUser });
+        // Create a new user object to trigger re-render
+        setUser(Object.assign(Object.create(auth.currentUser), auth.currentUser));
     }
   };
 
