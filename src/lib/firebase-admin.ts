@@ -1,6 +1,6 @@
 
 import * as admin from 'firebase-admin';
-import { headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 const initializeFirebaseAdmin = () => {
     if (admin.apps.length > 0) {
@@ -26,18 +26,11 @@ initializeFirebaseAdmin();
 
 
 export async function getAuthenticatedUser() {
-    const headerList = headers();
-    const authHeader = headerList.get('Authorization');
-
-    if (!authHeader) {
-        console.error("No Authorization header found");
-        return null;
-    }
-
-    const idToken = authHeader.split('Bearer ')[1];
-
+    const cookieStore = cookies();
+    const idToken = cookieStore.get('firebaseIdToken')?.value;
+    
     if (!idToken) {
-        console.error("No token found in Authorization header");
+        console.error("No firebaseIdToken cookie found");
         return null;
     }
     

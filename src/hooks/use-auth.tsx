@@ -89,15 +89,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       if (user) {
-        await user.reload();
-        const token = await user.getIdToken(true);
+        const token = await user.getIdToken();
         setCookie("firebaseIdToken", token, 1);
         setUser(user);
         
         const userRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(userRef);
         
-        // A user needs onboarding if their profile doesn't exist OR their display name is not set
         if (!docSnap.exists() || !user.displayName) {
           router.push('/onboarding');
         } else if (publicRoutes.includes(pathname)){
