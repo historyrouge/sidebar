@@ -3,7 +3,6 @@
 
 import {
   BookOpen,
-  Code,
   GraduationCap,
   HelpCircle,
   Info,
@@ -37,7 +36,6 @@ const menuItems = [
     { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
     { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion className="size-4" />, href: "/quiz" },
-    { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
     { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
     // { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
     // { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
