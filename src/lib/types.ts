@@ -28,4 +28,7 @@ export interface Friend {
     email: string;
     photoURL?: string;
     status: 'pending' | 'accepted' | 'requested';
+    // Timestamps can be null if the document is new and being created through a listener
+    createdAt?: Timestamp | null;
+    updatedAt?: Timestamp | null;
 }

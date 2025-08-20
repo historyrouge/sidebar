@@ -12,36 +12,49 @@ import Link from "next/link";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Input } from "./ui/input";
 import { useEffect, useState, useTransition } from "react";
-import { getFriendsAction, manageFriendRequestAction, sendFriendRequestAction } from "@/app/actions";
+import { manageFriendRequestAction, sendFriendRequestAction } from "@/app/actions";
 import type { Friend } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 
 export function FriendsContent() {
     const { user, logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const [friends, setFriends] = useState<Friend[]>([]);
-    const [isLoading, startLoading] = useTransition();
+    const [isLoading, setIsLoading] = useState(true);
     const [isActionLoading, startActionLoading] = useTransition();
     const [friendEmail, setFriendEmail] = useState("");
     const { toast } = useToast();
 
-    const fetchFriends = async () => {
-        startLoading(async () => {
-            const result = await getFriendsAction();
-            if (result.error) {
-                toast({ title: "Error fetching friends", description: result.error, variant: 'destructive' });
-            } else {
-                setFriends(result.data || []);
-            }
-        });
-    };
-
     useEffect(() => {
-        if(user) {
-            fetchFriends();
-        }
-    }, [user]);
+        if (!user) {
+            setIsLoading(false);
+            return;
+        };
+
+        const friendsRef = collection(db, `users/${user.uid}/friends`);
+        const q = query(friendsRef);
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const friendsData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Friend[];
+            setFriends(friendsData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching friends in real-time: ", error);
+            toast({ title: "Error fetching friends", description: "Could not connect to the database.", variant: 'destructive' });
+            setIsLoading(false);
+        });
+
+        // Cleanup the listener when the component unmounts
+        return () => unsubscribe();
+    }, [user, toast]);
+
 
     const handleAddFriend = async () => {
         if (!friendEmail) return;
@@ -52,7 +65,6 @@ export function FriendsContent() {
             } else {
                 toast({ title: "Friend request sent!", description: `Your request to ${friendEmail} has been sent.` });
                 setFriendEmail("");
-                fetchFriends(); 
             }
         });
     };
@@ -64,7 +76,6 @@ export function FriendsContent() {
                 toast({ title: `Failed to ${action} request`, description: result.error, variant: 'destructive' });
             } else {
                 toast({ title: "Success", description: `Friend request has been ${action === 'accept' ? 'accepted' : 'declined'}.` });
-                fetchFriends(); 
             }
         });
     }
