@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { getYoutubeTranscriptAction, saveStudyMaterialAction } from "@/app/actions";
+import { getYoutubeTranscriptAction } from "@/app/actions";
 import { Loader2, Youtube, Wand2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -36,30 +36,13 @@ export function YouTubeExtractorContent() {
         });
     };
 
-    const handleSaveAsMaterial = () => {
+    const handleCopyToClipboard = () => {
         if (!transcript.trim()) {
-            toast({ title: "No transcript to save", description: "Please extract a transcript first.", variant: 'destructive' });
+            toast({ title: "No transcript to copy", description: "Please extract a transcript first.", variant: 'destructive' });
             return;
         }
-
-        startSaving(async () => {
-            let title = "YouTube Transcript";
-            try {
-                const url = new URL(videoUrl);
-                const videoId = url.searchParams.get("v");
-                if (videoId) {
-                    title = `Transcript for video ${videoId}`;
-                }
-            } catch (e) { /* ignore invalid URL for title generation */ }
-
-            const result = await saveStudyMaterialAction(transcript, title);
-            if (result.error) {
-                toast({ title: "Failed to save material", description: result.error, variant: 'destructive' });
-            } else if (result.data) {
-                toast({ title: "Material saved!", description: "You can now analyze this material in a new Study Session." });
-                router.push(`/study-now?id=${result.data.id}`);
-            }
-        });
+        navigator.clipboard.writeText(transcript);
+        toast({ title: "Copied to clipboard!" });
     }
 
     return (
@@ -89,7 +72,7 @@ export function YouTubeExtractorContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Extracted Transcript</CardTitle>
-                        <CardDescription>The transcript will appear below. You can save it as study material.</CardDescription>
+                        <CardDescription>The transcript will appear below. You can copy it to use in other tools.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Textarea 
@@ -100,9 +83,9 @@ export function YouTubeExtractorContent() {
                         />
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={handleSaveAsMaterial} disabled={isSaving || !transcript.trim()}>
+                        <Button onClick={handleCopyToClipboard} disabled={isSaving || !transcript.trim()}>
                             {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2"/>}
-                            Save as Study Material
+                            Copy Transcript
                         </Button>
                     </CardFooter>
                 </Card>

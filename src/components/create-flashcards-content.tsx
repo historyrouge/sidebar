@@ -7,28 +7,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, PlusSquare, Wand2 } from "lucide-react";
+import { Loader2, PlusSquare, Wand2, Moon, Sun } from "lucide-react";
 import React, { useState, useTransition } from "react";
 import { Flashcard } from "./flashcard";
 import { ScrollArea } from "./ui/scroll-area";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 import { SidebarTrigger } from "./ui/sidebar";
-import { useAuth } from "@/hooks/use-auth";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-
 
 export function CreateFlashcardsContent() {
-    const { user, logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const [content, setContent] = useState("");
     const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
@@ -55,15 +41,6 @@ export function CreateFlashcardsContent() {
         });
     };
 
-    const getInitials = (name?: string | null) => {
-        if (!name) return "SS";
-        const names = name.split(' ');
-        if (names.length > 1) {
-          return names[0][0] + names[names.length - 1][0];
-        }
-        return name.substring(0, 2);
-    }
-
     return (
         <div className="flex h-screen flex-col bg-background">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
@@ -81,35 +58,6 @@ export function CreateFlashcardsContent() {
                         <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                         <span className="sr-only">Toggle theme</span>
                     </Button>
-                    <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Avatar className="h-9 w-9 cursor-pointer">
-                        <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
-                        <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-                        </Avatar>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href="/profile" passHref>
-                            <DropdownMenuItem>
-                                <User className="mr-2 h-4 w-4" />
-                                <span>Profile</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        <Link href="/settings" passHref>
-                            <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                <span>Settings</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => logout()}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Log out</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
@@ -171,4 +119,3 @@ export function CreateFlashcardsContent() {
         </div>
     );
 }
-

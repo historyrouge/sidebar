@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
-import { useAuth } from '@/hooks/use-auth';
 import { marked } from 'marked';
 
 
@@ -30,8 +29,6 @@ export function TutorChat({ content }: TutorChatProps) {
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
-
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,15 +75,6 @@ export function TutorChat({ content }: TutorChatProps) {
     }
   }, [history]);
   
-  const getInitials = (name?: string | null) => {
-    if (!name) return "U";
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
-    }
-    return name.substring(0, 2);
-  }
-
   return (
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
@@ -123,8 +111,7 @@ export function TutorChat({ content }: TutorChatProps) {
               </div>
               {message.role === "user" && (
                 <Avatar className="h-8 w-8">
-                   <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
-                   <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               )}
             </div>

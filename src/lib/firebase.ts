@@ -16,6 +16,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
+// Authentication is no longer used, but we keep the firestore instance for other potential features.
 const auth = getAuth(app);
 const db = getFirestore(app);
 

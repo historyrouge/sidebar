@@ -2,35 +2,30 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, saveStudyMaterialAction, getStudyMaterialByIdAction, textToSpeechAction, summarizeContentAction } from "@/app/actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, LogOut, Moon, Settings, Sun, Wand2, Save, Image as ImageIcon, X, User, Volume2, Pilcrow, CheckCircle2, Circle } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { TutorChat } from "./tutor-chat";
-import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "next-themes";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [materialId, setMaterialId] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
@@ -43,46 +38,17 @@ export function StudyNowContent() {
 
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
-  const [isSaving, startSaving] = useTransition();
   const [isLoadingMaterial, startLoadingMaterial] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const [isGeneratingSummary, startGeneratingSummary] = useTransition();
-  const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  useEffect(() => {
-    const id = searchParams.get('id');
-    if (id) {
-      setMaterialId(id);
-      startLoadingMaterial(async () => {
-        const result = await getStudyMaterialByIdAction(id);
-        if (result.error) {
-          toast({ title: "Failed to load material", description: result.error, variant: "destructive" });
-        } else if (result.data) {
-          setContent(result.data.content);
-          setTitle(result.data.title);
-          setMaterialId(id);
-          // Automatically run analysis on loaded content
-          startAnalyzing(async () => {
-            const analysisResult = await analyzeContentAction(result.data.content);
-            if (analysisResult.error) {
-              toast({ title: "Analysis Failed", description: analysisResult.error, variant: "destructive" });
-            } else {
-              setAnalysis(analysisResult.data);
-              setActiveTab("analysis");
-            }
-          });
-        }
-      });
-    }
-  }, [searchParams, toast]);
 
   const handleAnalyze = async () => {
     if (imageDataUri) {
@@ -99,20 +65,6 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      // Save material first if it's new
-      if (!materialId) {
-        const saveResult = await saveStudyMaterialAction(content, title || "Untitled Material");
-        if (saveResult.error) {
-            toast({ title: "Could not save material", description: saveResult.error, variant: "destructive" });
-            // continue with analysis even if save fails
-        } else if (saveResult.data) {
-            setMaterialId(saveResult.data.id);
-            if (!title) setTitle("Untitled Material");
-            toast({ title: "Material Saved", description: "Your study material has been saved." });
-            router.replace(`/study-now?id=${saveResult.data.id}`);
-        }
-      }
-
       const result = await analyzeContentAction(content);
       if (result.error) {
         toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
@@ -142,29 +94,6 @@ export function StudyNowContent() {
     });
   };
 
-  const handleSave = useCallback(async () => {
-    if (isSaving || (!content && !imageDataUri)) return;
-    
-    startSaving(async () => {
-      // For now, we only save text-based content. Image saving can be a future feature.
-      if (imageDataUri) {
-        toast({ title: "Note", description: "Image saving is not yet supported. Only the text prompt will be saved." });
-      }
-
-      const result = await saveStudyMaterialAction(content, title || 'Untitled Material', materialId);
-      if (result.error) {
-        toast({ title: "Failed to save", description: result.error, variant: 'destructive' });
-      } else if (result.data) {
-        if (!materialId) {
-          router.replace(`/study-now?id=${result.data.id}`);
-        }
-        setMaterialId(result.data.id);
-        toast({ title: "Material Saved", description: "Your changes have been saved." });
-      }
-    });
-  }, [content, title, isSaving, toast, imageDataUri, materialId, router]);
-
-
   const handleGenerateFlashcards = async () => {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
@@ -183,7 +112,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingQuiz(async () => {
       const quizContent = `Key Concepts: ${analysis.keyConcepts.join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-      const result = await generateQuizAction(quizContent);
+      const result = await generateQuizAction({content: quizContent, numQuestions: 10});
       if (result.error) {
         toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -246,16 +175,14 @@ export function StudyNowContent() {
           const text = e.target?.result as string;
           setContent(text);
           setTitle(file.name.replace('.txt', ''));
-          setMaterialId(null);
           setAnalysis(null);
           setFlashcards(null);
           setQuiz(null);
           setSummary(null);
           setImageDataUri(null);
-          router.replace('/study-now');
           toast({
             title: "File loaded",
-            description: "The file content has been loaded. Click Analyze to save and begin.",
+            description: "The file content has been loaded. Click Analyze to begin.",
           });
         };
         reader.readAsText(file);
@@ -278,12 +205,10 @@ export function StudyNowContent() {
                 setImageDataUri(dataUri);
                 setContent(""); // Clear text content
                 setTitle(file.name);
-                setMaterialId(null);
                 setAnalysis(null);
                 setFlashcards(null);
                 setQuiz(null);
                 setSummary(null);
-                router.replace('/study-now');
                 toast({
                   title: "Image loaded",
                   description: "You can add a text prompt to guide the analysis.",
@@ -310,19 +235,10 @@ export function StudyNowContent() {
     setQuiz(null);
     setSummary(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
-    router.replace('/study-now');
   }
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
   
-  const getInitials = (name?: string | null) => {
-    if (!name) return "SS";
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
-    }
-    return name.substring(0, 2);
-  }
 
   return (
     <div className="flex h-screen flex-col bg-muted/20">
@@ -341,35 +257,6 @@ export function StudyNowContent() {
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-9 w-9 cursor-pointer">
-                  <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
-                  <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <Link href="/profile" passHref>
-                    <DropdownMenuItem>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                    </DropdownMenuItem>
-                </Link>
-                <Link href="/settings" passHref>
-                    <DropdownMenuItem>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                    </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
         </div>
       </header>
       <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
@@ -430,10 +317,6 @@ export function StudyNowContent() {
                     Upload Image
                 </Button>
               </div>
-               <Button variant="secondary" onClick={handleSave} disabled={isSaving || isLoadingMaterial || (!content.trim() && !imageDataUri)}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {materialId ? 'Save Changes' : 'Save'}
-               </Button>
               <input
                 type="file"
                 ref={fileInputRef}

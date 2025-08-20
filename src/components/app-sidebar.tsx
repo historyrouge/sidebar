@@ -39,10 +39,10 @@ const menuItems = [
     { name: "Quiz", icon: <FileQuestion className="size-4" />, href: "/quiz" },
     { name: "Code Agent", icon: <Code className="size-4" />, href: "/code-agent" },
     { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
-    { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
-    { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
+    // { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
+    // { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
     { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
-    { name: "Profile", icon: <User className="size-4" />, href: "/profile" },
+    // { name: "Profile", icon: <User className="size-4" />, href: "/profile" },
     { name: "Settings", icon: <Settings className="size-4" />, href: "/settings" },
     { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
     { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
@@ -85,7 +85,7 @@ export function AppSidebar() {
                 <h1 className="text-lg font-semibold">ScholarSage</h1>
             </Link>
             <Button asChild variant="ghost" size="icon" className="group-data-[collapsible=icon]:hidden">
-                <Link href="/" >
+                <Link href="/study-now" >
                     <FilePlus2 />
                 </Link>
             </Button>

@@ -2,11 +2,10 @@
 "use client";
 
 import { codeAgentAction, CodeAgentInput } from "@/app/actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, Code, Loader2, Send } from "lucide-react";
@@ -42,7 +41,6 @@ export function CodeAgentChat({
 }) {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
   
   const handleSendMessage = async (e: React.FormEvent, message?: string) => {
     e.preventDefault();
@@ -84,15 +82,6 @@ export function CodeAgentChat({
         }, 100);
     }
   }, [history]);
-
-  const getInitials = (name?: string | null) => {
-    if (!name) return "U";
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
-    }
-    return name.substring(0, 2);
-  }
 
   return (
     <div className="relative h-full">
@@ -146,8 +135,7 @@ export function CodeAgentChat({
                 
                 {message.role === "user" && (
                     <Avatar className="h-9 w-9">
-                    <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "User"} />
-                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                    <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                 )}
                 </div>
