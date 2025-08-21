@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -30,6 +30,7 @@ export function StudyNowContent() {
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
   const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function StudyNowContent() {
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const [isGeneratingSummary, startGeneratingSummary] = useTransition();
+  const [isGeneratingImage, startGeneratingImage] = useTransition();
   const { theme, setTheme } = useTheme();
 
   const { toast } = useToast();
@@ -73,6 +75,7 @@ export function StudyNowContent() {
         setFlashcards(null);
         setQuiz(null);
         setSummary(null);
+        setGeneratedImage(null);
         setActiveTab("analysis");
       }
     });
@@ -89,6 +92,7 @@ export function StudyNowContent() {
             setFlashcards(null);
             setQuiz(null);
             setSummary(null);
+            setGeneratedImage(null);
             setActiveTab("analysis");
         }
     });
@@ -133,7 +137,21 @@ export function StudyNowContent() {
             setActiveTab("summary");
         }
     });
-};
+  };
+
+  const handleGenerateImage = async () => {
+    if (!analysis) return;
+    startGeneratingImage(async () => {
+        const prompt = `Based on the following concepts: ${analysis.keyConcepts.join(", ")}.`;
+        const result = await generateImageAction({ prompt });
+        if (result.error) {
+            toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
+        } else {
+            setGeneratedImage(result.data ?? null);
+            setActiveTab("image");
+        }
+    });
+  };
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
@@ -179,6 +197,7 @@ export function StudyNowContent() {
           setFlashcards(null);
           setQuiz(null);
           setSummary(null);
+          setGeneratedImage(null);
           setImageDataUri(null);
           toast({
             title: "File loaded",
@@ -209,6 +228,7 @@ export function StudyNowContent() {
                 setFlashcards(null);
                 setQuiz(null);
                 setSummary(null);
+                setGeneratedImage(null);
                 toast({
                   title: "Image loaded",
                   description: "You can add a text prompt to guide the analysis.",
@@ -234,11 +254,21 @@ export function StudyNowContent() {
     setFlashcards(null);
     setQuiz(null);
     setSummary(null);
+    setGeneratedImage(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary;
+  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary || isGeneratingImage;
   
+  const TABS = [
+    { value: "analysis", label: "Analysis" },
+    { value: "summary", label: "Summary" },
+    { value: "flashcards", label: "Flashcards" },
+    { value: "quiz", label: "Quiz" },
+    { value: "tutor", label: "Tutor" },
+    { value: "image", label: "Image" }
+  ];
+
 
   return (
     <div className="flex h-screen flex-col bg-muted/20">
@@ -359,12 +389,8 @@ export function StudyNowContent() {
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="analysis">Analysis</TabsTrigger>
-                    <TabsTrigger value="summary">Summary</TabsTrigger>
-                    <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-                    <TabsTrigger value="quiz">Quiz</TabsTrigger>
-                    <TabsTrigger value="tutor">Tutor</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+                    {TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
@@ -486,6 +512,21 @@ export function StudyNowContent() {
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
                       <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
+                    </TabsContent>
+                    <TabsContent value="image" className="h-full">
+                       {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <Image src={generatedImage.imageDataUri} alt="Generated visual aid" width={400} height={400} className="rounded-lg border shadow-md" />
+                          <p className="text-sm text-muted-foreground mt-4">A visual aid for your study material.</p>
+                        </div>
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                           <Button onClick={handleGenerateImage} disabled={isGeneratingImage}>
+                            <Camera className="mr-2 h-4 w-4" />
+                            Generate Image
+                          </Button>
+                        </div>
+                      )}
                     </TabsContent>
                   </ScrollArea>
                 </Tabs>

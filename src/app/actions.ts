@@ -11,6 +11,7 @@ import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/gen
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from "@/ai/flows/youtube-transcript";
+import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 
 // NOTE: All functions that required user authentication have been removed or disabled.
 // This includes managing friends, profiles, and saving study materials to an account.
@@ -141,6 +142,19 @@ export async function getYoutubeTranscriptAction(
   }
 }
 
+export async function generateImageAction(
+  input: GenerateImageInput
+): Promise<ActionResult<GenerateImageOutput>> {
+  try {
+    const output = await generateImage(input);
+    return { data: output };
+  } catch (e: any) {
+    console.error(e);
+    return { error: e.message || "An unknown error occurred." };
+  }
+}
+
+
 // Dummy types for exports where the original type is no longer relevant
 export type UserProfile = {};
 export type Friend = {};
@@ -148,5 +162,6 @@ export type Friend = {};
 export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput };
+export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput, GenerateImageOutput };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
+
