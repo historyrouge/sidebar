@@ -6,6 +6,7 @@ import { GenerateQuizzesOutput } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
+import { Button } from "./ui/button";
 
 type QuizData = {
     quizzes: GenerateQuizzesOutput['quizzes'];
