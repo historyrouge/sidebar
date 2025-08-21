@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -201,6 +201,11 @@ export function StudyNowContent() {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
       setIsSynthesizing(null);
     }
+  };
+
+  const handleCopyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: `${type} Copied!`, description: `The ${type.toLowerCase()} has been copied to your clipboard.` });
   };
 
 
@@ -450,6 +455,26 @@ export function StudyNowContent() {
                             )}
                             </AccordionContent>
                         </AccordionItem>
+                        {analysis.codeExamples && analysis.codeExamples.length > 0 && (
+                            <AccordionItem value="code-examples" className="rounded-md border bg-card px-4">
+                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
+                                    <div className="flex items-center gap-3"><Code />Code Examples</div>
+                                </AccordionTrigger>
+                                <AccordionContent className="space-y-4">
+                                {analysis.codeExamples.map((example, i) => 
+                                    <div key={i} className="space-y-2">
+                                        <p className="text-sm text-muted-foreground">{example.explanation}</p>
+                                        <div className="relative rounded-md bg-muted/50 p-4 font-mono text-xs">
+                                            <Button size="icon" variant="ghost" className="absolute top-2 right-2 h-6 w-6" onClick={() => handleCopyToClipboard(example.code, "Code")}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <pre className="whitespace-pre-wrap"><code>{example.code}</code></pre>
+                                        </div>
+                                    </div>
+                                )}
+                                </AccordionContent>
+                            </AccordionItem>
+                        )}
                         <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
                             <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
                                 <div className="flex items-center gap-3"><HelpCircle />Potential Questions</div>

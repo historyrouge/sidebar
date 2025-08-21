@@ -162,5 +162,6 @@ export type Friend = {};
 export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
-export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput, GenerateImageOutput };
+export type { GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput, GenerateImageOutput };
+export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
