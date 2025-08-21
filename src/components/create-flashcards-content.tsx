@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, PlusSquare, Wand2, Moon, Sun } from "lucide-react";
-import React, { useState, useTransition } from "react";
+import { Loader2, PlusSquare, Wand2, Moon, Sun, Mic, MicOff } from "lucide-react";
+import React, { useState, useTransition, useEffect, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { ScrollArea } from "./ui/scroll-area";
 import { useTheme } from "next-themes";
@@ -20,6 +20,42 @@ export function CreateFlashcardsContent() {
     const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
     const [isGenerating, startGenerating] = useTransition();
     const { toast } = useToast();
+    const [isRecording, setIsRecording] = useState(false);
+    const recognitionRef = useRef<any>(null);
+
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition();
+            const recognition = recognitionRef.current;
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => setIsRecording(true);
+            recognition.onend = () => setIsRecording(false);
+            recognition.onerror = (event: any) => {
+                toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
+                setIsRecording(false);
+            };
+            recognition.onresult = (event: any) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+                setContent(prev => prev + interimTranscript);
+            };
+        }
+    }, [toast]);
+
+    const handleToggleRecording = () => {
+        if (!recognitionRef.current) return;
+        if (isRecording) {
+            recognitionRef.current.stop();
+        } else {
+            recognitionRef.current.start();
+        }
+    };
+
 
     const handleGenerateFlashcards = async () => {
         if (content.trim().length < 50) {
@@ -68,12 +104,23 @@ export function CreateFlashcardsContent() {
                         <CardDescription>Paste your study material below to create a set of flashcards.</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-1">
-                        <Textarea
-                            placeholder="Paste your content here..."
-                            className="h-full min-h-[300px] resize-none"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                        />
+                        <div className="relative h-full">
+                            <Textarea
+                                placeholder="Paste your content here..."
+                                className="h-full min-h-[300px] resize-none pr-10"
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                            />
+                            <Button
+                                size="icon"
+                                variant={isRecording ? 'destructive' : 'ghost'}
+                                onClick={handleToggleRecording}
+                                className="absolute bottom-3 right-3"
+                                >
+                                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
+                            </Button>
+                        </div>
                         </CardContent>
                         <CardFooter>
                         <Button onClick={handleGenerateFlashcards} disabled={isGenerating || content.trim().length < 50}>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { GraduationCap, Loader2, Send, User } from "lucide-react";
+import { GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { marked } from 'marked';
 
@@ -29,12 +29,19 @@ export function TutorChat({ content }: TutorChatProps) {
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleSendMessage = async (e: React.FormEvent | null, message?: string) => {
+    e?.preventDefault();
+    const messageToSend = message || input;
+    if (!messageToSend.trim()) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    }
+
+    const userMessage: Message = { role: "user", content: messageToSend };
     setHistory((prev) => [...prev, userMessage]);
     setInput("");
 
@@ -42,7 +49,7 @@ export function TutorChat({ content }: TutorChatProps) {
       const chatHistory = history.map(({ role, content }) => ({ role, content }));
       const chatInput: ChatWithTutorInput = {
         content,
-        history: [...chatHistory, { role: "user", content: input }],
+        history: [...chatHistory, { role: "user", content: messageToSend }],
       };
       const result = await chatWithTutorAction(chatInput);
 
@@ -63,6 +70,55 @@ export function TutorChat({ content }: TutorChatProps) {
       }
     });
   };
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      const recognition = recognitionRef.current;
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => setIsRecording(true);
+      recognition.onend = () => setIsRecording(false);
+      recognition.onerror = (event: any) => {
+        toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
+        setIsRecording(false);
+      };
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        const fullTranscript = finalTranscript || interimTranscript;
+        setInput(fullTranscript);
+
+        if (finalTranscript.trim()) {
+            handleSendMessage(null, finalTranscript);
+        }
+      };
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history]);
+
+  const handleToggleRecording = () => {
+    if (!recognitionRef.current) return;
+    if (isRecording) {
+      recognitionRef.current.stop();
+    } else {
+      setInput("");
+      recognitionRef.current.start();
+    }
+  };
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -130,7 +186,7 @@ export function TutorChat({ content }: TutorChatProps) {
         </div>
       </ScrollArea>
       <div className="border-t p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+        <form onSubmit={(e) => handleSendMessage(e, input)} className="flex items-center gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -138,7 +194,11 @@ export function TutorChat({ content }: TutorChatProps) {
             disabled={isTyping || !content}
             title={!content ? "Please analyze some material first" : ""}
           />
-          <Button type="submit" disabled={isTyping || !input.trim() || !content}>
+           <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} onClick={handleToggleRecording} disabled={isTyping || !content}>
+            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+          </Button>
+          <Button type="submit" size="icon" disabled={isTyping || !input.trim() || !content}>
             {isTyping ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

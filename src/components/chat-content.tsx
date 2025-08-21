@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
+import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2 } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 
@@ -44,6 +44,8 @@ export function ChatContent({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
 
   const handleSendMessage = async (e: React.FormEvent | React.MouseEvent | null, message?: string) => {
     e?.preventDefault();
@@ -77,6 +79,51 @@ export function ChatContent({
       }
     });
   };
+
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: "The response has been copied to your clipboard." });
+  };
+  
+  const handleShare = async (text: string) => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'ScholarSage Response',
+                text: text,
+            });
+        } catch (error) {
+            toast({ title: "Sharing failed", description: "Could not share the response.", variant: "destructive" });
+        }
+    } else {
+        // Fallback for browsers that don't support navigator.share
+        handleCopyToClipboard(text);
+        toast({ title: "Copied!", description: "Sharing not supported. Response copied to clipboard instead." });
+    }
+  };
+
+  const handleTextToSpeech = async (text: string, id: string) => {
+    if (isSynthesizing === id) {
+      setAudioDataUri(null);
+      setIsSynthesizing(null);
+      return;
+    }
+    setIsSynthesizing(id);
+    setAudioDataUri(null);
+    try {
+      const result = await textToSpeechAction({ text });
+      if (result.error) {
+        toast({ title: 'Audio Generation Failed', description: result.error, variant: 'destructive' });
+        setIsSynthesizing(null);
+      } else if (result.data) {
+        setAudioDataUri(result.data.audioDataUri);
+      }
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+      setIsSynthesizing(null);
+    }
+  };
+
 
   useEffect(() => {
     // Check for browser support and initialize SpeechRecognition
@@ -162,7 +209,7 @@ export function ChatContent({
   return (
     <div className="relative h-full">
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto max-w-3xl w-full p-4 space-y-6 pb-24">
+            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-24">
             {history.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center">
                     <div className="bg-primary/10 p-4 rounded-full mb-4">
@@ -174,7 +221,7 @@ export function ChatContent({
                     </p>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left" onClick={(e) => handleSendMessage(e, prompt)}>
+                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left whitespace-normal" onClick={(e) => handleSendMessage(e, prompt)}>
                                 {prompt}
                             </Button>
                         ))}
@@ -190,19 +237,51 @@ export function ChatContent({
                 )}
                 >
                 {message.role === "model" && (
-                    <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
+                     <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
-                <div
-                    className={cn(
-                    "max-w-lg rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
-                    message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card border"
+                <div className="w-full max-w-lg">
+                    <div
+                        className={cn(
+                        "rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
+                        message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-card border"
+                        )}
+                        dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
+                    >
+                    </div>
+                    {message.role === 'model' && (
+                        <div className="mt-2 flex items-center gap-2">
+                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                <Copy className="h-4 w-4" />
+                                <span className="sr-only">Copy</span>
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                <Share2 className="h-4 w-4" />
+                                <span className="sr-only">Share</span>
+                            </Button>
+                             <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-7 w-7" 
+                                onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
+                                disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
+                             >
+                                {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                <span className="sr-only">Read aloud</span>
+                            </Button>
+                            {audioDataUri && isSynthesizing === `chat-${index}` && (
+                                <audio 
+                                    src={audioDataUri} 
+                                    autoPlay 
+                                    onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
+                                    className="hidden" 
+                                />
+                            )}
+                        </div>
                     )}
-                    dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
-                >
                 </div>
                 {message.role === "user" && (
                     <Avatar className="h-9 w-9">
