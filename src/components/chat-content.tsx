@@ -264,7 +264,7 @@ export function ChatContent({
                         <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
-                <div className="w-full max-w-lg">
+                <div className="w-full max-w-lg group relative">
                     <div
                         className={cn(
                         "rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
@@ -276,7 +276,7 @@ export function ChatContent({
                     >
                     </div>
                     {message.role === 'model' && (
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                 <Copy className="h-4 w-4" />
                                 <span className="sr-only">Copy</span>
