@@ -28,7 +28,6 @@ export function StudyNowContent() {
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
-  const [quiz, setQuiz] = useState<GenerateQuizzesOutput['quizzes'] | null>(null);
   const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
@@ -73,7 +72,6 @@ export function StudyNowContent() {
       } else {
         setAnalysis(result.data);
         setFlashcards(null);
-        setQuiz(null);
         setSummary(null);
         setGeneratedImage(null);
         setActiveTab("analysis");
@@ -90,7 +88,6 @@ export function StudyNowContent() {
         } else {
             setAnalysis(result.data as AnalyzeContentOutput);
             setFlashcards(null);
-            setQuiz(null);
             setSummary(null);
             setGeneratedImage(null);
             setActiveTab("analysis");
@@ -101,7 +98,7 @@ export function StudyNowContent() {
   const handleGenerateFlashcards = async () => {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
-      const flashcardContent = `Key Concepts: ${analysis.keyConcepts.join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+      const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
       const result = await generateFlashcardsAction(flashcardContent);
       if (result.error) {
         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
@@ -115,16 +112,34 @@ export function StudyNowContent() {
   const handleGenerateQuiz = async () => {
     if (!analysis) return;
     startGeneratingQuiz(async () => {
-      const quizContent = `Key Concepts: ${analysis.keyConcepts.join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-      const result = await generateQuizAction({content: quizContent, numQuestions: 10});
-      if (result.error) {
-        toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
-      } else {
-        setQuiz(result.data?.quizzes ?? []);
-        setActiveTab("quiz");
-      }
+        const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' });
+
+        if (result.error) {
+            toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
+        } else if (result.data) {
+            toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..." });
+            try {
+                const quizData = {
+                    quizzes: result.data.quizzes,
+                    options: {
+                        difficulty: 'medium',
+                        numQuestions: 10,
+                        timeLimit: 10 * 60, // 10 minutes in seconds
+                    }
+                };
+                localStorage.setItem('currentQuiz', JSON.stringify(quizData));
+                router.push('/quiz/start');
+            } catch (e) {
+                toast({
+                    title: "Could not start quiz",
+                    description: "There was an error while trying to proceed. Please try again.",
+                    variant: "destructive",
+                });
+            }
+        }
     });
-  };
+};
 
   const handleGenerateSummary = async () => {
     if (!content) return;
@@ -142,7 +157,7 @@ export function StudyNowContent() {
   const handleGenerateImage = async () => {
     if (!analysis) return;
     startGeneratingImage(async () => {
-        const prompt = `Based on the following concepts: ${analysis.keyConcepts.join(", ")}.`;
+        const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
         const result = await generateImageAction({ prompt });
         if (result.error) {
             toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
@@ -195,7 +210,6 @@ export function StudyNowContent() {
           setTitle(file.name.replace('.txt', ''));
           setAnalysis(null);
           setFlashcards(null);
-          setQuiz(null);
           setSummary(null);
           setGeneratedImage(null);
           setImageDataUri(null);
@@ -226,7 +240,6 @@ export function StudyNowContent() {
                 setTitle(file.name);
                 setAnalysis(null);
                 setFlashcards(null);
-                setQuiz(null);
                 setSummary(null);
                 setGeneratedImage(null);
                 toast({
@@ -252,7 +265,6 @@ export function StudyNowContent() {
     setContent("");
     setAnalysis(null);
     setFlashcards(null);
-    setQuiz(null);
     setSummary(null);
     setGeneratedImage(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
@@ -394,48 +406,37 @@ export function StudyNowContent() {
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
-                      <div className="space-y-6 pr-4">
-                        <div>
-                          <div className="flex justify-between items-center">
+                    <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
+                      <AccordionItem value="key-concepts" className="rounded-md border bg-background px-4">
+                        <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
+                          <div className="flex justify-between items-center w-full">
                             <h3 className="text-lg font-semibold">Key Concepts</h3>
-                             <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleTextToSpeech(analysis.keyConcepts.join('. '), 'key-concepts')}
-                                disabled={!!isSynthesizing}
-                            >
-                                {isSynthesizing === 'key-concepts' ? <Loader2 className="animate-spin" /> : <Volume2 />}
-                            </Button>
                           </div>
-                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                            {analysis.keyConcepts.map((concept, i) => <li key={i}>{concept}</li>)}
-                          </ul>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold">Potential Questions</h3>
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleTextToSpeech(analysis.potentialQuestions.join('. '), 'potential-questions')}
-                                disabled={!!isSynthesizing}
-                            >
-                                {isSynthesizing === 'potential-questions' ? <Loader2 className="animate-spin" /> : <Volume2 />}
-                            </Button>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {analysis.keyConcepts.map((concept, i) => 
+                            <div key={i} className="py-2">
+                              <p className="font-semibold">{concept.concept}</p>
+                              <p className="text-sm text-muted-foreground">{concept.explanation}</p>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="potential-questions" className="rounded-md border bg-background px-4">
+                        <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
+                          <div className="flex justify-between items-center w-full">
+                              <h3 className="text-lg font-semibold">Potential Questions</h3>
                           </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
                           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
                             {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
                           </ul>
-                        </div>
-                         {audioDataUri && isSynthesizing && (
-                            <div className="mt-4">
-                                <audio controls autoPlay src={audioDataUri} onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
-                                    Your browser does not support the audio element.
-                                </audio>
-                            </div>
-                        )}
-                      </div>
-                    </TabsContent>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </TabsContent>
                     <TabsContent value="summary" className="h-full">
                        {isGeneratingSummary ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating summary...</p></div> : summary ? (
                         <div className="space-y-4 pr-4">
@@ -483,35 +484,17 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="quiz" className="h-full">
-                       {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : quiz ? (
-                        <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
-                          {quiz.map((q, i) => (
-                            <AccordionItem value={`item-${i}`} key={q.question} className="rounded-md border bg-background px-4">
-                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">{i + 1}. {q.question}</AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="space-y-2 pb-4">
-                                        {q.options.map((option, optionIndex) => (
-                                            <div key={optionIndex} className={cn("flex items-center gap-3 text-sm", option === q.answer ? "font-semibold text-primary" : "text-muted-foreground")}>
-                                               {option === q.answer ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4" />}
-                                               <span>{option}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      ) : (
+                       {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : (
                         <div className="flex h-full items-center justify-center">
                            <Button onClick={handleGenerateQuiz} disabled={isGeneratingQuiz}>
                             {isGeneratingQuiz ? <Loader2 className="mr-2 animate-spin"/> : null}
-                            Generate Quiz
+                            Generate Quiz & Start
                           </Button>
                         </div>
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (

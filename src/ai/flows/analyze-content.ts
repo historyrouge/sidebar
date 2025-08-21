@@ -1,3 +1,4 @@
+
 // src/ai/flows/analyze-content.ts
 'use server';
 
@@ -18,7 +19,10 @@ const AnalyzeContentInputSchema = z.object({
 export type AnalyzeContentInput = z.infer<typeof AnalyzeContentInputSchema>;
 
 const AnalyzeContentOutputSchema = z.object({
-  keyConcepts: z.array(z.string()).describe('Key concepts identified in the content.'),
+  keyConcepts: z.array(z.object({
+    concept: z.string().describe('The key concept identified.'),
+    explanation: z.string().describe('A brief explanation of the concept.'),
+  })).describe('Key concepts identified in the content.'),
   potentialQuestions: z.array(z.string()).describe('Potential questions based on the content.'),
 });
 export type AnalyzeContentOutput = z.infer<typeof AnalyzeContentOutputSchema>;
@@ -35,7 +39,7 @@ const prompt = ai.definePrompt({
 
 Content to analyze: {{{content}}}
 
-Identify the key concepts and generate potential questions based on the content. Return the key concepts as a list of strings and the potential questions as a list of strings. Focus questions on factual recall, comprehension, and analysis.
+Identify the key concepts and generate potential questions based on the content. For each key concept, provide a brief explanation. Return the key concepts as a list of objects, each with a "concept" and "explanation" field. Return the potential questions as a list of strings. Focus questions on factual recall, comprehension, and analysis.
 `,
 });
 

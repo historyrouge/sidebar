@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -22,7 +23,10 @@ const AnalyzeImageContentInputSchema = z.object({
 export type AnalyzeImageContentInput = z.infer<typeof AnalyzeImageContentInputSchema>;
 
 const AnalyzeImageContentOutputSchema = z.object({
-  keyConcepts: z.array(z.string()).describe('Key concepts identified in the image.'),
+  keyConcepts: z.array(z.object({
+    concept: z.string().describe('The key concept identified.'),
+    explanation: z.string().describe('A brief explanation of the concept.'),
+  })).describe('Key concepts identified in the image.'),
   potentialQuestions: z.array(z.string()).describe('Potential questions based on the image content.'),
 });
 export type AnalyzeImageContentOutput = z.infer<typeof AnalyzeImageContentOutputSchema>;
@@ -40,7 +44,7 @@ const analyzeImagePrompt = ai.definePrompt({
 Image to analyze: {{media url=imageDataUri}}
 User prompt: {{{prompt}}}
 
-Analyze the image. If the user has provided a prompt, use it to guide your analysis. Identify the key concepts and generate potential questions based on the image content. Return the key concepts as a list of strings and the potential questions as a list of strings.
+Analyze the image. If the user has provided a prompt, use it to guide your analysis. For each key concept, provide a brief explanation. Return the key concepts as a list of objects, each with a "concept" and "explanation" field. Return the potential questions as a list of strings.
 `,
 });
 
