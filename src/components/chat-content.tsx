@@ -96,9 +96,9 @@ export function ChatContent({
                     <p className="text-muted-foreground mt-2 max-w-md">
                         I'm ScholarSage, your AI assistant. Ask me anything!
                     </p>
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Button key={i} variant="outline" className="text-left h-auto py-3" onClick={(e) => handleSendMessage(e, prompt)}>
+                            <Button key={i} variant="outline" className="text-left h-auto py-3 px-4 justify-start" onClick={(e) => handleSendMessage(e, prompt)}>
                                 {prompt}
                             </Button>
                         ))}
