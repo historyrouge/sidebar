@@ -32,18 +32,15 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 
 const menuItems = [
-    { name: "Chat", icon: <MessageSquare className="size-4" />, href: "/" },
-    { name: "Study Now", icon: <Sparkles className="size-4" />, href: "/study-now" },
-    { name: "Create Flashcards", icon: <PlusSquare className="size-4" />, href: "/create-flashcards" },
-    { name: "Quiz", icon: <FileQuestion className="size-4" />, href: "/quiz" },
-    { name: "YouTube Tools", icon: <Youtube className="size-4" />, href: "/youtube-extractor" },
-    // { name: "Your Material", icon: <Library className="size-4" />, href: "/materials" },
-    // { name: "Friends", icon: <Users className="size-4" />, href: "/friends" },
-    { name: "eBooks", icon: <BookOpen className="size-4" />, href: "/ebooks" },
-    // { name: "Profile", icon: <User className="size-4" />, href: "/profile" },
-    { name: "Settings", icon: <Settings className="size-4" />, href: "/settings" },
-    { name: "Help", icon: <HelpCircle className="size-4" />, href: "/help" },
-    { name: "About Us", icon: <Info className="size-4" />, href: "/about" },
+    { name: "Chat", icon: <MessageSquare />, href: "/" },
+    { name: "Study Now", icon: <Sparkles />, href: "/study-now" },
+    { name: "Create Flashcards", icon: <PlusSquare />, href: "/create-flashcards" },
+    { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
+    { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
+    { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
+    { name: "Settings", icon: <Settings />, href: "/settings" },
+    { name: "Help", icon: <HelpCircle />, href: "/help" },
+    { name: "About Us", icon: <Info />, href: "/about" },
 ];
 
 export function AppSidebar() {

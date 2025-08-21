@@ -283,10 +283,10 @@ export function StudyNowContent() {
 
 
   return (
-    <div className="flex h-screen flex-col bg-muted/20">
-      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
+    <div className="flex h-screen flex-col bg-muted/20 dark:bg-transparent">
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger className="lg:hidden" />
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
         <div className="flex items-center gap-4">
@@ -301,8 +301,8 @@ export function StudyNowContent() {
             </Button>
         </div>
       </header>
-      <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-        <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-8">
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
@@ -407,7 +407,7 @@ export function StudyNowContent() {
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
                     <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
-                      <AccordionItem value="key-concepts" className="rounded-md border bg-background px-4">
+                      <AccordionItem value="key-concepts" className="rounded-md border bg-card px-4">
                         <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
                           <div className="flex justify-between items-center w-full">
                             <h3 className="text-lg font-semibold">Key Concepts</h3>
@@ -423,7 +423,7 @@ export function StudyNowContent() {
                         </AccordionContent>
                       </AccordionItem>
 
-                      <AccordionItem value="potential-questions" className="rounded-md border bg-background px-4">
+                      <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
                         <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
                           <div className="flex justify-between items-center w-full">
                               <h3 className="text-lg font-semibold">Potential Questions</h3>

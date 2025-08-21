@@ -21,9 +21,9 @@ export function MainDashboard() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger className="lg:hidden" />
             <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         </div>
         <div className="flex items-center gap-4">
