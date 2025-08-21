@@ -164,4 +164,3 @@ export type CodeAgentInput = {};
 
 export type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput, GenerateImageOutput };
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
-
