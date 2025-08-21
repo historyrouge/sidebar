@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -72,7 +72,8 @@ export function StudyNowContent() {
       } else {
         setAnalysis(result.data);
         setFlashcards(null);
-        setSummary(null);
+        // We can reuse the summary from the analysis instead of calling another API
+        setSummary({ summary: result.data?.summary || "" });
         setGeneratedImage(null);
         setActiveTab("analysis");
       }
@@ -88,7 +89,7 @@ export function StudyNowContent() {
         } else {
             setAnalysis(result.data as AnalyzeContentOutput);
             setFlashcards(null);
-            setSummary(null);
+            setSummary({ summary: result.data?.summary || "" });
             setGeneratedImage(null);
             setActiveTab("analysis");
         }
@@ -142,6 +143,10 @@ export function StudyNowContent() {
 };
 
   const handleGenerateSummary = async () => {
+    if (analysis?.summary) {
+        setActiveTab("summary");
+        return;
+    }
     if (!content) return;
     startGeneratingSummary(async () => {
         const result = await summarizeContentAction({ content });
@@ -274,7 +279,6 @@ export function StudyNowContent() {
   
   const TABS = [
     { value: "analysis", label: "Analysis" },
-    { value: "summary", label: "Summary" },
     { value: "flashcards", label: "Flashcards" },
     { value: "quiz", label: "Quiz" },
     { value: "tutor", label: "Tutor" },
@@ -401,74 +405,73 @@ export function StudyNowContent() {
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
-                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
                     {TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">
-                    <Accordion type="single" collapsible className="w-full space-y-2 pr-4">
-                      <AccordionItem value="key-concepts" className="rounded-md border bg-card px-4">
-                        <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
-                          <div className="flex justify-between items-center w-full">
-                            <h3 className="text-lg font-semibold">Key Concepts</h3>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          {analysis.keyConcepts.map((concept, i) => 
-                            <div key={i} className="py-2">
-                              <p className="font-semibold">{concept.concept}</p>
-                              <p className="text-sm text-muted-foreground">{concept.explanation}</p>
-                            </div>
-                          )}
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
-                        <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
-                          <div className="flex justify-between items-center w-full">
-                              <h3 className="text-lg font-semibold">Potential Questions</h3>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                            {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
-                          </ul>
-                        </AccordionContent>
-                      </AccordionItem>
+                    <Accordion type="multiple" defaultValue={['summary', 'key-concepts']} className="w-full space-y-3 pr-4">
+                        <AccordionItem value="summary" className="rounded-md border bg-card px-4">
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
+                                <div className="flex items-center gap-3"><Pilcrow />Summary</div>
+                            </AccordionTrigger>
+                            <AccordionContent className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+                                <div className="flex justify-end">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => handleTextToSpeech(analysis.summary, 'summary')}
+                                        disabled={!!isSynthesizing}
+                                        className="mb-2"
+                                    >
+                                        {isSynthesizing === 'summary' ? <Loader2 className="animate-spin" /> : <Volume2 />}
+                                    </Button>
+                                </div>
+                                {audioDataUri && isSynthesizing === 'summary' && (
+                                    <div className="mb-2">
+                                        <audio controls autoPlay src={audioDataUri} className="w-full" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                )}
+                                <p>{analysis.summary}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="key-concepts" className="rounded-md border bg-card px-4">
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
+                                <div className="flex items-center gap-3"><BrainCircuit/>Key Concepts</div>
+                            </AccordionTrigger>
+                            <AccordionContent className="prose prose-sm dark:prose-invert max-w-none">
+                            {analysis.keyConcepts.map((concept, i) => 
+                                <div key={i} className="py-2">
+                                <p className="font-semibold !my-0">{concept.concept}</p>
+                                <p className="text-muted-foreground !my-0">{concept.explanation}</p>
+                                </div>
+                            )}
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
+                                <div className="flex items-center gap-3"><HelpCircle />Potential Questions</div>
+                            </AccordionTrigger>
+                            <AccordionContent className="prose-sm dark:prose-invert max-w-none">
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">
+                                {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                            </ul>
+                            </AccordionContent>
+                        </AccordionItem>
+                         <AccordionItem value="related-topics" className="rounded-md border bg-card px-4">
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
+                                <div className="flex items-center gap-3"><ListTree />Related Topics</div>
+                            </AccordionTrigger>
+                            <AccordionContent className="prose-sm dark:prose-invert max-w-none">
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">
+                                {analysis.relatedTopics.map((q, i) => <li key={i}>{q}</li>)}
+                            </ul>
+                            </AccordionContent>
+                        </AccordionItem>
                     </Accordion>
                   </TabsContent>
-                    <TabsContent value="summary" className="h-full">
-                       {isGeneratingSummary ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating summary...</p></div> : summary ? (
-                        <div className="space-y-4 pr-4">
-                           <div className="flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">Summary</h3>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleTextToSpeech(summary.summary, 'summary')}
-                                    disabled={!!isSynthesizing}
-                                >
-                                    {isSynthesizing === 'summary' ? <Loader2 className="animate-spin" /> : <Volume2 />}
-                                </Button>
-                            </div>
-                           <p className="text-sm leading-relaxed text-muted-foreground">{summary.summary}</p>
-                           {audioDataUri && isSynthesizing === 'summary' && (
-                            <div className="mt-4">
-                                <audio controls autoPlay src={audioDataUri} onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
-                                    Your browser does not support the audio element.
-                                </audio>
-                            </div>
-                        )}
-                        </div>
-                      ) : (
-                        <div className="flex h-full items-center justify-center">
-                           <Button onClick={handleGenerateSummary} disabled={isGeneratingSummary || imageDataUri !== null}>
-                             <Pilcrow className="mr-2 h-4 w-4" />
-                            Generate Summary
-                          </Button>
-                        </div>
-                      )}
-                    </TabsContent>
                     <TabsContent value="flashcards" className="h-full">
                       {isGeneratingFlashcards ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
                         <div className="grid grid-cols-1 gap-4 pr-4 @md:grid-cols-2">
@@ -477,7 +480,7 @@ export function StudyNowContent() {
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <Button onClick={handleGenerateFlashcards} disabled={isGeneratingFlashcards}>
-                            {isGeneratingFlashcards ? <Loader2 className="mr-2 animate-spin"/> : null}
+                            <BookCopy className="mr-2 h-4 w-4" />
                             Generate Flashcards
                           </Button>
                         </div>
@@ -487,7 +490,7 @@ export function StudyNowContent() {
                        {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : (
                         <div className="flex h-full items-center justify-center">
                            <Button onClick={handleGenerateQuiz} disabled={isGeneratingQuiz}>
-                            {isGeneratingQuiz ? <Loader2 className="mr-2 animate-spin"/> : null}
+                             <HelpCircle className="mr-2 h-4 w-4" />
                             Generate Quiz & Start
                           </Button>
                         </div>

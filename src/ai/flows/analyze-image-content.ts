@@ -23,11 +23,13 @@ const AnalyzeImageContentInputSchema = z.object({
 export type AnalyzeImageContentInput = z.infer<typeof AnalyzeImageContentInputSchema>;
 
 const AnalyzeImageContentOutputSchema = z.object({
+  summary: z.string().describe('A concise, one-paragraph summary of the image content.'),
   keyConcepts: z.array(z.object({
     concept: z.string().describe('The key concept identified.'),
     explanation: z.string().describe('A brief explanation of the concept.'),
   })).describe('Key concepts identified in the image.'),
   potentialQuestions: z.array(z.string()).describe('Potential questions based on the image content.'),
+  relatedTopics: z.array(z.string()).describe('A list of related topics for further exploration based on the image content.'),
 });
 export type AnalyzeImageContentOutput = z.infer<typeof AnalyzeImageContentOutputSchema>;
 
@@ -39,13 +41,16 @@ const analyzeImagePrompt = ai.definePrompt({
   name: 'analyzeImagePrompt',
   input: {schema: AnalyzeImageContentInputSchema},
   output: {schema: AnalyzeImageContentOutputSchema},
-  prompt: `You are an AI tool that analyzes the given image and identifies key concepts and generates potential questions to help students study more effectively. The image could be a diagram, a presentation slide, or a page from a book.
+  prompt: `You are an AI tool that analyzes the given image to help students study more effectively. The image could be a diagram, a presentation slide, or a page from a book.
 
 Image to analyze: {{media url=imageDataUri}}
 User prompt: {{{prompt}}}
 
-Analyze the image. If the user has provided a prompt, use it to guide your analysis. For each key concept, provide a brief explanation. Return the key concepts as a list of objects, each with a "concept" and "explanation" field. Return the potential questions as a list of strings.
-`,
+Analyze the image. If the user has provided a prompt, use it to guide your analysis.
+1.  Generate a concise, one-paragraph summary of the image content.
+2.  Identify the key concepts. For each concept, provide a brief explanation.
+3.  Generate potential questions based on the image content.
+4.  Suggest a list of related topics for further exploration.`,
 });
 
 const analyzeImageContentFlow = ai.defineFlow(

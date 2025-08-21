@@ -1,7 +1,7 @@
 
 "use server";
 
-import { analyzeContent, AnalyzeContentOutput } from "@/ai/flows/analyze-content";
+import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flows/chat-tutor";
 import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
@@ -23,7 +23,7 @@ type ActionResult<T> = {
 
 export async function analyzeContentAction(
   content: string
-): Promise<ActionResult<AnalyzeContentOutput>> {
+): Promise<ActionResult<AnalyzeContentOutputFlow>> {
   try {
     const output = await analyzeContent({ content });
     return { data: output };
