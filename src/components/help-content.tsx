@@ -11,7 +11,7 @@ export function HelpContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Help & Support</CardTitle>
-                        <CardDescription>Have questions? Ask our AI assistant for help with using the ScholarSage app.</CardDescription>
+                        <CardDescription>Have questions? Ask our AI assistant for help with using the LearnSphere app.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <HelpChatbot />

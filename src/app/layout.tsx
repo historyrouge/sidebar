@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PageLoader } from '@/components/page-loader';
 
 export const metadata: Metadata = {
-  title: 'ScholarSage',
+  title: 'LearnSphere',
   description: 'AI-powered study tool to help you learn smarter.',
 };
 

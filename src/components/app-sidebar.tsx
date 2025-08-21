@@ -77,7 +77,7 @@ export function AppSidebar() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                     <GraduationCap className="size-5" />
                 </div>
-                <h1 className="text-lg font-semibold">ScholarSage</h1>
+                <h1 className="text-lg font-semibold">LearnSphere</h1>
             </Link>
             <Button asChild variant="ghost" size="icon" className="group-data-[collapsible=icon]:hidden">
                 <Link href="/study-now" >

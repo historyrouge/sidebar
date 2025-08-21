@@ -50,7 +50,7 @@ export function ShareDialog({ isOpen, onOpenChange, content }: ShareDialogProps)
   };
 
   const createShareLink = (platform: 'twitter' | 'facebook' | 'linkedin') => {
-    const text = `Check out this response from ScholarSage: "${content.substring(0, 100)}..."`;
+    const text = `Check out this response from LearnSphere: "${content.substring(0, 100)}..."`;
     const encodedText = encodeURIComponent(text);
     const encodedUrl = encodeURIComponent(shareUrl);
   
@@ -60,7 +60,7 @@ export function ShareDialog({ isOpen, onOpenChange, content }: ShareDialogProps)
       case 'facebook':
         return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
       case 'linkedin':
-        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=Response%20from%20ScholarSage&summary=${encodedText}`;
+        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=Response%20from%20LearnSphere&summary=${encodedText}`;
     }
   };
 
