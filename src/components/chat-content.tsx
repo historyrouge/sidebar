@@ -17,13 +17,6 @@ type Message = {
   content: string;
 };
 
-const suggestionPrompts = [
-    "Explain quantum computing in simple terms",
-    "What are the main causes of climate change?",
-    "Write a short story about a time-traveling historian",
-    "Give me some ideas for a healthy breakfast",
-]
-
 export function ChatContent({
     history, 
     setHistory, 
@@ -95,18 +88,6 @@ export function ChatContent({
                     <p className="text-muted-foreground mt-2 max-w-md">
                         I'm ScholarSage, your AI assistant. Ask me anything!
                     </p>
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
-                        {suggestionPrompts.map(prompt => (
-                            <Button 
-                                key={prompt}
-                                variant="outline"
-                                className="text-left justify-start h-auto py-3 px-4 text-sm"
-                                onClick={(e) => handleSendMessage(e, prompt)}
-                                >
-                                    {prompt}
-                            </Button>
-                        ))}
-                    </div>
                 </div>
             )}
             {history.map((message, index) => (
