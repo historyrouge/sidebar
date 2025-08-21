@@ -48,7 +48,14 @@ export function CreateFlashcardsContent() {
     }, [toast]);
 
     const handleToggleRecording = () => {
-        if (!recognitionRef.current) return;
+        if (!recognitionRef.current) {
+            toast({
+                title: "Browser Not Supported",
+                description: "Your browser does not support voice-to-text.",
+                variant: "destructive",
+            });
+            return;
+        }
         if (isRecording) {
             recognitionRef.current.stop();
         } else {

@@ -5,14 +5,56 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileQuestion, Wand2 } from "lucide-react";
-import React, { useState } from "react";
+import { FileQuestion, Wand2, Mic, MicOff } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
 
 export function QuizGenerator() {
   const [content, setContent] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        const recognition = recognitionRef.current;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onerror = (event: any) => {
+            toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
+            setIsRecording(false);
+        };
+        recognition.onresult = (event: any) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                interimTranscript += event.results[i][0].transcript;
+            }
+            setContent(prev => prev + interimTranscript);
+        };
+    }
+  }, [toast]);
+
+  const handleToggleRecording = () => {
+    if (!recognitionRef.current) {
+        toast({
+            title: "Browser Not Supported",
+            description: "Your browser does not support voice-to-text.",
+            variant: "destructive",
+        });
+        return;
+    }
+    if (isRecording) {
+        recognitionRef.current.stop();
+    } else {
+        recognitionRef.current.start();
+    }
+  };
 
   const handleProceedToOptions = () => {
     if (content.trim().length < 50) {
@@ -45,12 +87,23 @@ export function QuizGenerator() {
           <CardDescription>Paste your study material below to begin creating your quiz.</CardDescription>
         </CardHeader>
         <CardContent className="flex-1">
-          <Textarea
-            placeholder="Paste your content here..."
-            className="h-full min-h-[300px] resize-none"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
+          <div className="relative h-full">
+            <Textarea
+              placeholder="Paste your content here..."
+              className="h-full min-h-[300px] resize-none pr-10"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+             <Button
+                size="icon"
+                variant={isRecording ? 'destructive' : 'ghost'}
+                onClick={handleToggleRecording}
+                className="absolute bottom-3 right-3"
+                >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
+            </Button>
+          </div>
         </CardContent>
         <CardFooter>
           <Button onClick={handleProceedToOptions} disabled={content.trim().length < 50}>

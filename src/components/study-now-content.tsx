@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -49,6 +49,48 @@ export function StudyNowContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        const recognition = recognitionRef.current;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onerror = (event: any) => {
+            toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
+            setIsRecording(false);
+        };
+        recognition.onresult = (event: any) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                interimTranscript += event.results[i][0].transcript;
+            }
+            setContent(prev => prev + interimTranscript);
+        };
+    }
+  }, [toast]);
+
+  const handleToggleRecording = () => {
+      if (!recognitionRef.current) {
+          toast({
+              title: "Browser Not Supported",
+              description: "Your browser does not support voice-to-text.",
+              variant: "destructive",
+          });
+          return;
+      }
+      if (isRecording) {
+          recognitionRef.current.stop();
+      } else {
+          recognitionRef.current.start();
+      }
+  };
 
 
   const handleAnalyze = async () => {
@@ -337,12 +379,23 @@ export function StudyNowContent() {
                     </Button>
                 </div>
               ) : (
-                <Textarea
-                    placeholder="Paste your study content here... (min. 50 characters)"
-                    className="h-full min-h-[300px] resize-none"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                />
+                <div className="relative h-full">
+                    <Textarea
+                        placeholder="Paste your study content here... (min. 50 characters)"
+                        className="h-full min-h-[300px] resize-none pr-10"
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
+                    <Button
+                        size="icon"
+                        variant={isRecording ? 'destructive' : 'ghost'}
+                        onClick={handleToggleRecording}
+                        className="absolute bottom-3 right-3"
+                        >
+                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                        <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
+                    </Button>
+                </div>
               )}
                {imageDataUri && (
                  <Textarea

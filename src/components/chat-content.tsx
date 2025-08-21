@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2 } from "lucide-react";
+import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 
@@ -79,6 +79,29 @@ export function ChatContent({
       }
     });
   };
+
+  const handleRegenerateResponse = async () => {
+      const lastUserMessage = history.findLast(m => m.role === 'user');
+      if (!lastUserMessage) return;
+
+      startTyping(async () => {
+        // We remove the last model response before regenerating
+        setHistory(prev => prev.slice(0, -1));
+
+        const chatInput: GeneralChatInput = {
+          history: history.slice(0,-1),
+        };
+        const result = await generalChatAction(chatInput);
+
+        if (result.error) {
+          toast({ title: "Chat Error", description: result.error, variant: "destructive" });
+        } else if (result.data) {
+          const modelMessage: Message = { role: "model", content: result.data.response };
+          setHistory((prev) => [...prev, modelMessage]);
+        }
+      });
+  };
+
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -272,6 +295,12 @@ export function ChatContent({
                                 {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
                                 <span className="sr-only">Read aloud</span>
                             </Button>
+                            {index === history.length -1 && (
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                    <RefreshCw className="h-4 w-4" />
+                                    <span className="sr-only">Regenerate</span>
+                                </Button>
+                            )}
                             {audioDataUri && isSynthesizing === `chat-${index}` && (
                                 <audio 
                                     src={audioDataUri} 
