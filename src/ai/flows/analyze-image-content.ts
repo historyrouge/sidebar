@@ -28,6 +28,10 @@ const AnalyzeImageContentOutputSchema = z.object({
     concept: z.string().describe('The key concept identified.'),
     explanation: z.string().describe('A brief explanation of the concept.'),
   })).describe('Key concepts identified in the image.'),
+  codeExamples: z.array(z.object({
+    code: z.string().describe('The code snippet.'),
+    explanation: z.string().describe('A brief explanation of what the code does.'),
+  })).describe('Code examples found in the content.'),
   potentialQuestions: z.array(z.string()).describe('Potential questions based on the image content.'),
   relatedTopics: z.array(z.string()).describe('A list of related topics for further exploration based on the image content.'),
 });
@@ -49,8 +53,9 @@ User prompt: {{{prompt}}}
 Analyze the image. If the user has provided a prompt, use it to guide your analysis.
 1.  Generate a concise, one-paragraph summary of the image content.
 2.  Identify the key concepts. For each concept, provide a brief explanation.
-3.  Generate potential questions based on the image content.
-4.  Suggest a list of related topics for further exploration.`,
+3.  If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array.
+4.  Generate potential questions based on the image content.
+5.  Suggest a list of related topics for further exploration.`,
 });
 
 const analyzeImageContentFlow = ai.defineFlow(

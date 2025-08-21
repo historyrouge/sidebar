@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
+  const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
@@ -129,7 +129,7 @@ export function StudyNowContent() {
         if (result.error) {
             toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
         } else {
-            setAnalysis(result.data as AnalyzeContentOutput);
+            setAnalysis(result.data as AnalyzeImageContentOutput);
             setFlashcards(null);
             setSummary({ summary: result.data?.summary || "" });
             setGeneratedImage(null);
