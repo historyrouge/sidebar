@@ -45,55 +45,8 @@ export function ChatContent({
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  useEffect(() => {
-    // Check for browser support and initialize SpeechRecognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      const recognition = recognitionRef.current;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => {
-        setIsRecording(true);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.onerror = (event: any) => {
-        toast({
-          title: "Speech Recognition Error",
-          description: event.error,
-          variant: "destructive",
-        });
-        setIsRecording(false);
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result) => result.transcript)
-          .join("");
-        setInput(transcript);
-      };
-    } else {
-      toast({
-        title: "Browser Not Supported",
-        description: "Your browser does not support voice-to-text.",
-        variant: "destructive",
-      });
-    }
-
-    return () => {
-      recognitionRef.current?.abort();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
-  const handleSendMessage = async (e: React.FormEvent | React.MouseEvent, message?: string) => {
-    e.preventDefault();
+  const handleSendMessage = async (e: React.FormEvent | React.MouseEvent | null, message?: string) => {
+    e?.preventDefault();
     const messageToSend = message || input;
     if (!messageToSend.trim()) return;
 
@@ -125,11 +78,71 @@ export function ChatContent({
     });
   };
 
+  useEffect(() => {
+    // Check for browser support and initialize SpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      const recognition = recognitionRef.current;
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.onerror = (event: any) => {
+        toast({
+          title: "Speech Recognition Error",
+          description: event.error,
+          variant: "destructive",
+        });
+        setIsRecording(false);
+      };
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        
+        const fullTranscript = finalTranscript || interimTranscript;
+        setInput(fullTranscript);
+
+        if (finalTranscript.trim()) {
+            handleSendMessage(null, finalTranscript);
+        }
+      };
+    } else {
+      toast({
+        title: "Browser Not Supported",
+        description: "Your browser does not support voice-to-text.",
+        variant: "destructive",
+      });
+    }
+
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history]); // Add history to dependency array for handleSendMessage
+  
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
     if (isRecording) {
       recognitionRef.current.stop();
     } else {
+      setInput("");
       recognitionRef.current.start();
     }
   };
@@ -212,7 +225,7 @@ export function ChatContent({
             </div>
         </ScrollArea>
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-4">
-             <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-3xl mx-auto">
+             <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
                 <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
