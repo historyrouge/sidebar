@@ -258,7 +258,7 @@ export function ChatContent({
                         <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
-                <div className="w-full max-w-lg group relative">
+                <div className="w-full max-w-lg group">
                     <div
                         className={cn(
                         "rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
@@ -266,45 +266,46 @@ export function ChatContent({
                             ? "bg-primary text-primary-foreground"
                             : "bg-card border"
                         )}
-                        dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }}
                     >
-                    </div>
-                    {message.role === 'model' && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                <Copy className="h-4 w-4" />
-                                <span className="sr-only">Copy</span>
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                <Share2 className="h-4 w-4" />
-                                <span className="sr-only">Share</span>
-                            </Button>
-                             <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="h-7 w-7" 
-                                onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
-                                disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
-                             >
-                                {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                                <span className="sr-only">Read aloud</span>
-                            </Button>
-                            {index === history.length -1 && (
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                    <RefreshCw className="h-4 w-4" />
-                                    <span className="sr-only">Regenerate</span>
+                        <div dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
+
+                        {message.role === 'model' && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                    <Copy className="h-4 w-4" />
+                                    <span className="sr-only">Copy</span>
                                 </Button>
-                            )}
-                            {audioDataUri && isSynthesizing === `chat-${index}` && (
-                                <audio 
-                                    src={audioDataUri} 
-                                    autoPlay 
-                                    onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
-                                    className="hidden" 
-                                />
-                            )}
-                        </div>
-                    )}
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                    <Share2 className="h-4 w-4" />
+                                    <span className="sr-only">Share</span>
+                                </Button>
+                                <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-7 w-7" 
+                                    onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
+                                    disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
+                                >
+                                    {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                    <span className="sr-only">Read aloud</span>
+                                </Button>
+                                {index === history.length -1 && (
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                        <RefreshCw className="h-4 w-4" />
+                                        <span className="sr-only">Regenerate</span>
+                                    </Button>
+                                )}
+                                {audioDataUri && isSynthesizing === `chat-${index}` && (
+                                    <audio 
+                                        src={audioDataUri} 
+                                        autoPlay 
+                                        onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
+                                        className="hidden" 
+                                    />
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 {message.role === "user" && (
                     <Avatar className="h-9 w-9">
