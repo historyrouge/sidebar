@@ -261,13 +261,13 @@ export function ChatContent({
                 <div className="w-full max-w-lg group">
                     <div
                         className={cn(
-                        "rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-2",
+                        "rounded-lg p-3 text-sm",
                         message.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : "bg-card border"
                         )}
                     >
-                        <div dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
+                        <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
 
                         {message.role === 'model' && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
@@ -327,7 +327,7 @@ export function ChatContent({
             )}
             </div>
         </ScrollArea>
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-4">
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-2 sm:p-4">
              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
                 <Input
                     value={input}
