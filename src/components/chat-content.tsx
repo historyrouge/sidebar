@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
+import { ShareDialog } from "./share-dialog";
 
 type Message = {
   role: "user" | "model";
@@ -46,6 +47,7 @@ export function ChatContent({
   const recognitionRef = useRef<any>(null);
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
+  const [shareContent, setShareContent] = useState<string | null>(null);
 
   const handleSendMessage = async (e: React.FormEvent | React.MouseEvent | null, message?: string) => {
     e?.preventDefault();
@@ -108,21 +110,8 @@ export function ChatContent({
     toast({ title: "Copied!", description: "The response has been copied to your clipboard." });
   };
   
-  const handleShare = async (text: string) => {
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'ScholarSage Response',
-                text: text,
-            });
-        } catch (error) {
-            toast({ title: "Sharing failed", description: "Could not share the response.", variant: "destructive" });
-        }
-    } else {
-        // Fallback for browsers that don't support navigator.share
-        handleCopyToClipboard(text);
-        toast({ title: "Copied!", description: "Sharing not supported. Response copied to clipboard instead." });
-    }
+  const handleShare = (text: string) => {
+    setShareContent(text);
   };
 
   const handleTextToSpeech = async (text: string, id: string) => {
@@ -231,6 +220,11 @@ export function ChatContent({
 
   return (
     <div className="relative h-full">
+        <ShareDialog
+            isOpen={!!shareContent}
+            onOpenChange={(open) => !open && setShareContent(null)}
+            content={shareContent || ""}
+        />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-24">
             {history.length === 0 && (
