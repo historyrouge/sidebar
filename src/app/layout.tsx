@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from '@/components/theme-provider';
+import { PageLoader } from '@/components/page-loader';
 
 export const metadata: Metadata = {
   title: 'ScholarSage',
@@ -29,7 +30,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <PageLoader>
+            {children}
+          </PageLoader>
           <Toaster />
         </ThemeProvider>
       </body>
