@@ -17,6 +17,14 @@ type Message = {
   content: string;
 };
 
+const suggestionPrompts = [
+    "Explain quantum computing in simple terms",
+    "What are the main causes of climate change?",
+    "Write a short story about a time-traveling historian",
+    "Give me some ideas for a healthy breakfast",
+];
+
+
 export function ChatContent({
     history, 
     setHistory, 
@@ -35,7 +43,7 @@ export function ChatContent({
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  const handleSendMessage = async (e: React.FormEvent, message?: string) => {
+  const handleSendMessage = async (e: React.FormEvent | React.MouseEvent, message?: string) => {
     e.preventDefault();
     const messageToSend = message || input;
     if (!messageToSend.trim()) return;
@@ -88,6 +96,13 @@ export function ChatContent({
                     <p className="text-muted-foreground mt-2 max-w-md">
                         I'm ScholarSage, your AI assistant. Ask me anything!
                     </p>
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
+                        {suggestionPrompts.map((prompt, i) => (
+                            <Button key={i} variant="outline" className="text-left h-auto py-3" onClick={(e) => handleSendMessage(e, prompt)}>
+                                {prompt}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             )}
             {history.map((message, index) => (
