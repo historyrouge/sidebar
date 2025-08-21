@@ -98,7 +98,7 @@ export function ChatContent({
                     </p>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Button key={i} variant="outline" className="text-left h-auto py-3 px-4 justify-start" onClick={(e) => handleSendMessage(e, prompt)}>
+                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left" onClick={(e) => handleSendMessage(e, prompt)}>
                                 {prompt}
                             </Button>
                         ))}
