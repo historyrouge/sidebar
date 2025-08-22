@@ -1,24 +1,20 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
-export function PageLoader({ children }: { children: React.ReactNode }) {
+function NProgressLogic() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     NProgress.configure({ showSpinner: false });
 
-    const handleStart = () => NProgress.start();
     const handleStop = () => NProgress.done();
 
-    // We can't use next/router events since we are in app router, 
-    // so we'll just listen to pathname and searchParams changes.
-    // This might not be perfect, but it's a good approximation.
     handleStop(); // Stop progress on initial load
 
     return () => {
@@ -54,5 +50,17 @@ export function PageLoader({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return <>{children}</>;
+  return null;
+}
+
+
+export function PageLoader({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <NProgressLogic />
+      </Suspense>
+      {children}
+    </>
+  );
 }
