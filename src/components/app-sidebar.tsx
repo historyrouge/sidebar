@@ -3,19 +3,14 @@
 
 import {
   BookOpen,
-  GraduationCap,
   HelpCircle,
   Info,
-  Library,
   MessageSquare,
   PlusSquare,
   Settings,
   Sparkles,
-  User,
   Youtube,
-  FilePlus2,
   FileQuestion,
-  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,12 +19,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "./ui/button";
 
 const menuItems = [
     { name: "Chat", icon: <MessageSquare />, href: "/" },
@@ -42,6 +35,26 @@ const menuItems = [
     { name: "Help", icon: <HelpCircle />, href: "/help" },
     { name: "About Us", icon: <Info />, href: "/about" },
 ];
+
+const Logo = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        {...props}
+    >
+        <title>LearnSphere Logo</title>
+        <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10 10-4.48 10-10z"/>
+        <path d="M4.2 11.27L12 8.5l7.8 2.77"/>
+        <path d="M12 20v-7.5"/>
+        <path d="M11.5 6.5L6.25 8.25l5.5 2.25 5.5-2.25L12.5 6.5c-.25-.1-.75-.1-1 0z"/>
+    </svg>
+);
+
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
@@ -72,19 +85,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <GraduationCap className="size-5" />
-                </div>
-                <h1 className="text-lg font-semibold">LearnSphere</h1>
-            </Link>
-            <Button asChild variant="ghost" size="icon" className="group-data-[collapsible=icon]:hidden">
-                <Link href="/study-now" >
-                    <FilePlus2 />
-                </Link>
-            </Button>
-        </div>
+        <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Logo className="size-5" />
+            </div>
+            <h1 className="text-lg font-semibold">LearnSphere</h1>
+        </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-grow">
         <SidebarMenu>
