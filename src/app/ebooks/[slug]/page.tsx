@@ -35,10 +35,10 @@ const EbookReader = dynamic(() => import('@/components/ebook-reader').then(mod =
 });
 
 
-export default function EbookPage({ params }: { params: { slug: string } }) {
+export default function EbookPage({ params: { slug } }: { params: { slug: string } }) {
     return (
         <MainLayout>
-           <EbookReader slug={params.slug} />
+           <EbookReader slug={slug} />
         </MainLayout>
     );
 }
