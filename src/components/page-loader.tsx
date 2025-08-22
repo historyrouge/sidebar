@@ -39,9 +39,8 @@ export function PageLoader({ children }: { children: React.ReactNode }) {
     const mutationObserver = new MutationObserver(handleMutation);
     mutationObserver.observe(document.body, { childList: true, subtree: true });
 
-    window.onload = () => {
-        NProgress.done();
-    };
+    // Fallback for initial load
+    NProgress.done();
     
     return () => {
         mutationObserver.disconnect();
