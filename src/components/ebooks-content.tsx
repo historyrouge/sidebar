@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "./ui/button";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
+import Link from "next/link";
+import { slugify } from "@/lib/utils";
 
 const ebooks = [
   {
@@ -18,6 +20,12 @@ const ebooks = [
     description: "Explore the wonders of the universe, from the Big Bang to the most distant galaxies. A captivating read for astronomy enthusiasts.",
     coverUrl: "https://placehold.co/300x400.png",
     aiHint: "space galaxy"
+  },
+  {
+    title: "The History of Ancient Civilizations",
+    description: "A comprehensive look at the rise and fall of the world's most influential ancient societies, from Mesopotamia to Rome.",
+    coverUrl: "https://placehold.co/300x400.png",
+    aiHint: "ancient history"
   }
 ];
 
@@ -34,16 +42,18 @@ export function EbooksContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
           {ebooks.map((book, index) => (
             <Card key={index} className="flex flex-col overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl">
-              <CardContent className="p-0">
-                <Image 
-                  src={book.coverUrl}
-                  alt={`Cover of ${book.title}`}
-                  width={300}
-                  height={400}
-                  className="w-full h-auto object-cover"
-                  data-ai-hint={book.aiHint}
-                />
-              </CardContent>
+              <Link href={`/ebooks/${slugify(book.title)}`}>
+                <CardContent className="p-0">
+                  <Image 
+                    src={book.coverUrl}
+                    alt={`Cover of ${book.title}`}
+                    width={300}
+                    height={400}
+                    className="w-full h-auto object-cover"
+                    data-ai-hint={book.aiHint}
+                  />
+                </CardContent>
+              </Link>
               <div className="flex flex-col flex-1 p-4">
                 <CardHeader className="p-0">
                   <CardTitle className="text-lg">{book.title}</CardTitle>
@@ -52,7 +62,9 @@ export function EbooksContent() {
                   <CardDescription>{book.description}</CardDescription>
                 </CardContent>
                 <CardFooter className="p-0 mt-4">
-                  <Button className="w-full">Read Now</Button>
+                    <Link href={`/ebooks/${slugify(book.title)}`} className="w-full">
+                        <Button className="w-full">Read Now</Button>
+                    </Link>
                 </CardFooter>
               </div>
             </Card>
