@@ -12,6 +12,7 @@ import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Vol
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
+import { useModel } from "@/hooks/use-model";
 
 type Message = {
   role: "user" | "model";
@@ -42,6 +43,7 @@ export function ChatContent({
     startTyping: React.TransitionStartFunction
 }) {
   const { toast } = useToast();
+  const { model } = useModel();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -66,7 +68,7 @@ export function ChatContent({
       const chatInput: GeneralChatInput = {
         history: [...history, userMessage],
       };
-      const result = await generalChatAction(chatInput);
+      const result = await generalChatAction(chatInput, model);
 
       if (result.error) {
         toast({
@@ -93,7 +95,7 @@ export function ChatContent({
         const chatInput: GeneralChatInput = {
           history: history.slice(0,-1),
         };
-        const result = await generalChatAction(chatInput);
+        const result = await generalChatAction(chatInput, model);
 
         if (result.error) {
           toast({ title: "Chat Error", description: result.error, variant: "destructive" });
@@ -309,7 +311,7 @@ export function ChatContent({
                 </div>
                 {message.role === "user" && (
                     <Avatar className="h-9 w-9">
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarFallback><User className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
                 </div>

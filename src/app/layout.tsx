@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from '@/components/theme-provider';
 import { PageLoader } from '@/components/page-loader';
+import { ModelProvider } from '@/hooks/use-model';
 
 export const metadata: Metadata = {
   title: 'LearnSphere',
@@ -30,9 +31,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <PageLoader>
-            {children}
-          </PageLoader>
+          <ModelProvider>
+            <PageLoader>
+              {children}
+            </PageLoader>
+          </ModelProvider>
           <Toaster />
         </ThemeProvider>
       </body>

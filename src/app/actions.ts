@@ -3,29 +3,70 @@
 
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
-import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from "@/ai/flows/chat-tutor";
-import { generateFlashcards, GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
-import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput } from "@/ai/flows/generate-quizzes";
-import { helpChat, HelpChatInput, HelpChatOutput } from "@/ai/flows/help-chatbot";
-import { generalChat, GeneralChatInput, GeneralChatOutput } from "@/ai/flows/general-chat";
-import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from "@/ai/flows/text-to-speech";
-import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from "@/ai/flows/summarize-content";
+import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutorOutputFlow } from "@/ai/flows/chat-tutor";
+import { generateFlashcards, GenerateFlashcardsOutput as GenerateFlashcardsOutputFlow } from "@/ai/flows/generate-flashcards";
+import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
+import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
+import { generalChat, GeneralChatInput, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
+import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutputFlow } from "@/ai/flows/text-to-speech";
+import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from "@/ai/flows/youtube-transcript";
-import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
-
-// NOTE: All functions that required user authentication have been removed or disabled.
-// This includes managing friends, profiles, and saving study materials to an account.
+import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
+import { openai } from "@/lib/openai";
+import { Model } from "@/hooks/use-model";
 
 type ActionResult<T> = {
   data?: T;
   error?: string;
 };
 
+// Re-exporting types for client components
+export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
+export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
+export type GenerateFlashcardsOutput = GenerateFlashcardsOutputFlow;
+export type GenerateQuizzesOutput = GenerateQuizzesOutputFlow;
+export type ChatWithTutorOutput = ChatWithTutorOutputFlow;
+export type HelpChatOutput = HelpChatOutputFlow;
+export type GeneralChatOutput = GeneralChatOutputFlow;
+export type TextToSpeechOutput = TextToSpeechOutputFlow;
+export type SummarizeContentOutput = SummarizeContentOutputFlow;
+export type GenerateImageOutput = GenerateImageOutputFlow;
+
+async function callOpenAI(systemPrompt: string, userPrompt: string): Promise<any> {
+    const completion = await openai.chat.completions.create({
+        model: "tngtech/deepseek-r1t2-chimera:free",
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+        ],
+        response_format: { type: "json_object" }
+    });
+    
+    if (!completion.choices[0].message.content) {
+        throw new Error("Received an empty response from the AI.");
+    }
+    
+    return JSON.parse(completion.choices[0].message.content);
+}
+
 export async function analyzeContentAction(
-  content: string
-): Promise<ActionResult<AnalyzeContentOutputFlow>> {
+  content: string,
+  model: Model
+): Promise<ActionResult<AnalyzeContentOutput>> {
   try {
-    const output = await analyzeContent({ content });
+    let output: AnalyzeContentOutput;
+    if (model === 'gemini') {
+        output = await analyzeContent({ content });
+    } else {
+        const systemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively. Return the output in a valid JSON object matching this schema: { summary: string, keyConcepts: [{concept: string, explanation: string}], codeExamples: [{code: string, explanation: string}], potentialQuestions: [string], relatedTopics: [string] }.`;
+        const userPrompt = `Content to analyze:\n---\n${content}\n---\n\nPlease perform the following actions with expert detail:
+1.  **Generate a Comprehensive Summary**: Create a concise, one-paragraph summary that captures the main ideas and purpose of the content.
+2.  **Identify Key Concepts & Relationships**: Identify the most important concepts. For each concept, provide a clear explanation and describe how it relates to other key concepts in the text.
+3.  **Extract and Explain Code Examples**: If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array for codeExamples.
+4.  **Generate Insightful Questions**: Create a list of potential questions that go beyond simple factual recall. These questions should test for deeper understanding, critical thinking, and the ability to apply the concepts.
+5.  **Suggest Related Topics**: Recommend a list of related topics or areas of study that would be logical next steps for someone learning this material.`;
+        output = await callOpenAI(systemPrompt, userPrompt);
+    }
     return { data: output };
   } catch (e: any) {
     console.error(e);
@@ -34,8 +75,13 @@ export async function analyzeContentAction(
 }
 
 export async function analyzeImageContentAction(
-    input: AnalyzeImageContentInput
-): Promise<ActionResult<AnalyzeImageContentOutputFlow>> {
+    input: AnalyzeImageContentInput,
+    model: Model
+): Promise<ActionResult<AnalyzeImageContentOutput>> {
+    // DeepSeek doesn't support image analysis in the same way, so we default to Gemini.
+    if (model === 'deepseek') {
+        return { error: "Image analysis is only available with the Gemini model." };
+    }
     try {
         const output = await analyzeImageContent(input);
         return { data: output };
@@ -46,10 +92,18 @@ export async function analyzeImageContentAction(
 }
 
 export async function generateFlashcardsAction(
-  content: string
+  content: string,
+  model: Model
 ): Promise<ActionResult<GenerateFlashcardsOutput>> {
   try {
-    const output = await generateFlashcards({ content });
+    let output: GenerateFlashcardsOutput;
+    if (model === 'gemini') {
+        output = await generateFlashcards({ content });
+    } else {
+        const systemPrompt = `You are an expert educator. Your task is to generate flashcards from the provided content. Return the output in a valid JSON object matching this schema: { flashcards: [{front: string, back: string}] }.`;
+        const userPrompt = `Content: ${content}\n\nGenerate flashcards covering key facts and concepts from the content. Each flashcard should have a front and a back.`;
+        output = await callOpenAI(systemPrompt, userPrompt);
+    }
     return { data: output };
   } catch (e: any) {
     console.error(e);
@@ -58,10 +112,18 @@ export async function generateFlashcardsAction(
 }
 
 export async function generateQuizAction(
-  input: GenerateQuizzesInput
+  input: GenerateQuizzesInput,
+  model: Model
 ): Promise<ActionResult<GenerateQuizzesOutput>> {
   try {
-    const output = await generateQuizzes(input);
+    let output: GenerateQuizzesOutput;
+    if (model === 'gemini') {
+        output = await generateQuizzes(input);
+    } else {
+        const systemPrompt = `You are a quiz generator. Return the output in a valid JSON object matching this schema: { quizzes: [{question: string, options: [string, string, string, string], answer: string, type: "multiple-choice"}] }.`;
+        const userPrompt = `Generate a list of ${input.numQuestions || 10} multiple-choice quiz questions from the following content. For each question, provide the question text, an array of 4 different options, and the correct answer. The quiz should be of ${input.difficulty || 'medium'} difficulty.\n\nContent: ${input.content}`;
+        output = await callOpenAI(systemPrompt, userPrompt);
+    }
     return { data: output };
   } catch (e: any) {
     console.error(e);
@@ -70,10 +132,19 @@ export async function generateQuizAction(
 }
 
 export async function chatWithTutorAction(
-  input: ChatWithTutorInput
+  input: ChatWithTutorInput,
+  model: Model
 ): Promise<ActionResult<ChatWithTutorOutput>> {
   try {
-    const output = await chatWithTutor(input);
+    let output: ChatWithTutorOutput;
+    if (model === 'gemini') {
+        output = await chatWithTutor(input);
+    } else {
+        const systemPrompt = `You are an expert AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. Return the output in a valid JSON object matching this schema: { response: string }.`;
+        const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\n');
+        const userPrompt = `Study Material Context:\n---\n${input.content}\n---\n\nConversation History:\n---\n${historyText}\n---\n\nBased on the context and history, provide a helpful and encouraging response to the user's last message. Your response should be in Markdown format.`;
+        output = await callOpenAI(systemPrompt, userPrompt);
+    }
     return { data: output };
   } catch (e: any) {
     console.error(e);
@@ -82,10 +153,19 @@ export async function chatWithTutorAction(
 }
 
 export async function helpChatAction(
-    input: HelpChatInput
+    input: HelpChatInput,
+    model: Model
   ): Promise<ActionResult<HelpChatOutput>> {
     try {
-      const output = await helpChat(input);
+      let output: HelpChatOutput;
+      if (model === 'gemini') {
+        output = await helpChat(input);
+      } else {
+        const systemPrompt = `You are a friendly and helpful AI assistant for the LearnSphere application. Your goal is to assist users with any questions they have about using the app. You know the following about the app: To analyze content, the user must paste text into the main text area and click "Analyze Content". After analysis, the user can generate Flashcards or a Quiz by going to the respective tabs and clicking the "Generate" button. The AI Tutor tab allows users to ask in-depth questions about the content they have provided. Users can upload .txt files instead of pasting text. Return the output in a valid JSON object matching this schema: { response: string }.`;
+        const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\n');
+        const userPrompt = `Conversation History:\n---\n${historyText}\n---\n\nBased on the conversation history and your knowledge of the app, provide a clear, concise, and friendly response to the user's last message.`;
+        output = await callOpenAI(systemPrompt, userPrompt);
+      }
       return { data: output };
     } catch (e: any) {
       console.error(e);
@@ -94,10 +174,19 @@ export async function helpChatAction(
 }
 
 export async function generalChatAction(
-    input: GeneralChatInput
+    input: GeneralChatInput,
+    model: Model
     ): Promise<ActionResult<GeneralChatOutput>> {
     try {
-        const output = await generalChat(input);
+        let output: GeneralChatOutput;
+        if (model === 'gemini') {
+            output = await generalChat(input);
+        } else {
+            const systemPrompt = `You are a friendly and helpful AI assistant named LearnSphere. Your goal is to be an expert educator who makes learning accessible and engaging. Your response should be in Markdown format. Return the output in a valid JSON object matching this schema: { response: string }.`;
+            const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\n');
+            const userPrompt = `Conversation History:\n---\n${historyText}\n---\n\nBased on the conversation history and your instructions, provide a clear, concise, and friendly response to the user's last message.`;
+            output = await callOpenAI(systemPrompt, userPrompt);
+        }
         return { data: output };
     } catch (e: any) {
         console.error(e);
@@ -118,10 +207,18 @@ export async function textToSpeechAction(
 }
 
 export async function summarizeContentAction(
-    input: SummarizeContentInput
+    input: SummarizeContentInput,
+    model: Model
     ): Promise<ActionResult<SummarizeContentOutput>> {
     try {
-        const output = await summarizeContent(input);
+        let output: SummarizeContentOutput;
+        if (model === 'gemini') {
+            output = await summarizeContent(input);
+        } else {
+            const systemPrompt = `You are an AI assistant that excels at summarizing complex topics into clear and concise summaries. Return the output in a valid JSON object matching this schema: { summary: string }.`;
+            const userPrompt = `Content to summarize:\n---\n${input.content}\n---\n\nPlease generate a concise summary of the provided content. The summary should capture the main ideas and key points of the text.`;
+            output = await callOpenAI(systemPrompt, userPrompt);
+        }
         return { data: output };
     } catch (e: any) {
         console.error(e);
@@ -143,17 +240,20 @@ export async function getYoutubeTranscriptAction(
 }
 
 export async function generateImageAction(
-  input: GenerateImageInput
+  input: GenerateImageInput,
+  model: Model
 ): Promise<ActionResult<GenerateImageOutput>> {
-  try {
-    const output = await generateImage(input);
-    return { data: output };
-  } catch (e: any) {
-    console.error(e);
-    return { error: e.message || "An unknown error occurred." };
-  }
+    if (model === 'deepseek') {
+        return { error: "Image generation is only available with the Gemini model." };
+    }
+    try {
+        const output = await generateImage(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
-
 
 // Dummy types for exports where the original type is no longer relevant
 export type UserProfile = {};
@@ -162,6 +262,5 @@ export type Friend = {};
 export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
-export type { GenerateFlashcardsOutput, GenerateQuizzesOutput, ChatWithTutorInput, ChatWithTutorOutput, HelpChatInput, HelpChatOutput, GeneralChatInput, GeneralChatOutput, TextToSpeechOutput, SummarizeContentOutput, GetYoutubeTranscriptOutput, GenerateImageOutput };
-export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
-export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
+export type { GetYoutubeTranscriptOutput };
+export type { GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput };
