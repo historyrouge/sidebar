@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const ChatWithTutorInputSchema = z.object({
   content: z.string().describe('The study material context.'),

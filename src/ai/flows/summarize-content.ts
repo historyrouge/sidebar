@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const SummarizeContentInputSchema = z.object({
   content: z.string().describe('The content to summarize.'),
