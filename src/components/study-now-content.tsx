@@ -23,7 +23,6 @@ import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
-import { useModel } from "@/hooks/use-model";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -37,7 +36,6 @@ export function StudyNowContent() {
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
 
-  const { model } = useModel();
   const [activeTab, setActiveTab] = useState("analysis");
   const [isAnalyzing, startAnalyzing] = useTransition();
   const [isLoadingMaterial, startLoadingMaterial] = useTransition();
@@ -110,7 +108,7 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      const result = await analyzeContentAction(content, model);
+      const result = await analyzeContentAction(content);
       if (result.error) {
         toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
       } else {
@@ -127,7 +125,7 @@ export function StudyNowContent() {
   const handleAnalyzeImage = async () => {
     if (!imageDataUri) return;
     startAnalyzing(async () => {
-        const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content }, model);
+        const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
         if (result.error) {
             toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
         } else {
@@ -144,7 +142,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
       const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-      const result = await generateFlashcardsAction(flashcardContent, model);
+      const result = await generateFlashcardsAction(flashcardContent);
       if (result.error) {
         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -158,7 +156,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingQuiz(async () => {
         const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' }, model);
+        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' });
 
         if (result.error) {
             toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
@@ -193,7 +191,7 @@ export function StudyNowContent() {
     }
     if (!content) return;
     startGeneratingSummary(async () => {
-        const result = await summarizeContentAction({ content }, model);
+        const result = await summarizeContentAction({ content });
         if (result.error) {
             toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
         } else {
@@ -207,7 +205,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
-        const result = await generateImageAction({ prompt }, model);
+        const result = await generateImageAction({ prompt });
         if (result.error) {
             toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
         } else {

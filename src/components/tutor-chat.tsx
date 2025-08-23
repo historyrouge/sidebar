@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { marked } from 'marked';
-import { useModel } from "@/hooks/use-model";
 
 
 interface TutorChatProps {
@@ -29,7 +28,6 @@ export function TutorChat({ content }: TutorChatProps) {
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
-  const { model } = useModel();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -53,7 +51,7 @@ export function TutorChat({ content }: TutorChatProps) {
         content,
         history: [...chatHistory, { role: "user", content: messageToSend }],
       };
-      const result = await chatWithTutorAction(chatInput, model);
+      const result = await chatWithTutorAction(chatInput);
 
       if (result.error) {
         toast({
