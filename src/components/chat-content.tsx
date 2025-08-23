@@ -12,6 +12,7 @@ import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Vol
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 type Message = {
   role: "user" | "model";
@@ -316,13 +317,12 @@ export function ChatContent({
             ))}
             {isTyping && (
                 <div className="flex items-start gap-4">
-                <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
-                </Avatar>
-                <div className="max-w-lg rounded-lg p-3 text-sm bg-card border flex items-center gap-2">
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>Thinking...</span>
-                </div>
+                    <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
+                    </Avatar>
+                    <div className="max-w-lg rounded-lg p-3 text-sm bg-card border flex items-center gap-2">
+                        <ThinkingIndicator />
+                    </div>
                 </div>
             )}
             </div>
