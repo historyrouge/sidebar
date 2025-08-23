@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getYoutubeTranscriptAction } from "@/app/actions";
 import { Loader2, Youtube, Wand2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BackButton } from "./back-button";
 
 export function YouTubeExtractorContent() {
     const [videoUrl, setVideoUrl] = useState("");
@@ -48,6 +49,10 @@ export function YouTubeExtractorContent() {
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
             <div className="mx-auto max-w-2xl space-y-6">
+                 <div className="flex items-center gap-2">
+                    <BackButton />
+                    <h1 className="text-2xl font-semibold tracking-tight">YouTube Tools</h1>
+                </div>
                 <Card>
                     <CardHeader>
                         <CardTitle>YouTube Transcript Extractor</CardTitle>

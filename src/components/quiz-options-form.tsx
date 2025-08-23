@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { generateQuizAction } from "@/app/actions";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { BackButton } from "./back-button";
 
 
 export function QuizOptionsForm() {
@@ -86,7 +87,10 @@ export function QuizOptionsForm() {
         <div className="flex justify-center items-center p-4 md:p-6">
             <Card className="w-full max-w-2xl">
                 <CardHeader>
-                    <CardTitle>Customize Your Quiz</CardTitle>
+                    <div className="flex items-center gap-2 mb-2">
+                        <BackButton />
+                        <CardTitle>Customize Your Quiz</CardTitle>
+                    </div>
                     <CardDescription>Set the parameters for your quiz below.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -143,13 +147,7 @@ export function QuizOptionsForm() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                    <Link href="/quiz">
-                        <Button variant="outline">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back
-                        </Button>
-                    </Link>
+                <CardFooter className="flex justify-end">
                     <Button onClick={handleGenerateQuiz} disabled={isGenerating}>
                         {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Quiz

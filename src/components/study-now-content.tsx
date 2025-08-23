@@ -22,6 +22,7 @@ import { Input } from "./ui/input";
 import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
+import { BackButton } from "./back-button";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -338,6 +339,7 @@ export function StudyNowContent() {
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
+            <BackButton />
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
         <div className="flex items-center gap-4">

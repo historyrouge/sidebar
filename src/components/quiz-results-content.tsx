@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { GenerateQuizzesOutput } from "@/app/actions";
+import { BackButton } from "./back-button";
 
 type ResultsData = {
     score: number;
@@ -59,7 +60,8 @@ export function QuizResultsContent() {
 
     return (
         <div className="container mx-auto max-w-4xl py-8">
-            <Card>
+            <Card className="relative">
+                <BackButton className="absolute top-4 left-4" />
                 <CardHeader className="text-center">
                     <CardTitle className="text-4xl font-bold">Quiz Complete!</CardTitle>
                     <CardDescription className="text-xl text-muted-foreground">Here's how you did.</CardDescription>

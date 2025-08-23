@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { slugify } from "@/lib/utils";
 import Link from "next/link";
+import { BackButton } from "./back-button";
 
 const ebooks = [
   {
@@ -73,11 +74,7 @@ export function EbookReader({ slug }: { slug: string }) {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
-        <Link href="/ebooks">
-            <Button variant="ghost" size="icon">
-                <ArrowLeft />
-            </Button>
-        </Link>
+        <BackButton />
         <div className="flex-1 mx-4 truncate">
           <h1 className="text-lg font-semibold truncate">{book.title}</h1>
         </div>

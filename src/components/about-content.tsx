@@ -3,11 +3,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BackButton } from "./back-button";
 
 export function AboutContent() {
   return (
     <div className="flex flex-col items-center justify-center p-4 md:p-8 bg-muted/40 min-h-full">
-      <Card className="w-full max-w-3xl shadow-lg overflow-hidden border-0">
+      <Card className="w-full max-w-3xl shadow-lg overflow-hidden border-0 relative">
+        <BackButton className="absolute top-4 left-4 z-10 bg-background/50 backdrop-blur-sm" />
         <div className="bg-card p-8 text-center">
             <Avatar className="mx-auto h-32 w-32 border-4 border-primary shadow-lg">
               <AvatarImage src="https://placehold.co/128x128.png" alt="Harsh" data-ai-hint="profile picture" />

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { Button } from "./ui/button";
+import { BackButton } from "./back-button";
 
 type QuizData = {
     quizzes: GenerateQuizzesOutput['quizzes'];
@@ -59,7 +60,7 @@ export function QuizStartContent() {
 
     const handlePrev = () => {
         if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(prev => prev - 1);
+            setCurrentQuestionIndex(prev => prev + 1);
         }
     };
     
@@ -106,6 +107,9 @@ export function QuizStartContent() {
 
     return (
         <>
+            <div className="absolute top-4 left-4 z-50">
+                <BackButton />
+            </div>
             <QuizInterface 
                 subject={quizData.options.difficulty}
                 durationSec={quizData.options.timeLimit}

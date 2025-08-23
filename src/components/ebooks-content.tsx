@@ -7,6 +7,7 @@ import Image from "next/image";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { slugify } from "@/lib/utils";
+import { BackButton } from "./back-button";
 
 const ebooks = [
   {
@@ -33,7 +34,8 @@ export function EbooksContent() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 text-center">
+        <header className="mb-8 text-center relative">
+            <BackButton className="absolute left-0 top-1/2 -translate-y-1/2" />
           <BookOpen className="mx-auto h-12 w-12 text-primary" />
           <h1 className="mt-4 text-4xl font-bold tracking-tight">eBook Library</h1>
           <p className="mt-2 text-lg text-muted-foreground">Browse our curated collection of educational eBooks.</p>

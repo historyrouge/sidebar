@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Moon, Sun } from "lucide-react";
+import { BackButton } from "./back-button";
 
 export function SettingsContent() {
   const { setTheme, theme } = useTheme();
@@ -13,6 +14,10 @@ export function SettingsContent() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-muted/40">
         <div className="mx-auto max-w-2xl space-y-6">
+            <div className="flex items-center gap-2">
+                <BackButton />
+                <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+            </div>
             <Card>
                 <CardHeader>
                     <CardTitle>Appearance</CardTitle>
