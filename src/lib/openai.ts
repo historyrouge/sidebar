@@ -12,8 +12,6 @@ if (!process.env.OPENROUTER_BASE_URL) {
 export const openai = new OpenAI({
   baseURL: process.env.OPENROUTER_BASE_URL,
   apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.YOUR_SITE_URL || "", // Optional. Site URL for rankings on openrouter.ai.
-    "X-Title": process.env.YOUR_SITE_NAME || "LearnSphere", // Optional. Site title for rankings on openrouter.ai.
-  },
 });
+
+    

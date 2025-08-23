@@ -34,12 +34,16 @@ export type GenerateImageOutput = GenerateImageOutputFlow;
 
 async function callOpenAI(systemPrompt: string, userPrompt: string): Promise<any> {
     const completion = await openai.chat.completions.create({
-        model: "tngtech/deepseek-r1t2-chimera:free",
+        model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
         ],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        extra_headers: {
+            "HTTP-Referer": process.env.YOUR_SITE_URL || "",
+            "X-Title": process.env.YOUR_SITE_NAME || "LearnSphere",
+        }
     });
     
     if (!completion.choices[0].message.content) {
@@ -264,3 +268,5 @@ export type CodeAgentInput = {};
 
 export type { GetYoutubeTranscriptOutput };
 export type { GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput };
+
+    
