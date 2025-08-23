@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateQuizAction } from "@/app/actions";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 
 export function QuizOptionsForm() {
@@ -142,7 +143,13 @@ export function QuizOptionsForm() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
+                <CardFooter className="flex justify-between">
+                    <Link href="/quiz">
+                        <Button variant="outline">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                        </Button>
+                    </Link>
                     <Button onClick={handleGenerateQuiz} disabled={isGenerating}>
                         {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Quiz
