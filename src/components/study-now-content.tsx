@@ -411,7 +411,7 @@ export function StudyNowContent() {
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze
               </Button>
-              <div className="flex items-stretch gap-2">
+              <div className="flex items-stretch gap-2 flex-1">
                 <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading || isLoadingMaterial}>
                     <FileUp className="mr-2 h-4 w-4" />
                     Upload .txt

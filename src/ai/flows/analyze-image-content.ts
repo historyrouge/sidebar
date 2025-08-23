@@ -48,9 +48,15 @@ const analyzeImagePrompt = ai.definePrompt({
   prompt: `You are an AI tool that analyzes the given image to help students study more effectively. The image could be a diagram, a presentation slide, or a page from a book.
 
 Image to analyze: {{media url=imageDataUri}}
-User prompt: {{{prompt}}}
 
-Analyze the image. If the user has provided a prompt, use it to guide your analysis.
+{{#if prompt}}
+The user has provided the following text as context. Use it to guide your analysis of the image:
+---
+{{{prompt}}}
+---
+{{/if}}
+
+Analyze the image.
 1.  Generate a concise, one-paragraph summary of the image content.
 2.  Identify the key concepts. For each concept, provide a brief explanation.
 3.  If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array.
