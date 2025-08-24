@@ -6,9 +6,9 @@ import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const messages = [
-  "Parsing prompt...",
-  "Activating neural network...",
-  "Synthesizing information...",
+  "Initializing model...",
+  "Performing multi-head attention...",
+  "Generating token sequence...",
   "Finalizing response...",
 ];
 
