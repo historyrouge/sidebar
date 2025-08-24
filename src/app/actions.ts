@@ -47,10 +47,6 @@ async function callOpenAI(systemPrompt: string, userPrompt: string, model: Model
             { role: "user", content: userPrompt }
         ],
         response_format: { type: "json_object" },
-        extra_headers: {
-            "HTTP-Referer": process.env.YOUR_SITE_URL || "",
-            "X-Title": process.env.YOUR_SITE_NAME || "LearnSphere",
-        }
     });
     
     if (!completion.choices[0].message.content) {
@@ -83,7 +79,7 @@ export async function analyzeContentAction(
 export async function analyzeImageContentAction(
     input: AnalyzeImageContentInput
 ): Promise<ActionResult<AnalyzeImageContentOutput>> {
-    // DeepSeek doesn't support image analysis, so we return an error.
+    // OpenRouter text models don't support image analysis, so we return an error.
     return { error: "Image analysis is not supported with the current AI model." };
 }
 
