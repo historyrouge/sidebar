@@ -7,16 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { getYoutubeTranscriptAction } from "@/app/actions";
-import { Loader2, Youtube, Wand2, Save } from "lucide-react";
+import { getYoutubeTranscriptAction, summarizeContentAction, SummarizeContentOutput } from "@/app/actions";
+import { Loader2, Youtube, Wand2, Save, Copy, Pilcrow } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./back-button";
+import { Skeleton } from "./ui/skeleton";
 
 export function YouTubeExtractorContent() {
     const [videoUrl, setVideoUrl] = useState("");
     const [transcript, setTranscript] = useState("");
+    const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
     const [isExtracting, startExtracting] = useTransition();
-    const [isSaving, startSaving] = useTransition();
+    const [isSummarizing, startSummarizing] = useTransition();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -27,6 +29,8 @@ export function YouTubeExtractorContent() {
         }
 
         startExtracting(async () => {
+            setTranscript("");
+            setSummary(null);
             const result = await getYoutubeTranscriptAction({ videoUrl });
             if (result.error) {
                 toast({ title: "Failed to get transcript", description: result.error, variant: 'destructive' });
@@ -37,13 +41,28 @@ export function YouTubeExtractorContent() {
         });
     };
 
-    const handleCopyToClipboard = () => {
-        if (!transcript.trim()) {
-            toast({ title: "No transcript to copy", description: "Please extract a transcript first.", variant: 'destructive' });
+    const handleSummarize = () => {
+        if (!transcript) {
+            toast({ title: "No transcript available", description: "Please extract a transcript first.", variant: 'destructive' });
             return;
         }
-        navigator.clipboard.writeText(transcript);
-        toast({ title: "Copied to clipboard!" });
+        startSummarizing(async () => {
+            const result = await summarizeContentAction({ content: transcript });
+            if (result.error) {
+                toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
+            } else {
+                setSummary(result.data ?? null);
+            }
+        });
+    };
+
+    const handleCopyToClipboard = (textToCopy: string, type: string) => {
+        if (!textToCopy.trim()) {
+            toast({ title: `No ${type} to copy`, variant: 'destructive' });
+            return;
+        }
+        navigator.clipboard.writeText(textToCopy);
+        toast({ title: `Copied to clipboard!`, description: `The ${type} has been copied.` });
     }
 
     return (
@@ -77,7 +96,7 @@ export function YouTubeExtractorContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Extracted Transcript</CardTitle>
-                        <CardDescription>The transcript will appear below. You can copy it to use in other tools.</CardDescription>
+                        <CardDescription>The transcript will appear below. You can copy it or generate a summary.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Textarea 
@@ -87,13 +106,45 @@ export function YouTubeExtractorContent() {
                             readOnly
                         />
                     </CardContent>
-                    <CardFooter>
-                        <Button onClick={handleCopyToClipboard} disabled={isSaving || !transcript.trim()}>
-                            {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2"/>}
+                    <CardFooter className="flex gap-2">
+                        <Button onClick={() => handleCopyToClipboard(transcript, "transcript")} disabled={isExtracting || !transcript.trim()}>
+                            <Copy className="mr-2"/>
                             Copy Transcript
+                        </Button>
+                        <Button onClick={handleSummarize} disabled={isSummarizing || !transcript.trim()}>
+                            {isSummarizing ? <Loader2 className="mr-2 animate-spin" /> : <Pilcrow className="mr-2"/>}
+                            Summarize
                         </Button>
                     </CardFooter>
                 </Card>
+
+                {(isSummarizing || summary) && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Video Summary</CardTitle>
+                            <CardDescription>An AI-generated summary of the video's content.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isSummarizing ? (
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">{summary?.summary}</p>
+                            )}
+                        </CardContent>
+                         {summary && (
+                            <CardFooter>
+                                <Button variant="outline" onClick={() => handleCopyToClipboard(summary.summary, "summary")}>
+                                    <Copy className="mr-2"/>
+                                    Copy Summary
+                                </Button>
+                            </CardFooter>
+                        )}
+                    </Card>
+                )}
             </div>
         </div>
     );
