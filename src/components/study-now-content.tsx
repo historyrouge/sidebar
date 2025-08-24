@@ -23,6 +23,7 @@ import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
+import { useModelSettings } from "@/hooks/use-model-settings";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -44,6 +45,7 @@ export function StudyNowContent() {
   const [isGeneratingSummary, startGeneratingSummary] = useTransition();
   const [isGeneratingImage, startGeneratingImage] = useTransition();
   const { theme, setTheme } = useTheme();
+  const { model } = useModelSettings();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +110,7 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      const result = await analyzeContentAction(content);
+      const result = await analyzeContentAction(content, model);
       if (result.error) {
         toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
       } else {
@@ -142,7 +144,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
       const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-      const result = await generateFlashcardsAction(flashcardContent);
+      const result = await generateFlashcardsAction(flashcardContent, model);
       if (result.error) {
         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -156,7 +158,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingQuiz(async () => {
         const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' });
+        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium', model });
 
         if (result.error) {
             toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
@@ -191,7 +193,7 @@ export function StudyNowContent() {
     }
     if (!content) return;
     startGeneratingSummary(async () => {
-        const result = await summarizeContentAction({ content });
+        const result = await summarizeContentAction({ content }, model);
         if (result.error) {
             toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
         } else {
@@ -576,7 +578,7 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} model={model} />
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (

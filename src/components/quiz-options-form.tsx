@@ -10,15 +10,16 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateQuizAction } from "@/app/actions";
-import { Loader2, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
+import { useModelSettings } from "@/hooks/use-model-settings";
 
 
 export function QuizOptionsForm() {
     const router = useRouter();
     const { toast } = useToast();
     const [isGenerating, startGenerating] = useTransition();
+    const { model } = useModelSettings();
 
     const [content, setContent] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState("medium");
@@ -50,6 +51,7 @@ export function QuizOptionsForm() {
                 content,
                 difficulty: difficulty as "easy" | "medium" | "hard",
                 numQuestions: parseInt(numQuestions),
+                model
             });
 
             if (result.error) {
