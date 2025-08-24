@@ -75,8 +75,10 @@ export function ChatContent({
     setCapturedImage(null);
 
     startTyping(async () => {
+      // We only send text history to the AI
+      const textHistory = history.map(h => ({role: h.role, content: h.content}));
       const chatInput: GeneralChatInput = {
-        history: [...history, { role: 'user', content: messageToSend }], // history for model shouldn't contain image
+        history: [...textHistory, { role: 'user', content: messageToSend }],
         imageDataUri: capturedImage || undefined,
       };
       const result = await generalChatAction(chatInput);
@@ -102,9 +104,12 @@ export function ChatContent({
       startTyping(async () => {
         // We remove the last model response before regenerating
         setHistory(prev => prev.slice(0, -1));
+        
+        // We only send text history to the AI
+        const historyForAI = history.slice(0, -1).map(h => ({role: h.role, content: h.content}));
 
         const chatInput: GeneralChatInput = {
-          history: history.slice(0,-1),
+          history: historyForAI,
           imageDataUri: lastUserMessage.imageDataUri
         };
         const result = await generalChatAction(chatInput);
