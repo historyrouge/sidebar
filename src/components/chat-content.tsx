@@ -8,15 +8,20 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw } from "lucide-react";
+import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
 import { ThinkingIndicator } from "./thinking-indicator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
+import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+import Image from "next/image";
+
 
 type Message = {
   role: "user" | "model";
   content: string;
+  imageDataUri?: string;
 };
 
 const suggestionPrompts = [
@@ -49,23 +54,30 @@ export function ChatContent({
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
+  
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleSendMessage = async (e: React.FormEvent | React.MouseEvent | null, message?: string) => {
     e?.preventDefault();
     const messageToSend = message || input;
-    if (!messageToSend.trim()) return;
+    if (!messageToSend.trim() && !capturedImage) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = { role: "user", content: messageToSend };
+    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
     setHistory((prev) => [...prev, userMessage]);
     setInput("");
+    setCapturedImage(null);
 
     startTyping(async () => {
       const chatInput: GeneralChatInput = {
-        history: [...history, userMessage],
+        history: [...history, { role: 'user', content: messageToSend }], // history for model shouldn't contain image
+        imageDataUri: capturedImage || undefined,
       };
       const result = await generalChatAction(chatInput);
 
@@ -93,6 +105,7 @@ export function ChatContent({
 
         const chatInput: GeneralChatInput = {
           history: history.slice(0,-1),
+          imageDataUri: lastUserMessage.imageDataUri
         };
         const result = await generalChatAction(chatInput);
 
@@ -195,7 +208,7 @@ export function ChatContent({
       recognitionRef.current?.abort();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]); // Add history to dependency array for handleSendMessage
+  }, [history]); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -206,6 +219,49 @@ export function ChatContent({
       recognitionRef.current.start();
     }
   };
+  
+    useEffect(() => {
+        if (isCameraOpen) {
+            const getCameraPermission = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    setHasCameraPermission(true);
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                    }
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    setHasCameraPermission(false);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Camera Access Denied',
+                        description: 'Please enable camera permissions in your browser settings.',
+                    });
+                }
+            };
+            getCameraPermission();
+        } else {
+            // Cleanup: stop video stream when modal is closed
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(track => track.stop());
+                videoRef.current.srcObject = null;
+            }
+        }
+    }, [isCameraOpen, toast]);
+
+    const handleCaptureImage = () => {
+        if (videoRef.current) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const context = canvas.getContext('2d');
+            context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+            const dataUri = canvas.toDataURL('image/jpeg');
+            setCapturedImage(dataUri);
+            setIsCameraOpen(false);
+        }
+    };
 
 
   useEffect(() => {
@@ -221,13 +277,36 @@ export function ChatContent({
 
   return (
     <div className="relative h-full">
+        <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Camera</DialogTitle>
+                </DialogHeader>
+                {hasCameraPermission === null ? (
+                    <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>
+                ) : hasCameraPermission === false ? (
+                    <Alert variant="destructive">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
+                    </Alert>
+                ) : (
+                    <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+                )}
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission}>Capture</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
         <ShareDialog
             isOpen={!!shareContent}
             onOpenChange={(open) => !open && setShareContent(null)}
             content={shareContent || ""}
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-24">
+            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-32 sm:pb-24">
             {history.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center">
                     <div className="bg-primary/10 p-4 rounded-full mb-4">
@@ -268,6 +347,9 @@ export function ChatContent({
                             : "bg-card border"
                         )}
                     >
+                         {message.imageDataUri && (
+                            <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                        )}
                         <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
 
                         {message.role === 'model' && (
@@ -328,7 +410,20 @@ export function ChatContent({
             </div>
         </ScrollArea>
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-2 sm:p-4">
+             {capturedImage && (
+                <div className="max-w-3xl mx-auto mb-2 relative w-fit">
+                    <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
+                    <Image src={capturedImage} alt="Captured image" width={80} height={60} className="rounded-md border" />
+                    <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
+                <Button type="button" size="icon" variant="outline" className="h-12 w-12" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
+                    <Camera className="h-5 w-5" />
+                    <span className="sr-only">Use Camera</span>
+                </Button>
                 <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -340,7 +435,7 @@ export function ChatContent({
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-12 w-12" disabled={isTyping || !input.trim()}>
+                <Button type="submit" size="icon" className="h-12 w-12" disabled={isTyping || (!input.trim() && !capturedImage)}>
                     {isTyping ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (

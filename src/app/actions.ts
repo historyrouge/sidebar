@@ -138,12 +138,9 @@ export async function helpChatAction(
 
 export async function generalChatAction(
     input: GeneralChatInput
-    ): Promise<ActionResult<GeneralChatOutput>> {
+): Promise<ActionResult<GeneralChatOutput>> {
     try {
-        const systemPrompt = `You are a friendly and helpful AI assistant named LearnSphere. Your goal is to be an expert educator who makes learning accessible and engaging. Your response should be in Markdown format. Return the output in a valid JSON object matching this schema: { response: string }.`;
-        const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\n');
-        const userPrompt = `Conversation History:\n---\n${historyText}\n---\n\nBased on the conversation history and your instructions, provide a clear, concise, and friendly response to the user's last message.`;
-        const output = await callOpenAI(systemPrompt, userPrompt);
+        const output = await generalChat(input);
         return { data: output };
     } catch (e: any) {
         console.error(e);
@@ -172,7 +169,8 @@ export async function summarizeContentAction(
         const userPrompt = `Content to summarize:\n---\n${input.content}\n---\n\nPlease generate a concise summary of the provided content. The summary should capture the main ideas and key points of the text.`;
         const output = await callOpenAI(systemPrompt, userPrompt);
         return { data: output };
-    } catch (e: any) {
+    } catch (e: any)
+        {
         console.error(e);
         return { error: e.message || "An unknown error occurred." };
     }

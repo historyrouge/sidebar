@@ -17,6 +17,7 @@ const GeneralChatInputSchema = z.object({
     role: z.enum(['user', 'model']),
     content: z.string(),
   })).describe('The conversation history.'),
+  imageDataUri: z.string().optional().describe("An optional image from the user, as a data URI."),
 });
 export type GeneralChatInput = z.infer<typeof GeneralChatInputSchema>;
 
@@ -46,6 +47,12 @@ Your Instructions:
 - Maintain a positive, friendly, and supportive tone throughout the conversation.
 - Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read.
 - Your primary goal is to help users learn and understand, not just to provide an answer.
+- If an image is provided, analyze it and use it as the primary context for your response.
+
+{{#if imageDataUri}}
+Image context:
+{{media url=imageDataUri}}
+{{/if}}
 
 Conversation History:
 ---
