@@ -6,10 +6,10 @@ import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const messages = [
-  "Analyzing your question...",
-  "Searching for insights...",
-  "Compiling the answer...",
-  "Almost there...",
+  "Parsing prompt...",
+  "Activating neural network...",
+  "Synthesizing information...",
+  "Finalizing response...",
 ];
 
 export function ThinkingIndicator() {
