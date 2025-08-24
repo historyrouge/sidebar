@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import { YoutubeTranscriptApi } from 'youtube-transcript-api';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 const GetYoutubeTranscriptInputSchema = z.object({
   videoUrl: z.string().url().describe('The URL of the YouTube video.'),
@@ -35,22 +35,25 @@ const getYoutubeTranscriptFlow = ai.defineFlow(
   },
   async ({videoUrl}) => {
     try {
-        const transcriptParts = await YoutubeTranscriptApi.getTranscript(videoUrl);
+        const transcriptParts = await YoutubeTranscript.fetchTranscript(videoUrl);
         if (!transcriptParts || transcriptParts.length === 0) {
-            throw new Error('Could not retrieve transcript for this video. It may be disabled.');
+            throw new Error('Could not retrieve transcript for this video. It may be disabled or unavailable.');
         }
         const transcript = transcriptParts.map(part => part.text).join(' ');
+        if (!transcript.trim()) {
+             throw new Error('The transcript for this video is empty.');
+        }
         return { transcript };
     } catch (error: any) {
         console.error("Error fetching transcript: ", error);
-        // The new library is better at providing meaningful errors.
+        // Provide more specific user-friendly error messages
         if (error.message.includes('subtitles are disabled')) {
-            throw new Error('Sorry, transcripts are disabled for this video.');
+            throw new Error('Sorry, transcripts (subtitles) are disabled for this video.');
         }
         if (error.message.includes('No transcript found')) {
             throw new Error('Sorry, no transcript is available for this video.');
         }
-        throw new Error('Failed to fetch transcript from YouTube.');
+        throw new Error('An unexpected error occurred while fetching the transcript from YouTube.');
     }
   }
 );
