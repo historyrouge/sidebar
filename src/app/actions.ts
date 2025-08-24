@@ -194,7 +194,13 @@ export async function getYoutubeTranscriptAction(
 export async function generateImageAction(
   input: GenerateImageInput
 ): Promise<ActionResult<GenerateImageOutput>> {
-    return { error: "Image generation is not supported with the current AI model." };
+    try {
+        const output = await generateImage(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+    }
 }
 
 // Dummy types for exports where the original type is no longer relevant
