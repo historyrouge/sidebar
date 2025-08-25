@@ -86,7 +86,7 @@ export function ChatContent({
         }
         try {
           const response = await puter.ai.chat(messageToSend);
-          const responseText = typeof response === 'object' && response.text ? response.text : response;
+          const responseText = typeof response === 'object' && response.text ? response.text : String(response);
           const modelMessage: Message = { role: "model", content: responseText };
           setHistory((prev) => [...prev, modelMessage]);
         } catch (error: any) {
