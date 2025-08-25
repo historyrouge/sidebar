@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generateFlashcardsSambaAction, GenerateFlashcardsOutput } from "@/app/actions";
+import { generateFlashcardsAction, GenerateFlashcardsOutput, ModelKey } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
+import { ModelSwitcherDialog } from "./model-switcher-dialog";
+import { useModelSettings } from "@/hooks/use-model-settings";
 
 export function CreateFlashcardsContent() {
     const { theme, setTheme } = useTheme();
@@ -23,6 +25,11 @@ export function CreateFlashcardsContent() {
     const { toast } = useToast();
     const [isRecording, setIsRecording] = useState(false);
     const recognitionRef = useRef<any>(null);
+
+    const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+    const { model, setModel } = useModelSettings();
+    const lastFailedContent = useRef<string | null>(null);
+
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -65,27 +72,61 @@ export function CreateFlashcardsContent() {
     };
 
 
-    const handleGenerateFlashcards = async () => {
-        if (content.trim().length < 50) {
-        toast({
-            title: "Content too short",
-            description: "Please provide at least 50 characters to generate flashcards.",
-            variant: "destructive",
-        });
-        return;
+    const handleGenerateFlashcards = (generationContent?: string) => {
+        const contentToUse = generationContent ?? content;
+        if (contentToUse.trim().length < 50) {
+            toast({
+                title: "Content too short",
+                description: "Please provide at least 50 characters to generate flashcards.",
+                variant: "destructive",
+            });
+            return;
         }
         startGenerating(async () => {
-        const result = await generateFlashcardsSambaAction({ content });
-        if (result.error) {
-            toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
-        } else {
-            setFlashcards(result.data?.flashcards ?? []);
-            toast({ title: "Flashcards Generated!", description: "Your new flashcards are ready."});
-        }
+            const result = await generateFlashcardsAction({ content: contentToUse });
+            if (result.error) {
+                if (result.error === "API_LIMIT_EXCEEDED") {
+                    lastFailedContent.current = contentToUse;
+                    setShowModelSwitcher(true);
+                } else {
+                    toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
+                }
+            } else {
+                setFlashcards(result.data?.flashcards ?? []);
+                toast({ title: "Flashcards Generated!", description: "Your new flashcards are ready."});
+                lastFailedContent.current = null;
+            }
         });
     };
 
+    const handleModelSwitch = (newModel: ModelKey) => {
+        // SambaNova is the only model for flashcards, so we can't switch.
+        // In a real scenario, you'd check if other models support this.
+        // For now, we'll just inform the user.
+        toast({
+            title: "Model Not Supported",
+            description: "Only the default model can be used for flashcard generation at this time.",
+            variant: "destructive"
+        });
+        setShowModelSwitcher(false);
+    
+        // If you had other models, the logic would be:
+        // setModel(newModel);
+        // setShowModelSwitcher(false);
+        // toast({ title: "Model Switched", description: `Now using ${newModel}. Retrying...` });
+        // if (lastFailedContent.current) {
+        //     handleGenerateFlashcards(lastFailedContent.current);
+        // }
+    };
+
     return (
+        <>
+        <ModelSwitcherDialog 
+            isOpen={showModelSwitcher}
+            onOpenChange={setShowModelSwitcher}
+            currentModel={model}
+            onModelSelect={handleModelSwitch}
+        />
         <div className="flex h-screen flex-col bg-background">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
                 <div className="flex items-center gap-2">
@@ -132,7 +173,7 @@ export function CreateFlashcardsContent() {
                         </div>
                         </CardContent>
                         <CardFooter>
-                        <Button onClick={handleGenerateFlashcards} disabled={isGenerating || content.trim().length < 50}>
+                        <Button onClick={() => handleGenerateFlashcards()} disabled={isGenerating || content.trim().length < 50}>
                             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                             Generate Flashcards
                         </Button>
@@ -173,5 +214,6 @@ export function CreateFlashcardsContent() {
                 </div>
             </main>
         </div>
+        </>
     );
 }

@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X } from "lucide-react";
-import React, { useState, useTransition, useRef, useEffect } from "react";
+import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
 import { ThinkingIndicator } from "./thinking-indicator";
@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
 import { useModelSettings } from "@/hooks/use-model-settings";
+import { ModelSwitcherDialog } from "./model-switcher-dialog";
 
 declare const puter: any;
 
@@ -56,26 +57,32 @@ export function ChatContent({
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
-  const { model } = useModelSettings();
+  const { model, setModel } = useModelSettings();
   
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleSendMessage = async (e: React.FormEvent | React.MouseEvent | null, message?: string) => {
-    e?.preventDefault();
-    const messageToSend = message || input;
+  const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const lastFailedMessage = useRef<Message | null>(null);
+
+  const handleSendMessage = useCallback(async (messageContent?: string) => {
+    const messageToSend = messageContent ?? input;
     if (!messageToSend.trim() && !capturedImage) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
-    setHistory((prev) => [...prev, userMessage]);
-    setInput("");
-    setCapturedImage(null);
+    const userMessage: Message = lastFailedMessage.current ? lastFailedMessage.current : { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
+    if (!lastFailedMessage.current) {
+        setHistory((prev) => [...prev, userMessage]);
+        setInput("");
+        setCapturedImage(null);
+    }
+    
+    lastFailedMessage.current = null;
 
     startTyping(async () => {
       if (model === 'puter') {
@@ -98,25 +105,57 @@ export function ChatContent({
         // Handle Gemini and SambaNova via server action
         const textHistory = history.map(h => ({role: h.role, content: h.content}));
         const chatInput: GeneralChatInput = {
-          history: [...textHistory, { role: 'user', content: messageToSend }],
-          imageDataUri: capturedImage || undefined,
+          history: textHistory,
+          imageDataUri: userMessage.imageDataUri,
         };
+
         const result = await generalChatAction(chatInput, model);
 
         if (result.error) {
-          toast({
-            title: "Chat Error",
-            description: result.error,
-            variant: "destructive",
-          });
+          if (result.error === "API_LIMIT_EXCEEDED") {
+            lastFailedMessage.current = userMessage;
+            setShowModelSwitcher(true);
+          } else {
+            toast({
+              title: "Chat Error",
+              description: result.error,
+              variant: "destructive",
+            });
+          }
           setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
         } else if (result.data) {
-          const modelMessage: Message = { role: "model", content: result.data.response };
+          const responseText = typeof result.data.response === 'object' ? (result.data.response as any).text : result.data.response;
+          const modelMessage: Message = { role: "model", content: responseText };
           setHistory((prev) => [...prev, modelMessage]);
         }
       }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, capturedImage, isRecording, model, history]);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage();
+  }
+
+  const handleSuggestionClick = (prompt: string) => {
+    setInput(prompt);
+    handleSendMessage(prompt);
+  }
+
+  const handleModelSwitch = (newModel: ModelKey) => {
+    setModel(newModel);
+    setShowModelSwitcher(false);
+    toast({
+      title: "Model Switched",
+      description: `Now using ${newModel}. Retrying your message...`,
+    });
+    // Automatically retry the failed message with the new model
+    if(lastFailedMessage.current) {
+        handleSendMessage(lastFailedMessage.current.content);
+    }
   };
+
 
   const handleRegenerateResponse = async () => {
       const lastUserMessage = history.findLast(m => m.role === 'user');
@@ -219,7 +258,7 @@ export function ChatContent({
         setInput(fullTranscript);
 
         if (finalTranscript.trim()) {
-            handleSendMessage(null, finalTranscript);
+            handleSendMessage(finalTranscript);
         }
       };
     } else {
@@ -303,6 +342,12 @@ export function ChatContent({
 
   return (
     <div className="relative h-full">
+        <ModelSwitcherDialog 
+            isOpen={showModelSwitcher}
+            onOpenChange={setShowModelSwitcher}
+            currentModel={model}
+            onModelSelect={handleModelSwitch}
+        />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -344,7 +389,7 @@ export function ChatContent({
                     </p>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left whitespace-normal" onClick={(e) => handleSendMessage(e, prompt)}>
+                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left whitespace-normal" onClick={() => handleSuggestionClick(prompt)}>
                                 {prompt}
                             </Button>
                         ))}
@@ -445,7 +490,7 @@ export function ChatContent({
                     </Button>
                 </div>
             )}
-             <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
+             <form onSubmit={handleFormSubmit} className="flex items-center gap-2 max-w-3xl mx-auto">
                 <Button type="button" size="icon" variant="outline" className="h-12 w-12" onClick={() => setIsCameraOpen(true)} disabled={isTyping || model === 'puter'}>
                     <Camera className="h-5 w-5" />
                     <span className="sr-only">Use Camera</span>

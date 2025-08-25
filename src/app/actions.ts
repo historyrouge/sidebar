@@ -4,8 +4,7 @@
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutorOutputFlow } from "@/ai/flows/chat-tutor";
-import { generateFlashcards, GenerateFlashcardsOutput as GenerateFlashcardsOutputFlow, GenerateFlashcardsInput } from "@/ai/flows/generate-flashcards";
-import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow } from "@/ai/flows/generate-flashcards-samba";
+import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsInput } from "@/ai/flows/generate-flashcards-samba";
 import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
@@ -25,7 +24,7 @@ type ActionResult<T> = {
 // Re-exporting types for client components
 export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
-export type GenerateFlashcardsOutput = GenerateFlashcardsOutputFlow;
+export type GenerateFlashcardsOutput = GenerateFlashcardsSambaOutputFlow;
 export type GenerateQuizzesOutput = GenerateQuizzesOutputFlow;
 export type ChatWithTutorOutput = ChatWithTutorOutputFlow;
 export type HelpChatOutput = HelpChatOutputFlow;
@@ -35,6 +34,12 @@ export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
 export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 
+function isRateLimitError(e: any): boolean {
+  if (e?.message?.includes('429') || e?.message?.toLowerCase().includes('quota') || e?.message?.toLowerCase().includes('limit')) {
+    return true;
+  }
+  return false;
+}
 
 export async function analyzeContentAction(
   content: string
@@ -45,6 +50,7 @@ export async function analyzeContentAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }
@@ -57,23 +63,12 @@ export async function analyzeImageContentAction(
         return { data: output };
     } catch (e: any) {
         console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
         return { error: e.message || "An unknown error occurred." };
     }
 }
 
 export async function generateFlashcardsAction(
-  content: string
-): Promise<ActionResult<GenerateFlashcardsOutput>> {
-  try {
-    const output = await generateFlashcards({ content });
-    return { data: output };
-  } catch (e: any) {
-    console.error(e);
-    return { error: e.message || "An unknown error occurred." };
-  }
-}
-
-export async function generateFlashcardsSambaAction(
   input: GenerateFlashcardsInput
 ): Promise<ActionResult<GenerateFlashcardsSambaOutputFlow>> {
   try {
@@ -81,10 +76,10 @@ export async function generateFlashcardsSambaAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }
-
 
 export async function generateQuizAction(
   input: GenerateQuizzesInput
@@ -94,6 +89,7 @@ export async function generateQuizAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }
@@ -106,6 +102,7 @@ export async function chatWithTutorAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }
@@ -118,6 +115,7 @@ export async function helpChatAction(
         return { data: output };
     } catch (e: any) {
       console.error(e);
+      if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
       return { error: e.message || "An unknown error occurred." };
     }
 }
@@ -129,6 +127,7 @@ const MODEL_MAP: Record<Exclude<ModelKey, 'puter'>, string> = {
 
 async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
   const { history, imageDataUri } = input;
+  
   const lastUserMessage = history[history.length - 1];
   const conversationHistory = history.slice(0, -1).map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.content}));
 
@@ -162,6 +161,7 @@ async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<General
     return { data: { response: response.choices[0].message.content } };
   } catch (error: any) {
     console.error("SambaNova API error:", error);
+    if (isRateLimitError(error)) return { error: "API_LIMIT_EXCEEDED" };
     if (error.code === 'ENOTFOUND') {
       return { error: "Could not connect to the SambaNova API. Please check the Base URL." };
     }
@@ -191,6 +191,7 @@ export async function generalChatAction(
         return { data: output };
     } catch (e: any) {
         console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
         return { error: e.message || "An unknown error occurred." };
     }
 }
@@ -203,6 +204,7 @@ export async function textToSpeechAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }
@@ -216,6 +218,7 @@ export async function summarizeContentAction(
     } catch (e: any)
         {
         console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
         return { error: e.message || "An unknown error occurred." };
     }
 }
@@ -229,6 +232,7 @@ export async function getYoutubeTranscriptAction(
   } catch (e: any)
     {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unexpected error occurred while fetching the transcript." };
   }
 }
@@ -241,6 +245,7 @@ export async function generateImageAction(
     return { data: output };
   } catch (e: any) {
     console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
 }

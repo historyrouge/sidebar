@@ -7,7 +7,7 @@ export type ModelKey = 'gemini' | 'samba' | 'puter';
 
 type ModelSettings = {
   model: ModelKey;
-  setModel: (model: ModelKey) => void;
+  setModel: (model: ModelKey, isPermanent?: boolean) => void;
 };
 
 export function useModelSettings(): ModelSettings {
@@ -24,11 +24,13 @@ export function useModelSettings(): ModelSettings {
     }
   }, []);
 
-  const handleSetModel = useCallback((newModel: ModelKey) => {
+  const handleSetModel = useCallback((newModel: ModelKey, isPermanent = true) => {
     try {
       if (['gemini', 'samba', 'puter'].includes(newModel)) {
         setModel(newModel);
-        localStorage.setItem('ai-model', newModel);
+        if (isPermanent) {
+            localStorage.setItem('ai-model', newModel);
+        }
       }
     } catch (error) {
       console.warn('Could not save model setting to localStorage', error);
