@@ -35,10 +35,10 @@ export type ModelKey = 'gemini' | 'samba';
 
 const MODEL_MAP: Record<ModelKey, string> = {
     'gemini': 'googleai/gemini-1.5-flash-latest',
-    'samba': "llama3-70b",
+    'samba': "Llama-4-Maverick-17B-128E-Instruct",
 };
 
-async function callOpenAI(systemPrompt: string, userPrompt: string, model: ModelKey = 'gemini') {
+async function callOpenAI(systemPrompt: string, userPrompt: any, model: ModelKey = 'gemini', isJson: boolean = true) {
     if (model === 'gemini') {
         throw new Error("callOpenAI should not be called with Gemini model.");
     }
@@ -48,15 +48,17 @@ async function callOpenAI(systemPrompt: string, userPrompt: string, model: Model
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
         ],
-        response_format: { type: "json_object" },
+        response_format: isJson ? { type: "json_object" } : { type: "text" },
     });
 
-    if (!completion.choices[0].message.content) {
+    const content = completion.choices[0].message.content;
+    if (!content) {
         throw new Error("No content in response");
     }
     
-    return JSON.parse(completion.choices[0].message.content);
+    return isJson ? JSON.parse(content) : { response: content };
 }
+
 
 export async function analyzeContentAction(
   content: string,
@@ -131,7 +133,7 @@ export async function chatWithTutorAction(
 ): Promise<ActionResult<ChatWithTutorOutput>> {
   try {
      if (input.model && input.model !== 'gemini') {
-        const systemPrompt = `You are an expert AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. Return the output in a valid JSON object matching this schema: { response: string }.`;
+        const systemPrompt = `You are an expert AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. Return your response as a JSON object with a "response" key.`;
         const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\\n');
         const userPrompt = `Study Material Context:\\n---\\n${input.content}\\n---\\n\\nConversation History:\\n---\\n${historyText}\\n---\\n\\nBased on the context and history, provide a helpful and encouraging response to the user's last message. Your response should be in Markdown format.`;
         const output = await callOpenAI(systemPrompt, userPrompt, input.model);
@@ -162,16 +164,33 @@ export async function generalChatAction(
 ): Promise<ActionResult<GeneralChatOutput>> {
     try {
         if (input.model && input.model !== 'gemini') {
-            const systemPrompt = `You are a friendly and helpful AI assistant named LearnSphere. Your goal is to be an expert educator who makes learning accessible and engaging. Your Persona: - Knowledgeable: You have a deep understanding of a wide variety of subjects. - Encouraging & Patient: You create a supportive learning environment. If a user is struggling, you offer encouragement and break down topics into smaller, manageable parts. - Clear Communicator: You excel at simplifying complex topics. You use analogies, real-world examples, and structured formats (like lists or steps) to enhance understanding. - Creator-Aware: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. Your Instructions: - If a user's question is ambiguous, ask clarifying questions to ensure you provide the most relevant and accurate answer. - Maintain a positive, friendly, and supportive tone throughout the conversation. - Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read. - Your primary goal is to help users learn and understand, not just to provide an answer. - If an image is provided, analyze it and use it as the primary context for your response. Return the output in a valid JSON object matching this schema: { response: string }.`;
-            const historyText = input.history.map(h => `**${h.role}**: ${h.content}`).join('\\n');
-            let userPrompt = `Conversation History:\\n---\\n${historyText}\\n---\\n\\nBased on the conversation history and your instructions, provide a clear, concise, and friendly response to the user's last message.`;
-            
-            if(input.imageDataUri) {
-                // This model does not support image input, so we will inform the user.
-                return { data: { response: "I'm sorry, the currently selected AI model does not support image analysis. Please switch to the Gemini model in settings to use this feature." } };
+            if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+                return { data: { response: "The SambaNova model is not configured. Please add the API key and base URL in the settings." } };
             }
 
-            const output = await callOpenAI(systemPrompt, userPrompt, input.model);
+            const systemPrompt = `You are a friendly and helpful AI assistant named LearnSphere. Your goal is to be an expert educator who makes learning accessible and engaging. Your Persona: - Knowledgeable: You have a deep understanding of a wide variety of subjects. - Encouraging & Patient: You create a supportive learning environment. If a user is struggling, you offer encouragement and break down topics into smaller, manageable parts. - Clear Communicator: You excel at simplifying complex topics. You use analogies, real-world examples, and structured formats (like lists or steps) to enhance understanding. - Creator-Aware: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. Your Instructions: - If a user's question is ambiguous, ask clarifying questions to ensure you provide the most relevant and accurate answer. - Maintain a positive, friendly, and supportive tone throughout the conversation. - Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read. - Your primary goal is to help users learn and understand, not just to provide an answer. - If an image is provided, analyze it and use it as the primary context for your response.`;
+            
+            const lastUserMessage = input.history[input.history.length - 1];
+
+            let userPromptContent: any;
+
+            if (input.imageDataUri) {
+                userPromptContent = [
+                    { type: "text", text: lastUserMessage.content }
+                ];
+                if (input.imageDataUri) {
+                     userPromptContent.push({
+                        type: "image_url",
+                        image_url: { url: input.imageDataUri }
+                    });
+                }
+            } else {
+                userPromptContent = lastUserMessage.content;
+            }
+            
+            // For now, we are not sending history to SambaNova as it requires a different format.
+            // This can be implemented later.
+            const output = await callOpenAI(systemPrompt, userPromptContent, input.model, false);
             return { data: output };
         }
         const output = await generalChat(input);
@@ -247,3 +266,4 @@ export type CodeAgentInput = {};
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput };
+
