@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generateFlashcardsAction, GenerateFlashcardsOutput } from "@/app/actions";
+import { generateFlashcardsSambaAction, GenerateFlashcardsOutput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,7 +75,7 @@ export function CreateFlashcardsContent() {
         return;
         }
         startGenerating(async () => {
-        const result = await generateFlashcardsAction(content);
+        const result = await generateFlashcardsSambaAction({ content });
         if (result.error) {
             toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
         } else {

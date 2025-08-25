@@ -4,7 +4,8 @@
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutorOutputFlow } from "@/ai/flows/chat-tutor";
-import { generateFlashcards, GenerateFlashcardsOutput as GenerateFlashcardsOutputFlow } from "@/ai/flows/generate-flashcards";
+import { generateFlashcards, GenerateFlashcardsOutput as GenerateFlashcardsOutputFlow, GenerateFlashcardsInput } from "@/ai/flows/generate-flashcards";
+import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow } from "@/ai/flows/generate-flashcards-samba";
 import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
@@ -39,6 +40,7 @@ export async function analyzeContentAction(
   content: string
 ): Promise<ActionResult<AnalyzeContentOutput>> {
   try {
+    // Analysis is always done by Gemini for its structured output capabilities
     const output = await analyzeContent({ content });
     return { data: output };
   } catch (e: any) {
@@ -70,6 +72,19 @@ export async function generateFlashcardsAction(
     return { error: e.message || "An unknown error occurred." };
   }
 }
+
+export async function generateFlashcardsSambaAction(
+  input: GenerateFlashcardsInput
+): Promise<ActionResult<GenerateFlashcardsSambaOutputFlow>> {
+  try {
+    const output = await generateFlashcardsSamba(input);
+    return { data: output };
+  } catch (e: any) {
+    console.error(e);
+    return { error: e.message || "An unknown error occurred." };
+  }
+}
+
 
 export async function generateQuizAction(
   input: GenerateQuizzesInput
@@ -115,6 +130,7 @@ const MODEL_MAP: Record<Exclude<ModelKey, 'puter'>, string> = {
 async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
   const { history, imageDataUri } = input;
   const lastUserMessage = history[history.length - 1];
+  const conversationHistory = history.slice(0, -1).map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.content}));
 
   let content: any;
 
@@ -128,7 +144,7 @@ async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<General
   }
   
   const messages = [
-    ...history.slice(0, -1).map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.content})),
+    ...conversationHistory,
     { role: 'user', content }
   ];
 
@@ -237,4 +253,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };
+export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };
