@@ -44,7 +44,7 @@ export function SettingsContent() {
                 <CardContent>
                     <div className="space-y-3">
                         <Label className="font-semibold">AI Model</Label>
-                        <RadioGroup defaultValue={model} value={model} onValueChange={(value) => setModel(value as ModelKey)} className="flex gap-4">
+                        <RadioGroup defaultValue={model} value={model} onValueChange={(value) => setModel(value as ModelKey)} className="flex flex-col sm:flex-row gap-4">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="gemini" id="gemini" />
                                 <Label htmlFor="gemini">Gemini</Label>
@@ -53,9 +53,13 @@ export function SettingsContent() {
                                 <RadioGroupItem value="samba" id="samba" />
                                 <Label htmlFor="samba">SambaNova</Label>
                             </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="puter" id="puter" />
+                                <Label htmlFor="puter">Puter.js</Label>
+                            </div>
                         </RadioGroup>
                         <p className="text-xs text-muted-foreground">
-                            SambaNova requires an API key and base URL to be set in your environment variables.
+                            SambaNova requires an API key and base URL to be set. Puter.js runs in your browser and requires no setup.
                         </p>
                     </div>
                 </CardContent>

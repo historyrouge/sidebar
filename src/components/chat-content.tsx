@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
 import { useModelSettings } from "@/hooks/use-model-settings";
 
+declare const puter: any;
 
 type Message = {
   role: "user" | "model";
@@ -77,24 +78,41 @@ export function ChatContent({
     setCapturedImage(null);
 
     startTyping(async () => {
-      // We only send text history to the AI
-      const textHistory = history.map(h => ({role: h.role, content: h.content}));
-      const chatInput: GeneralChatInput = {
-        history: [...textHistory, { role: 'user', content: messageToSend }],
-        imageDataUri: capturedImage || undefined,
-      };
-      const result = await generalChatAction(chatInput, model);
+      if (model === 'puter') {
+        if (typeof puter === 'undefined') {
+          toast({ title: 'Puter.js not loaded', description: 'Please try reloading the page.', variant: 'destructive' });
+          setHistory(prev => prev.slice(0, -1));
+          return;
+        }
+        try {
+          const response = await puter.ai.chat(messageToSend);
+          const modelMessage: Message = { role: "model", content: response };
+          setHistory((prev) => [...prev, modelMessage]);
+        } catch (error: any) {
+           toast({ title: 'Puter.js Error', description: error.message, variant: 'destructive' });
+           setHistory(prev => prev.slice(0, -1));
+        }
 
-      if (result.error) {
-        toast({
-          title: "Chat Error",
-          description: result.error,
-          variant: "destructive",
-        });
-        setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
-      } else if (result.data) {
-        const modelMessage: Message = { role: "model", content: result.data.response };
-        setHistory((prev) => [...prev, modelMessage]);
+      } else {
+        // Handle Gemini and SambaNova via server action
+        const textHistory = history.map(h => ({role: h.role, content: h.content}));
+        const chatInput: GeneralChatInput = {
+          history: [...textHistory, { role: 'user', content: messageToSend }],
+          imageDataUri: capturedImage || undefined,
+        };
+        const result = await generalChatAction(chatInput, model);
+
+        if (result.error) {
+          toast({
+            title: "Chat Error",
+            description: result.error,
+            variant: "destructive",
+          });
+          setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
+        } else if (result.data) {
+          const modelMessage: Message = { role: "model", content: result.data.response };
+          setHistory((prev) => [...prev, modelMessage]);
+        }
       }
     });
   };
@@ -215,7 +233,7 @@ export function ChatContent({
       recognitionRef.current?.abort();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]); 
+  }, [history, model]); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -379,7 +397,7 @@ export function ChatContent({
                                     {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
                                     <span className="sr-only">Read aloud</span>
                                 </Button>
-                                {index === history.length -1 && (
+                                {index === history.length -1 && model !== 'puter' && (
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
                                         <RefreshCw className="h-4 w-4" />
                                         <span className="sr-only">Regenerate</span>
@@ -427,7 +445,7 @@ export function ChatContent({
                 </div>
             )}
              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 max-w-3xl mx-auto">
-                <Button type="button" size="icon" variant="outline" className="h-12 w-12" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
+                <Button type="button" size="icon" variant="outline" className="h-12 w-12" onClick={() => setIsCameraOpen(true)} disabled={isTyping || model === 'puter'}>
                     <Camera className="h-5 w-5" />
                     <span className="sr-only">Use Camera</span>
                 </Button>

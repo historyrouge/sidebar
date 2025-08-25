@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-export type ModelKey = 'gemini' | 'samba';
+export type ModelKey = 'gemini' | 'samba' | 'puter';
 
 type ModelSettings = {
   model: ModelKey;
@@ -16,7 +16,7 @@ export function useModelSettings(): ModelSettings {
   useEffect(() => {
     try {
       const savedModel = localStorage.getItem('ai-model') as ModelKey | null;
-      if (savedModel && (savedModel === 'gemini' || savedModel === 'samba')) {
+      if (savedModel && ['gemini', 'samba', 'puter'].includes(savedModel)) {
         setModel(savedModel);
       }
     } catch (error) {
@@ -26,7 +26,7 @@ export function useModelSettings(): ModelSettings {
 
   const handleSetModel = useCallback((newModel: ModelKey) => {
     try {
-      if (newModel === 'gemini' || newModel === 'samba') {
+      if (['gemini', 'samba', 'puter'].includes(newModel)) {
         setModel(newModel);
         localStorage.setItem('ai-model', newModel);
       }

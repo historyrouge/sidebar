@@ -107,12 +107,12 @@ export async function helpChatAction(
     }
 }
 
-const MODEL_MAP: Record<ModelKey, string> = {
+const MODEL_MAP: Record<Exclude<ModelKey, 'puter'>, string> = {
   gemini: 'googleai/gemini-1.5-flash-latest',
   samba: 'Llama-4-Maverick-17B-128E-Instruct',
 };
 
-async function callOpenAI(input: GeneralChatInput): Promise<GeneralChatOutput> {
+async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
   const { history, imageDataUri } = input;
   const lastUserMessage = history[history.length - 1];
 
@@ -143,13 +143,13 @@ async function callOpenAI(input: GeneralChatInput): Promise<GeneralChatOutput> {
       throw new Error("Received an empty response from the AI.");
     }
     
-    return { response: response.choices[0].message.content };
+    return { data: { response: response.choices[0].message.content } };
   } catch (error: any) {
     console.error("SambaNova API error:", error);
     if (error.code === 'ENOTFOUND') {
       return { error: "Could not connect to the SambaNova API. Please check the Base URL." };
     }
-    throw new Error(error.message || "An unknown error occurred with the SambaNova API.");
+    return { error: error.message || "An unknown error occurred with the SambaNova API." };
   }
 }
 
@@ -159,15 +159,14 @@ export async function generalChatAction(
 ): Promise<ActionResult<GeneralChatOutput>> {
     if (model === 'samba') {
       if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-        return { error: "SambaNova API key or base URL is not configured. Please add it in the settings or select the Gemini model." };
+        return { error: "SambaNova API key or base URL is not configured. Please add it in the settings or select a different model." };
       }
-      try {
-        const output = await callOpenAI(input);
-        return { data: output };
-      } catch (e: any) {
-        console.error(e);
-        return { error: e.message || "An unknown error occurred." };
-      }
+      return callOpenAI(input);
+    }
+
+    if (model === 'puter') {
+      // Puter.js is handled client-side, this action should not be called.
+      return { error: "Puter.js cannot be called from the server." };
     }
     
     // Default to Gemini
