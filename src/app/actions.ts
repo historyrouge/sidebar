@@ -35,7 +35,7 @@ export type ModelKey = 'gemini' | 'samba';
 
 const MODEL_MAP: Record<ModelKey, string> = {
     'gemini': 'googleai/gemini-1.5-flash-latest',
-    'samba': "Meta-Llama-3-70B-Instruct",
+    'samba': "llama3-70b",
 };
 
 async function callOpenAI(systemPrompt: string, userPrompt: string, model: ModelKey = 'gemini') {
