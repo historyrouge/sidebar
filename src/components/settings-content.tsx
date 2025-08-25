@@ -7,9 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Label } from "./ui/label";
 import { Moon, Sun } from "lucide-react";
 import { BackButton } from "./back-button";
+import { useModelSettings, ModelKey } from "@/hooks/use-model-settings";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 export function SettingsContent() {
   const { setTheme, theme } = useTheme();
+  const { model, setModel } = useModelSettings();
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-muted/40">
@@ -30,6 +33,30 @@ export function SettingsContent() {
                             <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme("light")}><Sun /></Button>
                             <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme("dark")}><Moon /></Button>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>AI Settings</CardTitle>
+                    <CardDescription>Configure the AI model used for generating content.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-3">
+                        <Label className="font-semibold">AI Model</Label>
+                        <RadioGroup defaultValue={model} value={model} onValueChange={(value) => setModel(value as ModelKey)} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="gemini" id="gemini" />
+                                <Label htmlFor="gemini">Gemini</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="samba" id="samba" />
+                                <Label htmlFor="samba">SambaNova</Label>
+                            </div>
+                        </RadioGroup>
+                        <p className="text-xs text-muted-foreground">
+                            SambaNova requires an API key and base URL to be set in your environment variables.
+                        </p>
                     </div>
                 </CardContent>
             </Card>

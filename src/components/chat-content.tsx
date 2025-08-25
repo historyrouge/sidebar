@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
+import { useModelSettings } from "@/hooks/use-model-settings";
 
 
 type Message = {
@@ -54,6 +55,7 @@ export function ChatContent({
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
+  const { model } = useModelSettings();
   
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -81,7 +83,7 @@ export function ChatContent({
         history: [...textHistory, { role: 'user', content: messageToSend }],
         imageDataUri: capturedImage || undefined,
       };
-      const result = await generalChatAction(chatInput);
+      const result = await generalChatAction(chatInput, model);
 
       if (result.error) {
         toast({
@@ -112,7 +114,7 @@ export function ChatContent({
           history: historyForAI,
           imageDataUri: lastUserMessage.imageDataUri
         };
-        const result = await generalChatAction(chatInput);
+        const result = await generalChatAction(chatInput, model);
 
         if (result.error) {
           toast({ title: "Chat Error", description: result.error, variant: "destructive" });

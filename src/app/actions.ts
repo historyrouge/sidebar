@@ -12,6 +12,9 @@ import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutp
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
+import { openai } from "@/lib/openai";
+import type { ModelKey } from "@/hooks/use-model-settings";
+
 
 type ActionResult<T> = {
   data?: T;
@@ -104,9 +107,70 @@ export async function helpChatAction(
     }
 }
 
+const MODEL_MAP: Record<ModelKey, string> = {
+  gemini: 'googleai/gemini-1.5-flash-latest',
+  samba: 'Llama-4-Maverick-17B-128E-Instruct',
+};
+
+async function callOpenAI(input: GeneralChatInput): Promise<GeneralChatOutput> {
+  const { history, imageDataUri } = input;
+  const lastUserMessage = history[history.length - 1];
+
+  let content: any;
+
+  if (imageDataUri) {
+    content = [
+      { type: 'text', text: lastUserMessage.content || 'What do you see in this image?' },
+      { type: 'image_url', image_url: { url: imageDataUri } },
+    ];
+  } else {
+    content = lastUserMessage.content;
+  }
+  
+  const messages = [
+    ...history.slice(0, -1).map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.content})),
+    { role: 'user', content }
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL_MAP.samba,
+      messages: messages as any,
+      stream: false,
+    });
+
+    if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+      throw new Error("Received an empty response from the AI.");
+    }
+    
+    return { response: response.choices[0].message.content };
+  } catch (error: any) {
+    console.error("SambaNova API error:", error);
+    if (error.code === 'ENOTFOUND') {
+      return { error: "Could not connect to the SambaNova API. Please check the Base URL." };
+    }
+    throw new Error(error.message || "An unknown error occurred with the SambaNova API.");
+  }
+}
+
 export async function generalChatAction(
-    input: GeneralChatInput
+    input: GeneralChatInput,
+    model: ModelKey
 ): Promise<ActionResult<GeneralChatOutput>> {
+    if (model === 'samba') {
+      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        return { error: "SambaNova API key or base URL is not configured. Please add it in the settings or select the Gemini model." };
+      }
+      try {
+        const output = await callOpenAI(input);
+        return { data: output };
+      } catch (e: any) {
+        console.error(e);
+        return { error: e.message || "An unknown error occurred." };
+      }
+    }
+    
+    // Default to Gemini
     try {
         const output = await generalChat(input);
         return { data: output };
@@ -174,5 +238,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput };
-
+export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };

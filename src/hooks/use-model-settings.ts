@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import type { ModelKey } from '@/app/actions';
+
+export type ModelKey = 'gemini' | 'samba';
 
 type ModelSettings = {
   model: ModelKey;
