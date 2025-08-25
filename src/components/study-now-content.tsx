@@ -96,6 +96,11 @@ export function StudyNowContent() {
 
 
   const handleAnalyze = async () => {
+    if (model !== 'gemini' && imageDataUri) {
+        toast({ title: "Feature Not Available", description: "Image analysis is only available with the Gemini model.", variant: "destructive" });
+        return;
+    }
+
     if (imageDataUri) {
       handleAnalyzeImage();
       return;
@@ -204,6 +209,10 @@ export function StudyNowContent() {
   };
 
   const handleGenerateImage = async () => {
+     if (model !== 'gemini') {
+        toast({ title: "Feature Not Available", description: "Image generation is only available with the Gemini model.", variant: "destructive" });
+        return;
+    }
     if (!analysis) return;
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
@@ -222,6 +231,10 @@ export function StudyNowContent() {
   };
 
   const handleImageUploadClick = () => {
+     if (model !== 'gemini') {
+        toast({ title: "Feature Not Available", description: "Image upload is only available with the Gemini model.", variant: "destructive" });
+        return;
+    }
     imageInputRef.current?.click();
   };
 
@@ -331,7 +344,7 @@ export function StudyNowContent() {
     { value: "flashcards", label: "Flashcards" },
     { value: "quiz", label: "Quiz" },
     { value: "tutor", label: "Tutor" },
-    { value: "image", label: "Image" }
+    { value: "image", label: "Image", disabled: model !== 'gemini' }
   ];
 
 
@@ -467,7 +480,7 @@ export function StudyNowContent() {
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
                   <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
-                    {TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
+                    {TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} disabled={tab.disabled}>{tab.label}</TabsTrigger>)}
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
                   <TabsContent value="analysis" className="h-full">

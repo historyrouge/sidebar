@@ -10,12 +10,12 @@ type ModelSettings = {
 };
 
 export function useModelSettings(): ModelSettings {
-  const [model, setModel] = useState<ModelKey>('deepseek');
+  const [model, setModel] = useState<ModelKey>('gemini');
 
   useEffect(() => {
     try {
       const savedModel = localStorage.getItem('ai-model') as ModelKey | null;
-      if (savedModel && (savedModel === 'deepseek' || savedModel === 'openai')) {
+      if (savedModel && (savedModel === 'gemini' || savedModel === 'samba')) {
         setModel(savedModel);
       }
     } catch (error) {
@@ -25,7 +25,7 @@ export function useModelSettings(): ModelSettings {
 
   const handleSetModel = useCallback((newModel: ModelKey) => {
     try {
-      if (newModel === 'deepseek' || newModel === 'openai') {
+      if (newModel === 'gemini' || newModel === 'samba') {
         setModel(newModel);
         localStorage.setItem('ai-model', newModel);
       }

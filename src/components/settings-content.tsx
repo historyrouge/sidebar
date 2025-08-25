@@ -52,11 +52,14 @@ export function SettingsContent() {
                                 <SelectValue placeholder="Select a model" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="deepseek">DeepSeek (Free)</SelectItem>
-                                <SelectItem value="openai">OpenAI (Free)</SelectItem>
+                                <SelectItem value="gemini">Gemini 1.5 Flash</SelectItem>
+                                <SelectItem value="samba">SambaNova (Llama3)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
+                     <p className="text-xs text-muted-foreground">
+                        Note: Image-related features like analysis and generation are only available with the Gemini model.
+                    </p>
                 </CardContent>
             </Card>
         </div>
