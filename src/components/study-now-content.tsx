@@ -23,7 +23,6 @@ import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
-import { useModelSettings } from "@/hooks/use-model-settings";
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -45,7 +44,6 @@ export function StudyNowContent() {
   const [isGeneratingSummary, startGeneratingSummary] = useTransition();
   const [isGeneratingImage, startGeneratingImage] = useTransition();
   const { theme, setTheme } = useTheme();
-  const { model } = useModelSettings();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,11 +94,6 @@ export function StudyNowContent() {
 
 
   const handleAnalyze = async () => {
-    if (model !== 'gemini' && imageDataUri) {
-        toast({ title: "Feature Not Available", description: "Image analysis is only available with the Gemini model.", variant: "destructive" });
-        return;
-    }
-
     if (imageDataUri) {
       handleAnalyzeImage();
       return;
@@ -115,7 +108,7 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      const result = await analyzeContentAction(content, model);
+      const result = await analyzeContentAction(content);
       if (result.error) {
         toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
       } else {
@@ -149,7 +142,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
       const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-      const result = await generateFlashcardsAction(flashcardContent, model);
+      const result = await generateFlashcardsAction(flashcardContent);
       if (result.error) {
         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
       } else {
@@ -163,7 +156,7 @@ export function StudyNowContent() {
     if (!analysis) return;
     startGeneratingQuiz(async () => {
         const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium', model });
+        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' });
 
         if (result.error) {
             toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
@@ -198,7 +191,7 @@ export function StudyNowContent() {
     }
     if (!content) return;
     startGeneratingSummary(async () => {
-        const result = await summarizeContentAction({ content }, model);
+        const result = await summarizeContentAction({ content });
         if (result.error) {
             toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
         } else {
@@ -209,10 +202,6 @@ export function StudyNowContent() {
   };
 
   const handleGenerateImage = async () => {
-     if (model !== 'gemini') {
-        toast({ title: "Feature Not Available", description: "Image generation is only available with the Gemini model.", variant: "destructive" });
-        return;
-    }
     if (!analysis) return;
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
@@ -231,10 +220,6 @@ export function StudyNowContent() {
   };
 
   const handleImageUploadClick = () => {
-     if (model !== 'gemini') {
-        toast({ title: "Feature Not Available", description: "Image upload is only available with the Gemini model.", variant: "destructive" });
-        return;
-    }
     imageInputRef.current?.click();
   };
 
@@ -344,7 +329,7 @@ export function StudyNowContent() {
     { value: "flashcards", label: "Flashcards" },
     { value: "quiz", label: "Quiz" },
     { value: "tutor", label: "Tutor" },
-    { value: "image", label: "Image", disabled: model !== 'gemini' }
+    { value: "image", label: "Image" }
   ];
 
 
@@ -591,7 +576,7 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} model={model} />
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (

@@ -12,14 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { generateQuizAction } from "@/app/actions";
 import { Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
-import { useModelSettings } from "@/hooks/use-model-settings";
 
 
 export function QuizOptionsForm() {
     const router = useRouter();
     const { toast } = useToast();
     const [isGenerating, startGenerating] = useTransition();
-    const { model } = useModelSettings();
 
     const [content, setContent] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState("medium");
@@ -51,7 +49,6 @@ export function QuizOptionsForm() {
                 content,
                 difficulty: difficulty as "easy" | "medium" | "hard",
                 numQuestions: parseInt(numQuestions),
-                model
             });
 
             if (result.error) {

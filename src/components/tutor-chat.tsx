@@ -1,7 +1,7 @@
 
 "use client";
 
-import { chatWithTutorAction, ChatWithTutorInput, ModelKey } from "@/app/actions";
+import { chatWithTutorAction, ChatWithTutorInput } from "@/app/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,6 @@ import { marked } from 'marked';
 
 interface TutorChatProps {
   content: string;
-  model: ModelKey;
 }
 
 type Message = {
@@ -24,7 +23,7 @@ type Message = {
   htmlContent?: string;
 };
 
-export function TutorChat({ content, model }: TutorChatProps) {
+export function TutorChat({ content }: TutorChatProps) {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
@@ -52,7 +51,7 @@ export function TutorChat({ content, model }: TutorChatProps) {
         content,
         history: [...chatHistory, { role: "user", content: messageToSend }],
       };
-      const result = await chatWithTutorAction({...chatInput, model});
+      const result = await chatWithTutorAction(chatInput);
 
       if (result.error) {
         toast({
