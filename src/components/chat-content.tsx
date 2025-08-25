@@ -86,7 +86,8 @@ export function ChatContent({
         }
         try {
           const response = await puter.ai.chat(messageToSend);
-          const modelMessage: Message = { role: "model", content: response };
+          const responseText = typeof response === 'object' && response.text ? response.text : response;
+          const modelMessage: Message = { role: "model", content: responseText };
           setHistory((prev) => [...prev, modelMessage]);
         } catch (error: any) {
            toast({ title: 'Puter.js Error', description: error.message, variant: 'destructive' });
@@ -473,3 +474,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
