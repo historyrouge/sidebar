@@ -385,7 +385,7 @@ export function ChatContent({
                     </div>
                     <h2 className="mt-6 text-3xl font-semibold">How can I help you today?</h2>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        I'm LearnSphere, your AI assistant. Ask me anything!
+                        I'm Easy Learn AI, your AI assistant. Ask me anything!
                     </p>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
@@ -498,7 +498,7 @@ export function ChatContent({
                 <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Message LearnSphere..."
+                    placeholder="Message Easy Learn AI..."
                     disabled={isTyping}
                     className="h-12 text-base shadow-sm"
                 />
@@ -519,5 +519,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    

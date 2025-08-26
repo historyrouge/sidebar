@@ -72,7 +72,7 @@ export function OnboardingForm() {
         if (result.error) {
             toast({ title: "Failed to save profile", description: result.error, variant: "destructive" });
         } else {
-            toast({ title: "Profile saved!", description: "Welcome to LearnSphere!" });
+            toast({ title: "Profile saved!", description: "Welcome to Easy Learn AI!" });
             router.push("/");
         }
     } catch (error: any) {
@@ -87,7 +87,7 @@ export function OnboardingForm() {
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Welcome to LearnSphere!</CardTitle>
+        <CardTitle className="text-2xl">Welcome to Easy Learn AI!</CardTitle>
         <CardDescription>Let's set up your profile.</CardDescription>
         <Progress value={progress} className="mt-2" />
       </CardHeader>

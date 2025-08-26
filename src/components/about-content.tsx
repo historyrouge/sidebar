@@ -16,15 +16,15 @@ export function AboutContent() {
               <AvatarFallback>H</AvatarFallback>
             </Avatar>
             <CardTitle className="text-4xl font-bold mt-6">A Message from the Developer</CardTitle>
-            <CardDescription className="text-xl text-muted-foreground mt-2">&mdash; The story behind LearnSphere &mdash;</CardDescription>
+            <CardDescription className="text-xl text-muted-foreground mt-2">&mdash; The story behind Easy Learn AI &mdash;</CardDescription>
         </div>
         <CardContent className="prose prose-lg dark:prose-invert max-w-none mx-auto text-left px-4 sm:px-8 py-8 bg-background">
             <p className="lead text-center text-2xl font-semibold !mt-0">Hey there, fellow learners! 👋</p>
             <p>
-                I&apos;m Harsh, a 9th-grade student from Sri Chaitanya School, and I&apos;m super excited to introduce my very own app: <strong>LearnSphere</strong>! 🚀 As someone who&apos;s always juggling schoolwork, exams, and a bit of fun, I know how tough it can be to stay organized and motivated while studying. That&apos;s why I built LearnSphere – an app designed specifically to make learning easier, smarter, and way more enjoyable.
+                I&apos;m Harsh, a 9th-grade student from Sri Chaitanya School, and I&apos;m super excited to introduce my very own app: <strong>Easy Learn AI</strong>! 🚀 As someone who&apos;s always juggling schoolwork, exams, and a bit of fun, I know how tough it can be to stay organized and motivated while studying. That&apos;s why I built Easy Learn AI – an app designed specifically to make learning easier, smarter, and way more enjoyable.
             </p>
             <p>
-                Here&apos;s what makes LearnSphere your ultimate study buddy:
+                Here&apos;s what makes Easy Learn AI your ultimate study buddy:
             </p>
             <ul className="list-disc pl-5 space-y-2">
                 <li><strong>Smart Flashcards</strong>: Create custom decks for any subject, with AI-powered hints to help you remember tricky concepts.</li>
@@ -33,7 +33,7 @@ export function AboutContent() {
                 <li><strong>AI Image Generation</strong>: Create visual aids for your notes based on the study material.</li>
             </ul>
             <p>
-                I poured my heart into this during late-night coding sessions (while still acing my classes 😉). Whether you&apos;re prepping for boards or just wanting to level up your grades, LearnSphere is here to spark that love for learning!
+                I poured my heart into this during late-night coding sessions (while still acing my classes 😉). Whether you&apos;re prepping for boards or just wanting to level up your grades, Easy Learn AI is here to spark that love for learning!
             </p>
             <p>
                 What do you think? Drop your feedback – I&apos;d love to hear from you!

@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   name: 'helpChatPrompt',
   input: {schema: HelpChatInputSchema},
   output: {schema: HelpChatOutputSchema},
-  prompt: `You are a friendly and helpful AI assistant for the LearnSphere application. Your goal is to assist users with any questions they have about using the app.
+  prompt: `You are a friendly and helpful AI assistant for the Easy Learn AI application. Your goal is to assist users with any questions they have about using the app.
 
 You know the following about the app:
 - To analyze content, the user must paste text into the main text area and click "Analyze Content".

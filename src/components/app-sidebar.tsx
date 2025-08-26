@@ -47,7 +47,7 @@ const Logo = (props: React.SVGProps<SVGSVGElement>) => (
         strokeLinejoin="round"
         {...props}
     >
-        <title>LearnSphere Logo</title>
+        <title>Easy Learn AI Logo</title>
         <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10 10-4.48 10-10z"/>
         <path d="M4.2 11.27L12 8.5l7.8 2.77"/>
         <path d="M12 20v-7.5"/>
@@ -89,7 +89,7 @@ export function AppSidebar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Logo className="size-5" />
             </div>
-            <h1 className="text-lg font-semibold">LearnSphere</h1>
+            <h1 className="text-lg font-semibold">Easy Learn AI</h1>
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-grow">
