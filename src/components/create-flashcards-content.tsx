@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generateFlashcardsAction, GenerateFlashcardsOutput, ModelKey } from "@/app/actions";
+import { generateFlashcardsAction, GenerateFlashcardsSambaOutput, ModelKey } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ import { useModelSettings } from "@/hooks/use-model-settings";
 export function CreateFlashcardsContent() {
     const { theme, setTheme } = useTheme();
     const [content, setContent] = useState("");
-    const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
+    const [flashcards, setFlashcards] = useState<GenerateFlashcardsSambaOutput['flashcards'] | null>(null);
     const [isGenerating, startGenerating] = useTransition();
     const { toast } = useToast();
     const [isRecording, setIsRecording] = useState(false);
@@ -188,14 +188,14 @@ export function CreateFlashcardsContent() {
                             <ScrollArea className="h-[400px] w-full">
                                 {isGenerating ? (
                                     <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2">
-                                        <Skeleton className="h-48 w-full" />
-                                        <Skeleton className="h-48 w-full" />
-                                        <Skeleton className="h-48 w-full" />
-                                        <Skeleton className="h-48 w-full" />
+                                        <Skeleton className="h-64 w-full" />
+                                        <Skeleton className="h-64 w-full" />
+                                        <Skeleton className="h-64 w-full" />
+                                        <Skeleton className="h-64 w-full" />
                                     </div>
                                 ) : flashcards ? (
                                     <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2">
-                                        {flashcards.map((card, i) => <Flashcard key={i} front={card.front} back={card.back} />)}
+                                        {flashcards.map((card, i) => <Flashcard key={i} {...card} />)}
                                     </div>
                                 ) : (
                                     <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">

@@ -5,8 +5,8 @@
  * @fileOverview Flashcard generation AI agent using SambaNova.
  *
  * - generateFlashcardsSamba - A function that handles the flashcard generation process with SambaNova.
- * - GenerateFlashcardsSambaInput - The input type for the generateFlashcardsSamba function.
- * - GenerateFlashcardsSambaOutput - The return type for the generateFlashcardsSamba function.
+ * - GenerateFlashcardsSambaInput - The input type for the generateFlashcardsSambaInput function.
+ * - GenerateFlashcardsSambaOutput - The return type for the generateFlashcardsSambaInput function.
  */
 
 import { openai } from '@/lib/openai';
@@ -22,8 +22,11 @@ export type GenerateFlashcardsSambaInput = z.infer<typeof GenerateFlashcardsSamb
 const GenerateFlashcardsSambaOutputSchema = z.object({
   flashcards: z.array(
     z.object({
-      front: z.string().describe('The front side of the flashcard.'),
-      back: z.string().describe('The back side of the flashcard.'),
+      front: z.string().describe('The front side of the flashcard (a question or term).'),
+      back: z.string().describe('The back side of the flashcard (a detailed answer or definition).'),
+      category: z.string().describe('A category for the flashcard (e.g., "Definition", "Key Concept", "Example").'),
+      color: z.enum(['blue', 'green', 'purple', 'orange', 'red']).describe('A suggested color for the flashcard.'),
+      relatedTopics: z.array(z.string()).describe('A list of 1-3 related topics.'),
     })
   ).describe('The generated flashcards.'),
 });
@@ -31,7 +34,12 @@ export type GenerateFlashcardsSambaOutput = z.infer<typeof GenerateFlashcardsSam
 
 
 const flashcardSystemPrompt = `You are an expert educator. Your task is to generate flashcards from the provided content.
-Generate flashcards covering key facts and concepts from the content. Each flashcard should have a front and a back.
+Generate flashcards covering key facts and concepts from the content. Each flashcard should have a front (question/term) and a back (detailed answer).
+For each flashcard, you MUST also provide:
+1. A concise 'category' (e.g., "Definition", "Key Concept", "Important Date", "Formula", "Example").
+2. A 'color' suggestion from the following options: 'blue', 'green', 'purple', 'orange', 'red'. Choose a color that fits the topic.
+3. A list of 1-3 'relatedTopics' for further study.
+
 You must respond in JSON format. The JSON object should match the following schema:
 {
     "type": "object",
@@ -41,10 +49,13 @@ You must respond in JSON format. The JSON object should match the following sche
             "items": {
                 "type": "object",
                 "properties": {
-                    "front": { "type": "string", "description": "The front side of the flashcard (a question or term)." },
-                    "back": { "type": "string", "description": "The back side of the flashcard (the answer or definition)." }
+                    "front": { "type": "string" },
+                    "back": { "type": "string" },
+                    "category": { "type": "string" },
+                    "color": { "type": "string", "enum": ["blue", "green", "purple", "orange", "red"] },
+                    "relatedTopics": { "type": "array", "items": { "type": "string" } }
                 },
-                "required": ["front", "back"]
+                "required": ["front", "back", "category", "color", "relatedTopics"]
             }
         }
     },
