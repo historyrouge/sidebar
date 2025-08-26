@@ -409,7 +409,7 @@ export function ChatContent({
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
                             <Link href={prompt.href} key={i}>
-                                <Card className="p-4 h-full hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors dark:border-transparent">
+                                <Card className="p-4 h-full hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors border-black dark:border-transparent">
                                     <div className="flex items-start gap-4">
                                         <div className="p-2 bg-muted rounded-full">{prompt.icon}</div>
                                         <div>
@@ -554,4 +554,5 @@ export function ChatContent({
   );
 }
 
+    
     
