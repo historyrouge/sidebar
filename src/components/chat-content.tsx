@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, Lightbulb, PencilRuler, BookText, FlaskConical } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Sparkles } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -19,6 +19,7 @@ import Image from "next/image";
 import { useModelSettings } from "@/hooks/use-model-settings";
 import { ModelSwitcherDialog } from "./model-switcher-dialog";
 import { Card } from "./ui/card";
+import Link from "next/link";
 
 declare const puter: any;
 
@@ -30,24 +31,28 @@ type Message = {
 
 const suggestionPrompts = [
     {
-        icon: <Lightbulb className="text-yellow-500" />,
-        title: "Explain a concept",
-        prompt: "Explain quantum computing in simple terms"
+        icon: <FileQuestion className="text-yellow-500" />,
+        title: "Take a Quiz",
+        description: "Test your knowledge with a custom quiz.",
+        href: "/quiz"
     },
     {
-        icon: <PencilRuler className="text-blue-500" />,
-        title: "Help me create",
-        prompt: "Write a short story about a time-traveling historian"
+        icon: <PlusSquare className="text-blue-500" />,
+        title: "Create Flashcards",
+        description: "Generate flashcards from your notes.",
+        href: "/create-flashcards"
     },
     {
-        icon: <BookText className="text-green-500" />,
-        title: "Summarize this",
-        prompt: "Summarize the plot of 'To Kill a Mockingbird'"
+        icon: <BookOpen className="text-green-500" />,
+        title: "Browse eBooks",
+        description: "Explore our library of educational books.",
+        href: "/ebooks"
     },
     {
-        icon: <FlaskConical className="text-purple-500" />,
-        title: "Give me ideas",
-        prompt: "Give me some ideas for a fun science experiment for kids"
+        icon: <Sparkles className="text-purple-500" />,
+        title: "Start a Study Session",
+        description: "Analyze content to create study materials.",
+        href: "/study-now"
     },
 ];
 
@@ -154,11 +159,6 @@ export function ChatContent({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
-  }
-
-  const handleSuggestionClick = (prompt: string) => {
-    setInput(prompt);
-    handleSendMessage(prompt);
   }
 
   const handleModelSwitch = (newModel: ModelKey) => {
@@ -396,103 +396,106 @@ export function ChatContent({
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-48 sm:pb-40">
-            {history.length === 0 && (
+            {history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
                     <div className="mb-4">
                         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
                             Hello!
                         </h1>
                         <p className="text-xl sm:text-2xl text-muted-foreground mt-2">
-                           I&apos;m Easy Learn AI. How can I help you today?
+                           How can I help you today?
                         </p>
                     </div>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Card key={i} className="p-4 hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleSuggestionClick(prompt.prompt)}>
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-muted rounded-full">{prompt.icon}</div>
-                                    <div>
-                                        <h3 className="font-semibold text-left">{prompt.title}</h3>
-                                        <p className="text-sm text-muted-foreground text-left">{prompt.prompt}</p>
+                            <Link href={prompt.href} key={i}>
+                                <Card className="p-4 h-full hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-2 bg-muted rounded-full">{prompt.icon}</div>
+                                        <div>
+                                            <h3 className="font-semibold text-left">{prompt.title}</h3>
+                                            <p className="text-sm text-muted-foreground text-left">{prompt.description}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </Card>
+                                </Card>
+                            </Link>
                         ))}
                     </div>
                 </div>
-            )}
-            {history.map((message, index) => (
-                <div
-                key={index}
-                className={cn(
-                    "flex items-start gap-4",
-                    message.role === "user" ? "justify-end" : ""
-                )}
-                >
-                {message.role === "model" && (
-                     <Avatar className="h-9 w-9 border">
-                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                    </Avatar>
-                )}
-                <div className="w-full max-w-lg group">
+            ) : (
+                history.map((message, index) => (
                     <div
-                        className={cn(
-                        "rounded-xl p-3 text-sm",
-                        message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background border"
-                        )}
+                    key={index}
+                    className={cn(
+                        "flex items-start gap-4",
+                        message.role === "user" ? "justify-end" : ""
+                    )}
                     >
-                         {message.imageDataUri && (
-                            <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
-                        )}
-                        <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
-
-                        {message.role === 'model' && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                    <Copy className="h-4 w-4" />
-                                    <span className="sr-only">Copy</span>
-                                </Button>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                    <Share2 className="h-4 w-4" />
-                                    <span className="sr-only">Share</span>
-                                </Button>
-                                <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-7 w-7" 
-                                    onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
-                                    disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
-                                >
-                                    {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                                    <span className="sr-only">Read aloud</span>
-                                </Button>
-                                {index === history.length -1 && model !== 'puter' && (
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                        <RefreshCw className="h-4 w-4" />
-                                        <span className="sr-only">Regenerate</span>
+                    {message.role === "model" && (
+                         <Avatar className="h-9 w-9 border">
+                            <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                        </Avatar>
+                    )}
+                    <div className="w-full max-w-lg group">
+                        <div
+                            className={cn(
+                            "rounded-xl p-3 text-sm",
+                            message.role === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background border"
+                            )}
+                        >
+                             {message.imageDataUri && (
+                                <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                            )}
+                            <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
+    
+                            {message.role === 'model' && (
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                        <Copy className="h-4 w-4" />
+                                        <span className="sr-only">Copy</span>
                                     </Button>
-                                )}
-                                {audioDataUri && isSynthesizing === `chat-${index}` && (
-                                    <audio 
-                                        src={audioDataUri} 
-                                        autoPlay 
-                                        onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
-                                        className="hidden" 
-                                    />
-                                )}
-                            </div>
-                        )}
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                        <Share2 className="h-4 w-4" />
+                                        <span className="sr-only">Share</span>
+                                    </Button>
+                                    <Button 
+                                        size="icon" 
+                                        variant="ghost" 
+                                        className="h-7 w-7" 
+                                        onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
+                                        disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
+                                    >
+                                        {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                        <span className="sr-only">Read aloud</span>
+                                    </Button>
+                                    {index === history.length -1 && model !== 'puter' && (
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                            <RefreshCw className="h-4 w-4" />
+                                            <span className="sr-only">Regenerate</span>
+                                        </Button>
+                                    )}
+                                    {audioDataUri && isSynthesizing === `chat-${index}` && (
+                                        <audio 
+                                            src={audioDataUri} 
+                                            autoPlay 
+                                            onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
+                                            className="hidden" 
+                                        />
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-                {message.role === "user" && (
-                    <Avatar className="h-9 w-9 border">
-                    <AvatarFallback><User className="size-5" /></AvatarFallback>
-                    </Avatar>
-                )}
-                </div>
-            ))}
+                    {message.role === "user" && (
+                        <Avatar className="h-9 w-9 border">
+                        <AvatarFallback><User className="size-5" /></AvatarFallback>
+                        </Avatar>
+                    )}
+                    </div>
+                ))
+            )}
             {isTyping && (
                 <div className="flex items-start gap-4">
                     <Avatar className="h-9 w-9 border">
