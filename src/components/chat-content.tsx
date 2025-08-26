@@ -154,7 +154,7 @@ export function ChatContent({
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, capturedImage, isRecording, model]);
+  }, [input, capturedImage, isRecording, model, history]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,7 +276,7 @@ export function ChatContent({
         setInput(fullTranscript);
 
         if (finalTranscript.trim()) {
-            handleSendMessage(finalTranscript);
+            handleSendMessage(null, finalTranscript);
         }
       };
     } else {
@@ -553,3 +553,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
