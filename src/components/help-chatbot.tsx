@@ -26,6 +26,7 @@ export function HelpChatbot() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSendMessage = async (e: React.FormEvent | null, message?: string) => {
     e?.preventDefault();
@@ -76,24 +77,36 @@ export function HelpChatbot() {
       };
 
       recognition.onresult = (event: any) => {
+        if (audioSendTimeoutRef.current) {
+          clearTimeout(audioSendTimeoutRef.current);
+        }
+        
         let interimTranscript = '';
         let finalTranscript = '';
-
+        
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+            finalTranscript = event.results[i][0].transcript;
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
         }
         
-        const fullTranscript = finalTranscript || interimTranscript;
-        setInput(fullTranscript);
+        setInput(interimTranscript);
 
         if (finalTranscript.trim()) {
-            handleSendMessage(null, finalTranscript);
+           setInput(finalTranscript);
+           audioSendTimeoutRef.current = setTimeout(() => {
+                handleSendMessage(null, finalTranscript);
+           }, 1000);
         }
       };
+    }
+    
+    return () => {
+        if (audioSendTimeoutRef.current) {
+            clearTimeout(audioSendTimeoutRef.current);
+        }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history]);
@@ -191,3 +204,5 @@ export function HelpChatbot() {
     </div>
   );
 }
+
+    

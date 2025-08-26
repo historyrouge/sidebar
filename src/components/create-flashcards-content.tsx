@@ -46,11 +46,15 @@ export function CreateFlashcardsContent() {
                 setIsRecording(false);
             };
             recognition.onresult = (event: any) => {
-                let interimTranscript = '';
+                let fullTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    interimTranscript += event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        fullTranscript += event.results[i][0].transcript;
+                    }
                 }
-                setContent(prev => prev + interimTranscript);
+                if (fullTranscript) {
+                    setContent(prev => prev + fullTranscript + ' ');
+                }
             };
         }
     }, [toast]);
@@ -217,3 +221,5 @@ export function CreateFlashcardsContent() {
         </>
     );
 }
+
+    

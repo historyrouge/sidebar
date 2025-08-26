@@ -76,6 +76,8 @@ export function ChatContent({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
@@ -235,7 +237,6 @@ export function ChatContent({
 
 
   useEffect(() => {
-    // Check for browser support and initialize SpeechRecognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
@@ -243,40 +244,38 @@ export function ChatContent({
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onstart = () => {
-        setIsRecording(true);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
+      recognition.onstart = () => setIsRecording(true);
+      recognition.onend = () => setIsRecording(false);
       recognition.onerror = (event: any) => {
-        toast({
-          title: "Speech Recognition Error",
-          description: event.error,
-          variant: "destructive",
-        });
+        toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
         setIsRecording(false);
       };
 
+      let finalTranscript = '';
       recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
+        if (audioSendTimeoutRef.current) {
+          clearTimeout(audioSendTimeoutRef.current);
         }
         
-        const fullTranscript = finalTranscript || interimTranscript;
-        setInput(fullTranscript);
+        let interimTranscript = '';
+        finalTranscript = ''; // Reset final transcript for current event
+        
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        setInput(interimTranscript);
 
         if (finalTranscript.trim()) {
-            handleSendMessage(null, finalTranscript);
+           setInput(finalTranscript);
+            // Debounce sending the message
+           audioSendTimeoutRef.current = setTimeout(() => {
+                handleSendMessage(finalTranscript);
+           }, 1000); // Send after 1 second of silence
         }
       };
     } else {
@@ -289,6 +288,9 @@ export function ChatContent({
 
     return () => {
       recognitionRef.current?.abort();
+      if (audioSendTimeoutRef.current) {
+          clearTimeout(audioSendTimeoutRef.current);
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]); 
@@ -554,5 +556,4 @@ export function ChatContent({
   );
 }
 
-    
     

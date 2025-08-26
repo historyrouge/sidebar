@@ -74,11 +74,15 @@ export function StudyNowContent() {
             setIsRecording(false);
         };
         recognition.onresult = (event: any) => {
-            let interimTranscript = '';
+            let fullTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-                interimTranscript += event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    fullTranscript += event.results[i][0].transcript;
+                }
             }
-            setContent(prev => prev + interimTranscript);
+            if (fullTranscript) {
+                setContent(prev => prev + fullTranscript + ' ');
+            }
         };
     }
   }, [toast]);
@@ -621,7 +625,7 @@ export function StudyNowContent() {
                     <TabsContent value="flashcards" className="h-full">
                       {isGeneratingFlashcards ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
                         <div className="grid grid-cols-1 gap-4 pr-4 @md:grid-cols-2">
-                          {flashcards.map((card, i) => <Flashcard key={i} front={card.front} back={card.back} />)}
+                          {flashcards.map((card, i) => <Flashcard key={i} front={card.front} back={card.back} category={card.category} color={card.color} relatedTopics={card.relatedTopics} />)}
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
@@ -671,3 +675,5 @@ export function StudyNowContent() {
     </>
   );
 }
+
+    
