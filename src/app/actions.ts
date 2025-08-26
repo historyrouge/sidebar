@@ -129,23 +129,23 @@ async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<General
   const { history, imageDataUri } = input;
   
   const lastUserMessage = history[history.length - 1];
-  const conversationHistory = history.slice(0, -1).map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.content}));
 
-  let content: any;
+  const messages = history.map((h, i) => {
+    const isLastMessage = i === history.length - 1;
+    const role = h.role === 'model' ? 'assistant' : 'user';
 
-  if (imageDataUri) {
-    content = [
-      { type: 'text', text: lastUserMessage.content || 'What do you see in this image?' },
-      { type: 'image_url', image_url: { url: imageDataUri } },
-    ];
-  } else {
-    content = lastUserMessage.content;
-  }
-  
-  const messages = [
-    ...conversationHistory,
-    { role: 'user', content }
-  ];
+    if (isLastMessage && imageDataUri) {
+      return {
+        role,
+        content: [
+          { type: 'text', text: h.content || 'What do you see in this image?' },
+          { type: 'image_url', image_url: { url: imageDataUri } },
+        ],
+      };
+    }
+
+    return { role, content: h.content };
+  });
 
   try {
     const response = await openai.chat.completions.create({
