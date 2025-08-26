@@ -127,7 +127,7 @@ export function CreateFlashcardsContent() {
             currentModel={model}
             onModelSelect={handleModelSwitch}
         />
-        <div className="flex h-screen flex-col bg-background">
+        <div className="flex h-full flex-col bg-muted/20 dark:bg-transparent">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
@@ -147,7 +147,7 @@ export function CreateFlashcardsContent() {
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 h-full">
                     <Card className="flex flex-col">
                         <CardHeader>
                         <CardTitle>Generate Flashcards</CardTitle>

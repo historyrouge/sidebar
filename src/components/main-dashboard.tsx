@@ -21,7 +21,7 @@ export function MainDashboard() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex h-screen flex-col bg-muted/30 dark:bg-muted/10">
+    <div className="flex h-full flex-col bg-muted/30 dark:bg-muted/10">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />

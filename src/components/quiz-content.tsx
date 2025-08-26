@@ -12,7 +12,7 @@ export function QuizContent() {
     const { theme, setTheme } = useTheme();
 
     return (
-        <div className="flex h-screen flex-col bg-background">
+        <div className="flex h-full flex-col bg-muted/20 dark:bg-transparent">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />

@@ -80,8 +80,8 @@ export function QuizGenerator() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      <Card className="flex flex-col lg:col-span-2">
+    <div className="flex flex-col h-full">
+      <Card className="flex flex-col flex-1 lg:col-span-2">
         <CardHeader>
           <CardTitle>Generate a Quiz</CardTitle>
           <CardDescription>Paste your study material below to begin creating your quiz.</CardDescription>
