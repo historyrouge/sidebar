@@ -128,12 +128,11 @@ const MODEL_MAP: Record<Exclude<ModelKey, 'puter'>, string> = {
 async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
   const { history, imageDataUri } = input;
   
-  const lastUserMessage = history[history.length - 1];
-
   const messages = history.map((h, i) => {
     const isLastMessage = i === history.length - 1;
     const role = h.role === 'model' ? 'assistant' : 'user';
 
+    // If it's the last message and an image is present, create a multi-part content
     if (isLastMessage && imageDataUri) {
       return {
         role,
@@ -144,6 +143,7 @@ async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<General
       };
     }
 
+    // Otherwise, just return the text content
     return { role, content: h.content };
   });
 

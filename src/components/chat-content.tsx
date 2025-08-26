@@ -103,7 +103,8 @@ export function ChatContent({
 
       } else {
         // Handle Gemini and SambaNova via server action
-        const textHistory = history.map(h => ({role: h.role, content: h.content}));
+        const fullHistory = [...history, userMessage];
+        const textHistory = fullHistory.map(h => ({role: h.role, content: h.content}));
         const chatInput: GeneralChatInput = {
           history: textHistory,
           imageDataUri: userMessage.imageDataUri,
@@ -122,7 +123,7 @@ export function ChatContent({
               variant: "destructive",
             });
           }
-          setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
+          setHistory((prev) => prev.filter(msg => msg !== userMessage)); // Remove user message on error
         } else if (result.data) {
           const responseText = typeof result.data.response === 'object' ? (result.data.response as any).text : result.data.response;
           const modelMessage: Message = { role: "model", content: responseText };
@@ -131,7 +132,7 @@ export function ChatContent({
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, capturedImage, isRecording, model, history]);
+  }, [input, capturedImage, isRecording, model]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,7 +274,7 @@ export function ChatContent({
       recognitionRef.current?.abort();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history, model]); 
+  }, [model]); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
