@@ -5,66 +5,95 @@
 
 @layer base {
   :root {
-    --background: 240 10% 99%;
+    --background: 210 40% 98%;
     --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
+
+    --card: 210 40% 100%;
     --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
+ 
+    --popover: 210 40% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 221 42% 51%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 240 5% 96%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 0 0% 45%;
-    --accent-foreground: 210 20% 98%;
+ 
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 142.1 76.2% 36.3%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 262.1 83.3% 57.8%;
+    --accent-foreground: 210 40% 98%;
+ 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-    --radius: 0.8rem;
+    --destructive-foreground: 210 40% 98%;
 
-    --sidebar-background: 224 71.4% 4.1%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 210 20% 98%;
-    --sidebar-primary-foreground: 220.9 39.3% 11%;
-    --sidebar-accent: 215 27.9% 16.9%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 27.9% 16.9%;
-    --sidebar-ring: 220 8.9% 46.1%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+ 
+    --radius: 0.5rem;
+
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 142.1 76.2% 36.3%;
+    --chart-3: 262.1 83.3% 57.8%;
+    --chart-4: 34.9 98.6% 74.5%;
+    --chart-5: 0 84.2% 60.2%;
+
+    --sidebar-background: 215 27.9% 16.9%;
+    --sidebar-foreground: 213 27.3% 84.7%;
+    --sidebar-primary: 213 27.3% 84.7%;
+    --sidebar-primary-foreground: 215 27.9% 16.9%;
+    --sidebar-accent: 215.4 16.3% 46.9%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 25% 26.5%;
+    --sidebar-ring: 224 71.4% 4.1%;
   }
-
+ 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71.4% 4.1%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+ 
+    --card: 224 71.4% 4.1%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+ 
+    --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 40% 98%;
-    --primary: 218 48% 60%;
+ 
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
+ 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 220 10% 12%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+ 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+ 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
-    --sidebar-background: 222.2 84% 4.9%;
+
+    --chart-1: 212.7 26.8% 83.9%;
+    --chart-2: 172.8 68.9% 75.1%;
+    --chart-3: 310.2 82.6% 84.1%;
+    --chart-4: 34.9 98.6% 74.5%;
+    --chart-5: 0 72.2% 50.6%;
+
+    --sidebar-background: 224 71.4% 4.1%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 215.4 16.3% 46.9%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -75,32 +104,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* NProgress styles */
-#nprogress {
-  pointer-events: none;
-}
-
-#nprogress .bar {
-  background: hsl(var(--primary));
-  position: fixed;
-  z-index: 1031;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-}
-
-#nprogress .peg {
-  display: block;
-  position: absolute;
-  right: 0px;
-  width: 100px;
-  height: 100%;
-  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 5px hsl(var(--primary));
-  opacity: 1.0;
-  -webkit-transform: rotate(3deg) translate(0px, -4px);
-      -ms-transform: rotate(3deg) translate(0px, -4px);
-          transform: rotate(3deg) translate(0px, -4px);
 }
