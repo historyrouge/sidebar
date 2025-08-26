@@ -7,11 +7,11 @@ import { useTheme } from "next-themes";
 import React, { useState, useTransition } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
-import { BackButton } from "./back-button";
 
 type Message = {
   role: "user" | "model";
   content: string;
+  imageDataUri?: string;
 };
 
 export function MainDashboard() {
@@ -21,11 +21,10 @@ export function MainDashboard() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-muted/30 dark:bg-muted/10">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
-            <BackButton />
             <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         </div>
         <div className="flex items-center gap-4">

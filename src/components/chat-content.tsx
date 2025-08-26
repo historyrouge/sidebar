@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, GraduationCap, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, Lightbulb, PencilRuler, BookText, FlaskConical } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
 import { useModelSettings } from "@/hooks/use-model-settings";
 import { ModelSwitcherDialog } from "./model-switcher-dialog";
+import { Card } from "./ui/card";
 
 declare const puter: any;
 
@@ -28,10 +29,26 @@ type Message = {
 };
 
 const suggestionPrompts = [
-    "Explain quantum computing in simple terms",
-    "What are the main causes of climate change?",
-    "Write a short story about a time-traveling historian",
-    "Give me some ideas for a healthy breakfast",
+    {
+        icon: <Lightbulb className="text-yellow-500" />,
+        title: "Explain a concept",
+        prompt: "Explain quantum computing in simple terms"
+    },
+    {
+        icon: <PencilRuler className="text-blue-500" />,
+        title: "Help me create",
+        prompt: "Write a short story about a time-traveling historian"
+    },
+    {
+        icon: <BookText className="text-green-500" />,
+        title: "Summarize this",
+        prompt: "Summarize the plot of 'To Kill a Mockingbird'"
+    },
+    {
+        icon: <FlaskConical className="text-purple-500" />,
+        title: "Give me ideas",
+        prompt: "Give me some ideas for a fun science experiment for kids"
+    },
 ];
 
 
@@ -378,21 +395,28 @@ export function ChatContent({
             content={shareContent || ""}
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-32 sm:pb-24">
+            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-48 sm:pb-40">
             {history.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] text-center">
-                    <div className="bg-primary/10 p-4 rounded-full mb-4">
-                        <GraduationCap className="w-12 h-12 text-primary" />
+                <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
+                    <div className="mb-4">
+                        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                            Hello!
+                        </h1>
+                        <p className="text-xl sm:text-2xl text-muted-foreground mt-2">
+                           I&apos;m Easy Learn AI. How can I help you today?
+                        </p>
                     </div>
-                    <h2 className="mt-6 text-3xl font-semibold">How can I help you today?</h2>
-                    <p className="text-muted-foreground mt-2 max-w-md">
-                        I'm Easy Learn AI, your AI assistant. Ask me anything!
-                    </p>
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Button key={i} variant="outline" className="h-auto justify-start py-3 px-4 text-left whitespace-normal" onClick={() => handleSuggestionClick(prompt)}>
-                                {prompt}
-                            </Button>
+                            <Card key={i} className="p-4 hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleSuggestionClick(prompt.prompt)}>
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2 bg-muted rounded-full">{prompt.icon}</div>
+                                    <div>
+                                        <h3 className="font-semibold text-left">{prompt.title}</h3>
+                                        <p className="text-sm text-muted-foreground text-left">{prompt.prompt}</p>
+                                    </div>
+                                </div>
+                            </Card>
                         ))}
                     </div>
                 </div>
@@ -406,17 +430,17 @@ export function ChatContent({
                 )}
                 >
                 {message.role === "model" && (
-                     <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
+                     <Avatar className="h-9 w-9 border">
+                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
                 <div className="w-full max-w-lg group">
                     <div
                         className={cn(
-                        "rounded-lg p-3 text-sm",
+                        "rounded-xl p-3 text-sm",
                         message.role === "user"
                             ? "bg-primary text-primary-foreground"
-                            : "bg-card border"
+                            : "bg-background border"
                         )}
                     >
                          {message.imageDataUri && (
@@ -463,7 +487,7 @@ export function ChatContent({
                     </div>
                 </div>
                 {message.role === "user" && (
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="h-9 w-9 border">
                     <AvatarFallback><User className="size-5" /></AvatarFallback>
                     </Avatar>
                 )}
@@ -471,51 +495,57 @@ export function ChatContent({
             ))}
             {isTyping && (
                 <div className="flex items-start gap-4">
-                    <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
+                    <Avatar className="h-9 w-9 border">
+                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
                     </Avatar>
-                    <div className="max-w-lg rounded-lg p-3 text-sm bg-card border flex items-center gap-2">
+                    <div className="max-w-lg rounded-xl p-3 text-sm bg-background border flex items-center gap-2">
                         <ThinkingIndicator />
                     </div>
                 </div>
             )}
             </div>
         </ScrollArea>
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent border-t p-2 sm:p-4">
-             {capturedImage && (
-                <div className="max-w-3xl mx-auto mb-2 relative w-fit">
-                    <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
-                    <Image src={capturedImage} alt="Captured image" width={80} height={60} className="rounded-md border" />
-                    <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
-                        <X className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
-             <form onSubmit={handleFormSubmit} className="flex items-center gap-2 max-w-3xl mx-auto">
-                <Button type="button" size="icon" variant="outline" className="h-12 w-12" onClick={() => setIsCameraOpen(true)} disabled={isTyping || model === 'puter'}>
-                    <Camera className="h-5 w-5" />
-                    <span className="sr-only">Use Camera</span>
-                </Button>
-                <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Message Easy Learn AI..."
-                    disabled={isTyping}
-                    className="h-12 text-base shadow-sm"
-                />
-                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "outline"} className="h-12 w-12" onClick={handleToggleRecording} disabled={isTyping}>
-                    {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                    <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                </Button>
-                <Button type="submit" size="icon" className="h-12 w-12" disabled={isTyping || (!input.trim() && !capturedImage)}>
-                    {isTyping ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                    <Send className="h-5 w-5" />
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background/90 via-background/80 to-transparent p-4 pb-6">
+             <Card className="max-w-3xl mx-auto p-2 rounded-2xl shadow-lg">
+                <div className="relative">
+                    {capturedImage && (
+                        <div className="absolute -top-16 left-2 w-fit">
+                            <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
+                            <div className="relative">
+                                <Image src={capturedImage} alt="Captured image" width={56} height={56} className="rounded-md border-2 border-background" />
+                                <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
                     )}
-                    <span className="sr-only">Send</span>
-                </Button>
-            </form>
+                     <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
+                        <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping || model === 'puter'}>
+                            <Camera className="h-5 w-5" />
+                            <span className="sr-only">Use Camera</span>
+                        </Button>
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Message Easy Learn AI..."
+                            disabled={isTyping}
+                            className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
+                        />
+                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+                        </Button>
+                        <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
+                            {isTyping ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                            <Send className="h-5 w-5" />
+                            )}
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </form>
+                </div>
+             </Card>
         </div>
     </div>
   );
