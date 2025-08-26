@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Tag, Link as LinkIcon } from "lucide-react";
+import { RotateCcw, Tag } from "lucide-react";
 import { Badge } from "./ui/badge";
 
 type ColorVariants = {
@@ -34,10 +34,9 @@ interface FlashcardProps {
   back: string;
   category: string;
   color: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'yellow' | 'pink' | 'teal' | 'gray';
-  relatedTopics: string[];
 }
 
-export function Flashcard({ front, back, category, color, relatedTopics }: FlashcardProps) {
+export function Flashcard({ front, back, category, color }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const colors = colorVariants[color] || colorVariants.default;
 
@@ -70,23 +69,13 @@ export function Flashcard({ front, back, category, color, relatedTopics }: Flash
 
         {/* Back of the card */}
         <CardContent className={cn(
-            "absolute flex h-full w-full flex-col justify-between p-4 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-xl",
+            "absolute flex h-full w-full flex-col justify-center items-center p-4 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-xl",
             colors.background,
             colors.text
         )}>
-            <div className="flex-grow overflow-y-auto pr-2">
-                 <p className="text-base">{back}</p>
+            <div className="flex-grow overflow-y-auto pr-2 flex justify-center items-center">
+                 <p className="text-base text-center">{back}</p>
             </div>
-            {relatedTopics && relatedTopics.length > 0 && (
-                <div className="mt-4 pt-2 border-t border-current/20">
-                    <h4 className="font-semibold text-sm mb-1 flex items-center gap-1.5"><LinkIcon className="h-4 w-4" /> Related Topics</h4>
-                    <div className="flex flex-wrap gap-1">
-                        {relatedTopics.map(topic => (
-                            <Badge key={topic} variant="secondary" className="text-xs">{topic}</Badge>
-                        ))}
-                    </div>
-                </div>
-            )}
         </CardContent>
       </Card>
     </div>

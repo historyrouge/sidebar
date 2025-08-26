@@ -26,7 +26,6 @@ const GenerateFlashcardsSambaOutputSchema = z.object({
       back: z.string().describe('The back side of the flashcard (a detailed answer or definition).'),
       category: z.string().describe('A category for the flashcard (e.g., "Definition", "Key Concept", "Example").'),
       color: z.enum(['blue', 'green', 'purple', 'orange', 'red', 'yellow', 'pink', 'teal', 'gray']).describe('A suggested color for the flashcard.'),
-      relatedTopics: z.array(z.string()).describe('A list of 1-3 related topics.'),
     })
   ).describe('The generated flashcards.'),
 });
@@ -38,7 +37,6 @@ Generate flashcards covering key facts and concepts from the content. Each flash
 For each flashcard, you MUST also provide:
 1. A concise 'category' (e.g., "Definition", "Key Concept", "Important Date", "Formula", "Example").
 2. A 'color' suggestion from the following options: 'blue', 'green', 'purple', 'orange', 'red', 'yellow', 'pink', 'teal', 'gray'. Choose a color that fits the topic.
-3. A list of 1-3 'relatedTopics' for further study.
 
 You must respond in JSON format. The JSON object should match the following schema:
 {
@@ -52,10 +50,9 @@ You must respond in JSON format. The JSON object should match the following sche
                     "front": { "type": "string" },
                     "back": { "type": "string" },
                     "category": { "type": "string" },
-                    "color": { "type": "string", "enum": ["blue", "green", "purple", "orange", "red", "yellow", "pink", "teal", "gray"] },
-                    "relatedTopics": { "type": "array", "items": { "type": "string" } }
+                    "color": { "type": "string", "enum": ["blue", "green", "purple", "orange", "red", "yellow", "pink", "teal", "gray"] }
                 },
-                "required": ["front", "back", "category", "color", "relatedTopics"]
+                "required": ["front", "back", "category", "color"]
             }
         }
     },

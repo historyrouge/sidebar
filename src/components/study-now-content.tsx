@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsSambaOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
 import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +25,14 @@ import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
 import { ModelSwitcherDialog } from "./model-switcher-dialog";
 import { useModelSettings } from "@/hooks/use-model-settings";
+import { GenerateFlashcardsOutput } from "@/app/actions";
+
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
-  const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
+  const [flashcards, setFlashcards] = useState<GenerateFlashcardsSambaOutput['flashcards'] | null>(null);
   const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
@@ -625,7 +627,7 @@ export function StudyNowContent() {
                     <TabsContent value="flashcards" className="h-full">
                       {isGeneratingFlashcards ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating flashcards...</p></div> : flashcards ? (
                         <div className="grid grid-cols-1 gap-4 pr-4 @md:grid-cols-2">
-                          {flashcards.map((card, i) => <Flashcard key={i} front={card.front} back={card.back} category={card.category} color={card.color} relatedTopics={card.relatedTopics} />)}
+                          {flashcards.map((card, i) => <Flashcard key={i} {...card} />)}
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
@@ -675,5 +677,3 @@ export function StudyNowContent() {
     </>
   );
 }
-
-    
