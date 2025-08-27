@@ -60,7 +60,7 @@ export function QuizStartContent() {
 
     const handlePrev = () => {
         if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(prev => prev + 1);
+            setCurrentQuestionIndex(prev => prev - 1);
         }
     };
     
@@ -107,7 +107,7 @@ export function QuizStartContent() {
 
     return (
         <>
-            <div className="absolute top-4 left-4 z-50">
+            <div className="absolute top-4 left-4 z-[60]">
                 <BackButton />
             </div>
             <QuizInterface 
