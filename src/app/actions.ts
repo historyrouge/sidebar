@@ -12,6 +12,7 @@ import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutp
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
+import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
 import { openai } from "@/lib/openai";
 import type { ModelKey } from "@/hooks/use-model-settings";
 
@@ -38,6 +39,7 @@ export type TextToSpeechOutput = TextToSpeechOutputFlow;
 export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
 export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
+export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
 
 function isRateLimitError(e: any): boolean {
   if (e?.message?.includes('429') || e?.message?.toLowerCase().includes('quota') || e?.message?.toLowerCase().includes('limit')) {
@@ -277,6 +279,19 @@ export async function generateImageAction(
   }
 }
 
+export async function generateEbookChapterAction(
+  input: GenerateEbookChapterInput
+): Promise<ActionResult<GenerateEbookChapterOutput>> {
+    try {
+        const output = await generateEbookChapter(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
 // Dummy types for exports where the original type is no longer relevant
 export type UserProfile = {};
 export type Friend = {};
@@ -285,4 +300,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };
+export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput };
