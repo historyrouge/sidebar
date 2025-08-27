@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User } from "lucide-react";
+import { Bot, Loader2, Send, User, Sparkles } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { useModelSettings } from "@/hooks/use-model-settings";
@@ -32,6 +32,15 @@ type Article = {
   };
   publishedAt: string;
 };
+
+const dummyPrompts = [
+    "Explain this in simple terms.",
+    "What is the key takeaway from this?",
+    "Who is most affected by this news?",
+    "What could be the long-term impact?",
+    "Summarize the main arguments in 3 bullet points.",
+    "Are there any counter-arguments to this?",
+];
 
 export function NewsReaderContent() {
   const { toast } = useToast();
@@ -159,7 +168,7 @@ export function NewsReaderContent() {
                 <div className="h-96 flex flex-col">
                     <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
                         <div className="space-y-4 pr-4">
-                            {history.slice(1).map((message, index) => ( // Slicing to exclude summary
+                            {history.slice(1).map((message, index) => (
                                 <div
                                     key={index}
                                     className={cn(
@@ -178,7 +187,7 @@ export function NewsReaderContent() {
                                             "rounded-xl p-3 text-sm",
                                             message.role === "user"
                                                 ? "bg-primary text-primary-foreground"
-                                                : "bg-background border"
+                                                : "bg-muted"
                                             )}
                                         >
                                             <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
@@ -198,6 +207,26 @@ export function NewsReaderContent() {
                                     </Avatar>
                                     <div className="max-w-lg rounded-xl p-3 text-sm bg-background border flex items-center gap-2">
                                         <Loader2 className="size-4 animate-spin" />
+                                    </div>
+                                </div>
+                            )}
+                            {history.length === 1 && !isTyping && (
+                                <div className="pt-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Sparkles className="text-primary w-5 h-5"/>
+                                        <p className="text-sm font-semibold text-muted-foreground">Try asking...</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {dummyPrompts.map(prompt => (
+                                            <Button 
+                                                key={prompt}
+                                                variant="outline"
+                                                className="h-auto text-left justify-start py-2"
+                                                onClick={() => handleSendMessage(prompt)}
+                                            >
+                                                {prompt}
+                                            </Button>
+                                        ))}
                                     </div>
                                 </div>
                             )}
