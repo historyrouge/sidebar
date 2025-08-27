@@ -11,6 +11,7 @@ import {
   Sparkles,
   Youtube,
   FileQuestion,
+  Rss,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const menuItems = [
     { name: "Create Flashcards", icon: <PlusSquare />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
+    { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
     { name: "Settings", icon: <Settings />, href: "/settings" },
     { name: "Help", icon: <HelpCircle />, href: "/help" },

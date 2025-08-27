@@ -20,6 +20,34 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.google.com',
+      },
+       {
+        protocol: 'https',
+        hostname: '*.wsj.net',
+      },
+       {
+        protocol: 'https',
+        hostname: 'media.zenfs.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's.yimg.com',
+      },
+       {
+        protocol: 'https',
+        hostname: 'i.kinja-img.com',
+      },
+       {
+        protocol: 'https',
+        hostname: 'images.wsj.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.cnbcfm.com',
+      },
     ],
   },
   async headers() {
