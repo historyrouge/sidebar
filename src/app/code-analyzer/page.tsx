@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { MainLayout } from "@/components/main-layout";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 
 const CodeAnalyzerContent = dynamic(() => import('@/components/code-analyzer-content').then(mod => mod.CodeAnalyzerContent), { 
     ssr: false, 
@@ -52,5 +52,3 @@ export default function CodeAnalyzerPage() {
         </MainLayout>
     )
 }
-
-    
