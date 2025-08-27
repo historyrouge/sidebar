@@ -10,7 +10,8 @@ import { Loader2, Wand2, Bug, Zap, AlertTriangle, Code, ArrowRight } from "lucid
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { analyzeCodeAction, AnalyzeCodeOutput } from "@/app/actions";
+import { analyzeCodeAction } from "@/app/actions";
+import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
@@ -163,5 +164,3 @@ export function CodeAnalyzerContent() {
         </div>
     );
 }
-
-    

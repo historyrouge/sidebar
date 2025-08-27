@@ -13,7 +13,8 @@ import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as Summ
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
-import { analyzeCode, AnalyzeCodeInput, AnalyzeCodeOutput as AnalyzeCodeOutputFlow } from "@/ai/flows/analyze-code";
+import { analyzeCode } from "@/ai/flows/analyze-code";
+import { AnalyzeCodeInput, AnalyzeCodeOutput as AnalyzeCodeOutputFlow } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
 import type { ModelKey } from "@/hooks/use-model-settings";
 
@@ -318,5 +319,3 @@ export type CodeAgentInput = {};
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };
-
-    
