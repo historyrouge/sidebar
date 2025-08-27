@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Rss } from "lucide-react";
 import { BackButton } from "./back-button";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "./ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 type Article = {
   title: string;
@@ -20,16 +22,38 @@ type Article = {
   publishedAt: string;
 };
 
+const categories = [
+    { name: "Top Headlines", value: "top" },
+    { name: "Technology", value: "technology" },
+    { name: "Artificial Intelligence", value: "ai" },
+    { name: "Gaming", value: "gaming" },
+];
+
+
 export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("top");
   const router = useRouter();
 
   useEffect(() => {
     const fetchNews = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch("/api/news");
+        let url = `/api/news?category=${activeCategory}`;
+        if (activeCategory === 'ai') {
+            url = `/api/news?q=artificial intelligence`;
+        } else if (activeCategory === 'gaming') {
+            url = `/api/news?q=gaming`;
+        } else if (activeCategory === 'technology') {
+             url = `/api/news?category=technology`;
+        } else {
+             url = `/api/news?category=general`;
+        }
+
+        const res = await fetch(url);
         if (!res.ok) {
             const errorData = await res.json();
             throw new Error(errorData.error || "Failed to fetch news");
@@ -43,7 +67,7 @@ export function NewsContent() {
       }
     };
     fetchNews();
-  }, []);
+  }, [activeCategory]);
 
   const handleReadMore = (article: Article) => {
     try {
@@ -65,6 +89,14 @@ export function NewsContent() {
             <p className="mt-2 text-lg text-muted-foreground">Top headlines in technology and education.</p>
         </header>
 
+        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+                {categories.map(cat => (
+                    <TabsTrigger key={cat.value} value={cat.value}>{cat.name}</TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
+
         {error && (
              <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
                 <p className="text-destructive font-semibold">Failed to load news</p>
@@ -73,42 +105,57 @@ export function NewsContent() {
             </div>
         )}
 
-        {!loading && !error && articles.length === 0 && (
-            <div className="text-center text-muted-foreground">
-                <p>No articles found.</p>
+        {loading ? (
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                     <Card key={i}>
+                        <CardHeader className="p-0">
+                            <Skeleton className="h-48 w-full" />
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-2">
+                           <Skeleton className="h-6 w-3/4" />
+                           <Skeleton className="h-4 w-full" />
+                           <Skeleton className="h-4 w-5/6" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        ) : !error && articles.length === 0 ? (
+            <div className="text-center text-muted-foreground mt-12">
+                <p>No articles found for this category.</p>
+            </div>
+        ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {articles.map((article, i) => (
+                    <Card key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
+                        <CardHeader className="p-0">
+                            {article.urlToImage ? (
+                                <div className="relative w-full h-48">
+                                    <Image
+                                        src={article.urlToImage}
+                                        alt={article.title}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                    <Rss className="w-10 h-10 text-primary/50" />
+                                </div>
+                            )}
+                        </CardHeader>
+                        <CardContent className="p-4 flex-grow flex flex-col">
+                            <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
+                            <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
+                        </CardContent>
+                        <CardFooter className="p-4 pt-0">
+                            <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
+                        </CardFooter>
+                    </Card>
+                ))}
             </div>
         )}
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {articles.map((article, i) => (
-                <Card key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
-                    <CardHeader className="p-0">
-                         {article.urlToImage ? (
-                            <div className="relative w-full h-48">
-                                <Image
-                                    src={article.urlToImage}
-                                    alt={article.title}
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                        ) : (
-                            <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                                <Rss className="w-10 h-10 text-primary/50" />
-                            </div>
-                        )}
-                    </CardHeader>
-                    <CardContent className="p-4 flex-grow flex flex-col">
-                        <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
-                        <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
-                        <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                        <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
-                    </CardFooter>
-                </Card>
-            ))}
-        </div>
     </div>
     </>
   );

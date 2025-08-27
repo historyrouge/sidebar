@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Sparkles } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -49,10 +49,10 @@ const suggestionPrompts = [
         href: "/ebooks"
     },
     {
-        icon: <Sparkles className="text-purple-500" />,
-        title: "Start a Study Session",
-        description: "Analyze content to create study materials.",
-        href: "/study-now"
+        icon: <Rss className="text-purple-500" />,
+        title: "Read Latest News",
+        description: "Check out top headlines in tech & education.",
+        href: "/news"
     },
 ];
 
