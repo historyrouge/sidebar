@@ -81,9 +81,9 @@ export function NewsContent() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {articles.map((article, i) => (
-                <Card key={i} className="flex flex-col overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl">
-                    {article.urlToImage ? (
-                        <CardHeader className="p-0">
+                <Card key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
+                    <CardHeader className="p-0">
+                         {article.urlToImage ? (
                             <div className="relative w-full h-48">
                                 <Image
                                     src={article.urlToImage}
@@ -92,12 +92,12 @@ export function NewsContent() {
                                     className="object-cover"
                                 />
                             </div>
-                        </CardHeader>
-                    ) : (
-                        <div className="h-48 bg-muted flex items-center justify-center">
-                            <Rss className="w-10 h-10 text-muted-foreground" />
-                        </div>
-                    )}
+                        ) : (
+                            <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                <Rss className="w-10 h-10 text-primary/50" />
+                            </div>
+                        )}
+                    </CardHeader>
                     <CardContent className="p-4 flex-grow flex flex-col">
                         <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
                         <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
