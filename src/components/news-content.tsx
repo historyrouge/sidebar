@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Rss } from "lucide-react";
 import { BackButton } from "./back-button";
+import { AiDialog } from "./ai-dialog";
 
 type Article = {
   title: string;
@@ -23,6 +24,8 @@ export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -43,7 +46,20 @@ export function NewsContent() {
     fetchNews();
   }, []);
 
+  const handleReadMore = (article: Article) => {
+    setSelectedArticle(article);
+    setIsAiDialogOpen(true);
+  }
+
   return (
+    <>
+    <AiDialog 
+        isOpen={isAiDialogOpen}
+        onOpenChange={setIsAiDialogOpen}
+        title={selectedArticle?.title ?? ""}
+        context={selectedArticle?.description ?? ""}
+        imageUrl={selectedArticle?.urlToImage}
+    />
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <header className="mb-8 text-center relative">
             <BackButton className="absolute left-0 top-1/2 -translate-y-1/2" />
@@ -91,13 +107,12 @@ export function NewsContent() {
                         <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
                     </CardContent>
                     <CardFooter className="p-4 pt-0">
-                        <a href={article.url} target="_blank" rel="noopener noreferrer" className="w-full">
-                            <Button className="w-full">Read More</Button>
-                        </a>
+                        <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
                     </CardFooter>
                 </Card>
             ))}
         </div>
     </div>
+    </>
   );
 }

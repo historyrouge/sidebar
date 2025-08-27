@@ -7,13 +7,18 @@ import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutor
 import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsInput } from "@/ai/flows/generate-flashcards-samba";
 import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
-import { generalChat, GeneralChatInput, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
+import { generalChat, GeneralChatInput as GeneralChatInputFlow, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutputFlow } from "@/ai/flows/text-to-speech";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
 import { openai } from "@/lib/openai";
 import type { ModelKey } from "@/hooks/use-model-settings";
+
+// Extend GeneralChatInput to include an optional prompt for specific scenarios
+export type GeneralChatInput = GeneralChatInputFlow & {
+  prompt?: string;
+};
 
 
 type ActionResult<T> = {
@@ -126,25 +131,31 @@ const MODEL_MAP: Record<Exclude<ModelKey, 'puter'>, string> = {
 };
 
 async function callOpenAI(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
-  const { history, imageDataUri } = input;
+  const { history, imageDataUri, prompt } = input;
   
   const messages = history.map((h, i) => {
     const isLastMessage = i === history.length - 1;
     const role = h.role === 'model' ? 'assistant' : 'user';
+
+    let content = h.content;
+    // If it's the last user message and there's a custom prompt, prepend it.
+    if (isLastMessage && h.role === 'user' && prompt) {
+        content = `${prompt}\n\nUser query: ${h.content}`;
+    }
 
     // If it's the last message and an image is present, create a multi-part content
     if (isLastMessage && imageDataUri) {
       return {
         role,
         content: [
-          { type: 'text', text: h.content || 'What do you see in this image?' },
+          { type: 'text', text: content || 'What do you see in this image?' },
           { type: 'image_url', image_url: { url: imageDataUri } },
         ],
       };
     }
 
     // Otherwise, just return the text content
-    return { role, content: h.content };
+    return { role, content: content };
   });
 
   try {
@@ -187,7 +198,23 @@ export async function generalChatAction(
     
     // Default to Gemini
     try {
-        const output = await generalChat(input);
+        const { history, imageDataUri, prompt } = input;
+        
+        let flowInput = { history, imageDataUri };
+
+        // If there's a custom prompt and it's the first message, prepend it to the user's message.
+        if (prompt && history.length > 0) {
+            const lastMessage = history[history.length - 1];
+            if (lastMessage.role === 'user') {
+                const modifiedHistory = [...history.slice(0, -1), {
+                    ...lastMessage,
+                    content: `${prompt}\n\nUser query: ${lastMessage.content}`
+                }];
+                flowInput = { ...flowInput, history: modifiedHistory };
+            }
+        }
+
+        const output = await generalChat(flowInput);
         return { data: output };
     } catch (e: any) {
         console.error(e);
@@ -258,4 +285,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, GeneralChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };
+export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey };
