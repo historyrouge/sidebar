@@ -10,7 +10,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=in&category=technology&apiKey=${apiKey}`
+      `https://newsapi.org/v2/everything?q=education%20OR%20technology&language=en&sortBy=publishedAt&apiKey=${apiKey}`
     );
 
     if (!response.ok) {
