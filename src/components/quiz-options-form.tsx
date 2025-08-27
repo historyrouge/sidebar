@@ -50,25 +50,40 @@ export function QuizOptionsForm() {
 
         startGenerating(async () => {
             try {
-                const quizResult = await puter.ai.quiz({
-                    text: content,
-                    difficulty: difficulty,
-                    n: parseInt(numQuestions),
-                });
+                 const prompt = `Generate a quiz based on the following text.
+    
+                Text: "${content}"
                 
-                if (!quizResult || quizResult.length === 0) {
-                    throw new Error("Puter.js failed to generate a quiz.");
+                Difficulty: ${difficulty}
+                Number of Questions: ${numQuestions}
+                
+                Respond with a JSON object containing a single key "quizzes", which is an array of question objects. Each object should have "question", "options" (an array of 4 strings), and "answer" (the correct option string).
+                
+                Example format:
+                {
+                  "quizzes": [
+                    {
+                      "question": "What is the capital of France?",
+                      "options": ["Berlin", "Madrid", "Paris", "Rome"],
+                      "answer": "Paris"
+                    }
+                  ]
+                }`;
+
+                const resultString = await puter.ai.ask(prompt);
+                const quizResult = JSON.parse(resultString);
+
+                if (!quizResult || !quizResult.quizzes || quizResult.quizzes.length === 0) {
+                    throw new Error("Puter.js failed to generate a valid quiz from the content.");
                 }
 
                 toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..."});
                 
-                // The output from puter.ai.quiz is an array of questions.
-                // We need to match the structure expected by the quiz page.
-                const formattedQuizzes = quizResult.map((q: any) => ({
+                const formattedQuizzes = quizResult.quizzes.map((q: any) => ({
                     question: q.question,
                     options: q.options,
                     answer: q.answer,
-                    type: 'multiple-choice', // Assuming this is always the type
+                    type: 'multiple-choice',
                 }));
 
                 const quizData = {
@@ -85,7 +100,7 @@ export function QuizOptionsForm() {
             } catch (e: any) {
                  toast({
                     title: "Could not generate quiz",
-                    description: e.message || "There was an error while trying to generate the quiz with Puter.js.",
+                    description: e.message || "There was an error while trying to generate the quiz with Puter.js. The model may have returned an invalid format.",
                     variant: "destructive",
                 });
             }
