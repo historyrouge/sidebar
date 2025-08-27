@@ -12,6 +12,7 @@ import {
   Youtube,
   FileQuestion,
   Rss,
+  Code,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,6 +29,7 @@ import { usePathname } from "next/navigation";
 const menuItems = [
     { name: "Chat", icon: <MessageSquare />, href: "/" },
     { name: "Study Session", icon: <Sparkles />, href: "/study-now" },
+    { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
     { name: "Create Flashcards", icon: <PlusSquare />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
@@ -102,3 +104,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+    

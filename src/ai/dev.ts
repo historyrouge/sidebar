@@ -12,3 +12,6 @@ import '@/ai/flows/summarize-content.ts';
 import '@/ai/flows/youtube-transcript.ts';
 import '@/ai/flows/generate-image.ts';
 import '@/ai/flows/generate-ebook-chapter.ts';
+import '@/ai/flows/analyze-code.ts';
+
+    
