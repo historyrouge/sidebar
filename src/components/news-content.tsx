@@ -71,21 +71,22 @@ export function NewsContent() {
                 <Card key={i} className="flex flex-col overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl">
                     {article.urlToImage ? (
                         <CardHeader className="p-0">
-                            <Image
-                                src={article.urlToImage}
-                                alt={article.title}
-                                width={400}
-                                height={225}
-                                className="w-full h-48 object-cover"
-                            />
+                            <div className="relative w-full h-48">
+                                <Image
+                                    src={article.urlToImage}
+                                    alt={article.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
                         </CardHeader>
                     ) : (
                         <div className="h-48 bg-muted flex items-center justify-center">
                             <Rss className="w-10 h-10 text-muted-foreground" />
                         </div>
                     )}
-                    <CardContent className="p-4 flex-grow">
-                        <CardTitle className="text-lg leading-snug">{article.title}</CardTitle>
+                    <CardContent className="p-4 flex-grow flex flex-col">
+                        <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
                         <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
                         <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
                     </CardContent>
