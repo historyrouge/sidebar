@@ -50,6 +50,7 @@ The quiz should be of {{difficulty}} difficulty.
 {{/if}}
 
 Content: {{{content}}}`,
+  model: 'puter'
 });
 
 const generateQuizzesFlow = ai.defineFlow(

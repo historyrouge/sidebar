@@ -9,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateQuizAction } from "@/app/actions";
 import { Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
 
+declare const puter: any;
 
 export function QuizOptionsForm() {
     const router = useRouter();
@@ -43,36 +43,51 @@ export function QuizOptionsForm() {
 
     const handleGenerateQuiz = () => {
         if (!content) return;
+        if (typeof puter === 'undefined') {
+            toast({ title: 'Puter.js not loaded', description: 'Please try reloading the page.', variant: 'destructive' });
+            return;
+        }
 
         startGenerating(async () => {
-            const result = await generateQuizAction({
-                content,
-                difficulty: difficulty as "easy" | "medium" | "hard",
-                numQuestions: parseInt(numQuestions),
-            });
-
-            if (result.error) {
-                toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
-            } else if (result.data) {
-                toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..."});
-                try {
-                    const quizData = {
-                        quizzes: result.data.quizzes,
-                        options: {
-                            difficulty,
-                            numQuestions: parseInt(numQuestions),
-                            timeLimit: parseInt(timeLimit) * 60, // convert to seconds
-                        }
-                    };
-                    localStorage.setItem('currentQuiz', JSON.stringify(quizData));
-                    router.push('/quiz/start');
-                } catch (e) {
-                     toast({
-                        title: "Could not start quiz",
-                        description: "There was an error while trying to proceed. Please try again.",
-                        variant: "destructive",
-                    });
+            try {
+                const quizResult = await puter.ai.quiz({
+                    text: content,
+                    difficulty: difficulty,
+                    n: parseInt(numQuestions),
+                });
+                
+                if (!quizResult || quizResult.length === 0) {
+                    throw new Error("Puter.js failed to generate a quiz.");
                 }
+
+                toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..."});
+                
+                // The output from puter.ai.quiz is an array of questions.
+                // We need to match the structure expected by the quiz page.
+                const formattedQuizzes = quizResult.map((q: any) => ({
+                    question: q.question,
+                    options: q.options,
+                    answer: q.answer,
+                    type: 'multiple-choice', // Assuming this is always the type
+                }));
+
+                const quizData = {
+                    quizzes: formattedQuizzes,
+                    options: {
+                        difficulty,
+                        numQuestions: parseInt(numQuestions),
+                        timeLimit: parseInt(timeLimit) * 60, // convert to seconds
+                    }
+                };
+                localStorage.setItem('currentQuiz', JSON.stringify(quizData));
+                router.push('/quiz/start');
+
+            } catch (e: any) {
+                 toast({
+                    title: "Could not generate quiz",
+                    description: e.message || "There was an error while trying to generate the quiz with Puter.js.",
+                    variant: "destructive",
+                });
             }
         });
     };
