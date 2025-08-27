@@ -70,7 +70,8 @@ export function QuizOptionsForm() {
                   ]
                 }`;
 
-                const resultString = await puter.ai.ask(prompt);
+                const result = await puter.ai.chat(prompt);
+                const resultString = typeof result === 'object' && result.text ? result.text : String(result);
                 const quizResult = JSON.parse(resultString);
 
                 if (!quizResult || !quizResult.quizzes || quizResult.quizzes.length === 0) {
