@@ -45,7 +45,7 @@ const analyzeImagePrompt = ai.definePrompt({
   name: 'analyzeImagePrompt',
   input: {schema: AnalyzeImageContentInputSchema},
   output: {schema: AnalyzeImageContentOutputSchema},
-  prompt: `You are an AI tool that analyzes the given image to help students study more effectively. The image could be a diagram, a presentation slide, or a page from a book.
+  prompt: `You are an AI tool that analyzes the given image to help students study more effectively. The image could be a diagram, a presentation slide, or a page from a book. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Image to analyze: {{media url=imageDataUri}}
 

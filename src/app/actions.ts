@@ -49,7 +49,7 @@ function isRateLimitError(e: any): boolean {
   return false;
 }
 
-const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
+const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Content to analyze:
 ---
@@ -182,7 +182,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -240,11 +240,17 @@ export async function generalChatAction(
         }
         return { role, content: content };
       });
+
+      // Inject system prompt for Qwen
+      const systemMessage = {
+          role: 'system',
+          content: "You are a helpful AI assistant. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student."
+      };
   
       try {
         const response = await openai.chat.completions.create({
           model: 'Meta-Llama-3.1-8B-Instruct',
-          messages: messages as any,
+          messages: [systemMessage, ...messages as any],
           stream: false,
         });
   
@@ -334,7 +340,7 @@ export async function summarizeContentAction(
 ): Promise<ActionResult<SummarizeContentOutput>> {
   try {
     // Summarization is always done by Qwen
-    const prompt = `Please provide a concise, one-paragraph summary of the following content: --- ${input.content} ---`;
+    const prompt = `Please provide a concise, one-paragraph summary of the following content. Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. --- ${input.content} ---`;
     let responseText: string;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
@@ -360,5 +366,3 @@ export async function summarizeContentAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput };
-
-    

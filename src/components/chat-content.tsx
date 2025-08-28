@@ -117,7 +117,9 @@ export function ChatContent({
 
         try {
             if (model === 'gpt5') {
-                const promise = puter.ai.chat(currentMessage.content);
+                const creatorPrompt = "Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.";
+                const finalPrompt = `${creatorPrompt}\n\nUser query: ${currentMessage.content}`;
+                const promise = puter.ai.chat(finalPrompt);
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 230));
                 const response = await Promise.race([promise, timeoutPromise]);
                 responseText = typeof response === 'object' && response.text ? response.text : String(response);
@@ -537,5 +539,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    

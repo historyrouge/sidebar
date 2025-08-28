@@ -13,6 +13,7 @@ import { AnalyzeCodeInput, AnalyzeCodeInputSchema, AnalyzeCodeOutput, AnalyzeCod
 
 const analysisSystemPrompt = `You are an expert programmer and code reviewer specializing in {{language}}.
 Your task is to analyze the following code snippet and provide a detailed review.
+If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Code:
 \`\`\`{{language}}

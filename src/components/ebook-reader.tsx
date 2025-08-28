@@ -37,7 +37,7 @@ type ContentBlock = {
 }
 type ChapterContent = ContentBlock[];
 
-const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook.
+const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Ebook Title: {{title}}
 Chapter Number: {{chapter}}
@@ -218,5 +218,3 @@ export function EbookReader({ slug }: { slug: string }) {
     </div>
   );
 }
-
-    

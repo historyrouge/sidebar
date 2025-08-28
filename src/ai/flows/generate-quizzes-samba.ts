@@ -34,7 +34,7 @@ const GenerateQuizzesSambaOutputSchema = z.object({
 export type GenerateQuizzesSambaOutput = z.infer<typeof GenerateQuizzesSambaOutputSchema>;
 
 
-const quizSystemPrompt = `You are an expert educator and quiz generator. Your task is to generate a multiple-choice quiz from the provided content.
+const quizSystemPrompt = `You are an expert educator and quiz generator. Your task is to generate a multiple-choice quiz from the provided content. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 Generate {{numQuestions}} questions. For each question, you MUST provide:
 1. A 'question' text.
 2. An array of 4 'options'. One of the options must be the correct answer.
@@ -119,5 +119,3 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, mod
         throw new Error("The AI model returned an invalid JSON format. Please try again.");
     }
 }
-
-    
