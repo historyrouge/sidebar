@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
 import { Card } from "./ui/card";
 import Link from "next/link";
+import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 
 declare const puter: any;
 
@@ -85,24 +86,75 @@ export function ChatContent({
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [isPuterAvailable, setIsPuterAvailable] = useState(true);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
 
-  // Check for puter.js availability
-  useEffect(() => {
-    const puterCheckTimeout = setTimeout(() => {
-        if (typeof puter === 'undefined') {
-            setIsPuterAvailable(false);
+  const executeChat = useCallback(async (
+    currentMessage: Message, 
+    chatHistory: Message[],
+    modelsToTry: ModelKey[]
+  ): Promise<void> => {
+      if (modelsToTry.length === 0) {
+          setShowLimitDialog(true);
+          setHistory(prev => prev.slice(0, -1)); // Remove user message
+          return;
+      }
+
+      const model = modelsToTry[0];
+      const remainingModels = modelsToTry.slice(1);
+      
+      startTyping(async () => {
+        let responseText: string | null = null;
+        let error: string | null = null;
+
+        if (model !== 'puter') {
             toast({
-                title: "Puter.js not available",
-                description: "Falling back to SambaNova for chat.",
-                variant: "default",
-                icon: <WifiOff className="text-destructive"/>
-            })
+                title: "Model Fallback",
+                description: `Puter.js timeout. Trying ${model}...`,
+                duration: 2000,
+            });
         }
-    }, 440); // 0.44 seconds
 
-    return () => clearTimeout(puterCheckTimeout);
-  }, [toast]);
+        try {
+            if (model === 'puter') {
+                const promise = puter.ai.chat(currentMessage.content);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 230));
+                const response = await Promise.race([promise, timeoutPromise]);
+                responseText = typeof response === 'object' && response.text ? response.text : String(response);
+            } else { // samba or gemini
+                const result = await generalChatAction({ 
+                    history: chatHistory.map(h => ({role: h.role, content: h.content})),
+                    imageDataUri: currentMessage.imageDataUri,
+                    model: model
+                });
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                responseText = result.data!.response;
+            }
+        } catch (e: any) {
+            error = e.message;
+        }
+
+        if (responseText) {
+            const modelMessage: Message = { role: "model", content: responseText };
+            setHistory((prev) => [...prev, modelMessage]);
+        } else {
+             if (remainingModels.length > 0) {
+                 toast({
+                    title: `Model Error: ${model}`,
+                    description: `Switching to ${remainingModels[0]}. Reason: ${error}`,
+                    variant: "destructive",
+                    duration: 3000
+                });
+                await executeChat(currentMessage, chatHistory, remainingModels);
+             } else {
+                setHistory(prev => prev.slice(0, -1)); // Remove user message
+                setShowLimitDialog(true);
+             }
+        }
+      });
+  }, [startTyping, toast]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -114,48 +166,15 @@ export function ChatContent({
     }
 
     const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
-    setHistory((prev) => [...prev, userMessage]);
+    const newHistory = [...history, userMessage];
+    setHistory(newHistory);
     setInput("");
     setCapturedImage(null);
 
-    startTyping(async () => {
-      if (isPuterAvailable) {
-        try {
-          const response = await puter.ai.chat(messageToSend);
-          const responseText = typeof response === 'object' && response.text ? response.text : String(response);
-          const modelMessage: Message = { role: "model", content: responseText };
-          setHistory((prev) => [...prev, modelMessage]);
-        } catch (error: any) {
-           toast({ title: 'Puter.js Error', description: error.message, variant: 'destructive' });
-           setHistory(prev => prev.slice(0, -1));
-        }
-      } else {
-        // Fallback to SambaNova
-        const fullHistory = [...history, userMessage];
-        const textHistory = fullHistory.map(h => ({role: h.role, content: h.content}));
-        const chatInput: GeneralChatInput = {
-          history: textHistory,
-          imageDataUri: userMessage.imageDataUri,
-        };
+    await executeChat(userMessage, newHistory, ['puter', 'samba', 'gemini']);
 
-        const result = await generalChatAction(chatInput);
-
-        if (result.error) {
-            toast({
-              title: "Chat Error",
-              description: result.error,
-              variant: "destructive",
-            });
-            setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
-        } else if (result.data) {
-          const responseText = typeof result.data.response === 'object' ? (result.data.response as any).text : result.data.response;
-          const modelMessage: Message = { role: "model", content: responseText };
-          setHistory((prev) => [...prev, modelMessage]);
-        }
-      }
-    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, capturedImage, isRecording, history, isPuterAvailable]);
+  }, [input, capturedImage, isRecording, history, executeChat]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,26 +185,9 @@ export function ChatContent({
       const lastUserMessage = history.findLast(m => m.role === 'user');
       if (!lastUserMessage) return;
 
-      startTyping(async () => {
-        // We remove the last model response before regenerating
-        setHistory(prev => prev.slice(0, -1));
-        
-        // We only send text history to the AI
-        const historyForAI = history.slice(0, -1).map(h => ({role: h.role, content: h.content}));
-
-        const chatInput: GeneralChatInput = {
-          history: historyForAI,
-          imageDataUri: lastUserMessage.imageDataUri
-        };
-        const result = await generalChatAction(chatInput);
-
-        if (result.error) {
-          toast({ title: "Chat Error", description: result.error, variant: "destructive" });
-        } else if (result.data) {
-          const modelMessage: Message = { role: "model", content: result.data.response };
-          setHistory((prev) => [...prev, modelMessage]);
-        }
-      });
+      const historyWithoutLastResponse = history.slice(0, -1);
+      setHistory(historyWithoutLastResponse);
+      await executeChat(lastUserMessage, historyWithoutLastResponse, ['puter', 'samba', 'gemini']);
   };
 
 
@@ -278,7 +280,7 @@ export function ChatContent({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPuterAvailable]); 
+  }, []); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -347,6 +349,7 @@ export function ChatContent({
 
   return (
     <div className="relative h-full">
+        <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
             <DialogContent>
                 <DialogHeader>

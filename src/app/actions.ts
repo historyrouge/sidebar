@@ -4,7 +4,6 @@
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsSambaInput } from "@/ai/flows/generate-flashcards-samba";
-import { generateQuizzes, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
 import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput as GenerateQuizzesSambaOutputFlow } from "@/ai/flows/generate-quizzes-samba";
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput as GeneralChatInputFlow, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
@@ -16,9 +15,12 @@ import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as Summ
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
 
+export type ModelKey = 'gemini' | 'samba' | 'puter';
+
 // Extend GeneralChatInput to include an optional prompt for specific scenarios
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
+  model?: 'samba' | 'gemini';
 };
 
 
@@ -31,8 +33,7 @@ type ActionResult<T> = {
 export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
 export type GenerateFlashcardsOutput = GenerateFlashcardsSambaOutputFlow;
-export type GenerateQuizzesOutput = GenerateQuizzesOutputFlow | GenerateQuizzesSambaOutputFlow;
-export type ChatWithTutorOutput = ChatWithTutorOutputFlow;
+export type GenerateQuizzesOutput = GenerateQuizzesSambaOutputFlow;
 export type HelpChatOutput = HelpChatOutputFlow;
 export type GeneralChatOutput = GeneralChatOutputFlow;
 export type TextToSpeechOutput = TextToSpeechOutputFlow;
@@ -222,43 +223,53 @@ export async function helpChatAction(
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
-    // This action is now only for the SambaNova fallback for the main chat
-    if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-      return { error: "SambaNova API key or base URL is not configured. Please add it in the settings or select a different model." };
-    }
-    
-    const { history, imageDataUri, prompt } = input;
-    
-    const messages = history.map((h, i) => {
-      const isLastMessage = i === history.length - 1;
-      const role = h.role === 'model' ? 'assistant' : 'user';
+    const { history, imageDataUri, prompt, model = 'samba' } = input;
 
-      let content = h.content;
-      if (isLastMessage && h.role === 'user' && prompt) {
-          content = `${prompt}\n\nUser query: ${h.content}`;
-      }
-      return { role, content: content };
-    });
-
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'Meta-Llama-3.1-8B-Instruct',
-        messages: messages as any,
-        stream: false,
-      });
-
-      if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-        throw new Error("Received an empty response from the AI.");
+    if (model === 'samba') {
+      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        return { error: "SambaNova API key or base URL is not configured." };
       }
       
-      return { data: { response: response.choices[0].message.content } };
-    } catch (error: any) {
-      console.error("SambaNova API error:", error);
-      if (isRateLimitError(error)) return { error: "API_LIMIT_EXCEEDED" };
-      if (error.code === 'ENOTFOUND') {
-        return { error: "Could not connect to the SambaNova API. Please check the Base URL." };
+      const messages = history.map((h, i) => {
+        const isLastMessage = i === history.length - 1;
+        const role = h.role === 'model' ? 'assistant' : 'user';
+  
+        let content = h.content;
+        if (isLastMessage && h.role === 'user' && prompt) {
+            content = `${prompt}\n\nUser query: ${h.content}`;
+        }
+        return { role, content: content };
+      });
+  
+      try {
+        const response = await openai.chat.completions.create({
+          model: 'Meta-Llama-3.1-8B-Instruct',
+          messages: messages as any,
+          stream: false,
+        });
+  
+        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+          throw new Error("Received an empty response from the AI.");
+        }
+        
+        return { data: { response: response.choices[0].message.content } };
+      } catch (error: any) {
+        console.error("SambaNova API error:", error);
+        if (isRateLimitError(error)) return { error: "API_LIMIT_EXCEEDED" };
+        if (error.code === 'ENOTFOUND') {
+          return { error: "Could not connect to the SambaNova API. Please check the Base URL." };
+        }
+        return { error: error.message || "An unknown error occurred with the SambaNova API." };
       }
-      return { error: error.message || "An unknown error occurred with the SambaNova API." };
+    } else { // model is 'gemini'
+        try {
+            const output = await generalChat(input);
+            return { data: output };
+        } catch (e: any) {
+          console.error(e);
+          if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+          return { error: e.message || "An unknown error occurred." };
+        }
     }
 }
 
@@ -347,11 +358,5 @@ export async function summarizeContentAction(
     return { error: e.message || "An unknown error occurred." };
   }
 }
-
-
-// Dummy type for removed feature
-export type CodeAgentOutput = {};
-export type CodeAgentInput = {};
-
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput };
