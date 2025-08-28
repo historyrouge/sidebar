@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rss } from "lucide-react";
+import { Rss, RefreshCw } from "lucide-react";
 import { BackButton } from "./back-button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
@@ -57,39 +57,40 @@ export function NewsContent() {
     return () => clearInterval(stepInterval);
   }, [loading]);
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        let url = `/api/news?category=${activeCategory}`;
-        if (activeCategory === 'ai') {
-            url = `/api/news?q=artificial intelligence`;
-        } else if (activeCategory === 'gaming') {
-            url = `/api/news?q=gaming`;
-        } else if (activeCategory === 'technology') {
-             url = `/api/news?category=technology`;
-        } else {
-             url = `/api/news?category=general`;
-        }
-
-        const res = await fetch(url);
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || "Failed to fetch news");
-        }
-        const data = await res.json();
-        
-        setArticles(data.articles || []);
-
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchNews = useCallback(async (category: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let url = `/api/news?category=${category}`;
+      if (category === 'ai') {
+          url = `/api/news?q=artificial intelligence`;
+      } else if (category === 'gaming') {
+          url = `/api/news?q=gaming`;
+      } else if (category === 'technology') {
+           url = `/api/news?category=technology`;
+      } else {
+           url = `/api/news?category=general`;
       }
-    };
-    fetchNews();
-  }, [activeCategory]);
+
+      const res = await fetch(url);
+      if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to fetch news");
+      }
+      const data = await res.json();
+      
+      setArticles(data.articles || []);
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNews(activeCategory);
+  }, [activeCategory, fetchNews]);
 
   const handleReadMore = (article: Article) => {
     try {
@@ -121,6 +122,16 @@ export function NewsContent() {
                     </motion.p>
                 </AnimatePresence>
             </div>
+             <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fetchNews(activeCategory)} 
+                disabled={loading}
+                className="absolute right-0 top-1/2 -translate-y-1/2"
+            >
+                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+            </Button>
         </header>
 
         <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full mb-6">
