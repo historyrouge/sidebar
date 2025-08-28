@@ -62,7 +62,7 @@ async function callPuter(prompt: string): Promise<string> {
 }
 
 
-export const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
+const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
 
 Content to analyze:
 ---
@@ -489,3 +489,5 @@ export type CodeAgentInput = {};
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput, SummarizeContentInput };
+
+    
