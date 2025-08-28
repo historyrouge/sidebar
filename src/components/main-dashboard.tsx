@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import React, { useState, useTransition } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
+import { WelcomeDialog } from "./welcome-dialog";
 
 type Message = {
   role: "user" | "model";
@@ -22,6 +23,7 @@ export function MainDashboard() {
 
   return (
     <div className="flex h-full flex-col bg-muted/20 dark:bg-muted/10">
+      <WelcomeDialog />
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
