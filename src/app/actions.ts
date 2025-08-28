@@ -62,7 +62,7 @@ async function callPuter(prompt: string): Promise<string> {
 }
 
 
-const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
+export const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
 
 Content to analyze:
 ---
@@ -112,7 +112,7 @@ Here are the actions in detail:
 
 export async function analyzeContentAction(
   content: string,
-  model: ModelKey,
+  model: Exclude<ModelKey, 'puter'>,
 ): Promise<ActionResult<AnalyzeContentOutput>> {
   try {
     if (model === 'gemini') {
@@ -120,31 +120,31 @@ export async function analyzeContentAction(
         return { data: output };
     }
 
+    // This action now only handles SambaNova and Gemini
+    if (model !== 'samba') {
+        return { error: `Unsupported model for server-side analysis: ${model}` };
+    }
+
     let jsonResponseString: string;
     const prompt = analysisSystemPrompt.replace('{{content}}', content);
 
-    if (model === 'puter') {
-        jsonResponseString = await callPuter(prompt);
-    } else { // Samba
-        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            return { error: "SambaNova API key or base URL is not configured." };
-        }
-         const response = await openai.chat.completions.create({
-            model: 'Llama-4-Maverick-17B-128E-Instruct',
-            messages: [{ role: 'user', content: prompt }],
-            response_format: { type: 'json_object' },
-            temperature: 0.7,
-        });
-        if (!response.choices?.[0]?.message?.content) {
-            throw new Error("Received an empty or invalid response from SambaNova.");
-        }
-        jsonResponseString = response.choices[0].message.content;
+    if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        return { error: "SambaNova API key or base URL is not configured." };
     }
+     const response = await openai.chat.completions.create({
+        model: 'Llama-4-Maverick-17B-128E-Instruct',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        temperature: 0.7,
+    });
+    if (!response.choices?.[0]?.message?.content) {
+        throw new Error("Received an empty or invalid response from SambaNova.");
+    }
+    jsonResponseString = response.choices[0].message.content;
+    
 
     try {
         const jsonResponse = JSON.parse(jsonResponseString);
-        // We can't easily validate against the Zod schema here since it's not exported from the flow.
-        // We'll trust the shape for now.
         return { data: jsonResponse as AnalyzeContentOutput };
     } catch (error) {
         console.error("JSON parsing or validation error:", error);
@@ -490,4 +490,5 @@ export type CodeAgentInput = {};
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput, SummarizeContentInput };
 
+    
     

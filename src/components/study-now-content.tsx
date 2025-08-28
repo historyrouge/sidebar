@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction, chatWithTutorAction } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction, chatWithTutorAction, analysisSystemPrompt } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +26,7 @@ import { BackButton } from "./back-button";
 import { ModelSwitcherDialog } from "./model-switcher-dialog";
 import { useModelSettings } from "@/hooks/use-model-settings";
 
+declare const puter: any;
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -120,22 +121,38 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      const result = await analyzeContentAction(content, model);
-      if (result.error) {
-         if (result.error === "API_LIMIT_EXCEEDED") {
-            lastFailedAction.current = handleAnalyze;
-            setShowModelSwitcher(true);
+        let result: { data?: AnalyzeContentOutput; error?: string } | null = null;
+        if (model === 'puter') {
+            try {
+                if (typeof puter === 'undefined') {
+                    throw new Error("Puter.js is not loaded.");
+                }
+                const prompt = analysisSystemPrompt.replace('{{content}}', content);
+                const response = await puter.ai.chat(prompt);
+                const responseText = typeof response === 'object' && response.text ? response.text : String(response);
+                result = { data: JSON.parse(responseText) };
+            } catch (e: any) {
+                result = { error: e.message || "An error occurred with Puter.js" };
+            }
         } else {
-            toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
+            result = await analyzeContentAction(content, model);
         }
-      } else {
-        setAnalysis(result.data ?? null);
-        setFlashcards(null);
-        setSummary({ summary: result.data?.summary || "" });
-        setGeneratedImage(null);
-        setActiveTab("analysis");
-        lastFailedAction.current = null;
-      }
+
+        if (result.error) {
+            if (result.error === "API_LIMIT_EXCEEDED") {
+                lastFailedAction.current = handleAnalyze;
+                setShowModelSwitcher(true);
+            } else {
+                toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
+            }
+        } else if (result.data) {
+            setAnalysis(result.data ?? null);
+            setFlashcards(null);
+            setSummary({ summary: result.data?.summary || "" });
+            setGeneratedImage(null);
+            setActiveTab("analysis");
+            lastFailedAction.current = null;
+        }
     });
   }, [content, imageDataUri, model, toast]);
 
