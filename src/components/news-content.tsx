@@ -10,6 +10,7 @@ import { BackButton } from "./back-button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Article = {
   title: string;
@@ -29,13 +30,32 @@ const categories = [
     { name: "Gaming", value: "gaming" },
 ];
 
+const loadingSteps = [
+    "Fetching top headlines...",
+    "Analyzing the latest sources...",
+    "Compiling your news feed...",
+    "Almost there, just a moment...",
+];
+
 
 export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("top");
   const router = useRouter();
+
+  useEffect(() => {
+    let stepInterval: NodeJS.Timeout | undefined;
+    if (loading) {
+        setLoadingStep(0);
+        stepInterval = setInterval(() => {
+            setLoadingStep(prev => (prev + 1) % loadingSteps.length);
+        }, 2000); // Change message every 2 seconds
+    }
+    return () => clearInterval(stepInterval);
+  }, [loading]);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -86,7 +106,19 @@ export function NewsContent() {
             <BackButton className="absolute left-0 top-1/2 -translate-y-1/2" />
             <Rss className="mx-auto h-12 w-12 text-primary" />
             <h1 className="mt-4 text-4xl font-bold tracking-tight">Latest News</h1>
-            <p className="mt-2 text-lg text-muted-foreground">Top headlines in technology and education.</p>
+            <div className="mt-2 text-lg text-muted-foreground h-7">
+                <AnimatePresence mode="wait">
+                    <motion.p
+                        key={loading ? loadingStep : 'default'}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                       {loading ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
+                    </motion.p>
+                </AnimatePresence>
+            </div>
         </header>
 
         <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full mb-6">
