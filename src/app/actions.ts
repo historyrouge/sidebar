@@ -10,7 +10,6 @@ import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOu
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput as GeneralChatInputFlow, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutputFlow } from "@/ai/flows/text-to-speech";
-import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
@@ -41,7 +40,6 @@ export type ChatWithTutorOutput = ChatWithTutorOutputFlow;
 export type HelpChatOutput = HelpChatOutputFlow;
 export type GeneralChatOutput = GeneralChatOutputFlow;
 export type TextToSpeechOutput = TextToSpeechOutputFlow;
-export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
 export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
@@ -271,21 +269,6 @@ export async function textToSpeechAction(
   }
 }
 
-export async function summarizeContentAction(
-    input: SummarizeContentInput,
-    model: ModelKey
-    ): Promise<ActionResult<SummarizeContentOutput>> {
-    try {
-        const output = await summarizeContent(input); // Summarization is always Gemini
-        return { data: output };
-    } catch (e: any)
-        {
-        console.error(e);
-        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-        return { error: e.message || "An unknown error occurred." };
-    }
-}
-
 export async function getYoutubeTranscriptAction(
   input: GetYoutubeTranscriptInput
 ): Promise<ActionResult<GetYoutubeTranscriptOutput>> {
@@ -350,6 +333,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };
-
-    
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };

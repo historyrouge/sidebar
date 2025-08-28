@@ -56,8 +56,6 @@ export function NewsReaderContent() {
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { model } = useModelSettings();
-  const [isSummarizing, startSummarizing] = useTransition();
-  const [summarizationError, setSummarizationError] = useState<string | null>(null);
 
   // Load article from localStorage on mount
   useEffect(() => {
@@ -108,28 +106,6 @@ export function NewsReaderContent() {
   }
 
   useEffect(() => {
-    if (article && history.length === 0) {
-        startSummarizing(async () => {
-            setSummarizationError(null);
-            const initialPrompt = `Summarize the following news article and then ask the user what they'd like to explore further. Keep the summary concise (2-3 paragraphs). The article is titled: "${article.title}". Description: "${article.description}"`;
-             const chatInput: GeneralChatInput = {
-                history: [{ role: 'user', content: initialPrompt }],
-            };
-            // Always use Gemini for the initial, reliable summary.
-            const result = await generalChatAction(chatInput, 'gemini');
-             if (result.error) {
-                setSummarizationError(result.error);
-                toast({ title: "Summarization Error", description: result.error, variant: "destructive" });
-             } else if (result.data) {
-                const modelMessage: Message = { role: "model", content: result.data.response };
-                setHistory([modelMessage]);
-            }
-        });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article]);
-
-  useEffect(() => {
     if (scrollAreaRef.current) {
         setTimeout(() => {
             const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
@@ -173,25 +149,15 @@ export function NewsReaderContent() {
                         <Image src={article.urlToImage} alt={article.title} fill className="object-cover" />
                     </div>
                 )}
-                 {summarizationError && (
-                    <Alert variant="destructive">
-                        <AlertTitle>Summarization Error</AlertTitle>
-                        <AlertDescription>{summarizationError}</AlertDescription>
-                    </Alert>
-                 )}
                 
-                <div>
-                    <h2 className="text-xl font-semibold mb-2">AI Summary</h2>
-                    {(isSummarizing && history.length === 0) ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-5/6" />
-                            <Skeleton className="h-4 w-full" />
-                        </div>
-                    ) : (
-                        <div className="prose dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: history[0] ? marked(history[0].content) : ""}} />
-                    )}
-                </div>
+                {article.description && (
+                  <div>
+                      <h2 className="text-xl font-semibold mb-2">Article Description</h2>
+                      <p className="prose dark:prose-invert max-w-none text-muted-foreground">
+                        {article.description}
+                      </p>
+                  </div>
+                )}
 
                 <div className="border rounded-lg bg-card">
                     <div className="p-4 border-b">
@@ -200,7 +166,7 @@ export function NewsReaderContent() {
                     <div className="h-[28rem] flex flex-col">
                         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
                             <div className="space-y-4 pr-4">
-                                {history.slice(1).map((message, index) => (
+                                {history.map((message, index) => (
                                     <div
                                         key={index}
                                         className={cn(
@@ -242,7 +208,7 @@ export function NewsReaderContent() {
                                         </div>
                                     </div>
                                 )}
-                                {history.length === 1 && !isTyping && !isSummarizing && (
+                                {history.length === 0 && !isTyping && (
                                     <div className="pt-4">
                                         <div className="flex items-center gap-2 mb-3">
                                             <Sparkles className="text-primary w-5 h-5"/>
@@ -270,10 +236,10 @@ export function NewsReaderContent() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder="Ask a follow-up question..."
-                                disabled={isTyping || isSummarizing}
+                                disabled={isTyping}
                                 className="h-10 text-base"
                             />
-                            <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || isSummarizing || !input.trim()}>
+                            <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || !input.trim()}>
                                 {isTyping ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
