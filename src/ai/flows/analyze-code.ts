@@ -7,19 +7,11 @@
  * - analyzeCode - A function that analyzes a code snippet.
  */
 
-import {ai} from '@/ai/genkit';
+import { openai } from '@/lib/openai';
 import { AnalyzeCodeInput, AnalyzeCodeInputSchema, AnalyzeCodeOutput, AnalyzeCodeOutputSchema } from '@/lib/code-analysis-types';
 
 
-export async function analyzeCode(input: AnalyzeCodeInput): Promise<AnalyzeCodeOutput> {
-  return analyzeCodeFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'analyzeCodePrompt',
-  input: {schema: AnalyzeCodeInputSchema},
-  output: {schema: AnalyzeCodeOutputSchema},
-  prompt: `You are an expert programmer and code reviewer specializing in {{language}}.
+const analysisSystemPrompt = `You are an expert programmer and code reviewer specializing in {{language}}.
 Your task is to analyze the following code snippet and provide a detailed review.
 
 Code:
@@ -27,21 +19,73 @@ Code:
 {{{code}}}
 \`\`\`
 
-Please provide the following analysis:
-1.  **Explanation**: Give a clear, high-level explanation of what the code is intended to do.
-2.  **Potential Bugs**: Identify any potential bugs, logical errors, or edge cases that are not handled. For each bug, specify the line number (if applicable), describe the issue, and suggest a fix. If there are no bugs, return an empty array.
-3.  **Optimizations**: Suggest any optimizations for performance, readability, or best practices. For each suggestion, specify the line number (if applicable) and explain the benefit. If there are no optimizations, return an empty array.
-`,
-});
+You must provide your analysis in a valid JSON format. The JSON object should match the following schema:
+{
+    "type": "object",
+    "properties": {
+        "explanation": { "type": "string" },
+        "potentialBugs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "line": { "type": "number" },
+                    "bug": { "type": "string" },
+                    "fix": { "type": "string" }
+                },
+                "required": ["bug", "fix"]
+            }
+        },
+        "optimizations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "line": { "type": "number" },
+                    "suggestion": { "type": "string" }
+                },
+                "required": ["suggestion"]
+            }
+        }
+    },
+    "required": ["explanation", "potentialBugs", "optimizations"]
+}
 
-const analyzeCodeFlow = ai.defineFlow(
-  {
-    name: 'analyzeCodeFlow',
-    inputSchema: AnalyzeCodeInputSchema,
-    outputSchema: AnalyzeCodeOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+
+Please provide the following analysis in the JSON response:
+1.  **Explanation**: Give a clear, high-level explanation of what the code is intended to do in the 'explanation' field.
+2.  **Potential Bugs**: Identify any potential bugs, logical errors, or edge cases that are not handled. For each bug, specify the line number, describe the issue, and suggest a fix. Add these to the 'potentialBugs' array. If there are no bugs, return an empty array.
+3.  **Optimizations**: Suggest any optimizations for performance, readability, or best practices. For each suggestion, specify the line number and explain the benefit. Add these to the 'optimizations' array. If there are no optimizations, return an empty array.
+`;
+
+export async function analyzeCode(input: AnalyzeCodeInput): Promise<AnalyzeCodeOutput> {
+     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        throw new Error("SambaNova API key or base URL is not configured.");
+    }
+
+    try {
+        const prompt = analysisSystemPrompt
+            .replace(/{{language}}/g, input.language)
+            .replace('{{{code}}}', input.code);
+
+        const response = await openai.chat.completions.create({
+            model: 'Llama-4-Maverick-17B-128E-Instruct',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+            temperature: 0.5,
+        });
+
+        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+            throw new Error("Received an empty or invalid response from SambaNova.");
+        }
+
+        const jsonResponse = JSON.parse(response.choices[0].message.content);
+        const validatedOutput = AnalyzeCodeOutputSchema.parse(jsonResponse);
+        
+        return validatedOutput;
+
+    } catch (error: any) {
+        console.error("SambaNova code analysis error:", error);
+        throw new Error(error.message || "An unknown error occurred while analyzing code with SambaNova.");
+    }
+}

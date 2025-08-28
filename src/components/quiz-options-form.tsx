@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
 import { generateQuizAction, GenerateQuizzesInput } from "@/app/actions";
-import { useModelSettings } from "@/hooks/use-model-settings";
 
 
 export function QuizOptionsForm() {
@@ -24,7 +23,6 @@ export function QuizOptionsForm() {
     const [difficulty, setDifficulty] = useState("medium");
     const [numQuestions, setNumQuestions] = useState("10");
     const [timeLimit, setTimeLimit] = useState("10");
-    const { model } = useModelSettings();
     
     // On component mount, retrieve the content from localStorage
     useEffect(() => {
@@ -53,7 +51,7 @@ export function QuizOptionsForm() {
                 numQuestions: parseInt(numQuestions),
             };
 
-            const result = await generateQuizAction(quizInput, model);
+            const result = await generateQuizAction(quizInput);
 
             if (result.error) {
                  toast({
@@ -94,7 +92,7 @@ export function QuizOptionsForm() {
                         <BackButton />
                         <CardTitle>Customize Your Quiz</CardTitle>
                     </div>
-                    <CardDescription>Set the parameters for your quiz below. The quiz will be generated using the '{model}' model.</CardDescription>
+                    <CardDescription>Set the parameters for your quiz below. The quiz will be generated using SambaNova.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-3">

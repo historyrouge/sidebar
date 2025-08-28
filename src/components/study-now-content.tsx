@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction, chatWithTutorAction, analysisSystemPrompt } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,8 +23,6 @@ import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
-import { ModelSwitcherDialog } from "./model-switcher-dialog";
-import { useModelSettings } from "@/hooks/use-model-settings";
 
 declare const puter: any;
 
@@ -33,7 +31,6 @@ export function StudyNowContent() {
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
-  const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
@@ -45,7 +42,6 @@ export function StudyNowContent() {
   const [isLoadingMaterial, startLoadingMaterial] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
-  const [isGeneratingSummary, startGeneratingSummary] = useTransition();
   const [isGeneratingImage, startGeneratingImage] = useTransition();
   const { theme, setTheme } = useTheme();
 
@@ -55,10 +51,6 @@ export function StudyNowContent() {
   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
-
-  const [showModelSwitcher, setShowModelSwitcher] = useState(false);
-  const { model, setModel } = useModelSettings();
-  const lastFailedAction = useRef<(() => void) | null>(null);
 
 
   useEffect(() => {
@@ -121,60 +113,30 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-        let result: { data?: AnalyzeContentOutput; error?: string } | null = null;
-        if (model === 'puter') {
-            try {
-                if (typeof puter === 'undefined') {
-                    throw new Error("Puter.js is not loaded.");
-                }
-                const prompt = analysisSystemPrompt.replace('{{content}}', content);
-                const response = await puter.ai.chat(prompt);
-                const responseText = typeof response === 'object' && response.text ? response.text : String(response);
-                result = { data: JSON.parse(responseText) };
-            } catch (e: any) {
-                result = { error: e.message || "An error occurred with Puter.js" };
-            }
-        } else {
-            result = await analyzeContentAction(content, model);
-        }
-
+        const result = await analyzeContentAction(content);
         if (result.error) {
-            if (result.error === "API_LIMIT_EXCEEDED") {
-                lastFailedAction.current = handleAnalyze;
-                setShowModelSwitcher(true);
-            } else {
-                toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
-            }
+            toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
         } else if (result.data) {
             setAnalysis(result.data ?? null);
             setFlashcards(null);
-            setSummary({ summary: result.data?.summary || "" });
             setGeneratedImage(null);
             setActiveTab("analysis");
-            lastFailedAction.current = null;
         }
     });
-  }, [content, imageDataUri, model, toast]);
+  }, [content, imageDataUri, toast]);
 
   const handleAnalyzeImage = useCallback(async () => {
     if (!imageDataUri) return;
     startAnalyzing(async () => {
-        // Image analysis is always done by Gemini as it's a multimodal model
+        // Image analysis is always done by Gemini
         const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
         if (result.error) {
-            if (result.error === "API_LIMIT_EXCEEDED") {
-                lastFailedAction.current = handleAnalyzeImage;
-                setShowModelSwitcher(true);
-            } else {
-                toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
-            }
+            toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
         } else {
             setAnalysis(result.data as AnalyzeImageContentOutput);
             setFlashcards(null);
-            setSummary({ summary: result.data?.summary || "" });
             setGeneratedImage(null);
             setActiveTab("analysis");
-            lastFailedAction.current = null;
         }
     });
   }, [imageDataUri, content, toast]);
@@ -185,16 +147,10 @@ export function StudyNowContent() {
       const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
       const result = await generateFlashcardsAction({content: flashcardContent});
       if (result.error) {
-         if (result.error === "API_LIMIT_EXCEEDED") {
-            lastFailedAction.current = handleGenerateFlashcards;
-            setShowModelSwitcher(true);
-        } else {
-            toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
-        }
+         toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
       } else {
         setFlashcards(result.data?.flashcards ?? []);
         setActiveTab("flashcards");
-        lastFailedAction.current = null;
       }
     });
   }, [analysis, toast]);
@@ -214,48 +170,20 @@ export function StudyNowContent() {
     }
 };
 
-  const handleGenerateSummary = useCallback(async () => {
-    if (analysis?.summary) {
-        setActiveTab("summary");
-        return;
-    }
-    if (!content) return;
-    startGeneratingSummary(async () => {
-        const result = await summarizeContentAction({ content }, model);
-        if (result.error) {
-             if (result.error === "API_LIMIT_EXCEEDED") {
-                lastFailedAction.current = handleGenerateSummary;
-                setShowModelSwitcher(true);
-            } else {
-                toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
-            }
-        } else {
-            setSummary(result.data ?? null);
-            setActiveTab("summary");
-            lastFailedAction.current = null;
-        }
-    });
-  }, [analysis, content, model, toast]);
-
   const handleGenerateImage = useCallback(async () => {
     if (!analysis) return;
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
-        const result = await generateImageAction({ prompt }, model);
+        // Image generation is always done by Gemini
+        const result = await generateImageAction({ prompt });
         if (result.error) {
-            if (result.error === "API_LIMIT_EXCEEDED") {
-                lastFailedAction.current = handleGenerateImage;
-                setShowModelSwitcher(true);
-            } else {
-                toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
-            }
+            toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
         } else {
             setGeneratedImage(result.data ?? null);
             setActiveTab("image");
-            lastFailedAction.current = null;
         }
     });
-  }, [analysis, model, toast]);
+  }, [analysis, toast]);
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
@@ -304,7 +232,6 @@ export function StudyNowContent() {
           setTitle(file.name.replace('.txt', ''));
           setAnalysis(null);
           setFlashcards(null);
-          setSummary(null);
           setGeneratedImage(null);
           setImageDataUri(null);
           toast({
@@ -334,7 +261,6 @@ export function StudyNowContent() {
                 setTitle(file.name);
                 setAnalysis(null);
                 setFlashcards(null);
-                setSummary(null);
                 setGeneratedImage(null);
                 toast({
                   title: "Image loaded",
@@ -359,29 +285,16 @@ export function StudyNowContent() {
     setContent("");
     setAnalysis(null);
     setFlashcards(null);
-    setSummary(null);
     setGeneratedImage(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  const handleModelSwitch = (newModel: ModelKey) => {
-    setModel(newModel);
-    setShowModelSwitcher(false);
-    toast({
-        title: "Model Switched",
-        description: `Now using ${newModel}. Retrying...`,
-    });
-    if (lastFailedAction.current) {
-        lastFailedAction.current();
-    }
-  };
-
   const handleTutorChat = async (history: any) => {
-    const result = await chatWithTutorAction({ content, history }, model);
+    const result = await chatWithTutorAction({ content, history });
     return result;
   }
 
-  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary || isGeneratingImage;
+  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingImage;
   
   const TABS = [
     { value: "analysis", label: "Analysis", disabled: !analysis },
@@ -393,13 +306,6 @@ export function StudyNowContent() {
 
 
   return (
-    <>
-    <ModelSwitcherDialog
-        isOpen={showModelSwitcher}
-        onOpenChange={setShowModelSwitcher}
-        currentModel={model}
-        onModelSelect={handleModelSwitch}
-    />
     <div className="flex h-screen flex-col bg-muted/20 dark:bg-transparent">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
@@ -424,7 +330,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or upload an image. AI actions will use the '{model}' model.</CardDescription>
+              <CardDescription>Paste text, upload a document, or upload an image. Analysis is done by SambaNova.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input 
@@ -509,7 +415,7 @@ export function StudyNowContent() {
             <CardHeader>
               <CardTitle>AI-Powered Study Tools</CardTitle>
               <CardDescription>
-                Actions are powered by your selected model: '{model}'.
+                Tools are powered by their optimal AI models.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
@@ -672,8 +578,5 @@ export function StudyNowContent() {
         </div>
       </main>
     </div>
-    </>
   );
 }
-
-    

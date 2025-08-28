@@ -8,9 +8,10 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { slugify } from "@/lib/utils";
 import Link from "next/link";
 import { BackButton } from "./back-button";
-import { generateEbookChapterAction, GenerateEbookChapterOutput } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
+
+declare const puter: any;
 
 const ebooks = [
   {
@@ -30,7 +31,36 @@ const ebooks = [
   },
 ];
 
-type ChapterContent = GenerateEbookChapterOutput['content'];
+type ContentBlock = {
+    type: 'h1' | 'h2' | 'p';
+    text: string;
+}
+type ChapterContent = ContentBlock[];
+
+const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook.
+
+Ebook Title: {{title}}
+Chapter Number: {{chapter}}
+
+You must generate the content for this chapter in a valid JSON format. The JSON object should contain a single key, "content", which is an array of content blocks. Each block must have a 'type' ('h1', 'h2', 'p') and a 'text'.
+- Start with a single 'h1' element for the chapter title.
+- Use a mix of 'h2' elements for section headings and 'p' elements for paragraphs.
+- Generate about 5-7 content blocks in total for the chapter.
+- The content should be appropriate for the book's title and the chapter number, creating a logical progression.
+- For chapter 1, provide a strong introduction to the topic. For subsequent chapters, build upon the previous one.
+- Make the content interesting and educational.
+
+Example for a book titled "A Journey Through the Cosmos", Chapter 1:
+{
+    "content": [
+        { "type": "h1", "text": "Chapter 1: The Big Bang" },
+        { "type": "p", "text": "The Big Bang theory is the leading cosmological model..." },
+        { "type": "h2", "text": "1.1: Cosmic Inflation" },
+        { "type": "p", "text": "Cosmic inflation is a theory of exponential expansion of space in the early universe..." }
+    ]
+}
+`;
+
 
 export function EbookReader({ slug }: { slug: string }) {
   const [bookTitle, setBookTitle] = useState<string>("");
@@ -41,20 +71,31 @@ export function EbookReader({ slug }: { slug: string }) {
   const { toast } = useToast();
 
   const fetchChapter = useCallback(async (chapterNumber: number) => {
-    if (!bookTitle) return;
+    if (!bookTitle || typeof puter === 'undefined') return;
 
     const action = chapterNumber > currentChapter || Object.keys(chapters).length === 0 ? startLoading : startPrefetching;
 
     action(async () => {
-      const result = await generateEbookChapterAction({ title: bookTitle, chapter: chapterNumber });
-      if (result.error) {
-        toast({
+      try {
+        const prompt = ebookSystemPrompt
+            .replace('{{title}}', bookTitle)
+            .replace('{{chapter}}', String(chapterNumber));
+        
+        const response = await puter.ai.chat(prompt);
+        const responseText = typeof response === 'object' && response.text ? response.text : String(response);
+        const jsonResponse = JSON.parse(responseText);
+
+        if (jsonResponse.content) {
+            setChapters(prev => ({ ...prev, [chapterNumber]: jsonResponse.content }));
+        } else {
+             throw new Error("Invalid format from AI.");
+        }
+      } catch (e: any) {
+         toast({
           title: `Failed to load Chapter ${chapterNumber}`,
-          description: result.error,
+          description: e.message || "An error occurred with Puter.js",
           variant: "destructive"
         });
-      } else if (result.data) {
-        setChapters(prev => ({ ...prev, [chapterNumber]: result.data.content }));
       }
     });
   }, [bookTitle, currentChapter, chapters, toast]);
@@ -68,14 +109,20 @@ export function EbookReader({ slug }: { slug: string }) {
   }, [slug]);
 
   useEffect(() => {
-    if (bookTitle && !chapters[1]) {
+    if (bookTitle && !chapters[1] && typeof puter !== 'undefined') {
       fetchChapter(1);
+    } else if (typeof puter === 'undefined') {
+        toast({
+            title: "Puter.js not available",
+            description: "eBook generation is disabled. Please try again later.",
+            variant: "destructive"
+        });
     }
-  }, [bookTitle, chapters, fetchChapter]);
+  }, [bookTitle, chapters, fetchChapter, toast]);
 
   // Prefetch next chapter
   useEffect(() => {
-    if (bookTitle && chapters[currentChapter] && !chapters[currentChapter + 1]) {
+    if (bookTitle && chapters[currentChapter] && !chapters[currentChapter + 1] && typeof puter !== 'undefined') {
       fetchChapter(currentChapter + 1);
     }
   }, [bookTitle, chapters, currentChapter, fetchChapter]);

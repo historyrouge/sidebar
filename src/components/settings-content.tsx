@@ -7,13 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Label } from "./ui/label";
 import { Moon, Sun } from "lucide-react";
 import { BackButton } from "./back-button";
-import { useModelSettings, ModelKey } from "@/hooks/use-model-settings";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { SidebarTrigger } from "./ui/sidebar";
 
 export function SettingsContent() {
   const { setTheme, theme } = useTheme();
-  const { model, setModel } = useModelSettings();
 
   return (
     <div className="flex flex-col h-full bg-muted/40">
@@ -52,32 +49,17 @@ export function SettingsContent() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                     <CardHeader>
                         <CardTitle>AI Settings</CardTitle>
-                        <CardDescription>Configure the AI model used for generating content.</CardDescription>
+                        <CardDescription>The AI models for each feature have been preset for optimal performance and quality.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
-                            <Label className="font-semibold">AI Model</Label>
-                            <RadioGroup defaultValue={model} value={model} onValueChange={(value) => setModel(value as ModelKey)} className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="gemini" id="gemini" />
-                                    <Label htmlFor="gemini">Gemini</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="samba" id="samba" />
-                                    <Label htmlFor="samba">SambaNova</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="puter" id="puter" />
-                                    <Label htmlFor="puter">Puter.js</Label>
-                                </div>
-                            </RadioGroup>
-                            <p className="text-xs text-muted-foreground">
-                                SambaNova requires an API key and base URL to be set. Puter.js runs in your browser and requires no setup.
-                            </p>
-                        </div>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                            <li className="flex items-center justify-between"><span>Chat & eBooks</span><span className="font-medium text-foreground">Puter.js</span></li>
+                            <li className="flex items-center justify-between"><span>Analysis & Quizzes</span><span className="font-medium text-foreground">SambaNova</span></li>
+                            <li className="flex items-center justify-between"><span>Image Generation</span><span className="font-medium text-foreground">Gemini</span></li>
+                        </ul>
                     </CardContent>
                 </Card>
             </div>

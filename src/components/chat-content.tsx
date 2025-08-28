@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -16,8 +16,6 @@ import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
-import { useModelSettings } from "@/hooks/use-model-settings";
-import { ModelSwitcherDialog } from "./model-switcher-dialog";
 import { Card } from "./ui/card";
 import Link from "next/link";
 
@@ -81,15 +79,31 @@ export function ChatContent({
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
-  const { model, setModel } = useModelSettings();
   
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [showModelSwitcher, setShowModelSwitcher] = useState(false);
-  const lastFailedMessage = useRef<Message | null>(null);
+  const [isPuterAvailable, setIsPuterAvailable] = useState(true);
+
+  // Check for puter.js availability
+  useEffect(() => {
+    const puterCheckTimeout = setTimeout(() => {
+        if (typeof puter === 'undefined') {
+            setIsPuterAvailable(false);
+            toast({
+                title: "Puter.js not available",
+                description: "Falling back to SambaNova for chat.",
+                variant: "default",
+                icon: <WifiOff className="text-destructive"/>
+            })
+        }
+    }, 440); // 0.44 seconds
+
+    return () => clearTimeout(puterCheckTimeout);
+  }, [toast]);
+
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
@@ -99,22 +113,13 @@ export function ChatContent({
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = lastFailedMessage.current ? lastFailedMessage.current : { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
-    if (!lastFailedMessage.current) {
-        setHistory((prev) => [...prev, userMessage]);
-        setInput("");
-        setCapturedImage(null);
-    }
-    
-    lastFailedMessage.current = null;
+    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
+    setHistory((prev) => [...prev, userMessage]);
+    setInput("");
+    setCapturedImage(null);
 
     startTyping(async () => {
-      if (model === 'puter') {
-        if (typeof puter === 'undefined') {
-          toast({ title: 'Puter.js not loaded', description: 'Please try reloading the page.', variant: 'destructive' });
-          setHistory(prev => prev.slice(0, -1));
-          return;
-        }
+      if (isPuterAvailable) {
         try {
           const response = await puter.ai.chat(messageToSend);
           const responseText = typeof response === 'object' && response.text ? response.text : String(response);
@@ -124,9 +129,8 @@ export function ChatContent({
            toast({ title: 'Puter.js Error', description: error.message, variant: 'destructive' });
            setHistory(prev => prev.slice(0, -1));
         }
-
       } else {
-        // Handle Gemini and SambaNova via server action
+        // Fallback to SambaNova
         const fullHistory = [...history, userMessage];
         const textHistory = fullHistory.map(h => ({role: h.role, content: h.content}));
         const chatInput: GeneralChatInput = {
@@ -134,20 +138,15 @@ export function ChatContent({
           imageDataUri: userMessage.imageDataUri,
         };
 
-        const result = await generalChatAction(chatInput, model);
+        const result = await generalChatAction(chatInput);
 
         if (result.error) {
-          if (result.error === "API_LIMIT_EXCEEDED") {
-            lastFailedMessage.current = userMessage;
-            setShowModelSwitcher(true);
-          } else {
             toast({
               title: "Chat Error",
               description: result.error,
               variant: "destructive",
             });
-          }
-          setHistory((prev) => prev.filter(msg => msg !== userMessage)); // Remove user message on error
+            setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
         } else if (result.data) {
           const responseText = typeof result.data.response === 'object' ? (result.data.response as any).text : result.data.response;
           const modelMessage: Message = { role: "model", content: responseText };
@@ -156,26 +155,12 @@ export function ChatContent({
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, capturedImage, isRecording, model, history]);
+  }, [input, capturedImage, isRecording, history, isPuterAvailable]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
   }
-
-  const handleModelSwitch = (newModel: ModelKey) => {
-    setModel(newModel);
-    setShowModelSwitcher(false);
-    toast({
-      title: "Model Switched",
-      description: `Now using ${newModel}. Retrying your message...`,
-    });
-    // Automatically retry the failed message with the new model
-    if(lastFailedMessage.current) {
-        handleSendMessage(lastFailedMessage.current.content);
-    }
-  };
-
 
   const handleRegenerateResponse = async () => {
       const lastUserMessage = history.findLast(m => m.role === 'user');
@@ -192,7 +177,7 @@ export function ChatContent({
           history: historyForAI,
           imageDataUri: lastUserMessage.imageDataUri
         };
-        const result = await generalChatAction(chatInput, model);
+        const result = await generalChatAction(chatInput);
 
         if (result.error) {
           toast({ title: "Chat Error", description: result.error, variant: "destructive" });
@@ -293,7 +278,7 @@ export function ChatContent({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]); 
+  }, [isPuterAvailable]); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -362,12 +347,6 @@ export function ChatContent({
 
   return (
     <div className="relative h-full">
-        <ModelSwitcherDialog 
-            isOpen={showModelSwitcher}
-            onOpenChange={setShowModelSwitcher}
-            currentModel={model}
-            onModelSelect={handleModelSwitch}
-        />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -472,7 +451,7 @@ export function ChatContent({
                                         {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
                                         <span className="sr-only">Read aloud</span>
                                     </Button>
-                                    {index === history.length -1 && model !== 'puter' && (
+                                    {index === history.length -1 && (
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
                                             <RefreshCw className="h-4 w-4" />
                                             <span className="sr-only">Regenerate</span>
@@ -525,7 +504,7 @@ export function ChatContent({
                         </div>
                     )}
                      <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping || model === 'puter'}>
+                        <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
                             <Camera className="h-5 w-5" />
                             <span className="sr-only">Use Camera</span>
                         </Button>
@@ -555,5 +534,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    

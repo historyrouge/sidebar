@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { Bot, Loader2, Send, User, Sparkles, Sidebar, Moon, Sun } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
-import { useModelSettings } from "@/hooks/use-model-settings";
 import { Skeleton } from "./ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -57,7 +56,6 @@ export function NewsReaderContent() {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
-  const { model } = useModelSettings();
 
   // Load article from localStorage on mount
   useEffect(() => {
@@ -74,6 +72,7 @@ export function NewsReaderContent() {
                 setSummary({ summary: "No content available to summarize." });
                 return;
             }
+            // News summarization always uses SambaNova
             const result = await summarizeContentAction({ content: contentToSummarize });
             if (result.error) {
                 toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
@@ -108,7 +107,8 @@ export function NewsReaderContent() {
         prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${context}".`,
       };
 
-      const result = await generalChatAction(chatInput, model);
+      // News chat uses SambaNova
+      const result = await generalChatAction(chatInput);
 
       if (result.error) {
         toast({ title: "Chat Error", description: result.error, variant: "destructive" });
@@ -118,7 +118,7 @@ export function NewsReaderContent() {
         setHistory((prev) => [...prev, modelMessage]);
       }
     });
-  }, [input, model, history, article, toast, summary]);
+  }, [input, history, article, toast, summary]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,9 +282,3 @@ export function NewsReaderContent() {
     </div>
   );
 }
-
-  
-
-    
-
-    
