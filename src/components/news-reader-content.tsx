@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, ModelKey } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, summarizeContentAction, SummarizeContentOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,6 @@ import { useRouter } from "next/navigation";
 import { BackButton } from "./back-button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 type Message = {
   role: "user" | "model";
@@ -30,6 +29,7 @@ type Article = {
   description: string;
   url: string;
   urlToImage: string;
+  content: string | null;
   source: {
     name: string;
   };
@@ -52,6 +52,8 @@ export function NewsReaderContent() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const [article, setArticle] = useState<Article | null>(null);
+  const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
+  const [isSummarizing, startSummarizing] = useTransition();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
@@ -62,7 +64,24 @@ export function NewsReaderContent() {
     try {
       const savedArticle = localStorage.getItem('selectedArticle');
       if (savedArticle) {
-        setArticle(JSON.parse(savedArticle));
+        const parsedArticle = JSON.parse(savedArticle);
+        setArticle(parsedArticle);
+        
+        // Generate summary when article is loaded
+        startSummarizing(async () => {
+            const contentToSummarize = parsedArticle.content || parsedArticle.description;
+            if (!contentToSummarize) {
+                setSummary({ summary: "No content available to summarize." });
+                return;
+            }
+            const result = await summarizeContentAction({ content: contentToSummarize });
+            if (result.error) {
+                toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
+            } else {
+                setSummary(result.data ?? null);
+            }
+        });
+
       } else {
         toast({ title: "No article selected", description: "Please go back and select an article.", variant: "destructive" });
         router.push('/news');
@@ -83,9 +102,10 @@ export function NewsReaderContent() {
 
     startTyping(async () => {
       const fullHistory = [...history, userMessage];
+      const context = summary?.summary || article.description;
       const chatInput: GeneralChatInput = {
         history: fullHistory,
-        prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article description for context: "${article.description}".`,
+        prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${context}".`,
       };
 
       const result = await generalChatAction(chatInput, model);
@@ -98,7 +118,7 @@ export function NewsReaderContent() {
         setHistory((prev) => [...prev, modelMessage]);
       }
     });
-  }, [input, model, history, article, toast]);
+  }, [input, model, history, article, toast, summary]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,14 +170,20 @@ export function NewsReaderContent() {
                     </div>
                 )}
                 
-                {article.description && (
-                  <div>
-                      <h2 className="text-xl font-semibold mb-2">Article Description</h2>
-                      <p className="prose dark:prose-invert max-w-none text-muted-foreground">
-                        {article.description}
-                      </p>
-                  </div>
-                )}
+                <div>
+                  <h2 className="text-xl font-semibold mb-2">AI-Generated Description</h2>
+                  {isSummarizing ? (
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                    </div>
+                  ) : (
+                    <p className="prose dark:prose-invert max-w-none text-muted-foreground">
+                      {summary?.summary || "No summary available."}
+                    </p>
+                  )}
+                </div>
 
                 <div className="border rounded-lg bg-card">
                     <div className="p-4 border-b">

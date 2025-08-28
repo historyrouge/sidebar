@@ -14,6 +14,7 @@ import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOu
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
 import { analyzeCode, AnalyzeCodeInput } from "@/ai/flows/analyze-code";
+import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
 import type { ModelKey } from "@/hooks/use-model-settings";
@@ -43,6 +44,7 @@ export type TextToSpeechOutput = TextToSpeechOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
 export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
+export type SummarizeContentOutput = SummarizeContentOutputFlow;
 
 
 function isRateLimitError(e: any): boolean {
@@ -222,7 +224,11 @@ export async function generalChatAction(
       // Puter.js is handled client-side for this action, this is a fallback.
        try {
             const lastMessage = input.history[input.history.length - 1];
-            const response = await callPuter(lastMessage.content);
+            let fullPrompt = lastMessage.content;
+            if (input.prompt) {
+                fullPrompt = `${input.prompt}\n\nUser query: ${lastMessage.content}`;
+            }
+            const response = await callPuter(fullPrompt);
             return { data: { response } };
        } catch (e: any) {
             return { error: e.message || "An unknown error occurred with Puter.js" };
@@ -324,6 +330,19 @@ export async function analyzeCodeAction(
     }
 }
 
+export async function summarizeContentAction(
+  input: SummarizeContentInput,
+): Promise<ActionResult<SummarizeContentOutput>> {
+  try {
+    const output = await summarizeContent(input);
+    return { data: output };
+  } catch (e: any) {
+    console.error(e);
+    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+    return { error: e.message || "An unknown error occurred." };
+  }
+}
+
 
 // Dummy types for exports where the original type is no longer relevant
 export type UserProfile = {};
@@ -333,4 +352,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput, SummarizeContentInput };
