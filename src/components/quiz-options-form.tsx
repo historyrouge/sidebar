@@ -11,8 +11,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
+import { generateQuizAction, GenerateQuizzesInput } from "@/app/actions";
+import { useModelSettings } from "@/hooks/use-model-settings";
 
-declare const puter: any;
 
 export function QuizOptionsForm() {
     const router = useRouter();
@@ -23,6 +24,7 @@ export function QuizOptionsForm() {
     const [difficulty, setDifficulty] = useState("medium");
     const [numQuestions, setNumQuestions] = useState("10");
     const [timeLimit, setTimeLimit] = useState("10");
+    const { model } = useModelSettings();
     
     // On component mount, retrieve the content from localStorage
     useEffect(() => {
@@ -43,52 +45,30 @@ export function QuizOptionsForm() {
 
     const handleGenerateQuiz = () => {
         if (!content) return;
-        if (typeof puter === 'undefined') {
-            toast({ title: 'Puter.js not loaded', description: 'Please try reloading the page.', variant: 'destructive' });
-            return;
-        }
-
+        
         startGenerating(async () => {
-            try {
-                 const prompt = `Generate a quiz based on the following text.
-    
-                Text: "${content}"
-                
-                Difficulty: ${difficulty}
-                Number of Questions: ${numQuestions}
-                
-                Respond with a JSON object containing a single key "quizzes", which is an array of question objects. Each object should have "question", "options" (an array of 4 strings), and "answer" (the correct option string).
-                
-                Example format:
-                {
-                  "quizzes": [
-                    {
-                      "question": "What is the capital of France?",
-                      "options": ["Berlin", "Madrid", "Paris", "Rome"],
-                      "answer": "Paris"
-                    }
-                  ]
-                }`;
+            const quizInput: GenerateQuizzesInput = {
+                content,
+                difficulty: difficulty as "easy" | "medium" | "hard",
+                numQuestions: parseInt(numQuestions),
+            };
 
-                const result = await puter.ai.chat(prompt);
-                const resultString = typeof result === 'object' && result.text ? result.text : String(result);
-                const quizResult = JSON.parse(resultString);
+            const result = await generateQuizAction(quizInput, model);
 
-                if (!quizResult || !quizResult.quizzes || quizResult.quizzes.length === 0) {
-                    throw new Error("Puter.js failed to generate a valid quiz from the content.");
-                }
+            if (result.error) {
+                 toast({
+                    title: "Could not generate quiz",
+                    description: result.error,
+                    variant: "destructive",
+                });
+                return;
+            }
 
+            if (result.data) {
                 toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..."});
                 
-                const formattedQuizzes = quizResult.quizzes.map((q: any) => ({
-                    question: q.question,
-                    options: q.options,
-                    answer: q.answer,
-                    type: 'multiple-choice',
-                }));
-
                 const quizData = {
-                    quizzes: formattedQuizzes,
+                    quizzes: result.data.quizzes,
                     options: {
                         difficulty,
                         numQuestions: parseInt(numQuestions),
@@ -97,13 +77,6 @@ export function QuizOptionsForm() {
                 };
                 localStorage.setItem('currentQuiz', JSON.stringify(quizData));
                 router.push('/quiz/start');
-
-            } catch (e: any) {
-                 toast({
-                    title: "Could not generate quiz",
-                    description: e.message || "There was an error while trying to generate the quiz with Puter.js. The model may have returned an invalid format.",
-                    variant: "destructive",
-                });
             }
         });
     };
@@ -121,7 +94,7 @@ export function QuizOptionsForm() {
                         <BackButton />
                         <CardTitle>Customize Your Quiz</CardTitle>
                     </div>
-                    <CardDescription>Set the parameters for your quiz below.</CardDescription>
+                    <CardDescription>Set the parameters for your quiz below. The quiz will be generated using the '{model}' model.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-3">

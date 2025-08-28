@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsSambaOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
 import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,14 +25,13 @@ import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
 import { ModelSwitcherDialog } from "./model-switcher-dialog";
 import { useModelSettings } from "@/hooks/use-model-settings";
-import { GenerateFlashcardsOutput } from "@/app/actions";
 
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
-  const [flashcards, setFlashcards] = useState<GenerateFlashcardsSambaOutput['flashcards'] | null>(null);
+  const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   const [summary, setSummary] = useState<SummarizeContentOutput | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
@@ -121,8 +120,7 @@ export function StudyNowContent() {
       return;
     }
     startAnalyzing(async () => {
-      // Analysis always uses Gemini for structured output
-      const result = await analyzeContentAction(content);
+      const result = await analyzeContentAction(content, model);
       if (result.error) {
          if (result.error === "API_LIMIT_EXCEEDED") {
             lastFailedAction.current = handleAnalyze;
@@ -131,7 +129,7 @@ export function StudyNowContent() {
             toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
         }
       } else {
-        setAnalysis(result.data);
+        setAnalysis(result.data ?? null);
         setFlashcards(null);
         setSummary({ summary: result.data?.summary || "" });
         setGeneratedImage(null);
@@ -185,41 +183,17 @@ export function StudyNowContent() {
 
   const handleGenerateQuiz = async () => {
     if (!analysis) return;
-    startGeneratingQuiz(async () => {
-        // Quiz generation uses Gemini
+    try {
         const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
-        const result = await generateQuizAction({ content: quizContent, numQuestions: 10, difficulty: 'medium' });
-
-        if (result.error) {
-             if (result.error === "API_LIMIT_EXCEEDED") {
-                lastFailedAction.current = handleGenerateQuiz;
-                setShowModelSwitcher(true);
-            } else {
-                toast({ title: "Quiz Generation Failed", description: result.error, variant: "destructive" });
-            }
-        } else if (result.data) {
-            toast({ title: "Quiz Generated!", description: "Your quiz is ready. Redirecting..." });
-            try {
-                const quizData = {
-                    quizzes: result.data.quizzes,
-                    options: {
-                        difficulty: 'medium',
-                        numQuestions: 10,
-                        timeLimit: 10 * 60, // 10 minutes in seconds
-                    }
-                };
-                localStorage.setItem('currentQuiz', JSON.stringify(quizData));
-                router.push('/quiz/start');
-                lastFailedAction.current = null;
-            } catch (e) {
-                toast({
-                    title: "Could not start quiz",
-                    description: "There was an error while trying to proceed. Please try again.",
-                    variant: "destructive",
-                });
-            }
-        }
-    });
+        localStorage.setItem('quizContent', quizContent);
+        router.push('/quiz/options');
+    } catch (e) {
+        toast({
+            title: "Could not start quiz",
+            description: "There was an error while preparing the quiz content.",
+            variant: "destructive",
+        });
+    }
 };
 
   const handleGenerateSummary = async () => {
@@ -229,7 +203,7 @@ export function StudyNowContent() {
     }
     if (!content) return;
     startGeneratingSummary(async () => {
-        const result = await summarizeContentAction({ content });
+        const result = await summarizeContentAction({ content }, model);
         if (result.error) {
              if (result.error === "API_LIMIT_EXCEEDED") {
                 lastFailedAction.current = handleGenerateSummary;
@@ -238,7 +212,7 @@ export function StudyNowContent() {
                 toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
             }
         } else {
-            setSummary(result.data);
+            setSummary(result.data ?? null);
             setActiveTab("summary");
             lastFailedAction.current = null;
         }
@@ -429,7 +403,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or upload an image.</CardDescription>
+              <CardDescription>Paste text, upload a document, or upload an image. AI actions will use the '{model}' model.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input 

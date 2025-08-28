@@ -4,8 +4,9 @@
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutorOutputFlow } from "@/ai/flows/chat-tutor";
-import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsInput } from "@/ai/flows/generate-flashcards-samba";
-import { generateQuizzes, GenerateQuizzesInput, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
+import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsSambaInput } from "@/ai/flows/generate-flashcards-samba";
+import { generateQuizzes, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
+import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput as GenerateQuizzesSambaOutputFlow } from "@/ai/flows/generate-quizzes-samba";
 import { helpChat, HelpChatInput, HelpChatOutput as HelpChatOutputFlow } from "@/ai/flows/help-chatbot";
 import { generalChat, GeneralChatInput as GeneralChatInputFlow, GeneralChatOutput as GeneralChatOutputFlow } from "@/ai/flows/general-chat";
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput as TextToSpeechOutputFlow } from "@/ai/flows/text-to-speech";
@@ -13,10 +14,11 @@ import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as Summ
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput as GetYoutubeTranscriptOutputFlow } from "@/ai/flows/youtube-transcript";
 import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImageOutputFlow } from "@/ai/flows/generate-image";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
-import { analyzeCode } from "@/ai/flows/analyze-code";
-import { AnalyzeCodeInput, AnalyzeCodeOutput as AnalyzeCodeOutputFlow } from "@/lib/code-analysis-types";
+import { analyzeCode, AnalyzeCodeInput, AnalyzeCodeOutput as AnalyzeCodeOutputFlow } from "@/ai/flows/analyze-code";
 import { openai } from "@/lib/openai";
 import type { ModelKey } from "@/hooks/use-model-settings";
+
+declare const puter: any;
 
 // Extend GeneralChatInput to include an optional prompt for specific scenarios
 export type GeneralChatInput = GeneralChatInputFlow & {
@@ -33,7 +35,7 @@ type ActionResult<T> = {
 export type AnalyzeContentOutput = AnalyzeContentOutputFlow;
 export type AnalyzeImageContentOutput = AnalyzeImageContentOutputFlow;
 export type GenerateFlashcardsOutput = GenerateFlashcardsSambaOutputFlow;
-export type GenerateQuizzesOutput = GenerateQuizzesOutputFlow;
+export type GenerateQuizzesOutput = GenerateQuizzesOutputFlow | GenerateQuizzesSambaOutputFlow;
 export type ChatWithTutorOutput = ChatWithTutorOutputFlow;
 export type HelpChatOutput = HelpChatOutputFlow;
 export type GeneralChatOutput = GeneralChatOutputFlow;
@@ -52,8 +54,17 @@ function isRateLimitError(e: any): boolean {
   return false;
 }
 
+async function callPuter(prompt: string): Promise<string> {
+    if (typeof puter === 'undefined') {
+        throw new Error('Puter.js is not loaded.');
+    }
+    const response = await puter.ai.chat(prompt);
+    return typeof response === 'object' && response.text ? response.text : String(response);
+}
+
 export async function analyzeContentAction(
-  content: string
+  content: string,
+  model: ModelKey,
 ): Promise<ActionResult<AnalyzeContentOutput>> {
   try {
     // Analysis is always done by Gemini for its structured output capabilities
@@ -80,8 +91,8 @@ export async function analyzeImageContentAction(
 }
 
 export async function generateFlashcardsAction(
-  input: GenerateFlashcardsInput
-): Promise<ActionResult<GenerateFlashcardsSambaOutputFlow>> {
+  input: GenerateFlashcardsSambaInput
+): Promise<ActionResult<GenerateFlashcardsOutput>> {
   try {
     const output = await generateFlashcardsSamba(input);
     return { data: output };
@@ -93,10 +104,22 @@ export async function generateFlashcardsAction(
 }
 
 export async function generateQuizAction(
-  input: GenerateQuizzesInput
+  input: GenerateQuizzesSambaInput,
+  model: ModelKey
 ): Promise<ActionResult<GenerateQuizzesOutput>> {
   try {
-    const output = await generateQuizzes(input);
+    let output: GenerateQuizzesOutput;
+    if (model === 'gemini') {
+        // Gemini can handle structured output well.
+        output = await generateQuizzes({ 
+            content: input.content, 
+            difficulty: input.difficulty, 
+            numQuestions: input.numQuestions 
+        });
+    } else {
+        // Samba and Puter will use the text-based generation flow.
+        output = await generateQuizzesSamba(input, model);
+    }
     return { data: output };
   } catch (e: any) {
     console.error(e);
@@ -198,8 +221,14 @@ export async function generalChatAction(
     }
 
     if (model === 'puter') {
-      // Puter.js is handled client-side, this action should not be called.
-      return { error: "Puter.js cannot be called from the server." };
+      // Puter.js is handled client-side for this action, this is a fallback.
+       try {
+            const lastMessage = input.history[input.history.length - 1];
+            const response = await callPuter(lastMessage.content);
+            return { data: { response } };
+       } catch (e: any) {
+            return { error: e.message || "An unknown error occurred with Puter.js" };
+       }
     }
     
     // Default to Gemini
@@ -243,10 +272,11 @@ export async function textToSpeechAction(
 }
 
 export async function summarizeContentAction(
-    input: SummarizeContentInput
+    input: SummarizeContentInput,
+    model: ModelKey
     ): Promise<ActionResult<SummarizeContentOutput>> {
     try {
-        const output = await summarizeContent(input);
+        const output = await summarizeContent(input); // Summarization is always Gemini
         return { data: output };
     } catch (e: any)
         {
@@ -297,9 +327,11 @@ export async function generateEbookChapterAction(
 }
 
 export async function analyzeCodeAction(
-    input: AnalyzeCodeInput
+    input: AnalyzeCodeInput,
+    model: ModelKey
 ): Promise<ActionResult<AnalyzeCodeOutput>> {
     try {
+        // Code analysis always uses Gemini
         const output = await analyzeCode(input);
         return { data: output };
     } catch (e: any) {
@@ -318,4 +350,4 @@ export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
 
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesInput, GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, SummarizeContentInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput };
