@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput, ModelKey } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, summarizeContentAction, generateImageAction, chatWithTutorAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -105,7 +105,7 @@ export function StudyNowContent() {
   };
 
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
     if (imageDataUri) {
       handleAnalyzeImage();
       return;
@@ -137,11 +137,12 @@ export function StudyNowContent() {
         lastFailedAction.current = null;
       }
     });
-  };
+  }, [content, imageDataUri, model, toast]);
 
-  const handleAnalyzeImage = async () => {
+  const handleAnalyzeImage = useCallback(async () => {
     if (!imageDataUri) return;
     startAnalyzing(async () => {
+        // Image analysis is always done by Gemini as it's a multimodal model
         const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -159,9 +160,9 @@ export function StudyNowContent() {
             lastFailedAction.current = null;
         }
     });
-  };
+  }, [imageDataUri, content, toast]);
 
-  const handleGenerateFlashcards = async () => {
+  const handleGenerateFlashcards = useCallback(async () => {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
       const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
@@ -179,7 +180,7 @@ export function StudyNowContent() {
         lastFailedAction.current = null;
       }
     });
-  };
+  }, [analysis, toast]);
 
   const handleGenerateQuiz = async () => {
     if (!analysis) return;
@@ -196,7 +197,7 @@ export function StudyNowContent() {
     }
 };
 
-  const handleGenerateSummary = async () => {
+  const handleGenerateSummary = useCallback(async () => {
     if (analysis?.summary) {
         setActiveTab("summary");
         return;
@@ -217,13 +218,13 @@ export function StudyNowContent() {
             lastFailedAction.current = null;
         }
     });
-  };
+  }, [analysis, content, model, toast]);
 
-  const handleGenerateImage = async () => {
+  const handleGenerateImage = useCallback(async () => {
     if (!analysis) return;
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
-        const result = await generateImageAction({ prompt });
+        const result = await generateImageAction({ prompt }, model);
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
                 lastFailedAction.current = handleGenerateImage;
@@ -237,7 +238,7 @@ export function StudyNowContent() {
             lastFailedAction.current = null;
         }
     });
-  };
+  }, [analysis, model, toast]);
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
@@ -347,8 +348,7 @@ export function StudyNowContent() {
   }
 
   const handleModelSwitch = (newModel: ModelKey) => {
-    const isPermanentSwitch = model === newModel;
-    setModel(newModel, isPermanentSwitch);
+    setModel(newModel);
     setShowModelSwitcher(false);
     toast({
         title: "Model Switched",
@@ -359,6 +359,10 @@ export function StudyNowContent() {
     }
   };
 
+  const handleTutorChat = async (history: any) => {
+    const result = await chatWithTutorAction({ content, history }, model);
+    return result;
+  }
 
   const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingSummary || isGeneratingImage;
   
@@ -488,7 +492,7 @@ export function StudyNowContent() {
             <CardHeader>
               <CardTitle>AI-Powered Study Tools</CardTitle>
               <CardDescription>
-                Analysis is powered by Gemini. Other tools may use your selected model.
+                Actions are powered by your selected model: '{model}'.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
@@ -623,7 +627,10 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} />
+                      <TutorChat 
+                        content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} 
+                        onSendMessage={handleTutorChat}
+                      />
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (
@@ -651,3 +658,5 @@ export function StudyNowContent() {
     </>
   );
 }
+
+    

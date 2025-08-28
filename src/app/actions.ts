@@ -3,7 +3,6 @@
 
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput as AnalyzeImageContentOutputFlow } from "@/ai/flows/analyze-image-content";
-import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput as ChatWithTutorOutputFlow } from "@/ai/flows/chat-tutor";
 import { generateFlashcardsSamba, GenerateFlashcardsSambaOutput as GenerateFlashcardsSambaOutputFlow, GenerateFlashcardsSambaInput } from "@/ai/flows/generate-flashcards-samba";
 import { generateQuizzes, GenerateQuizzesOutput as GenerateQuizzesOutputFlow } from "@/ai/flows/generate-quizzes";
 import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput as GenerateQuizzesSambaOutputFlow } from "@/ai/flows/generate-quizzes-samba";
@@ -62,14 +61,96 @@ async function callPuter(prompt: string): Promise<string> {
     return typeof response === 'object' && response.text ? response.text : String(response);
 }
 
+
+const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
+
+Content to analyze:
+---
+{{content}}
+---
+
+Please perform the following actions with expert detail and respond in a valid JSON format. The JSON object should match the following schema:
+{
+    "type": "object",
+    "properties": {
+        "summary": { "type": "string", "description": "A concise, one-paragraph summary of the content." },
+        "keyConcepts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "concept": { "type": "string" },
+                    "explanation": { "type": "string" }
+                },
+                "required": ["concept", "explanation"]
+            }
+        },
+        "codeExamples": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "code": { "type": "string" },
+                    "explanation": { "type": "string" }
+                },
+                "required": ["code", "explanation"]
+            }
+        },
+        "potentialQuestions": { "type": "array", "items": { "type": "string" } },
+        "relatedTopics": { "type": "array", "items": { "type": "string" } }
+    },
+    "required": ["summary", "keyConcepts", "codeExamples", "potentialQuestions", "relatedTopics"]
+}
+
+Here are the actions in detail:
+1.  **Generate a Comprehensive Summary**: Create a concise, one-paragraph summary that captures the main ideas and purpose of the content for the 'summary' field.
+2.  **Identify Key Concepts & Relationships**: Identify the most important concepts. For each concept, provide a clear explanation and add it to the 'keyConcepts' array.
+3.  **Extract and Explain Code Examples**: If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does and add it to the 'codeExamples' array. If no code is present, return an empty array.
+4.  **Generate Insightful Questions**: Create a list of potential questions that go beyond simple factual recall. These questions should test for deeper understanding, critical thinking, and the ability to apply the concepts. Add them to the 'potentialQuestions' array.
+5.  **Suggest Related Topics**: Recommend a list of related topics or areas of study that would be logical next steps for someone learning this material. Add them to the 'relatedTopics' array.
+`;
+
 export async function analyzeContentAction(
   content: string,
   model: ModelKey,
 ): Promise<ActionResult<AnalyzeContentOutput>> {
   try {
-    // Analysis is always done by Gemini for its structured output capabilities
-    const output = await analyzeContent({ content });
-    return { data: output };
+    if (model === 'gemini') {
+        const output = await analyzeContent({ content });
+        return { data: output };
+    }
+
+    let jsonResponseString: string;
+    const prompt = analysisSystemPrompt.replace('{{content}}', content);
+
+    if (model === 'puter') {
+        jsonResponseString = await callPuter(prompt);
+    } else { // Samba
+        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+            return { error: "SambaNova API key or base URL is not configured." };
+        }
+         const response = await openai.chat.completions.create({
+            model: 'Llama-4-Maverick-17B-128E-Instruct',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+        });
+        if (!response.choices?.[0]?.message?.content) {
+            throw new Error("Received an empty or invalid response from SambaNova.");
+        }
+        jsonResponseString = response.choices[0].message.content;
+    }
+
+    try {
+        const jsonResponse = JSON.parse(jsonResponseString);
+        // We can't easily validate against the Zod schema here since it's not exported from the flow.
+        // We'll trust the shape for now.
+        return { data: jsonResponse as AnalyzeContentOutput };
+    } catch (error) {
+        console.error("JSON parsing or validation error:", error);
+        console.error("Invalid JSON string received:", jsonResponseString);
+        throw new Error("The AI model returned an invalid JSON format. Please try again.");
+    }
   } catch (e: any) {
     console.error(e);
     if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
@@ -81,6 +162,7 @@ export async function analyzeImageContentAction(
     input: AnalyzeImageContentInput
 ): Promise<ActionResult<AnalyzeImageContentOutput>> {
     try {
+        // Image analysis is always done by Gemini as it's a multimodal model
         const output = await analyzeImageContent(input);
         return { data: output };
     } catch (e: any) {
@@ -110,14 +192,12 @@ export async function generateQuizAction(
   try {
     let output: GenerateQuizzesOutput;
     if (model === 'gemini') {
-        // Gemini can handle structured output well.
         output = await generateQuizzes({ 
             content: input.content, 
             difficulty: input.difficulty, 
             numQuestions: input.numQuestions 
         });
     } else {
-        // Samba and Puter will use the text-based generation flow.
         output = await generateQuizzesSamba(input, model);
     }
     return { data: output };
@@ -129,11 +209,37 @@ export async function generateQuizAction(
 }
 
 export async function chatWithTutorAction(
-  input: ChatWithTutorInput
+  input: ChatWithTutorInput,
+  model: ModelKey
 ): Promise<ActionResult<ChatWithTutorOutput>> {
   try {
-    const output = await chatWithTutor(input);
-    return { data: output };
+     if (model === 'gemini') {
+      const output = await generalChat({ history: input.history, prompt: `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. Study Material Context: --- ${input.content} ---` });
+      return { data: output };
+    }
+
+    const lastMessage = input.history[input.history.length - 1];
+    const prompt = `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+
+    let responseText: string;
+    if (model === 'puter') {
+      responseText = await callPuter(prompt);
+    } else { // Samba
+      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        return { error: "SambaNova API key or base URL is not configured." };
+      }
+      const response = await openai.chat.completions.create({
+        model: MODEL_MAP.samba,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+      });
+      if (!response.choices?.[0]?.message?.content) {
+        throw new Error("Received an empty response from the AI.");
+      }
+      responseText = response.choices[0].message.content;
+    }
+    return { data: { response: responseText } };
+
   } catch (e: any) {
     console.error(e);
     if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
@@ -290,9 +396,13 @@ export async function getYoutubeTranscriptAction(
 }
 
 export async function generateImageAction(
-  input: GenerateImageInput
+  input: GenerateImageInput,
+  model: ModelKey
 ): Promise<ActionResult<GenerateImageOutput>> {
   try {
+     if (model === 'samba' || model === 'puter') {
+        return { error: `The '${model}' model does not support image generation. Please switch to Gemini.` };
+    }
     const output = await generateImage(input);
     return { data: output };
   } catch (e: any) {
@@ -320,7 +430,7 @@ export async function analyzeCodeAction(
     model: ModelKey
 ): Promise<ActionResult<AnalyzeCodeOutput>> {
     try {
-        // Code analysis always uses Gemini
+        // Code analysis always uses Gemini for its structured output capabilities
         const output = await analyzeCode(input);
         return { data: output };
     } catch (e: any) {
@@ -332,10 +442,36 @@ export async function analyzeCodeAction(
 
 export async function summarizeContentAction(
   input: SummarizeContentInput,
+  model: ModelKey
 ): Promise<ActionResult<SummarizeContentOutput>> {
   try {
-    const output = await summarizeContent(input);
-    return { data: output };
+    if (model === 'gemini') {
+        const output = await summarizeContent(input);
+        return { data: output };
+    }
+
+    const prompt = `Please provide a concise, one-paragraph summary of the following content: --- ${input.content} ---`;
+    let responseText: string;
+
+    if (model === 'puter') {
+        responseText = await callPuter(prompt);
+    } else { // Samba
+        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+            return { error: "SambaNova API key or base URL is not configured." };
+        }
+         const response = await openai.chat.completions.create({
+            model: MODEL_MAP.samba,
+            messages: [{ role: 'user', content: prompt }],
+            stream: false,
+        });
+        if (!response.choices?.[0]?.message?.content) {
+            throw new Error("Received an empty response from SambaNova.");
+        }
+        responseText = response.choices[0].message.content;
+    }
+    
+    return { data: { summary: responseText } };
+
   } catch (e: any) {
     console.error(e);
     if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
@@ -353,3 +489,5 @@ export type CodeAgentInput = {};
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, ModelKey, GenerateEbookChapterInput, AnalyzeCodeInput, SummarizeContentInput };
+
+    
