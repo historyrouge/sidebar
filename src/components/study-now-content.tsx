@@ -23,8 +23,17 @@ import Image from "next/image";
 import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
+import { Progress } from "./ui/progress";
 
 declare const puter: any;
+
+const imageGenerationSteps = [
+    "Warming up the AI...",
+    "Analyzing concepts...",
+    "Generating initial draft...",
+    "Painting the pixels...",
+    "Adding final touches...",
+];
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
@@ -43,6 +52,8 @@ export function StudyNowContent() {
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
   const [isGeneratingImage, startGeneratingImage] = useTransition();
+  const [imageGenerationProgress, setImageGenerationProgress] = useState(0);
+  const [imageGenerationStep, setImageGenerationStep] = useState(0);
   const { theme, setTheme } = useTheme();
 
   const { toast } = useToast();
@@ -172,10 +183,20 @@ export function StudyNowContent() {
 
   const handleGenerateImage = useCallback(async () => {
     if (!analysis) return;
+    
+    // Reset progress for new generation
+    setImageGenerationProgress(0);
+    setImageGenerationStep(0);
+    
+    // Start the generation process
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
         // Image generation is always done by Gemini
         const result = await generateImageAction({ prompt });
+        
+        // Ensure progress is 100% on completion
+        setImageGenerationProgress(100);
+
         if (result.error) {
             toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
         } else {
@@ -184,6 +205,41 @@ export function StudyNowContent() {
         }
     });
   }, [analysis, toast]);
+
+  useEffect(() => {
+    let progressInterval: NodeJS.Timeout | undefined;
+    let stepInterval: NodeJS.Timeout | undefined;
+
+    if (isGeneratingImage) {
+        const totalDuration = 15000; // 15 seconds
+        const stepDuration = totalDuration / imageGenerationSteps.length;
+
+        // Interval to update the progress bar
+        progressInterval = setInterval(() => {
+            setImageGenerationProgress(prev => {
+                if (prev >= 95) { // Don't let it reach 100% until it's actually done
+                    clearInterval(progressInterval);
+                    return prev;
+                }
+                return prev + 1;
+            });
+        }, totalDuration / 100);
+
+        // Interval to update the text steps
+        setImageGenerationStep(0); // Start at the first step
+        stepInterval = setInterval(() => {
+            setImageGenerationStep(prev => (prev + 1) % imageGenerationSteps.length);
+        }, stepDuration);
+
+    }
+
+    return () => {
+        clearInterval(progressInterval);
+        clearInterval(stepInterval);
+    };
+  }, [isGeneratingImage]);
+
+
   
   const handleFileUploadClick = () => {
     fileInputRef.current?.click();
@@ -556,7 +612,13 @@ export function StudyNowContent() {
                       />
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
-                       {isGeneratingImage ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating image...</p></div> : generatedImage ? (
+                       {isGeneratingImage ? (
+                         <div className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground">
+                            <p className="text-sm font-medium">{imageGenerationSteps[imageGenerationStep]}</p>
+                            <Progress value={imageGenerationProgress} className="w-3/4" />
+                            <p className="text-xs text-muted-foreground">This can take up to 30 seconds...</p>
+                         </div>
+                       ) : generatedImage ? (
                         <div className="flex flex-col items-center justify-center h-full">
                           <Image src={generatedImage.imageDataUri} alt="Generated visual aid" width={400} height={400} className="rounded-lg border shadow-md" />
                           <p className="text-sm text-muted-foreground mt-4">A visual aid for your study material.</p>
