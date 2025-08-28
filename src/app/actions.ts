@@ -325,7 +325,7 @@ export async function analyzeCodeAction(
     input: AnalyzeCodeInput,
 ): Promise<ActionResult<AnalyzeCodeOutput>> {
     try {
-        // Code analysis always uses Qwen
+        // Code analysis always uses SambaNova
         const result = await analyzeCode(input);
         return { data: result };
     } catch (e: any) {
