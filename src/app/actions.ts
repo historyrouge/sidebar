@@ -107,7 +107,7 @@ export async function analyzeContentAction(
         return { error: "SambaNova API key or base URL is not configured." };
     }
      const response = await openai.chat.completions.create({
-        model: 'Llama-4-Maverick-17B-128E-Instruct',
+        model: 'Meta-Llama-3.1-8B-Instruct',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
         temperature: 0.7,
@@ -187,7 +187,7 @@ export async function chatWithTutorAction(
       return { error: "SambaNova API key or base URL is not configured." };
     }
     const response = await openai.chat.completions.create({
-      model: 'Llama-4-Maverick-17B-128E-Instruct',
+      model: 'Meta-Llama-3.1-8B-Instruct',
       messages: [{ role: 'user', content: prompt }],
       stream: false,
     });
@@ -242,7 +242,7 @@ export async function generalChatAction(
 
     try {
       const response = await openai.chat.completions.create({
-        model: 'Llama-4-Maverick-17B-128E-Instruct',
+        model: 'Meta-Llama-3.1-8B-Instruct',
         messages: messages as any,
         stream: false,
       });
@@ -330,7 +330,7 @@ export async function summarizeContentAction(
         return { error: "SambaNova API key or base URL is not configured." };
     }
       const response = await openai.chat.completions.create({
-        model: 'Llama-4-Maverick-17B-128E-Instruct',
+        model: 'Meta-Llama-3.1-8B-Instruct',
         messages: [{ role: 'user', content: prompt }],
         stream: false,
     });

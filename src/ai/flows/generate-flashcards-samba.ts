@@ -68,7 +68,7 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
 
     try {
         const response = await openai.chat.completions.create({
-            model: 'Llama-4-Maverick-17B-128E-Instruct',
+            model: 'Meta-Llama-3.1-8B-Instruct',
             messages: [
                 {
                     role: 'system',

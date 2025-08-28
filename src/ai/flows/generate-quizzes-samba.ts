@@ -93,7 +93,7 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, mod
         }
         try {
             const response = await openai.chat.completions.create({
-                model: 'Llama-4-Maverick-17B-128E-Instruct',
+                model: 'Meta-Llama-3.1-8B-Instruct',
                 messages: [{ role: 'user', content: prompt }],
                 response_format: { type: 'json_object' },
                 temperature: 0.7,
