@@ -80,17 +80,7 @@ export function NewsContent() {
         }
         const data = await res.json();
         
-        // Filter out seen articles
-        const seenUrls = JSON.parse(localStorage.getItem('seenNewsUrls') || '[]');
-        const uniqueArticles = (data.articles || []).filter((article: Article) => !seenUrls.includes(article.url));
-        
-        setArticles(uniqueArticles);
-        
-        // Update seen articles in localStorage
-        const newUrls = uniqueArticles.map((article: Article) => article.url);
-        const updatedSeenUrls = [...new Set([...seenUrls, ...newUrls])];
-        localStorage.setItem('seenNewsUrls', JSON.stringify(updatedSeenUrls));
-
+        setArticles(data.articles || []);
 
       } catch (err: any) {
         setError(err.message);
