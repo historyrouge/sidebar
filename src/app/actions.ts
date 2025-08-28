@@ -349,9 +349,6 @@ export async function summarizeContentAction(
 }
 
 
-// Dummy types for exports where the original type is no longer relevant
-export type UserProfile = {};
-export type Friend = {};
 // Dummy type for removed feature
 export type CodeAgentOutput = {};
 export type CodeAgentInput = {};
