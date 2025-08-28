@@ -171,7 +171,7 @@ export function NewsReaderContent() {
                 )}
                 
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">AI-Generated Description</h2>
+                  <h2 className="text-xl font-semibold mb-2">News Description</h2>
                   {isSummarizing ? (
                      <div className="space-y-2">
                         <Skeleton className="h-4 w-full" />
@@ -284,5 +284,7 @@ export function NewsReaderContent() {
 }
 
   
+
+    
 
     
