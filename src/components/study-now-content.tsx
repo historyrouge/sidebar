@@ -386,7 +386,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or upload an image. Analysis is done by SambaNova.</CardDescription>
+              <CardDescription>Paste text, upload a document, or upload an image. Analysis is done by Qwen.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input 
@@ -642,3 +642,5 @@ export function StudyNowContent() {
     </div>
   );
 }
+
+    

@@ -107,21 +107,21 @@ export function ChatContent({
         let responseText: string | null = null;
         let error: string | null = null;
 
-        if (model !== 'puter') {
+        if (model !== 'gpt5') {
             toast({
                 title: "Model Fallback",
-                description: `Puter.js timeout. Trying ${model}...`,
+                description: `OpenAI GPT-5 timeout. Trying ${model}...`,
                 duration: 2000,
             });
         }
 
         try {
-            if (model === 'puter') {
+            if (model === 'gpt5') {
                 const promise = puter.ai.chat(currentMessage.content);
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 230));
                 const response = await Promise.race([promise, timeoutPromise]);
                 responseText = typeof response === 'object' && response.text ? response.text : String(response);
-            } else { // samba or gemini
+            } else { // qwen or gemini
                 const result = await generalChatAction({ 
                     history: chatHistory.map(h => ({role: h.role, content: h.content})),
                     imageDataUri: currentMessage.imageDataUri,
@@ -154,7 +154,7 @@ export function ChatContent({
              }
         }
       });
-  }, [startTyping, toast]);
+  }, [startTyping, toast, setHistory]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -171,7 +171,7 @@ export function ChatContent({
     setInput("");
     setCapturedImage(null);
 
-    await executeChat(userMessage, newHistory, ['puter', 'samba', 'gemini']);
+    await executeChat(userMessage, newHistory, ['gpt5', 'qwen', 'gemini']);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -187,7 +187,7 @@ export function ChatContent({
 
       const historyWithoutLastResponse = history.slice(0, -1);
       setHistory(historyWithoutLastResponse);
-      await executeChat(lastUserMessage, historyWithoutLastResponse, ['puter', 'samba', 'gemini']);
+      await executeChat(lastUserMessage, historyWithoutLastResponse, ['gpt5', 'qwen', 'gemini']);
   };
 
 
@@ -537,3 +537,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    

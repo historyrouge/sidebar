@@ -56,8 +56,8 @@ export function SettingsContent() {
                     </CardHeader>
                     <CardContent>
                         <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li className="flex items-center justify-between"><span>Chat & eBooks</span><span className="font-medium text-foreground">Puter.js</span></li>
-                            <li className="flex items-center justify-between"><span>Analysis & Quizzes</span><span className="font-medium text-foreground">SambaNova</span></li>
+                            <li className="flex items-center justify-between"><span>Chat & eBooks</span><span className="font-medium text-foreground">OpenAI GPT-5</span></li>
+                            <li className="flex items-center justify-between"><span>Analysis & Quizzes</span><span className="font-medium text-foreground">Qwen</span></li>
                             <li className="flex items-center justify-between"><span>Image Generation</span><span className="font-medium text-foreground">Gemini</span></li>
                         </ul>
                     </CardContent>
@@ -67,3 +67,5 @@ export function SettingsContent() {
     </div>
   );
 }
+
+    

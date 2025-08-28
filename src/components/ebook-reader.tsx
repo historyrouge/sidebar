@@ -93,7 +93,7 @@ export function EbookReader({ slug }: { slug: string }) {
       } catch (e: any) {
          toast({
           title: `Failed to load Chapter ${chapterNumber}`,
-          description: e.message || "An error occurred with Puter.js",
+          description: e.message || "An error occurred with OpenAI GPT-5",
           variant: "destructive"
         });
       }
@@ -113,7 +113,7 @@ export function EbookReader({ slug }: { slug: string }) {
       fetchChapter(1);
     } else if (typeof puter === 'undefined') {
         toast({
-            title: "Puter.js not available",
+            title: "OpenAI GPT-5 not available",
             description: "eBook generation is disabled. Please try again later.",
             variant: "destructive"
         });
@@ -218,3 +218,5 @@ export function EbookReader({ slug }: { slug: string }) {
     </div>
   );
 }
+
+    

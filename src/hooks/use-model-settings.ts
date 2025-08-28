@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 // This hook is no longer used for model selection but is kept for potential future settings.
 // The model logic is now hard-coded per feature.
 
-export type ModelKey = 'gemini' | 'samba' | 'puter';
+export type ModelKey = 'gemini' | 'qwen' | 'gpt5';
 
 type ModelSettings = {
   model: ModelKey;
@@ -25,3 +25,5 @@ export function useModelSettings(): ModelSettings {
 
   return { model, setModel: handleSetModel };
 }
+
+    

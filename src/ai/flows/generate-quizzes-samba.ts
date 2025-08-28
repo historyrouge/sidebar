@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Quiz generation AI agent using SambaNova or Puter.js.
+ * @fileOverview Quiz generation AI agent using Qwen or OpenAI GPT-5.
  *
  * - generateQuizzesSamba - A function that handles the quiz generation process.
  * - GenerateQuizzesSambaInput - The input type for the generateQuizzesSamba function.
@@ -81,15 +81,15 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, mod
     const prompt = buildPrompt(input);
     let jsonResponseString: string;
 
-    if (model === 'puter') {
+    if (model === 'gpt5') {
          if (typeof puter === 'undefined') {
-            throw new Error("Puter.js is not loaded or configured.");
+            throw new Error("OpenAI GPT-5 is not loaded or configured.");
         }
         const response = await puter.ai.chat(prompt);
         jsonResponseString = typeof response === 'object' && response.text ? response.text : String(response);
-    } else { // Default to Samba
+    } else { // Default to Qwen
         if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            throw new Error("SambaNova API key or base URL is not configured.");
+            throw new Error("Qwen API key or base URL is not configured.");
         }
         try {
             const response = await openai.chat.completions.create({
@@ -100,12 +100,12 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, mod
             });
 
             if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-                throw new Error("Received an empty or invalid response from SambaNova.");
+                throw new Error("Received an empty or invalid response from Qwen.");
             }
             jsonResponseString = response.choices[0].message.content;
         } catch (error: any) {
-            console.error("SambaNova quiz generation error:", error);
-            throw new Error(error.message || "An unknown error occurred while generating quizzes with SambaNova.");
+            console.error("Qwen quiz generation error:", error);
+            throw new Error(error.message || "An unknown error occurred while generating quizzes with Qwen.");
         }
     }
 
@@ -119,3 +119,5 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, mod
         throw new Error("The AI model returned an invalid JSON format. Please try again.");
     }
 }
+
+    

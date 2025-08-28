@@ -2,9 +2,9 @@
 'use server';
 
 /**
- * @fileOverview Flashcard generation AI agent using SambaNova.
+ * @fileOverview Flashcard generation AI agent using Qwen.
  *
- * - generateFlashcardsSamba - A function that handles the flashcard generation process with SambaNova.
+ * - generateFlashcardsSamba - A function that handles the flashcard generation process with Qwen.
  * - GenerateFlashcardsSambaInput - The input type for the generateFlashcardsSambaInput function.
  * - GenerateFlashcardsSambaOutput - The return type for the generateFlashcardsSambaInput function.
  */
@@ -63,7 +63,7 @@ You must respond in JSON format. The JSON object should match the following sche
 
 export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInput): Promise<GenerateFlashcardsSambaOutput> {
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-        throw new Error("SambaNova API key or base URL is not configured.");
+        throw new Error("Qwen API key or base URL is not configured.");
     }
 
     try {
@@ -84,7 +84,7 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
         });
 
         if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-            throw new Error("Received an empty or invalid response from SambaNova.");
+            throw new Error("Received an empty or invalid response from Qwen.");
         }
 
         const jsonResponse = JSON.parse(response.choices[0].message.content);
@@ -95,7 +95,9 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
         return validatedOutput;
 
     } catch (error: any) {
-        console.error("SambaNova flashcard generation error:", error);
-        throw new Error(error.message || "An unknown error occurred while generating flashcards with SambaNova.");
+        console.error("Qwen flashcard generation error:", error);
+        throw new Error(error.message || "An unknown error occurred while generating flashcards with Qwen.");
     }
 }
+
+    

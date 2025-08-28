@@ -92,7 +92,7 @@ export function QuizOptionsForm() {
                         <BackButton />
                         <CardTitle>Customize Your Quiz</CardTitle>
                     </div>
-                    <CardDescription>Set the parameters for your quiz below. The quiz will be generated using SambaNova.</CardDescription>
+                    <CardDescription>Set the parameters for your quiz below. The quiz will be generated using Qwen.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-3">
@@ -158,3 +158,5 @@ export function QuizOptionsForm() {
         </div>
     );
 }
+
+    

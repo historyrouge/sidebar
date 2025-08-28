@@ -72,7 +72,7 @@ export function NewsReaderContent() {
                 setSummary({ summary: "No content available to summarize." });
                 return;
             }
-            // News summarization always uses SambaNova
+            // News summarization always uses Qwen
             const result = await summarizeContentAction({ content: contentToSummarize });
             if (result.error) {
                 toast({ title: "Summarization Failed", description: result.error, variant: "destructive" });
@@ -107,7 +107,7 @@ export function NewsReaderContent() {
         prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${context}".`,
       };
 
-      // News chat uses SambaNova
+      // News chat uses Qwen
       const result = await generalChatAction(chatInput);
 
       if (result.error) {
@@ -282,3 +282,5 @@ export function NewsReaderContent() {
     </div>
   );
 }
+
+    
