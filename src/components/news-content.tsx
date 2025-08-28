@@ -79,7 +79,19 @@ export function NewsContent() {
             throw new Error(errorData.error || "Failed to fetch news");
         }
         const data = await res.json();
-        setArticles(data.articles || []);
+        
+        // Filter out seen articles
+        const seenUrls = JSON.parse(localStorage.getItem('seenNewsUrls') || '[]');
+        const uniqueArticles = (data.articles || []).filter((article: Article) => !seenUrls.includes(article.url));
+        
+        setArticles(uniqueArticles);
+        
+        // Update seen articles in localStorage
+        const newUrls = uniqueArticles.map((article: Article) => article.url);
+        const updatedSeenUrls = [...new Set([...seenUrls, ...newUrls])];
+        localStorage.setItem('seenNewsUrls', JSON.stringify(updatedSeenUrls));
+
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -154,7 +166,7 @@ export function NewsContent() {
             </div>
         ) : !error && articles.length === 0 ? (
             <div className="text-center text-muted-foreground mt-12">
-                <p>No articles found for this category.</p>
+                <p>No new articles found for this category. Please check back later!</p>
             </div>
         ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
