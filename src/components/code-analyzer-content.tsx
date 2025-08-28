@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, Bug, Zap, AlertTriangle, Code, ArrowRight } from "lucide-react";
+import { Loader2, Wand2, Bug, Zap, Code, AlertTriangle } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -15,11 +15,14 @@ import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+
 
 export function CodeAnalyzerContent() {
     const [code, setCode] = useState("");
     const [language, setLanguage] = useState<"python" | "cpp">("python");
     const [analysis, setAnalysis] = useState<AnalyzeCodeOutput | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [isAnalyzing, startAnalyzing] = useTransition();
     const { toast } = useToast();
 
@@ -32,10 +35,13 @@ export function CodeAnalyzerContent() {
             });
             return;
         }
+        setError(null);
+        setAnalysis(null);
         startAnalyzing(async () => {
             const result = await analyzeCodeAction({ code, language });
             if (result.error) {
-                toast({ title: "Code Analysis Failed", description: result.error, variant: "destructive" });
+                setError(result.error);
+                toast({ title: "Code Analysis Failed", description: "Please check the analysis panel for details.", variant: "destructive" });
             } else {
                 setAnalysis(result.data ?? null);
                 toast({ title: "Code Analyzed!", description: "The analysis is ready for review." });
@@ -105,6 +111,14 @@ export function CodeAnalyzerContent() {
                                             <Skeleton className="h-20 w-full" />
                                         </div>
                                     </div>
+                                ) : error ? (
+                                    <Alert variant="destructive">
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertTitle>Code Analysis Failed</AlertTitle>
+                                        <AlertDescription>
+                                            {error}
+                                        </AlertDescription>
+                                    </Alert>
                                 ) : analysis ? (
                                     <Accordion type="multiple" defaultValue={['explanation', 'bugs', 'optimizations']} className="w-full pr-4 space-y-3">
                                         <AccordionItem value="explanation" className="rounded-md border bg-background px-4">
@@ -164,5 +178,3 @@ export function CodeAnalyzerContent() {
         </div>
     );
 }
-
-    

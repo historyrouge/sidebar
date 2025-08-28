@@ -63,7 +63,8 @@ export async function analyzeCode(input: AnalyzeCodeInput): Promise<AnalyzeCodeO
      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
         throw new Error("SambaNova API key or base URL is not configured.");
     }
-
+    
+    let jsonResponseString;
     try {
         const prompt = analysisSystemPrompt
             .replace(/{{language}}/g, input.language)
@@ -79,14 +80,20 @@ export async function analyzeCode(input: AnalyzeCodeInput): Promise<AnalyzeCodeO
         if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
             throw new Error("Received an empty or invalid response from SambaNova.");
         }
-
-        const jsonResponse = JSON.parse(response.choices[0].message.content);
-        const validatedOutput = AnalyzeCodeOutputSchema.parse(jsonResponse);
-        
-        return validatedOutput;
+        jsonResponseString = response.choices[0].message.content;
 
     } catch (error: any) {
         console.error("SambaNova code analysis error:", error);
         throw new Error(error.message || "An unknown error occurred while analyzing code with SambaNova.");
+    }
+
+    try {
+        const jsonResponse = JSON.parse(jsonResponseString);
+        const validatedOutput = AnalyzeCodeOutputSchema.parse(jsonResponse);
+        return validatedOutput;
+    } catch (error) {
+        console.error("JSON parsing or validation error:", error);
+        console.error("Invalid JSON string from SambaNova:", jsonResponseString);
+        throw new Error("The AI model returned an invalid format. Please try again.");
     }
 }
