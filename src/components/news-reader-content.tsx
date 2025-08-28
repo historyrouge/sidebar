@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { BackButton } from "./back-button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 type Message = {
   role: "user" | "model";
@@ -56,6 +57,7 @@ export function NewsReaderContent() {
   const [isTyping, startTyping] = useTransition();
   const { model } = useModelSettings();
   const [isSummarizing, startSummarizing] = useTransition();
+  const [summarizationError, setSummarizationError] = useState<string | null>(null);
 
   // Load article from localStorage on mount
   useEffect(() => {
@@ -108,12 +110,15 @@ export function NewsReaderContent() {
   useEffect(() => {
     if (article && history.length === 0) {
         startSummarizing(async () => {
+            setSummarizationError(null);
             const initialPrompt = `Summarize the following news article and then ask the user what they'd like to explore further. Keep the summary concise (2-3 paragraphs). The article is titled: "${article.title}". Description: "${article.description}"`;
              const chatInput: GeneralChatInput = {
                 history: [{ role: 'user', content: initialPrompt }],
             };
-            const result = await generalChatAction(chatInput, model);
+            // Always use Gemini for the initial, reliable summary.
+            const result = await generalChatAction(chatInput, 'gemini');
              if (result.error) {
+                setSummarizationError(result.error);
                 toast({ title: "Summarization Error", description: result.error, variant: "destructive" });
              } else if (result.data) {
                 const modelMessage: Message = { role: "model", content: result.data.response };
@@ -122,7 +127,7 @@ export function NewsReaderContent() {
         });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article, model]);
+  }, [article]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -168,6 +173,12 @@ export function NewsReaderContent() {
                         <Image src={article.urlToImage} alt={article.title} fill className="object-cover" />
                     </div>
                 )}
+                 {summarizationError && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Summarization Error</AlertTitle>
+                        <AlertDescription>{summarizationError}</AlertDescription>
+                    </Alert>
+                 )}
                 
                 <div>
                     <h2 className="text-xl font-semibold mb-2">AI Summary</h2>
@@ -231,7 +242,7 @@ export function NewsReaderContent() {
                                         </div>
                                     </div>
                                 )}
-                                {history.length === 1 && !isTyping && (
+                                {history.length === 1 && !isTyping && !isSummarizing && (
                                     <div className="pt-4">
                                         <div className="flex items-center gap-2 mb-3">
                                             <Sparkles className="text-primary w-5 h-5"/>
@@ -281,3 +292,5 @@ export function NewsReaderContent() {
 }
 
   
+
+    
