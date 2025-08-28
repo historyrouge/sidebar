@@ -531,7 +531,7 @@ export function StudyNowContent() {
                                 <div className="flex items-center gap-3"><BrainCircuit/>Key Concepts</div>
                             </AccordionTrigger>
                             <AccordionContent className="prose prose-sm dark:prose-invert max-w-none">
-                            {analysis.keyConcepts.map((concept, i) => 
+                            {analysis.keyConcepts && analysis.keyConcepts.map((concept, i) => 
                                 <div key={i} className="py-2">
                                 <p className="font-semibold !my-0">{concept.concept}</p>
                                 <p className="text-muted-foreground !my-0">{concept.explanation}</p>
@@ -642,5 +642,3 @@ export function StudyNowContent() {
     </div>
   );
 }
-
-    
