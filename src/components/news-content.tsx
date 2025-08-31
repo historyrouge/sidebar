@@ -81,17 +81,10 @@ export function NewsContent() {
     }
     setError(null);
     try {
-      let url = `/api/news?category=${category}&page=${pageNum}`;
-      if (category === 'ai') {
-          url = `/api/news?q=artificial intelligence&page=${pageNum}`;
-      } else if (category === 'gaming') {
-          url = `/api/news?q=gaming&page=${pageNum}`;
-      } else if (category === 'technology') {
-           url = `/api/news?category=technology&page=${pageNum}`;
-      } else {
-           url = `/api/news?category=general&page=${pageNum}`;
-      }
-
+      let url = `/api/news?page=${pageNum}`;
+      const searchCategory = category === 'top' ? 'general' : category;
+      url += category === 'ai' ? `&q=artificial%20intelligence` : `&category=${searchCategory}`;
+      
       const res = await fetch(url);
       if (!res.ok) {
           const errorData = await res.json();
@@ -99,12 +92,14 @@ export function NewsContent() {
       }
       const data = await res.json();
       
+      const filteredArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]");
+      
       if (pageNum === 1) {
-        setArticles(data.articles || []);
+        setArticles(filteredArticles);
       } else {
-        setArticles(prev => [...prev, ...(data.articles || [])]);
+        setArticles(prev => [...prev, ...filteredArticles]);
       }
-      setHasMore((data.articles || []).length > 0);
+      setHasMore(filteredArticles.length > 0);
 
     } catch (err: any) {
       setError(err.message);
