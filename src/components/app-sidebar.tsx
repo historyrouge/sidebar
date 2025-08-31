@@ -96,17 +96,6 @@ export function AppSidebar() {
             </SidebarMenu>
         </div>
       </SidebarContent>
-      <SidebarFooter className="p-2">
-          <div className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50">
-              <Avatar className="size-8">
-                  <AvatarFallback>N</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 truncate">
-                  <p className="truncate font-semibold text-sidebar-foreground">Guest User</p>
-              </div>
-              <MoreHorizontal className="size-4 shrink-0 text-sidebar-foreground/50" />
-          </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
