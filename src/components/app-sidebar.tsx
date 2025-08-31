@@ -83,7 +83,7 @@ export function AppSidebar() {
     setOpenMobile(false);
   };
 
-  const renderMenuItems = (items: typeof menuItems) => {
+  const renderMenuItems = (items: typeof menuItems | typeof bottomMenuItems) => {
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
             <Link href={item.href} className="w-full">
@@ -114,39 +114,43 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow">
         <SidebarMenu>
             {renderMenuItems(menuItems)}
-            {renderMenuItems(bottomMenuItems)}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4">
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50">
-                    <Avatar className="size-8">
-                        <AvatarFallback>N</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 truncate">
-                        <p className="truncate font-semibold text-sidebar-foreground">Guest User</p>
-                    </div>
-                    <MoreHorizontal className="size-4 shrink-0 text-sidebar-foreground/50" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64" side="top" align="start">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>
-                    <User className="mr-2" />
-                    <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                    <Settings className="mr-2" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>
-                    Log out
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+            {renderMenuItems(bottomMenuItems)}
+        </SidebarMenu>
+        <div className="p-2">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50">
+                        <Avatar className="size-8">
+                            <AvatarFallback>N</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 truncate">
+                            <p className="truncate font-semibold text-sidebar-foreground">Guest User</p>
+                        </div>
+                        <MoreHorizontal className="size-4 shrink-0 text-sidebar-foreground/50" />
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64" side="top" align="start">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled>
+                        <User className="mr-2" />
+                        <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled>
+                        <Settings className="mr-2" />
+                        <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled>
+                        Log out
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
