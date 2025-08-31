@@ -517,13 +517,13 @@ export function StudyNowContent() {
                         <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
                             <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><HelpCircle />Potential Questions</div></AccordionTrigger>
                             <AccordionContent className="prose-sm dark:prose-invert max-w-none">
-                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}</ul>
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.potentialQuestions?.map((q, i) => <li key={i}>{q}</li>)}</ul>
                             </AccordionContent>
                         </AccordionItem>
                          <AccordionItem value="related-topics" className="rounded-md border bg-card px-4">
                             <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Related Topics</div></AccordionTrigger>
                             <AccordionContent className="prose-sm dark:prose-invert max-w-none">
-                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.relatedTopics.map((q, i) => <li key={i}>{q}</li>)}</ul>
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.relatedTopics?.map((q, i) => <li key={i}>{q}</li>)}</ul>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -577,5 +577,7 @@ export function StudyNowContent() {
     </div>
   );
 }
+
+    
 
     
