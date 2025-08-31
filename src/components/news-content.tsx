@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rss, RefreshCw } from "lucide-react";
+import { Rss, RefreshCw, Loader2 } from "lucide-react";
 import { BackButton } from "./back-button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
@@ -41,10 +41,26 @@ const loadingSteps = [
 export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("top");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
+
+  const observer = useRef<IntersectionObserver>();
+  const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+            setPage(prevPage => prevPage + 1);
+        }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
+
 
   useEffect(() => {
     let stepInterval: NodeJS.Timeout | undefined;
@@ -57,19 +73,23 @@ export function NewsContent() {
     return () => clearInterval(stepInterval);
   }, [loading]);
 
-  const fetchNews = useCallback(async (category: string) => {
-    setLoading(true);
+  const fetchNews = useCallback(async (category: string, pageNum: number) => {
+    if (pageNum === 1) {
+        setLoading(true);
+    } else {
+        setLoadingMore(true);
+    }
     setError(null);
     try {
-      let url = `/api/news?category=${category}`;
+      let url = `/api/news?category=${category}&page=${pageNum}`;
       if (category === 'ai') {
-          url = `/api/news?q=artificial intelligence`;
+          url = `/api/news?q=artificial intelligence&page=${pageNum}`;
       } else if (category === 'gaming') {
-          url = `/api/news?q=gaming`;
+          url = `/api/news?q=gaming&page=${pageNum}`;
       } else if (category === 'technology') {
-           url = `/api/news?category=technology`;
+           url = `/api/news?category=technology&page=${pageNum}`;
       } else {
-           url = `/api/news?category=general`;
+           url = `/api/news?category=general&page=${pageNum}`;
       }
 
       const res = await fetch(url);
@@ -79,18 +99,37 @@ export function NewsContent() {
       }
       const data = await res.json();
       
-      setArticles(data.articles || []);
+      if (pageNum === 1) {
+        setArticles(data.articles || []);
+      } else {
+        setArticles(prev => [...prev, ...(data.articles || [])]);
+      }
+      setHasMore((data.articles || []).length > 0);
 
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (pageNum === 1) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchNews(activeCategory);
+    setArticles([]);
+    setPage(1);
+    setHasMore(true);
+    fetchNews(activeCategory, 1);
   }, [activeCategory, fetchNews]);
+
+  useEffect(() => {
+    if (page > 1) {
+        fetchNews(activeCategory, page);
+    }
+  }, [page, activeCategory, fetchNews]);
+
 
   const handleReadMore = (article: Article) => {
     try {
@@ -101,6 +140,13 @@ export function NewsContent() {
         setError("Could not open article. Please try again.");
     }
   }
+
+  const handleRefresh = () => {
+    setArticles([]);
+    setPage(1);
+    setHasMore(true);
+    fetchNews(activeCategory, 1);
+  };
 
   return (
     <>
@@ -125,7 +171,7 @@ export function NewsContent() {
              <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => fetchNews(activeCategory)} 
+                onClick={handleRefresh} 
                 disabled={loading}
                 className="absolute right-0 top-1/2 -translate-y-1/2"
             >
@@ -170,36 +216,48 @@ export function NewsContent() {
                 <p>No new articles found for this category. Please check back later!</p>
             </div>
         ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {articles.map((article, i) => (
-                    <Card key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
-                        <CardHeader className="p-0">
-                            {article.urlToImage ? (
-                                <div className="relative w-full h-48">
-                                    <Image
-                                        src={article.urlToImage}
-                                        alt={article.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                                    <Rss className="w-10 h-10 text-primary/50" />
-                                </div>
-                            )}
-                        </CardHeader>
-                        <CardContent className="p-4 flex-grow flex flex-col">
-                            <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
-                            <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
-                            <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
-                        </CardContent>
-                        <CardFooter className="p-4 pt-0">
-                            <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
+            <>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {articles.map((article, i) => (
+                         <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
+                            <CardHeader className="p-0">
+                                {article.urlToImage ? (
+                                    <div className="relative w-full h-48">
+                                        <Image
+                                            src={article.urlToImage}
+                                            alt={article.title}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                        <Rss className="w-10 h-10 text-primary/50" />
+                                    </div>
+                                )}
+                            </CardHeader>
+                            <CardContent className="p-4 flex-grow flex flex-col">
+                                <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
+                                <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
+                                <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
+                            </CardContent>
+                            <CardFooter className="p-4 pt-0">
+                                <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+                {loadingMore && (
+                     <div className="flex justify-center items-center py-8">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                )}
+                 {!hasMore && !loadingMore && articles.length > 0 && (
+                    <div className="text-center text-muted-foreground py-8">
+                        <p>You've reached the end of the news.</p>
+                    </div>
+                )}
+            </>
         )}
     </div>
     </>
