@@ -16,8 +16,9 @@ const GeneralChatInputSchema = z.object({
   history: z.array(z.object({
     role: z.enum(['user', 'model']),
     content: z.string(),
+    imageDataUri: z.string().optional().describe("An optional image from the user, as a data URI."),
   })).describe('The conversation history.'),
-  imageDataUri: z.string().optional().describe("An optional image from the user, as a data URI."),
+  imageDataUri: z.string().optional().describe("An optional image from the user for the CURRENT message, as a data URI."),
 });
 export type GeneralChatInput = z.infer<typeof GeneralChatInputSchema>;
 
@@ -50,7 +51,7 @@ Your Instructions:
 - If an image is provided, analyze it and use it as the primary context for your response.
 
 {{#if imageDataUri}}
-Image context:
+The user has provided this image. Use it as the primary context for your response.
 {{media url=imageDataUri}}
 {{/if}}
 
@@ -58,6 +59,9 @@ Conversation History:
 ---
 {{#each history}}
 **{{role}}**: {{{content}}}
+{{#if imageDataUri}}
+[IMAGE WAS ATTACHED]
+{{/if}}
 {{/each}}
 ---
 

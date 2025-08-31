@@ -107,7 +107,7 @@ export function ChatContent({
         let responseText: string | null = null;
         let error: string | null = null;
 
-        if (model !== 'gpt5') {
+        if (model !== 'gpt5' && model !== 'gemini' && !currentMessage.imageDataUri) {
             toast({
                 title: "Model Fallback",
                 description: `OpenAI GPT-5 timeout. Trying ${model}...`,
@@ -116,16 +116,16 @@ export function ChatContent({
         }
 
         try {
-            if (model === 'gpt5') {
+            if (model === 'gpt5' && !currentMessage.imageDataUri) {
                 const creatorPrompt = "Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.";
                 const finalPrompt = `${creatorPrompt}\n\nUser query: ${currentMessage.content}`;
                 const promise = puter.ai.chat(finalPrompt);
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 230));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000)); // 5s timeout for gpt5
                 const response = await Promise.race([promise, timeoutPromise]);
                 responseText = typeof response === 'object' && response.text ? response.text : String(response);
-            } else { // qwen or gemini
+            } else { // qwen or gemini, or gpt5 with image falls through here
                 const result = await generalChatAction({ 
-                    history: chatHistory.map(h => ({role: h.role, content: h.content})),
+                    history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
                     imageDataUri: currentMessage.imageDataUri,
                     model: model
                 });
@@ -173,7 +173,9 @@ export function ChatContent({
     setInput("");
     setCapturedImage(null);
 
-    await executeChat(userMessage, newHistory, ['gpt5', 'qwen', 'gemini']);
+    // If there's an image, Gemini is the best model for it. Prioritize it.
+    const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
+    await executeChat(userMessage, newHistory, modelsToTry);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -189,7 +191,8 @@ export function ChatContent({
 
       const historyWithoutLastResponse = history.slice(0, -1);
       setHistory(historyWithoutLastResponse);
-      await executeChat(lastUserMessage, historyWithoutLastResponse, ['gpt5', 'qwen', 'gemini']);
+      const modelsToTry = lastUserMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
+      await executeChat(lastUserMessage, historyWithoutLastResponse, modelsToTry);
   };
 
 
@@ -352,11 +355,11 @@ export function ChatContent({
     <div className="relative h-full">
         <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-            <DialogContent>
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[425px] md:max-w-lg lg:max-w-2xl w-full h-auto sm:h-auto sm:w-auto p-0">
+                <DialogHeader className="p-4 border-b">
                     <DialogTitle>Camera</DialogTitle>
                 </DialogHeader>
-                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+                <video ref={videoRef} className="w-full aspect-video bg-muted" autoPlay muted playsInline />
                 {hasCameraPermission === null && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                         <Loader2 className="animate-spin" />
@@ -370,7 +373,7 @@ export function ChatContent({
                         </Alert>
                     </div>
                 )}
-                <DialogFooter>
+                <DialogFooter className="p-4 border-t">
                     <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                     </DialogClose>
