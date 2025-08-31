@@ -68,6 +68,7 @@ export function StudyNowContent() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isStreamReady, setIsStreamReady] = useState(false);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -315,18 +316,31 @@ export function StudyNowContent() {
     let stream: MediaStream | null = null;
     const getCameraPermission = async () => {
         if (isCameraOpen) {
+            setHasCameraPermission(null);
+            setIsStreamReady(false);
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 setHasCameraPermission(true);
-                if (videoRef.current) videoRef.current.srcObject = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.onloadedmetadata = () => {
+                        setIsStreamReady(true);
+                    };
+                }
             } catch (error) {
                 setHasCameraPermission(false);
-                toast({ variant: 'destructive', title: 'Camera Access Denied', description: 'Please enable camera permissions in your browser settings.'});
             }
         }
     };
     getCameraPermission();
-    return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+    return () => { 
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+         if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+     };
   }, [isCameraOpen, toast]);
 
   const handleCaptureImage = () => {
@@ -335,12 +349,14 @@ export function StudyNowContent() {
           canvas.width = videoRef.current.videoWidth;
           canvas.height = videoRef.current.videoHeight;
           const context = canvas.getContext('2d');
-          context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-          const dataUri = canvas.toDataURL('image/jpeg');
-          setImageDataUri(dataUri);
-          setContent(""); setTitle("Camera Capture"); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
-          setIsCameraOpen(false);
-          toast({ title: "Image captured!", description: "The captured image is ready for analysis." });
+          if (context) {
+            context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+            const dataUri = canvas.toDataURL('image/png'); // Use PNG for higher quality
+            setImageDataUri(dataUri);
+            setContent(""); setTitle("Camera Capture"); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
+            setIsCameraOpen(false);
+            toast({ title: "Image captured!", description: "The captured image is ready for analysis." });
+          }
       }
   };
 
@@ -359,19 +375,32 @@ export function StudyNowContent() {
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
             <DialogContent>
                 <DialogHeader><DialogTitle>Capture from Camera</DialogTitle></DialogHeader>
-                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
-                {hasCameraPermission === null && <div className="absolute inset-0 flex items-center justify-center bg-background/80"><Loader2 className="animate-spin" /></div>}
-                {hasCameraPermission === false && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
-                        <Alert variant="destructive">
-                            <AlertTitle>Camera Access Required</AlertTitle>
-                            <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
-                        </Alert>
-                    </div>
-                )}
+                <div className="relative">
+                    <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
+                    {hasCameraPermission === null && 
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                            <div className="text-center">
+                                <Loader2 className="animate-spin h-8 w-8 mx-auto" />
+                                <p className="mt-2 text-muted-foreground">Requesting camera access...</p>
+                            </div>
+                        </div>
+                    }
+                    {hasCameraPermission === false && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
+                            <Alert variant="destructive">
+                                <AlertTitle>Camera Access Required</AlertTitle>
+                                <AlertDescription>
+                                    Please allow camera access in your browser settings to use this feature. You may need to reload the page after granting permission.
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission}>Capture Image</Button>
+                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
+                        {isStreamReady ? 'Capture Image' : 'Starting Camera...'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -422,7 +451,7 @@ export function StudyNowContent() {
               <div className="flex items-stretch gap-2 flex-1">
                 <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading}><FileUp className="mr-2 h-4 w-4" />.txt</Button>
                 <Button variant="outline" className="flex-1" onClick={handleImageUploadClick} disabled={isLoading}><ImageIcon className="mr-2 h-4 w-4" />Image</Button>
-                <Button variant="outline" className="flex-1" onClick={() => { setHasCameraPermission(null); setIsCameraOpen(true); }} disabled={isLoading}><Camera className="mr-2 h-4 w-4" />Capture</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { setIsCameraOpen(true); }} disabled={isLoading}><Camera className="mr-2 h-4 w-4" />Capture</Button>
               </div>
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
               <input type="file" ref={imageInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
@@ -548,3 +577,5 @@ export function StudyNowContent() {
     </div>
   );
 }
+
+    

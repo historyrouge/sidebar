@@ -85,6 +85,8 @@ export function ChatContent({
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isStreamReady, setIsStreamReady] = useState(false);
+
 
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   
@@ -297,34 +299,39 @@ export function ChatContent({
     }
   };
   
-    useEffect(() => {
+  useEffect(() => {
         let stream: MediaStream | null = null;
         const getCameraPermission = async () => {
             if (isCameraOpen) {
+                setHasCameraPermission(null);
+                setIsStreamReady(false);
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     setHasCameraPermission(true);
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
+                        videoRef.current.onloadedmetadata = () => {
+                            setIsStreamReady(true);
+                        };
                     }
                 } catch (error) {
                     console.error('Error accessing camera:', error);
                     setHasCameraPermission(false);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Camera Access Denied',
-                        description: 'Please enable camera permissions in your browser settings.',
-                    });
                 }
             }
         };
+
         getCameraPermission();
+
         return () => {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
         };
-    }, [isCameraOpen, toast]);
+    }, [isCameraOpen]);
 
     const handleCaptureImage = () => {
         if (videoRef.current) {
@@ -332,10 +339,12 @@ export function ChatContent({
             canvas.width = videoRef.current.videoWidth;
             canvas.height = videoRef.current.videoHeight;
             const context = canvas.getContext('2d');
-            context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            const dataUri = canvas.toDataURL('image/jpeg');
-            setCapturedImage(dataUri);
-            setIsCameraOpen(false);
+            if (context) {
+                context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                const dataUri = canvas.toDataURL('image/png'); // Use PNG for higher quality
+                setCapturedImage(dataUri);
+                setIsCameraOpen(false);
+            }
         }
     };
 
@@ -355,29 +364,38 @@ export function ChatContent({
     <div className="relative h-full">
         <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-            <DialogContent className="sm:max-w-[425px] md:max-w-lg lg:max-w-2xl w-full h-auto sm:h-auto sm:w-auto p-0">
+             <DialogContent className="sm:max-w-[425px] md:max-w-lg lg:max-w-2xl w-full h-auto sm:h-auto sm:w-auto p-0">
                 <DialogHeader className="p-4 border-b">
                     <DialogTitle>Camera</DialogTitle>
                 </DialogHeader>
-                <video ref={videoRef} className="w-full aspect-video bg-muted" autoPlay muted playsInline />
-                {hasCameraPermission === null && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-                        <Loader2 className="animate-spin" />
-                    </div>
-                )}
-                {hasCameraPermission === false && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
-                        <Alert variant="destructive">
-                            <AlertTitle>Camera Access Required</AlertTitle>
-                            <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
-                        </Alert>
-                    </div>
-                )}
+                <div className="relative">
+                    <video ref={videoRef} className="w-full aspect-video bg-muted" autoPlay muted playsInline />
+                    {hasCameraPermission === null && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                            <div className="text-center">
+                                <Loader2 className="animate-spin h-8 w-8 mx-auto" />
+                                <p className="mt-2 text-muted-foreground">Requesting camera access...</p>
+                            </div>
+                        </div>
+                    )}
+                    {hasCameraPermission === false && (
+                         <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
+                            <Alert variant="destructive">
+                                <AlertTitle>Camera Access Required</AlertTitle>
+                                <AlertDescription>
+                                    Please allow camera access in your browser settings to use this feature. You may need to reload the page after granting permission.
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                </div>
                 <DialogFooter className="p-4 border-t">
                     <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                     </DialogClose>
-                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission}>Capture</Button>
+                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
+                        {isStreamReady ? 'Capture' : 'Starting Camera...'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -545,3 +563,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
