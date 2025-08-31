@@ -356,7 +356,7 @@ export function ChatContent({
                 <DialogHeader>
                     <DialogTitle>Camera</DialogTitle>
                 </DialogHeader>
-                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
                 {hasCameraPermission === null && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                         <Loader2 className="animate-spin" />
