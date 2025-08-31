@@ -24,6 +24,8 @@ import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
 import { Progress } from "./ui/progress";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 declare const puter: any;
 
@@ -63,6 +65,9 @@ export function StudyNowContent() {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
 
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -139,7 +144,6 @@ export function StudyNowContent() {
   const handleAnalyzeImage = useCallback(async () => {
     if (!imageDataUri) return;
     startAnalyzing(async () => {
-        // Image analysis is always done by Gemini
         const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
         if (result.error) {
             toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
@@ -184,17 +188,13 @@ export function StudyNowContent() {
   const handleGenerateImage = useCallback(async () => {
     if (!analysis) return;
     
-    // Reset progress for new generation
     setImageGenerationProgress(0);
     setImageGenerationStep(0);
     
-    // Start the generation process
     startGeneratingImage(async () => {
         const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
-        // Image generation is always done by Gemini
         const result = await generateImageAction({ prompt });
         
-        // Ensure progress is 100% on completion
         setImageGenerationProgress(100);
 
         if (result.error) {
@@ -211,13 +211,12 @@ export function StudyNowContent() {
     let stepInterval: NodeJS.Timeout | undefined;
 
     if (isGeneratingImage) {
-        const totalDuration = 15000; // 15 seconds
+        const totalDuration = 15000;
         const stepDuration = totalDuration / imageGenerationSteps.length;
 
-        // Interval to update the progress bar
         progressInterval = setInterval(() => {
             setImageGenerationProgress(prev => {
-                if (prev >= 95) { // Don't let it reach 100% until it's actually done
+                if (prev >= 95) {
                     clearInterval(progressInterval);
                     return prev;
                 }
@@ -225,8 +224,7 @@ export function StudyNowContent() {
             });
         }, totalDuration / 100);
 
-        // Interval to update the text steps
-        setImageGenerationStep(0); // Start at the first step
+        setImageGenerationStep(0);
         stepInterval = setInterval(() => {
             setImageGenerationStep(prev => (prev + 1) % imageGenerationSteps.length);
         }, stepDuration);
@@ -239,15 +237,8 @@ export function StudyNowContent() {
     };
   }, [isGeneratingImage]);
 
-
-  
-  const handleFileUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageUploadClick = () => {
-    imageInputRef.current?.click();
-  };
+  const handleFileUploadClick = () => fileInputRef.current?.click();
+  const handleImageUploadClick = () => imageInputRef.current?.click();
 
   const handleTextToSpeech = async (text: string, id: string) => {
     if (isSynthesizing === id) {
@@ -276,7 +267,6 @@ export function StudyNowContent() {
     toast({ title: `${type} Copied!`, description: `The ${type.toLowerCase()} has been copied to your clipboard.` });
   };
 
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -286,22 +276,12 @@ export function StudyNowContent() {
           const text = e.target?.result as string;
           setContent(text);
           setTitle(file.name.replace('.txt', ''));
-          setAnalysis(null);
-          setFlashcards(null);
-          setGeneratedImage(null);
-          setImageDataUri(null);
-          toast({
-            title: "File loaded",
-            description: "The file content has been loaded. Click Analyze to begin.",
-          });
+          setAnalysis(null); setFlashcards(null); setGeneratedImage(null); setImageDataUri(null);
+          toast({ title: "File loaded", description: "The file content has been loaded. Click Analyze to begin." });
         };
         reader.readAsText(file);
       } else {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a .txt file.",
-          variant: "destructive",
-        });
+        toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
       }
     }
   };
@@ -313,44 +293,58 @@ export function StudyNowContent() {
             try {
                 const dataUri = await imageToDataUri(URL.createObjectURL(file));
                 setImageDataUri(dataUri);
-                setContent(""); // Clear text content
-                setTitle(file.name);
-                setAnalysis(null);
-                setFlashcards(null);
-                setGeneratedImage(null);
-                toast({
-                  title: "Image loaded",
-                  description: "You can add a text prompt to guide the analysis.",
-                });
+                setContent(""); setTitle(file.name); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
+                toast({ title: "Image loaded", description: "You can add a text prompt to guide the analysis." });
             } catch (error) {
                 toast({ title: "Image processing failed", description: "Could not read the image file.", variant: "destructive" });
             }
         } else {
-            toast({
-              title: "Invalid file type",
-              description: "Please upload an image file (e.g., PNG, JPG).",
-              variant: "destructive",
-            });
+            toast({ title: "Invalid file type", description: "Please upload an image file (e.g., PNG, JPG).", variant: "destructive" });
         }
     }
   };
 
   const clearImage = () => {
-    setImageDataUri(null);
-    setTitle("");
-    setContent("");
-    setAnalysis(null);
-    setFlashcards(null);
-    setGeneratedImage(null);
+    setImageDataUri(null); setTitle(""); setContent(""); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  const handleTutorChat = async (history: any) => {
-    const result = await chatWithTutorAction({ content, history });
-    return result;
-  }
+  const handleTutorChat = async (history: any) => await chatWithTutorAction({ content, history });
 
-  const isLoading = isAnalyzing || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingImage;
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    const getCameraPermission = async () => {
+        if (isCameraOpen) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setHasCameraPermission(true);
+                if (videoRef.current) videoRef.current.srcObject = stream;
+            } catch (error) {
+                setHasCameraPermission(false);
+                toast({ variant: 'destructive', title: 'Camera Access Denied', description: 'Please enable camera permissions in your browser settings.'});
+            }
+        }
+    };
+    getCameraPermission();
+    return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+  }, [isCameraOpen, toast]);
+
+  const handleCaptureImage = () => {
+      if (videoRef.current) {
+          const canvas = document.createElement('canvas');
+          canvas.width = videoRef.current.videoWidth;
+          canvas.height = videoRef.current.videoHeight;
+          const context = canvas.getContext('2d');
+          context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+          const dataUri = canvas.toDataURL('image/jpeg');
+          setImageDataUri(dataUri);
+          setContent(""); setTitle("Camera Capture"); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
+          setIsCameraOpen(false);
+          toast({ title: "Image captured!", description: "The captured image is ready for analysis." });
+      }
+  };
+
+  const isLoading = isAnalyzing || isLoadingMaterial || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingImage;
   
   const TABS = [
     { value: "analysis", label: "Analysis", disabled: !analysis },
@@ -360,9 +354,27 @@ export function StudyNowContent() {
     { value: "image", label: "Image", disabled: !analysis }
   ];
 
-
   return (
     <div className="flex h-screen flex-col bg-muted/20 dark:bg-transparent">
+        <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+            <DialogContent>
+                <DialogHeader><DialogTitle>Capture from Camera</DialogTitle></DialogHeader>
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
+                {hasCameraPermission === null && <div className="absolute inset-0 flex items-center justify-center bg-background/80"><Loader2 className="animate-spin" /></div>}
+                {hasCameraPermission === false && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
+                        <Alert variant="destructive">
+                            <AlertTitle>Camera Access Required</AlertTitle>
+                            <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
+                        </Alert>
+                    </div>
+                )}
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission}>Capture Image</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
@@ -370,11 +382,7 @@ export function StudyNowContent() {
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
         <div className="flex items-center gap-4">
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
@@ -386,110 +394,57 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or upload an image. Analysis is done by Qwen.</CardDescription>
+              <CardDescription>Paste text, upload a document, or capture an image. Analysis is done by Qwen.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
-              <Input 
-                placeholder="Enter a title for your material..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-lg font-semibold"
-                disabled={isLoadingMaterial}
-              />
-              {isLoadingMaterial ? (
-                <div className="flex flex-col flex-1 gap-4">
-                    <Skeleton className="w-full h-full" />
-                </div>
-              ) : imageDataUri ? (
+              <Input placeholder="Enter a title for your material..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-semibold" disabled={isLoading} />
+              {isLoadingMaterial ? <Skeleton className="w-full h-full flex-1" /> : imageDataUri ? (
                 <div className="relative flex-1">
                     <Image src={imageDataUri} alt="Uploaded content" layout="fill" objectFit="contain" className="rounded-md border" />
-                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}>
-                        <X className="h-4 w-4" />
-                    </Button>
+                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}><X className="h-4 w-4" /></Button>
                 </div>
               ) : (
                 <div className="relative h-full">
-                    <Textarea
-                        placeholder="Paste your study content here... (min. 50 characters)"
-                        className="h-full min-h-[300px] resize-none pr-10"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                    <Button
-                        size="icon"
-                        variant={isRecording ? 'destructive' : 'ghost'}
-                        onClick={handleToggleRecording}
-                        className="absolute bottom-3 right-3"
-                        >
+                    <Textarea placeholder="Paste your study content here... (min. 50 characters)" className="h-full min-h-[300px] resize-none pr-10" value={content} onChange={(e) => setContent(e.target.value)} />
+                    <Button size="icon" variant={isRecording ? 'destructive' : 'ghost'} onClick={handleToggleRecording} className="absolute bottom-3 right-3">
                         {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                         <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
                     </Button>
                 </div>
               )}
-               {imageDataUri && (
-                 <Textarea
-                    placeholder="Add an optional prompt to guide the AI..."
-                    className="h-24 resize-none"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                />
-               )}
+               {imageDataUri && <Textarea placeholder="Add an optional prompt to guide the AI..." className="h-24 resize-none" value={content} onChange={(e) => setContent(e.target.value)} />}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
-              <Button onClick={handleAnalyze} disabled={isLoading || isLoadingMaterial || (!imageDataUri && content.trim().length < 50)}>
+              <Button onClick={handleAnalyze} disabled={isLoading || (!imageDataUri && content.trim().length < 50)}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze
               </Button>
               <div className="flex items-stretch gap-2 flex-1">
-                <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading || isLoadingMaterial}>
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Upload .txt
-                </Button>
-                <Button variant="outline" className="flex-1" onClick={handleImageUploadClick} disabled={isLoading || isLoadingMaterial}>
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Upload Image
-                </Button>
+                <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading}><FileUp className="mr-2 h-4 w-4" />.txt</Button>
+                <Button variant="outline" className="flex-1" onClick={handleImageUploadClick} disabled={isLoading}><ImageIcon className="mr-2 h-4 w-4" />Image</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { setHasCameraPermission(null); setIsCameraOpen(true); }} disabled={isLoading}><Camera className="mr-2 h-4 w-4" />Capture</Button>
               </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept=".txt"
-              />
-              <input
-                type="file"
-                ref={imageInputRef}
-                onChange={handleImageFileChange}
-                className="hidden"
-                accept="image/*"
-              />
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
+              <input type="file" ref={imageInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
             </CardFooter>
           </Card>
 
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>AI-Powered Study Tools</CardTitle>
-              <CardDescription>
-                Tools are powered by their optimal AI models.
-              </CardDescription>
+              <CardDescription>Tools are powered by their optimal AI models.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
               {isAnalyzing && !analysis ? (
                 <div className="space-y-4 p-1">
-                  <Skeleton className="h-8 w-1/3" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-8 w-1/3" />
-                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-8 w-1/3" /><Skeleton className="h-20 w-full" /><Skeleton className="h-8 w-1/3" /><Skeleton className="h-20 w-full" />
                 </div>
               ) : !analysis ? (
                 <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
                   <div className="text-center p-8">
                     <Wand2 className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-semibold">Ready to Learn?</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Analyze your material to generate study tools.
-                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">Analyze your material to generate study tools.</p>
                   </div>
                 </div>
               ) : (
@@ -501,82 +456,45 @@ export function StudyNowContent() {
                   <TabsContent value="analysis" className="h-full">
                     <Accordion type="multiple" defaultValue={['summary', 'key-concepts']} className="w-full space-y-3 pr-4">
                         <AccordionItem value="summary" className="rounded-md border bg-card px-4">
-                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
-                                <div className="flex items-center gap-3"><Pilcrow />Summary</div>
-                            </AccordionTrigger>
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><Pilcrow />Summary</div></AccordionTrigger>
                             <AccordionContent className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
                                 <div className="flex justify-end">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        onClick={() => handleTextToSpeech(analysis.summary, 'summary')}
-                                        disabled={!!isSynthesizing}
-                                        className="mb-2"
-                                    >
+                                    <Button size="icon" variant="ghost" onClick={() => handleTextToSpeech(analysis.summary, 'summary')} disabled={!!isSynthesizing} className="mb-2">
                                         {isSynthesizing === 'summary' ? <Loader2 className="animate-spin" /> : <Volume2 />}
                                     </Button>
                                 </div>
                                 {audioDataUri && isSynthesizing === 'summary' && (
                                     <div className="mb-2">
-                                        <audio controls autoPlay src={audioDataUri} className="w-full" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }}>
-                                            Your browser does not support the audio element.
-                                        </audio>
+                                        <audio controls autoPlay src={audioDataUri} className="w-full" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
                                     </div>
                                 )}
                                 <p>{analysis.summary}</p>
                             </AccordionContent>
                         </AccordionItem>
                         <AccordionItem value="key-concepts" className="rounded-md border bg-card px-4">
-                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
-                                <div className="flex items-center gap-3"><BrainCircuit/>Key Concepts</div>
-                            </AccordionTrigger>
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><BrainCircuit/>Key Concepts</div></AccordionTrigger>
                             <AccordionContent className="prose prose-sm dark:prose-invert max-w-none">
-                            {analysis.keyConcepts && analysis.keyConcepts.map((concept, i) => 
-                                <div key={i} className="py-2">
-                                <p className="font-semibold !my-0">{concept.concept}</p>
-                                <p className="text-muted-foreground !my-0">{concept.explanation}</p>
-                                </div>
-                            )}
+                            {analysis.keyConcepts?.map((concept, i) => <div key={i} className="py-2"><p className="font-semibold !my-0">{concept.concept}</p><p className="text-muted-foreground !my-0">{concept.explanation}</p></div>)}
                             </AccordionContent>
                         </AccordionItem>
-                        {analysis.codeExamples && analysis.codeExamples.length > 0 && (
+                        {analysis.codeExamples?.length > 0 && (
                             <AccordionItem value="code-examples" className="rounded-md border bg-card px-4">
-                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
-                                    <div className="flex items-center gap-3"><Code />Code Examples</div>
-                                </AccordionTrigger>
+                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><Code />Code Examples</div></AccordionTrigger>
                                 <AccordionContent className="space-y-4">
-                                {analysis.codeExamples.map((example, i) => 
-                                    <div key={i} className="space-y-2">
-                                        <p className="text-sm text-muted-foreground">{example.explanation}</p>
-                                        <div className="relative rounded-md bg-muted/50 p-4 font-mono text-xs">
-                                            <Button size="icon" variant="ghost" className="absolute top-2 right-2 h-6 w-6" onClick={() => handleCopyToClipboard(example.code, "Code")}>
-                                                <Copy className="h-4 w-4" />
-                                            </Button>
-                                            <pre className="whitespace-pre-wrap"><code>{example.code}</code></pre>
-                                        </div>
-                                    </div>
-                                )}
+                                {analysis.codeExamples.map((example, i) => <div key={i} className="space-y-2"><p className="text-sm text-muted-foreground">{example.explanation}</p><div className="relative rounded-md bg-muted/50 p-4 font-mono text-xs"><Button size="icon" variant="ghost" className="absolute top-2 right-2 h-6 w-6" onClick={() => handleCopyToClipboard(example.code, "Code")}><Copy className="h-4 w-4" /></Button><pre className="whitespace-pre-wrap"><code>{example.code}</code></pre></div></div>)}
                                 </AccordionContent>
                             </AccordionItem>
                         )}
                         <AccordionItem value="potential-questions" className="rounded-md border bg-card px-4">
-                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
-                                <div className="flex items-center gap-3"><HelpCircle />Potential Questions</div>
-                            </AccordionTrigger>
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><HelpCircle />Potential Questions</div></AccordionTrigger>
                             <AccordionContent className="prose-sm dark:prose-invert max-w-none">
-                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">
-                                {analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}
-                            </ul>
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.potentialQuestions.map((q, i) => <li key={i}>{q}</li>)}</ul>
                             </AccordionContent>
                         </AccordionItem>
                          <AccordionItem value="related-topics" className="rounded-md border bg-card px-4">
-                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base">
-                                <div className="flex items-center gap-3"><ListTree />Related Topics</div>
-                            </AccordionTrigger>
+                            <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Related Topics</div></AccordionTrigger>
                             <AccordionContent className="prose-sm dark:prose-invert max-w-none">
-                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">
-                                {analysis.relatedTopics.map((q, i) => <li key={i}>{q}</li>)}
-                            </ul>
+                            <ul className="mt-2 list-disc space-y-2 pl-5 text-muted-foreground">{analysis.relatedTopics.map((q, i) => <li key={i}>{q}</li>)}</ul>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -588,28 +506,19 @@ export function StudyNowContent() {
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
-                          <Button onClick={handleGenerateFlashcards} disabled={isGeneratingFlashcards}>
-                            <BookCopy className="mr-2 h-4 w-4" />
-                            Generate Flashcards
-                          </Button>
+                          <Button onClick={handleGenerateFlashcards} disabled={isGeneratingFlashcards}><BookCopy className="mr-2 h-4 w-4" />Generate Flashcards</Button>
                         </div>
                       )}
                     </TabsContent>
                     <TabsContent value="quiz" className="h-full">
                        {isGeneratingQuiz ? <div className="flex h-full items-center justify-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" /> <p>Generating quiz...</p></div> : (
                         <div className="flex h-full items-center justify-center">
-                           <Button onClick={handleGenerateQuiz} disabled={isGeneratingQuiz}>
-                             <HelpCircle className="mr-2 h-4 w-4" />
-                            Generate Quiz & Start
-                          </Button>
+                           <Button onClick={handleGenerateQuiz} disabled={isGeneratingQuiz}><HelpCircle className="mr-2 h-4 w-4" />Generate Quiz & Start</Button>
                         </div>
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat 
-                        content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} 
-                        onSendMessage={handleTutorChat}
-                      />
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} onSendMessage={handleTutorChat}/>
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? (
@@ -625,10 +534,7 @@ export function StudyNowContent() {
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center">
-                           <Button onClick={handleGenerateImage} disabled={isGeneratingImage}>
-                            <Camera className="mr-2 h-4 w-4" />
-                            Generate Image
-                          </Button>
+                           <Button onClick={handleGenerateImage} disabled={isGeneratingImage}><Camera className="mr-2 h-4 w-4" />Generate Image</Button>
                         </div>
                       )}
                     </TabsContent>

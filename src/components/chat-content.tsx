@@ -295,10 +295,11 @@ export function ChatContent({
   };
   
     useEffect(() => {
-        if (isCameraOpen) {
-            const getCameraPermission = async () => {
+        let stream: MediaStream | null = null;
+        const getCameraPermission = async () => {
+            if (isCameraOpen) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     setHasCameraPermission(true);
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
@@ -312,16 +313,14 @@ export function ChatContent({
                         description: 'Please enable camera permissions in your browser settings.',
                     });
                 }
-            };
-            getCameraPermission();
-        } else {
-            // Cleanup: stop video stream when modal is closed
-            if (videoRef.current && videoRef.current.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
-                videoRef.current.srcObject = null;
             }
-        }
+        };
+        getCameraPermission();
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
     }, [isCameraOpen, toast]);
 
     const handleCaptureImage = () => {
@@ -357,15 +356,19 @@ export function ChatContent({
                 <DialogHeader>
                     <DialogTitle>Camera</DialogTitle>
                 </DialogHeader>
-                {hasCameraPermission === null ? (
-                    <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>
-                ) : hasCameraPermission === false ? (
-                    <Alert variant="destructive">
-                        <AlertTitle>Camera Access Required</AlertTitle>
-                        <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
-                    </Alert>
-                ) : (
-                    <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
+                {hasCameraPermission === null && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                        <Loader2 className="animate-spin" />
+                    </div>
+                )}
+                {hasCameraPermission === false && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
+                        <Alert variant="destructive">
+                            <AlertTitle>Camera Access Required</AlertTitle>
+                            <AlertDescription>Please allow camera access to use this feature.</AlertDescription>
+                        </Alert>
+                    </div>
                 )}
                 <DialogFooter>
                     <DialogClose asChild>
