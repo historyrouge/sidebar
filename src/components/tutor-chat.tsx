@@ -205,7 +205,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
           />
            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} onClick={handleToggleRecording} disabled={isTyping || !content}>
             {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+            <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
           </Button>
           <Button type="submit" size="icon" disabled={isTyping || !input.trim() || !content}>
             {isTyping ? (
