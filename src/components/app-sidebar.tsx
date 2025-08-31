@@ -2,17 +2,18 @@
 "use client";
 
 import {
+  Bell,
   BookOpen,
   HelpCircle,
+  Home,
   Info,
-  MessageSquare,
-  PlusSquare,
+  Plus,
+  Search,
   Settings,
-  Sparkles,
-  Youtube,
-  FileQuestion,
-  Rss,
   Code,
+  FileQuestion,
+  Youtube,
+  Rss,
   User,
   MoreHorizontal,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
@@ -34,15 +36,15 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
+    DropdownMenuSeparator as DropdownSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 const menuItems = [
-    { name: "Chat", icon: <MessageSquare />, href: "/" },
-    { name: "Study Session", icon: <Sparkles />, href: "/study-now" },
+    { name: "Home", icon: <Home />, href: "/" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
-    { name: "Create Flashcards", icon: <PlusSquare />, href: "/create-flashcards" },
+    { name: "Create Flashcards", icon: <Plus />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
@@ -56,23 +58,16 @@ const bottomMenuItems = [
 ]
 
 const Logo = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-        {...props}
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
     >
-        <title>Easy Learn AI Logo</title>
-        <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10 10-4.48 10-10z"/>
-        <path d="M4.2 11.27L12 8.5l7.8 2.77"/>
-        <path d="M12 20v-7.5"/>
-        <path d="M11.5 6.5L6.25 8.25l5.5 2.25 5.5-2.25L12.5 6.5c-.25-.1-.75-.1-1 0z"/>
+      <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.479l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
     </svg>
-);
+  );
 
 
 export function AppSidebar() {
@@ -105,52 +100,54 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Logo className="size-5" />
             </div>
             <h1 className="text-lg font-semibold">Easy Learn AI</h1>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="p-2 flex-grow">
-        <SidebarMenu>
+      <SidebarContent className="p-2 flex-grow flex flex-col">
+        <SidebarMenu className="flex-grow">
             {renderMenuItems(menuItems)}
+            <SidebarSeparator className="my-2" />
+            {renderMenuItems(bottomMenuItems)}
+        </SidebarMenu>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <Button className="w-full h-12 rounded-full text-lg">Post</Button>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
-        <SidebarMenu>
-            {renderMenuItems(bottomMenuItems)}
-        </SidebarMenu>
-        <div className="p-2">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50">
-                        <Avatar className="size-8">
-                            <AvatarFallback>N</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 truncate">
-                            <p className="truncate font-semibold text-sidebar-foreground">Guest User</p>
-                        </div>
-                        <MoreHorizontal className="size-4 shrink-0 text-sidebar-foreground/50" />
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-64" side="top" align="start">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled>
-                        <User className="mr-2" />
-                        <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                        <Settings className="mr-2" />
-                        <span>Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled>
-                        Log out
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex w-full items-center gap-2 overflow-hidden rounded-full p-2 text-left text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50">
+                    <Avatar className="size-8">
+                        <AvatarFallback>N</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 truncate">
+                        <p className="truncate font-semibold text-sidebar-foreground">Guest User</p>
+                    </div>
+                    <MoreHorizontal className="size-4 shrink-0 text-sidebar-foreground/50" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64" side="top" align="start">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownSeparator />
+                <DropdownMenuItem disabled>
+                    <User className="mr-2" />
+                    <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                    <Settings className="mr-2" />
+                    <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownSeparator />
+                <DropdownMenuItem disabled>
+                    Log out
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
