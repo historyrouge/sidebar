@@ -13,9 +13,10 @@ import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImage
 import { analyzeCode, AnalyzeCodeInput } from "@/ai/flows/analyze-code";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as GenerateMindMapOutputFlow } from "@/ai/flows/generate-mindmap";
-import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/ai/flows/generate-question-paper";
+import { generateQuestionPaper } from "@/ai/flows/generate-question-paper";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
+import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 
 export type ModelKey = 'gemini' | 'qwen' | 'gpt5';
 

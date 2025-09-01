@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, FileText, Wand2, Printer, AlertTriangle } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
-import { generateQuestionPaperAction, GenerateQuestionPaperOutput } from "@/app/actions";
+import { generateQuestionPaperAction, GenerateQuestionPaperOutput, GenerateQuestionPaperInput } from "@/app/actions";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
