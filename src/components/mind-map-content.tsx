@@ -13,62 +13,7 @@ import { generateMindMapAction, GenerateMindMapOutput } from "@/app/actions";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
-import { Badge } from "./ui/badge";
-
-type MindMapNode = GenerateMindMapOutput['mainNodes'][0];
-
-const NodeCard: React.FC<{ node: MindMapNode }> = ({ node }) => (
-    <Card className="flex flex-col h-full bg-card/50">
-        <CardHeader className="p-4">
-            <CardTitle className="text-base flex items-center gap-2">
-                <span className="text-2xl">{node.emoji}</span>
-                {node.title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-3 text-sm flex-1">
-            {node.content?.map((item, idx) => (
-                <div key={idx}>
-                    <p className="font-semibold text-foreground">{item.heading}:</p>
-                    <ul className="list-disc pl-5 text-muted-foreground">
-                        {item.points.map((point, pIdx) => <li key={pIdx}>{point}</li>)}
-                    </ul>
-                </div>
-            ))}
-        </CardContent>
-    </Card>
-);
-
-const MainNode: React.FC<{ node: MindMapNode }> = ({ node }) => (
-    <div className="flex flex-col items-center gap-4">
-        {/* Connector Line */}
-        <div className="w-px h-8 bg-border"></div>
-
-        {/* Main Node Card */}
-        <div className="w-full max-w-sm mx-auto">
-             <NodeCard node={node} />
-        </div>
-       
-        {/* Children Connector */}
-        {node.children && node.children.length > 0 && (
-            <div className="w-full flex justify-center">
-                <div className="w-px h-8 bg-border"></div>
-            </div>
-        )}
-
-        {/* Children Grid */}
-        {node.children && node.children.length > 0 && (
-             <div className="w-full h-px bg-border"></div>
-        )}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            {node.children?.map((child, idx) => (
-                 <div key={idx} className="flex flex-col items-center">
-                    <div className="w-px h-8 bg-border"></div>
-                    <NodeCard node={child} />
-                 </div>
-            ))}
-        </div>
-    </div>
-);
+import { cn } from "@/lib/utils";
 
 
 export function MindMapContent() {
@@ -115,7 +60,7 @@ export function MindMapContent() {
                     <Card className="flex flex-col h-full xl:col-span-1">
                         <CardHeader>
                             <CardTitle>Enter Your Content</CardTitle>
-                            <CardDescription>Paste your study material below to generate a structured mind map using Qwen.</CardDescription>
+                            <CardDescription>Paste your study material below to generate a structured mind map using our AI.</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-1 flex flex-col">
                             <Textarea
@@ -141,14 +86,10 @@ export function MindMapContent() {
                             <CardContent>
                                 <ScrollArea className="h-[calc(100vh-20rem)] w-full">
                                     {isGenerating ? (
-                                        <div className="space-y-6 pr-4">
-                                            <div className="space-y-2 text-center">
-                                                <Skeleton className="h-20 w-1/2 mx-auto" />
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                <Skeleton className="h-48 w-full" />
-                                                <Skeleton className="h-48 w-full" />
-                                                <Skeleton className="h-48 w-full" />
+                                        <div className="space-y-6 pr-4 flex items-center justify-center h-full">
+                                            <div className="text-center">
+                                                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                                                <p className="mt-2 text-muted-foreground">Generating your mind map...</p>
                                             </div>
                                         </div>
                                     ) : error ? (
@@ -161,40 +102,12 @@ export function MindMapContent() {
                                             </AlertDescription>
                                         </Alert>
                                     ) : mindMap ? (
-                                        <div className="pr-4 space-y-4">
-                                            <Card className="p-6 bg-primary/10 border-2 border-dashed border-primary/50 text-center">
-                                                <h2 className="text-2xl font-bold text-primary flex items-center justify-center gap-3">
-                                                    <span className="text-4xl">{mindMap.centralTopic.emoji}</span>
-                                                    {mindMap.centralTopic.title}
-                                                </h2>
+                                        <div className="pr-4">
+                                            <Card className="bg-muted/50 p-4">
+                                                <pre className="font-mono text-xs whitespace-pre-wrap break-words">
+                                                    {mindMap.mindmapText}
+                                                </pre>
                                             </Card>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                               {mindMap.mainNodes.map((node, index) => (
-                                                    <div key={index} className="flex flex-col items-center">
-                                                        <div className="w-px h-8 bg-border"></div>
-                                                        <NodeCard node={node} />
-                                                        {node.children && node.children.length > 0 && (
-                                                            <div className="w-full flex flex-col items-center mt-4 space-y-4">
-                                                                 <div className="w-px h-4 bg-border"></div>
-                                                                 <div className="w-full grid grid-cols-1 gap-4">
-                                                                     {node.children.map((child, childIdx) => (
-                                                                         <div key={childIdx} className="flex items-start gap-4">
-                                                                            <div className="flex flex-col items-center">
-                                                                                 <div className="w-px h-5 bg-border"></div>
-                                                                                 <div className="w-5 h-px bg-border -ml-2"></div>
-                                                                            </div>
-                                                                            <div className="flex-1 pt-1">
-                                                                                <NodeCard node={child} />
-                                                                            </div>
-                                                                         </div>
-                                                                     ))}
-                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                               ))}
-                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex h-full min-h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
