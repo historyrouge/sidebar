@@ -23,7 +23,23 @@ You must provide your response ONLY as a valid JSON object. Do not include any o
   "properties": {
     "title": { "type": "string" },
     "generalInstructions": { "type": "array", "items": { "type": "string" } },
-    "sectionA": { "type": "array", "items": { "type": "object", "properties": { "question": { "type": "string" }, "marks": { "type": "number" } } } },
+    "sectionA": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": { "type": "string" },
+          "options": {
+            "type": "object",
+            "properties": { "a": { "type": "string" }, "b": { "type": "string" }, "c": { "type": "string" }, "d": { "type": "string" } },
+            "required": ["a", "b", "c", "d"]
+          },
+          "answer": { "type": "string" },
+          "marks": { "type": "number", "const": 1 }
+        },
+        "required": ["question", "options", "answer", "marks"]
+      }
+    },
     "sectionB": { "type": "array", "items": { "type": "object", "properties": { "question": { "type": "string" }, "marks": { "type": "number" } } } },
     "sectionC": { "type": "array", "items": { "type": "object", "properties": { "question": { "type": "string" }, "marks": { "type": "number" } } } },
     "sectionD": { "type": "array", "items": { "type": "object", "properties": { "question": { "type": "string" }, "marks": { "type": "number" } } } },
@@ -36,7 +52,7 @@ Please generate the following content:
 1.  **Title**: Create a suitable title for the question paper.
 2.  **General Instructions**: Provide a list of standard instructions for students.
 3.  **Structure**: The paper must be divided into five sections: A, B, C, D, and E.
-4.  **Section A**: Generate 3-5 multiple-choice or one-word answer questions. Each question should be worth 1 mark.
+4.  **Section A**: Generate 3-5 **multiple-choice questions**. Each question must have four options (a, b, c, d), and you must specify the correct answer key. Each question is worth 1 mark.
 5.  **Section B**: Generate 2-3 very short answer questions. Each question should be worth 2 marks.
 6.  **Section C**: Generate 2 short answer questions. Each question should be worth 3 marks.
 7.  **Section D**: Generate 1 long answer question. This question should be worth 5 marks.

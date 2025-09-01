@@ -1,6 +1,19 @@
 
 import { z } from 'zod';
 
+const MCQSchema = z.object({
+    question: z.string().describe("The multiple-choice question text."),
+    options: z.object({
+        a: z.string(),
+        b: z.string(),
+        c: z.string(),
+        d: z.string(),
+    }).describe("An object containing four options: a, b, c, d."),
+    answer: z.string().describe("The correct option key (e.g., 'a', 'b', 'c', 'd')."),
+    marks: z.number().describe("The marks allocated to the question, typically 1."),
+});
+
+
 const QuestionSchema = z.object({
   question: z.string().describe('The question text.'),
   marks: z.number().describe('The marks allocated to the question.'),
@@ -24,8 +37,8 @@ export type GenerateQuestionPaperInput = z.infer<typeof GenerateQuestionPaperInp
 export const GenerateQuestionPaperOutputSchema = z.object({
   title: z.string().describe("The title of the question paper."),
   generalInstructions: z.array(z.string()).describe("A list of general instructions for the students."),
-  sectionA: z.array(QuestionSchema).describe('Section A: Multiple choice or very short answer questions (1 mark each).'),
-  sectionB: z.array(QuestionSchema).describe('Section B: Short answer questions (2 marks each).'),
+  sectionA: z.array(MCQSchema).describe('Section A: Multiple choice questions (1 mark each).'),
+  sectionB: z.array(QuestionSchema).describe('Section B: Very short answer questions (2 marks each).'),
   sectionC: z.array(QuestionSchema).describe('Section C: Short answer questions (3 marks each).'),
   sectionD: z.array(QuestionSchema).describe('Section D: Long answer questions (5 marks each).'),
   sectionE: z.array(CaseBasedQuestionSchema).describe('Section E: Case-based/Source-based questions (4 marks each).'),
