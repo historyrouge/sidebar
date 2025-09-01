@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -93,6 +93,10 @@ export function ChatContent({
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isStreamReady, setIsStreamReady] = useState(false);
+  
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
+  const streamRef = useRef<MediaStream | null>(null);
 
 
   const [showLimitDialog, setShowLimitDialog] = useState(false);
@@ -320,39 +324,68 @@ export function ChatContent({
     }
   };
   
-  useEffect(() => {
-        let stream: MediaStream | null = null;
-        const getCameraPermission = async () => {
+    const startCamera = useCallback(async (deviceId?: string) => {
+        // Stop any existing stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        setIsStreamReady(false);
+        try {
+            const constraints: MediaStreamConstraints = {
+                video: deviceId ? { deviceId: { exact: deviceId } } : true,
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = stream;
+            setHasCameraPermission(true);
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.onloadedmetadata = () => {
+                    setIsStreamReady(true);
+                };
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const getDevicesAndStart = async () => {
             if (isCameraOpen) {
                 setHasCameraPermission(null);
-                setIsStreamReady(false);
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    setHasCameraPermission(true);
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        videoRef.current.onloadedmetadata = () => {
-                            setIsStreamReady(true);
-                        };
-                    }
-                } catch (error) {
-                    console.error('Error accessing camera:', error);
-                    setHasCameraPermission(false);
+                await startCamera(currentDeviceId); // Initial start
+                
+                // Now get all devices to allow switching
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevs = devices.filter(d => d.kind === 'videoinput');
+                setVideoDevices(videoDevs);
+                if (!currentDeviceId && videoDevs.length > 0) {
+                    setCurrentDeviceId(videoDevs[0].deviceId);
                 }
             }
         };
 
-        getCameraPermission();
+        getDevicesAndStart();
 
         return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
             }
             if (videoRef.current) {
                 videoRef.current.srcObject = null;
             }
         };
-    }, [isCameraOpen]);
+    }, [isCameraOpen, currentDeviceId, startCamera]);
+
+    const handleSwitchCamera = () => {
+        if (videoDevices.length > 1) {
+            const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
+            const nextIndex = (currentIndex + 1) % videoDevices.length;
+            setCurrentDeviceId(videoDevices[nextIndex].deviceId);
+        }
+    };
+
 
     const handleCaptureImage = () => {
         if (videoRef.current) {
@@ -419,13 +452,22 @@ export function ChatContent({
                         </div>
                     )}
                 </div>
-                <DialogFooter className="p-4 border-t">
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
-                        {isStreamReady ? 'Capture' : 'Starting Camera...'}
-                    </Button>
+                <DialogFooter className="p-4 border-t flex justify-between">
+                    <div>
+                        {videoDevices.length > 1 && (
+                            <Button variant="outline" onClick={handleSwitchCamera}>
+                                <CameraRotate className="mr-2 h-4 w-4" /> Switch Camera
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
+                            {isStreamReady ? 'Capture' : 'Starting Camera...'}
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
