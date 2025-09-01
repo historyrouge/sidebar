@@ -228,7 +228,7 @@ export async function helpChatAction(
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
-    const { history, imageDataUri, prompt, model = 'qwen' } = input;
+    const { history, imageDataUri, prompt, model = 'gemini' } = input;
 
     if (model === 'qwen') {
       if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {

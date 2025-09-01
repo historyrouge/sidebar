@@ -9,6 +9,8 @@
 
 import { GenerateQuestionPaperInput, GenerateQuestionPaperInputSchema, GenerateQuestionPaperOutput, GenerateQuestionPaperOutputSchema } from '@/lib/question-paper-types';
 import { openai } from '@/lib/openai';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
 const paperSystemPrompt = `You are an expert educator specializing in creating academic question papers based on the Indian CBSE (Central Board of Secondary Education) pattern. Your task is to generate a well-structured question paper. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
 
@@ -101,3 +103,16 @@ export async function generateQuestionPaper(input: GenerateQuestionPaperInput): 
         throw new Error("The AI model returned an invalid format. Please try again.");
     }
 }
+
+
+export const generateQuestionPaperTool = ai.defineTool(
+    {
+        name: 'generateQuestionPaperTool',
+        description: 'Generates a question paper for a given class, subject, and topic based on the CBSE pattern.',
+        inputSchema: GenerateQuestionPaperInputSchema,
+        outputSchema: GenerateQuestionPaperOutputSchema,
+    },
+    async (input) => {
+        return await generateQuestionPaper(input);
+    }
+);

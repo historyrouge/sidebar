@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey, GenerateQuestionPaperOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -16,9 +16,11 @@ import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
-import { Card } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
+import { useRouter } from "next/navigation";
+
 
 declare const puter: any;
 
@@ -26,6 +28,10 @@ type Message = {
   role: "user" | "model";
   content: string;
   imageDataUri?: string;
+  toolResult?: {
+    type: 'questionPaper',
+    data: GenerateQuestionPaperOutput
+  }
 };
 
 const suggestionPrompts = [
@@ -72,6 +78,7 @@ export function ChatContent({
     startTyping: React.TransitionStartFunction
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -127,7 +134,7 @@ export function ChatContent({
                 responseText = typeof response === 'object' && response.text ? response.text : String(response);
             } else { // qwen or gemini, or gpt5 with image falls through here
                 const result = await generalChatAction({ 
-                    history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
+                    history: chatHistory.map(h => ({role: h.role as any, content: h.content, imageDataUri: h.imageDataUri})),
                     imageDataUri: currentMessage.imageDataUri,
                     model: model
                 });
@@ -141,7 +148,21 @@ export function ChatContent({
         }
 
         if (responseText) {
-            const modelMessage: Message = { role: "model", content: responseText };
+            let conversationalPart = responseText;
+            let toolResult: Message['toolResult'] | undefined = undefined;
+
+            if (responseText.includes('[TOOL_RESULT:questionPaper]')) {
+                const parts = responseText.split('\n\n[TOOL_RESULT:questionPaper]\n');
+                conversationalPart = parts[0];
+                try {
+                    const toolData = JSON.parse(parts[1]);
+                    toolResult = { type: 'questionPaper', data: toolData };
+                } catch (e) {
+                    console.error("Failed to parse tool result JSON", e);
+                }
+            }
+
+            const modelMessage: Message = { role: "model", content: conversationalPart, toolResult };
             setHistory((prev) => [...prev, modelMessage]);
         } else {
              if (remainingModels.length > 0) {
@@ -176,7 +197,7 @@ export function ChatContent({
     setCapturedImage(null);
 
     // If there's an image, Gemini is the best model for it. Prioritize it.
-    const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
+    const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gemini', 'gpt5', 'qwen'];
     await executeChat(userMessage, newHistory, modelsToTry);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,7 +214,7 @@ export function ChatContent({
 
       const historyWithoutLastResponse = history.slice(0, -1);
       setHistory(historyWithoutLastResponse);
-      const modelsToTry = lastUserMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
+      const modelsToTry = lastUserMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gemini', 'gpt5', 'qwen'];
       await executeChat(lastUserMessage, historyWithoutLastResponse, modelsToTry);
   };
 
@@ -348,6 +369,15 @@ export function ChatContent({
         }
     };
 
+  const handleViewQuestionPaper = (paper: GenerateQuestionPaperOutput) => {
+    try {
+        localStorage.setItem('questionPaper', JSON.stringify(paper));
+        router.push('/question-paper/view');
+    } catch (e) {
+        toast({ title: "Storage Error", description: "Could not store the generated paper.", variant: "destructive" });
+    }
+  };
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -460,6 +490,20 @@ export function ChatContent({
                             )}
                             <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
     
+                             {message.toolResult?.type === 'questionPaper' && (
+                                <Card className="mt-2 bg-muted/50">
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <FileText className="h-5 w-5"/>
+                                            {message.toolResult.data.title}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                                    </CardContent>
+                                </Card>
+                            )}
                             {message.role === 'model' && (
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
