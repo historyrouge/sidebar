@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, BrainCircuit, Share2, CornerDownRight } from "lucide-react";
+import { Loader2, Wand2, BrainCircuit, Share2, CornerDownRight, AlertTriangle } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import { generateMindMapAction, GenerateMindMapOutput } from "@/app/actions";
@@ -133,8 +133,12 @@ export function MindMapContent() {
                                     </div>
                                 ) : error ? (
                                     <Alert variant="destructive">
+                                        <AlertTriangle className="h-4 w-4" />
                                         <AlertTitle>Generation Failed</AlertTitle>
-                                        <AlertDescription>{error}</AlertDescription>
+                                        <AlertDescription>
+                                            The AI model could not generate a mind map. This might be due to an invalid API key or a network issue. Please check your configuration and try again.
+                                            <p className="text-xs font-mono mt-2 bg-destructive/10 p-2 rounded">Error: {error}</p>
+                                        </AlertDescription>
                                     </Alert>
                                 ) : mindMap ? (
                                      <div className="pr-4">
