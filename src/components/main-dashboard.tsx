@@ -4,22 +4,50 @@
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
+import { GenerateQuestionPaperOutput } from "@/app/actions";
 
 type Message = {
   role: "user" | "model";
   content: string;
   imageDataUri?: string;
+  toolResult?: {
+    type: 'questionPaper',
+    data: GenerateQuestionPaperOutput
+  }
 };
+
+const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
 
 export function MainDashboard() {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { theme, setTheme } = useTheme();
+
+  // Load history from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+      if (savedHistory) {
+        setHistory(JSON.parse(savedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to load chat history from localStorage", error);
+    }
+  }, []);
+
+  // Save history to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error("Failed to save chat history to localStorage", error);
+    }
+  }, [history]);
 
   return (
     <div className="flex h-full flex-col bg-muted/20 dark:bg-muted/10">
