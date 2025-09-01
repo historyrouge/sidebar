@@ -10,7 +10,6 @@ import { Loader2, Wand2, BrainCircuit, Share2, CornerDownRight, AlertTriangle } 
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import { generateMindMapAction, GenerateMindMapOutput } from "@/app/actions";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
@@ -18,35 +17,36 @@ import { cn } from "@/lib/utils";
 
 type MindMapNode = GenerateMindMapOutput['mainNodes'][0];
 
-const NodeComponent: React.FC<{ node: MindMapNode, level: number }> = ({ node, level }) => {
-    const hasChildren = node.children && node.children.length > 0;
-    const paddingLeft = `${level * 1.5}rem`;
-
-    if (!hasChildren) {
-        return (
-            <div className="flex items-start" style={{ paddingLeft }}>
-                 <CornerDownRight className="h-4 w-4 mr-2 mt-1 flex-shrink-0 text-muted-foreground" />
-                <p className="text-muted-foreground">{node.title}</p>
-            </div>
-        )
-    }
-
+const NodeComponent: React.FC<{ node: MindMapNode; isLastChild: boolean; isRoot?: boolean }> = ({ node, isLastChild, isRoot = false }) => {
     return (
-        <AccordionItem value={node.title} className="border-b-0">
-            <AccordionTrigger 
-                className="py-2 text-left font-medium hover:no-underline [&>svg]:hidden"
-                style={{ paddingLeft }}
-            >
-                <div className="flex items-center gap-2">
-                    <span className={cn(level === 0 ? "font-semibold text-base" : "font-medium text-sm")}>{node.title}</span>
+        <div className="relative flex items-start">
+            <div className="flex flex-col items-center mr-4">
+                {!isRoot && (
+                    <>
+                        <div className={cn("w-px h-6", isLastChild ? 'bg-transparent' : 'bg-border')}></div>
+                        <div className="w-6 h-px bg-border"></div>
+                    </>
+                )}
+            </div>
+            <div className="flex-1">
+                <div className={cn("p-3 rounded-lg flex-1", isRoot ? "bg-primary/10 border-primary/20 border" : "bg-card border")}>
+                    <p className={cn("font-medium", isRoot ? "text-primary font-semibold" : "text-foreground")}>{node.title}</p>
                 </div>
-            </AccordionTrigger>
-            <AccordionContent className="pb-0 pl-4 border-l-2 border-dashed ml-2">
-                {node.children.map((child, index) => (
-                    <NodeComponent key={`${child.title}-${index}`} node={child} level={level + 1} />
-                ))}
-            </AccordionContent>
-        </AccordionItem>
+                 {node.children && node.children.length > 0 && (
+                    <div className="mt-2 pl-6 border-l-2 border-dashed border-border/50">
+                        <div className="space-y-2">
+                           {node.children.map((child, index) => (
+                                <NodeComponent
+                                    key={index}
+                                    node={child}
+                                    isLastChild={index === node.children.length - 1}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 };
 
@@ -132,7 +132,7 @@ export function MindMapContent() {
                                         </div>
                                     </div>
                                 ) : error ? (
-                                    <Alert variant="destructive">
+                                     <Alert variant="destructive">
                                         <AlertTriangle className="h-4 w-4" />
                                         <AlertTitle>Generation Failed</AlertTitle>
                                         <AlertDescription>
@@ -141,18 +141,20 @@ export function MindMapContent() {
                                         </AlertDescription>
                                     </Alert>
                                 ) : mindMap ? (
-                                     <div className="pr-4">
-                                        <div className="mb-4 rounded-lg border bg-primary/10 p-4 text-center">
+                                     <div className="pr-4 space-y-4">
+                                        <div className="p-4 rounded-lg bg-primary/10 border-2 border-dashed border-primary/50 text-center">
                                             <h2 className="text-xl font-bold text-primary">{mindMap.centralTopic}</h2>
-                                            <p className="text-sm text-primary/80">Central Topic</p>
                                         </div>
-                                        <Accordion type="multiple" className="w-full space-y-2" defaultValue={mindMap.mainNodes.map(n => n.title)}>
+                                        <div className="space-y-2">
                                             {mindMap.mainNodes.map((node, index) => (
-                                                <div key={`${node.title}-${index}`} className="rounded-md border bg-card">
-                                                    <NodeComponent node={node} level={0} />
-                                                </div>
+                                                <NodeComponent
+                                                    key={index}
+                                                    node={node}
+                                                    isRoot
+                                                    isLastChild={index === mindMap.mainNodes.length - 1}
+                                                />
                                             ))}
-                                        </Accordion>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="flex h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
