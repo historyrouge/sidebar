@@ -95,7 +95,7 @@ export function MindMapContent() {
                     <Card className="flex flex-col h-full">
                         <CardHeader>
                             <CardTitle>Enter Your Content</CardTitle>
-                            <CardDescription>Paste your study material below to generate a structured mind map.</CardDescription>
+                            <CardDescription>Paste your study material below to generate a structured mind map using Qwen.</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-1 flex flex-col">
                             <Textarea
@@ -146,7 +146,7 @@ export function MindMapContent() {
                                             <h2 className="text-xl font-bold text-primary">{mindMap.centralTopic}</h2>
                                             <p className="text-sm text-primary/80">Central Topic</p>
                                         </div>
-                                        <Accordion type="multiple" className="w-full space-y-2">
+                                        <Accordion type="multiple" className="w-full space-y-2" defaultValue={mindMap.mainNodes.map(n => n.title)}>
                                             {mindMap.mainNodes.map((node, index) => (
                                                 <div key={`${node.title}-${index}`} className="rounded-md border bg-card">
                                                     <NodeComponent node={node} level={0} />
