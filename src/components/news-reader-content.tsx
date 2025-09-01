@@ -105,6 +105,7 @@ export function NewsReaderContent() {
       const chatInput: GeneralChatInput = {
         history: fullHistory,
         prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${context}".`,
+        model: 'qwen'
       };
 
       // News chat uses Qwen
