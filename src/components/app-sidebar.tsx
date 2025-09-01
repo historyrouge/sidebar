@@ -17,6 +17,7 @@ import {
   User,
   MoreHorizontal,
   GraduationCap,
+  BrainCircuit,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const menuItems = [
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
     { name: "Create Flashcards", icon: <Plus />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
+    { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
