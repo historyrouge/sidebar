@@ -7,4 +7,5 @@ import '@/ai/flows/generate-quizzes-samba.ts';
 import '@/ai/flows/generate-image.ts';
 import '@/ai/flows/analyze-code.ts';
 import '@/ai/flows/generate-mindmap.ts';
+import '@/ai/flows/generate-question-paper.ts';
 

@@ -13,6 +13,7 @@ import { generateImage, GenerateImageInput, GenerateImageOutput as GenerateImage
 import { analyzeCode, AnalyzeCodeInput } from "@/ai/flows/analyze-code";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as GenerateMindMapOutputFlow } from "@/ai/flows/generate-mindmap";
+import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/ai/flows/generate-question-paper";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
 
@@ -42,6 +43,7 @@ export type GenerateImageOutput = GenerateImageOutputFlow;
 export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
+export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
 
 
 function isRateLimitError(e: any): boolean {
@@ -380,4 +382,17 @@ export async function generateMindMapAction(
     }
 }
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput };
+export async function generateQuestionPaperAction(
+    input: GenerateQuestionPaperInput
+): Promise<ActionResult<GenerateQuestionPaperOutput>> {
+    try {
+        const output = await generateQuestionPaper(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput };
