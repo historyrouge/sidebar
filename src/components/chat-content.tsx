@@ -198,7 +198,7 @@ export function ChatContent({
 
     // If there's an image, Gemini is the best model for it. Prioritize it.
     const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gemini', 'gpt5', 'qwen'];
-    await executeChat(userMessage, newHistory, modelsToTry);
+    await executeChat(userMessage, history, modelsToTry);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -436,7 +436,7 @@ export function ChatContent({
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-48 sm:pb-40">
-            {history.length === 0 ? (
+            {history.length === 0 && !isTyping ? (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
                     <div className="mb-4">
                         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">

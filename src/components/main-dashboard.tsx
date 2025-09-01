@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { FileEdit, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useState, useTransition, useEffect } from "react";
 import { ChatContent } from "./chat-content";
@@ -49,6 +49,12 @@ export function MainDashboard() {
     }
   }, [history]);
 
+  const handleNewChat = () => {
+    setHistory([]);
+    setInput("");
+    // This will trigger the useEffect above to save the empty history.
+  };
+
   return (
     <div className="flex h-full flex-col bg-muted/20 dark:bg-muted/10">
       <WelcomeDialog />
@@ -58,6 +64,10 @@ export function MainDashboard() {
             <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         </div>
         <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={handleNewChat}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                New Chat
+            </Button>
             <Button
                 variant="ghost"
                 size="icon"
