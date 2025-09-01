@@ -17,7 +17,7 @@ Class: {{className}}
 Subject: {{subject}}
 Topic: {{topic}}
 
-You must provide your response in a valid JSON format. The JSON object should match the following schema:
+You must provide your response ONLY as a valid JSON object. Do not include any other text, explanations, or markdown formatting. The JSON object should strictly match the following schema:
 {
   "type": "object",
   "properties": {
@@ -59,7 +59,7 @@ export async function generateQuestionPaper(input: GenerateQuestionPaperInput): 
             .replace('{{topic}}', input.topic);
 
         const response = await openai.chat.completions.create({
-            model: 'Meta-Llama-3.1-8B-Instruct',
+            model: 'Llama-4-Maverick-17B-128E-Instruct',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: 'json_object' },
             temperature: 0.7,
