@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -160,7 +160,7 @@ export function StudyNowContent() {
   const handleGenerateFlashcards = useCallback(async () => {
     if (!analysis) return;
     startGeneratingFlashcards(async () => {
-      const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+      const flashcardContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions?.join(' ')}`;
       const result = await generateFlashcardsAction({content: flashcardContent});
       if (result.error) {
          toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
@@ -174,7 +174,7 @@ export function StudyNowContent() {
   const handleGenerateQuiz = async () => {
     if (!analysis) return;
     try {
-        const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions.join(' ')}`;
+        const quizContent = `Key Concepts: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Questions: ${analysis.potentialQuestions?.join(' ')}`;
         localStorage.setItem('quizContent', quizContent);
         router.push('/quiz/options');
     } catch (e) {
@@ -370,6 +370,8 @@ export function StudyNowContent() {
     { value: "image", label: "Image", disabled: !analysis }
   ];
 
+  const analysisAsImageOutput = analysis as AnalyzeImageContentOutput;
+
   return (
     <div className="flex h-screen flex-col bg-muted/20 dark:bg-transparent">
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
@@ -506,6 +508,24 @@ export function StudyNowContent() {
                             {analysis.keyConcepts?.map((concept, i) => <div key={i} className="py-2"><p className="font-semibold !my-0">{concept.concept}</p><p className="text-muted-foreground !my-0">{concept.explanation}</p></div>)}
                             </AccordionContent>
                         </AccordionItem>
+                        {'entities' in analysis && (
+                            <AccordionItem value="entities" className="rounded-md border bg-card px-4">
+                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Entities</div></AccordionTrigger>
+                                <AccordionContent className="space-y-3">
+                                    {analysisAsImageOutput.entities.people.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><Users className="size-4"/>People</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.people.map(p => <span key={p} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{p}</span>)}</div></div>}
+                                    {analysisAsImageOutput.entities.places.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><MapPin className="size-4"/>Places</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.places.map(p => <span key={p} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{p}</span>)}</div></div>}
+                                    {analysisAsImageOutput.entities.dates.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><Calendar className="size-4"/>Dates</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.dates.map(d => <span key={d} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{d}</span>)}</div></div>}
+                                </AccordionContent>
+                            </AccordionItem>
+                        )}
+                        {'diagrams' in analysis && analysisAsImageOutput.diagrams.length > 0 && (
+                            <AccordionItem value="diagrams" className="rounded-md border bg-card px-4">
+                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Diagrams & Processes</div></AccordionTrigger>
+                                <AccordionContent className="space-y-4">
+                                {analysisAsImageOutput.diagrams.map((d, i) => <div key={i}><h4 className="font-semibold">{d.title}</h4><p className="text-sm text-muted-foreground">{d.explanation}</p></div>)}
+                                </AccordionContent>
+                            </AccordionItem>
+                        )}
                         {analysis.codeExamples?.length > 0 && (
                             <AccordionItem value="code-examples" className="rounded-md border bg-card px-4">
                                 <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><Code />Code Examples</div></AccordionTrigger>
@@ -547,7 +567,7 @@ export function StudyNowContent() {
                       )}
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
-                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions.join(' ')}` : content) : content} onSendMessage={handleTutorChat}/>
+                      <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions?.join(' ')}` : content) : content} onSendMessage={handleTutorChat}/>
                     </TabsContent>
                     <TabsContent value="image" className="h-full">
                        {isGeneratingImage ? (
