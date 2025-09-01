@@ -19,7 +19,7 @@ export function AboutContent() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
             <div className="flex flex-col items-center justify-center">
               <Card className="w-full max-w-3xl shadow-lg overflow-hidden border-0 relative">
-                <div className="bg-card p-8 text-center">
+                <div className="bg-card p-8 text-center items-center">
                     <Avatar className="mx-auto h-32 w-32 border-4 border-primary shadow-lg">
                       <AvatarImage src="https://placehold.co/128x128.png" alt="Harsh" data-ai-hint="profile picture" />
                       <AvatarFallback>H</AvatarFallback>
