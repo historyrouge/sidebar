@@ -212,7 +212,7 @@ export function NewsContent() {
             </div>
         ) : (
             <>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {articles.map((article, i) => (
                          <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">

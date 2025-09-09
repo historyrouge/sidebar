@@ -22,12 +22,6 @@ import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 
 declare const puter: any;
 
-type Message = {
-  role: "user" | "model";
-  content: string;
-  imageDataUri?: string;
-};
-
 const suggestionPrompts = [
     {
         icon: <FileQuestion className="text-yellow-500" />,

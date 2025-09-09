@@ -161,18 +161,18 @@ export function NewsReaderContent() {
                 </Button>
             </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-            <div className="max-w-2xl mx-auto space-y-6">
-                <h1 className="text-3xl font-bold tracking-tight">{article.title}</h1>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
+            <div className="max-w-3xl mx-auto space-y-8">
+                <h1 className="text-4xl font-bold tracking-tight">{article.title}</h1>
                 
                 {article.urlToImage && (
-                    <div className="relative w-full aspect-video rounded-md overflow-hidden border">
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border">
                         <Image src={article.urlToImage} alt={article.title} fill className="object-cover" />
                     </div>
                 )}
                 
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">News Description</h2>
+                  <h2 className="text-2xl font-semibold mb-3">News Description</h2>
                   {isSummarizing ? (
                      <div className="space-y-2">
                         <Skeleton className="h-4 w-full" />
@@ -186,11 +186,11 @@ export function NewsReaderContent() {
                   )}
                 </div>
 
-                <div className="border rounded-lg bg-card">
+                <div className="border rounded-xl bg-card">
                     <div className="p-4 border-b">
                         <h3 className="font-semibold">Ask Follow-up Questions</h3>
                     </div>
-                    <div className="h-[28rem] flex flex-col">
+                    <div className="h-[32rem] flex flex-col">
                         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
                             <div className="space-y-4 pr-4">
                                 {history.map((message, index) => (
