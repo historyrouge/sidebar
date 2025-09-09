@@ -65,7 +65,8 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
         throw new Error("Qwen API key or base URL is not configured.");
     }
-
+    
+    let jsonResponseString;
     try {
         const response = await openai.chat.completions.create({
             model: 'Meta-Llama-3.1-8B-Instruct',
@@ -87,15 +88,21 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
             throw new Error("Received an empty or invalid response from Qwen.");
         }
 
-        const jsonResponse = JSON.parse(response.choices[0].message.content);
-        
-        // Validate the response against the Zod schema
-        const validatedOutput = GenerateFlashcardsSambaOutputSchema.parse(jsonResponse);
-        
-        return validatedOutput;
+        jsonResponseString = response.choices[0].message.content;
 
     } catch (error: any) {
         console.error("Qwen flashcard generation error:", error);
         throw new Error(error.message || "An unknown error occurred while generating flashcards with Qwen.");
+    }
+
+    try {
+        const jsonResponse = JSON.parse(jsonResponseString);
+        // Validate the response against the Zod schema
+        const validatedOutput = GenerateFlashcardsSambaOutputSchema.parse(jsonResponse);
+        return validatedOutput;
+    } catch (error) {
+        console.error("JSON parsing or validation error:", error);
+        console.error("Invalid JSON string from Qwen:", jsonResponseString);
+        throw new Error("The AI model returned an invalid format. Please try again.");
     }
 }
