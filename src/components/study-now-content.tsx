@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users, CameraRotate } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -69,6 +69,10 @@ export function StudyNowContent() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isStreamReady, setIsStreamReady] = useState(false);
+
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -312,36 +316,68 @@ export function StudyNowContent() {
 
   const handleTutorChat = async (history: any) => await chatWithTutorAction({ content, history });
 
-  useEffect(() => {
-    let stream: MediaStream | null = null;
-    const getCameraPermission = async () => {
-        if (isCameraOpen) {
-            setHasCameraPermission(null);
-            setIsStreamReady(false);
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                setHasCameraPermission(true);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.onloadedmetadata = () => {
-                        setIsStreamReady(true);
-                    };
-                }
-            } catch (error) {
-                setHasCameraPermission(false);
+    const startCamera = useCallback(async (deviceId?: string) => {
+        // Stop any existing stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        setIsStreamReady(false);
+        try {
+            const constraints: MediaStreamConstraints = {
+                video: deviceId ? { deviceId: { exact: deviceId } } : true,
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = stream;
+            setHasCameraPermission(true);
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.onloadedmetadata = () => {
+                    setIsStreamReady(true);
+                };
             }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const getDevicesAndStart = async () => {
+            if (isCameraOpen) {
+                setHasCameraPermission(null);
+                await startCamera(currentDeviceId); // Initial start
+                
+                // Now get all devices to allow switching
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevs = devices.filter(d => d.kind === 'videoinput');
+                setVideoDevices(videoDevs);
+                if (!currentDeviceId && videoDevs.length > 0) {
+                    setCurrentDeviceId(videoDevs[0].deviceId);
+                }
+            }
+        };
+
+        getDevicesAndStart();
+
+        return () => {
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
+        };
+    }, [isCameraOpen, currentDeviceId, startCamera]);
+
+    const handleSwitchCamera = () => {
+        if (videoDevices.length > 1) {
+            const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
+            const nextIndex = (currentIndex + 1) % videoDevices.length;
+            setCurrentDeviceId(videoDevices[nextIndex].deviceId);
         }
     };
-    getCameraPermission();
-    return () => { 
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-         if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-     };
-  }, [isCameraOpen, toast]);
+
 
   const handleCaptureImage = () => {
       if (videoRef.current) {
@@ -398,11 +434,20 @@ export function StudyNowContent() {
                         </div>
                     )}
                 </div>
-                <DialogFooter>
-                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
-                        {isStreamReady ? 'Capture Image' : 'Starting Camera...'}
-                    </Button>
+                <DialogFooter className="flex justify-between w-full">
+                    <div>
+                         {videoDevices.length > 1 && (
+                            <Button variant="outline" onClick={handleSwitchCamera}>
+                                <CameraRotate className="mr-2 h-4 w-4" /> Switch Camera
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
+                            {isStreamReady ? 'Capture Image' : 'Starting Camera...'}
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

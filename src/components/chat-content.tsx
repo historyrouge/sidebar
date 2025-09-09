@@ -1,14 +1,18 @@
 
 "use client";
 
+<<<<<<< HEAD
 import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
+=======
+import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey, GenerateQuestionPaperOutput } from "@/app/actions";
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -16,14 +20,20 @@ import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
-import { Card } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
+import { useRouter } from "next/navigation";
+
 
 type Message = {
   role: "user" | "model";
   content: string;
   imageDataUri?: string;
+  toolResult?: {
+    type: 'questionPaper',
+    data: GenerateQuestionPaperOutput
+  }
 };
 
 const QuizIcon = () => (
@@ -132,6 +142,7 @@ export function ChatContent({
     startTyping: React.TransitionStartFunction
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -146,6 +157,10 @@ export function ChatContent({
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isStreamReady, setIsStreamReady] = useState(false);
+  
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
+  const streamRef = useRef<MediaStream | null>(null);
 
 
   const [showLimitDialog, setShowLimitDialog] = useState(false);
@@ -161,11 +176,61 @@ export function ChatContent({
             imageDataUri: currentMessage.imageDataUri,
         });
 
+<<<<<<< HEAD
         if (result.error) {
             setHistory(prev => prev.slice(0, -1)); // Remove user message
             setShowLimitDialog(true);
         } else if (result.data) {
             const modelMessage: Message = { role: "model", content: result.data.response };
+=======
+        if (model !== 'gpt5' && model !== 'gemini' && !currentMessage.imageDataUri) {
+            toast({
+                title: "Model Fallback",
+                description: `OpenAI GPT-5 timeout. Trying ${model}...`,
+                duration: 2000,
+            });
+        }
+
+        try {
+            if (model === 'gpt5' && !currentMessage.imageDataUri) {
+                const creatorPrompt = "Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.";
+                const finalPrompt = `${creatorPrompt}\n\nUser query: ${currentMessage.content}`;
+                const promise = puter.ai.chat(finalPrompt);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000)); // 5s timeout for gpt5
+                const response = await Promise.race([promise, timeoutPromise]);
+                responseText = typeof response === 'object' && response.text ? response.text : String(response);
+            } else { // qwen or gemini, or gpt5 with image falls through here
+                const result = await generalChatAction({ 
+                    history: chatHistory.map(h => ({role: h.role as any, content: h.content, imageDataUri: h.imageDataUri})),
+                    imageDataUri: currentMessage.imageDataUri,
+                    model: model
+                });
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                responseText = result.data!.response;
+            }
+        } catch (e: any) {
+            error = e.message;
+        }
+
+        if (responseText) {
+            let conversationalPart = responseText;
+            let toolResult: Message['toolResult'] | undefined = undefined;
+
+            if (responseText.includes('[TOOL_RESULT:questionPaper]')) {
+                const parts = responseText.split('\n\n[TOOL_RESULT:questionPaper]\n');
+                conversationalPart = parts[0];
+                try {
+                    const toolData = JSON.parse(parts[1]);
+                    toolResult = { type: 'questionPaper', data: toolData };
+                } catch (e) {
+                    console.error("Failed to parse tool result JSON", e);
+                }
+            }
+
+            const modelMessage: Message = { role: "model", content: conversationalPart, toolResult };
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
             setHistory((prev) => [...prev, modelMessage]);
         }
       });
@@ -186,7 +251,13 @@ export function ChatContent({
     setInput("");
     setCapturedImage(null);
 
+<<<<<<< HEAD
     await executeChat(userMessage, newHistory);
+=======
+    // If there's an image, Gemini is the best model for it. Prioritize it.
+    const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gemini', 'gpt5', 'qwen'];
+    await executeChat(userMessage, history, modelsToTry);
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -202,7 +273,12 @@ export function ChatContent({
 
       const historyWithoutLastResponse = history.slice(0, -1);
       setHistory(historyWithoutLastResponse);
+<<<<<<< HEAD
       await executeChat(lastUserMessage, historyWithoutLastResponse);
+=======
+      const modelsToTry = lastUserMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gemini', 'gpt5', 'qwen'];
+      await executeChat(lastUserMessage, historyWithoutLastResponse, modelsToTry);
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
   };
 
 
@@ -307,39 +383,68 @@ export function ChatContent({
     }
   };
   
-  useEffect(() => {
-        let stream: MediaStream | null = null;
-        const getCameraPermission = async () => {
+    const startCamera = useCallback(async (deviceId?: string) => {
+        // Stop any existing stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        setIsStreamReady(false);
+        try {
+            const constraints: MediaStreamConstraints = {
+                video: deviceId ? { deviceId: { exact: deviceId } } : true,
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = stream;
+            setHasCameraPermission(true);
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.onloadedmetadata = () => {
+                    setIsStreamReady(true);
+                };
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const getDevicesAndStart = async () => {
             if (isCameraOpen) {
                 setHasCameraPermission(null);
-                setIsStreamReady(false);
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    setHasCameraPermission(true);
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        videoRef.current.onloadedmetadata = () => {
-                            setIsStreamReady(true);
-                        };
-                    }
-                } catch (error) {
-                    console.error('Error accessing camera:', error);
-                    setHasCameraPermission(false);
+                await startCamera(currentDeviceId); // Initial start
+                
+                // Now get all devices to allow switching
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevs = devices.filter(d => d.kind === 'videoinput');
+                setVideoDevices(videoDevs);
+                if (!currentDeviceId && videoDevs.length > 0) {
+                    setCurrentDeviceId(videoDevs[0].deviceId);
                 }
             }
         };
 
-        getCameraPermission();
+        getDevicesAndStart();
 
         return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
             }
             if (videoRef.current) {
                 videoRef.current.srcObject = null;
             }
         };
-    }, [isCameraOpen]);
+    }, [isCameraOpen, currentDeviceId, startCamera]);
+
+    const handleSwitchCamera = () => {
+        if (videoDevices.length > 1) {
+            const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
+            const nextIndex = (currentIndex + 1) % videoDevices.length;
+            setCurrentDeviceId(videoDevices[nextIndex].deviceId);
+        }
+    };
+
 
     const handleCaptureImage = () => {
         if (videoRef.current) {
@@ -355,6 +460,15 @@ export function ChatContent({
             }
         }
     };
+
+  const handleViewQuestionPaper = (paper: GenerateQuestionPaperOutput) => {
+    try {
+        localStorage.setItem('questionPaper', JSON.stringify(paper));
+        router.push('/question-paper/view');
+    } catch (e) {
+        toast({ title: "Storage Error", description: "Could not store the generated paper.", variant: "destructive" });
+    }
+  };
 
 
   useEffect(() => {
@@ -397,13 +511,22 @@ export function ChatContent({
                         </div>
                     )}
                 </div>
-                <DialogFooter className="p-4 border-t">
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
-                        {isStreamReady ? 'Capture' : 'Starting Camera...'}
-                    </Button>
+                <DialogFooter className="p-4 border-t flex justify-between">
+                    <div>
+                        {videoDevices.length > 1 && (
+                            <Button variant="outline" onClick={handleSwitchCamera}>
+                                <CameraRotate className="mr-2 h-4 w-4" /> Switch Camera
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
+                            {isStreamReady ? 'Capture' : 'Starting Camera...'}
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -414,7 +537,7 @@ export function ChatContent({
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-48 sm:pb-40">
-            {history.length === 0 ? (
+            {history.length === 0 && !isTyping ? (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
                     <div className="mb-4">
                         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
@@ -468,6 +591,20 @@ export function ChatContent({
                             )}
                             <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
     
+                             {message.toolResult?.type === 'questionPaper' && (
+                                <Card className="mt-2 bg-muted/50">
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <FileText className="h-5 w-5"/>
+                                            {message.toolResult.data.title}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                                    </CardContent>
+                                </Card>
+                            )}
                             {message.role === 'model' && (
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>

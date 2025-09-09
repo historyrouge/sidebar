@@ -2,27 +2,68 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { Moon, Sun, User as UserIcon } from "lucide-react";
+=======
+import { FileEdit, Moon, Sun } from "lucide-react";
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 import { useTheme } from "next-themes";
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
+<<<<<<< HEAD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+=======
+import { GenerateQuestionPaperOutput } from "@/app/actions";
+>>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 
 type Message = {
   role: "user" | "model";
   content: string;
   imageDataUri?: string;
+  toolResult?: {
+    type: 'questionPaper',
+    data: GenerateQuestionPaperOutput
+  }
 };
+
+const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
 
 export function MainDashboard() {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { theme, setTheme } = useTheme();
+
+  // Load history from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+      if (savedHistory) {
+        setHistory(JSON.parse(savedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to load chat history from localStorage", error);
+    }
+  }, []);
+
+  // Save history to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error("Failed to save chat history to localStorage", error);
+    }
+  }, [history]);
+
+  const handleNewChat = () => {
+    setHistory([]);
+    setInput("");
+    // This will trigger the useEffect above to save the empty history.
+  };
 
   return (
     <div className="flex h-full flex-col bg-muted/20 dark:bg-muted/10">
@@ -33,6 +74,10 @@ export function MainDashboard() {
             <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         </div>
         <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={handleNewChat}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                New Chat
+            </Button>
             <Button
                 variant="ghost"
                 size="icon"
