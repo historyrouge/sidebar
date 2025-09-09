@@ -23,7 +23,7 @@ import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 declare const puter: any;
 
 const QuizIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="24" fill="url(#quiz-gradient)"/>
         <path d="M24.5 32H23.5C22.3954 32 21.5 31.1046 21.5 30V28C21.5 26.8954 22.3954 26 23.5 26H24.5C25.6046 26 26.5 26.8954 26.5 28V30C26.5 31.1046 25.6046 32 24.5 32Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M24.5 22C24.5 20.3431 23.1569 19 21.5 19C19.8431 19 18.5 20.3431 18.5 22C18.5 23.6569 20.3726 25.9314 21.5 26H26.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -38,7 +38,7 @@ const QuizIcon = () => (
 );
 
 const FlashcardsIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="24" fill="url(#flash-gradient)"/>
         <path d="M18 19H30V29H18V19Z" fill="#A78BFA" stroke="white" strokeWidth="2" strokeLinejoin="round" transform="rotate(-10 24 24)"/>
         <path d="M22 17H34V27H22V17Z" fill="#C4B5FD" stroke="white" strokeWidth="2" strokeLinejoin="round" transform="rotate(5 24 24)"/>
@@ -52,7 +52,7 @@ const FlashcardsIcon = () => (
 );
 
 const EbooksIcon = () => (
-     <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="24" fill="url(#ebook-gradient)"/>
         <path d="M29 16H19C17.8954 16 17 16.8954 17 18V30C17 31.1046 17.8954 32 19 32H29C30.1046 32 31 31.1046 31 30V18C31 16.8954 30.1046 16 29 16Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M26 16V32" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -66,7 +66,7 @@ const EbooksIcon = () => (
 );
 
 const NewsIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="24" fill="url(#news-gradient)"/>
         <path d="M16 20H32" stroke="white" strokeWidth="2" strokeLinecap="round"/>
         <path d="M16 26H24" stroke="white" strokeWidth="2" strokeLinecap="round"/>
@@ -468,18 +468,18 @@ export function ChatContent({
                         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
                             Hello!
                         </h1>
-                        <p className="text-xl sm:text-2xl text-muted-foreground mt-2">
+                        <p className="text-xl sm:text-2xl text-muted-foreground mt-2 font-semibold">
                            How can I help you today?
                         </p>
                     </div>
                     <div className="mt-8 grid grid-cols-2 gap-4 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
                             <Link href={prompt.href} key={i}>
-                                <Card className={cn("p-4 h-full text-white bg-gradient-to-br hover:-translate-y-1 transition-transform duration-300 shadow-lg", prompt.gradient)}>
-                                    <div className="flex flex-col items-start gap-3 h-full">
+                                <Card className={cn("p-6 h-full text-white bg-gradient-to-br hover:-translate-y-1 transition-transform duration-300 shadow-lg rounded-2xl", prompt.gradient)}>
+                                    <div className="flex flex-col items-start gap-4 h-full">
                                         {prompt.icon}
                                         <div className="mt-auto">
-                                            <h3 className="font-semibold text-lg">{prompt.title}</h3>
+                                            <h3 className="font-semibold text-xl">{prompt.title}</h3>
                                             <p className="text-sm text-white/80">{prompt.description}</p>
                                         </div>
                                     </div>

@@ -2,12 +2,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, User as UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useState, useTransition } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import Link from "next/link";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 type Message = {
   role: "user" | "model";
@@ -39,6 +42,24 @@ export function MainDashboard() {
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
             </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                         <Avatar className="h-8 w-8">
+                            <AvatarFallback>U</AvatarFallback>
+                        </Avatar>
+                        <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <Link href="/settings"><DropdownMenuItem>Settings</DropdownMenuItem></Link>
+                    <Link href="/help"><DropdownMenuItem>Support</DropdownMenuItem></Link>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
       <main className="flex-1 overflow-auto">
