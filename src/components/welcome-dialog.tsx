@@ -40,7 +40,7 @@ export function WelcomeDialog() {
                 Here, you can easily generate quizzes, create flashcards, and explore AI-powered study tools to make learning fun and stress-free. If you ever face any issues or have suggestions, feel free to reach out to me directly at <a href="mailto:harshrishabh@proton.me">harshrishabh@proton.me</a>.
             </p>
              <p className="!mb-0">Thank you for being part of this journey!</p>
-             <p className="!mt-2">
+             <p className="!mt-2 text-sm">
                 Regards,
                 <br />
                 <strong>Harsh</strong>

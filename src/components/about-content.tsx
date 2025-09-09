@@ -47,12 +47,12 @@ export function AboutContent() {
                     <p>
                         What do you think? Drop your feedback – I'd love to hear from you!
                     </p>
-                    <p className="text-right font-semibold mt-12 text-lg">
+                    <p className="text-right font-semibold mt-12 text-base">
                         Cheers,
                         <br />
                         <span className="text-primary font-bold">Harsh</span>
                         <br />
-                        <span className="text-sm font-normal text-muted-foreground">(9th Grader &amp; Aspiring Developer @ Sri Chaitanya)</span>
+                        <span className="text-xs font-normal text-muted-foreground">(9th Grader &amp; Aspiring Developer @ Sri Chaitanya)</span>
                     </p>
                 </CardContent>
               </Card>
