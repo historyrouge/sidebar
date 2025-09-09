@@ -2,23 +2,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-import { Moon, Sun, User as UserIcon } from "lucide-react";
-=======
 import { FileEdit, Moon, Sun } from "lucide-react";
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 import { useTheme } from "next-themes";
 import React, { useState, useTransition, useEffect } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
-<<<<<<< HEAD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-=======
 import { GenerateQuestionPaperOutput } from "@/app/actions";
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
+
 
 type Message = {
   role: "user" | "model";

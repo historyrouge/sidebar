@@ -19,11 +19,8 @@ import {
   GraduationCap,
   BrainCircuit,
   FileText,
-<<<<<<< HEAD
   Layers,
-=======
   MessageSquare,
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,10 +31,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
-<<<<<<< HEAD
-=======
   SidebarGroup,
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
@@ -97,11 +91,7 @@ export function AppSidebar() {
     setOpenMobile(false);
   };
 
-<<<<<<< HEAD
-  const renderMenuItems = (items: typeof studyTools) => {
-=======
   const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
             <Link href={item.href} className="w-full">
@@ -134,11 +124,8 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
-<<<<<<< HEAD
                 <SidebarGroupLabel>Study Tools</SidebarGroupLabel>
                 {renderMenuItems(studyTools)}
-=======
-                {renderMenuItems(menuItems.slice(0,1))}
             </SidebarMenu>
             
             {lastChat && (
@@ -164,11 +151,6 @@ export function AppSidebar() {
 
             <SidebarSeparator className="my-2" />
             
-            <SidebarMenu>
-                {renderMenuItems(menuItems.slice(1))}
->>>>>>> 088d5d0fb9e64aea65013b4a6d06c9772c76d04d
-            </SidebarMenu>
-            <SidebarSeparator className="my-2" />
             <SidebarMenu>
                  <SidebarGroupLabel>Resources</SidebarGroupLabel>
                  {renderMenuItems(resources)}
