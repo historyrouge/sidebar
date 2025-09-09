@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 240 5% 96%; /* Very light gray, almost white */
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -14,83 +14,84 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
  
-    --primary: 225 90% 55%;
-    --primary-foreground: 210 40% 98%;
+    /* PayPal Blues */
+    --primary: 206 100% 36%; /* #0070BA */
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 224 71.4% 4.1%;
+    --secondary: 210 100% 23%; /* #00457C */
+    --secondary-foreground: 0 0% 100%;
  
-    --accent: 220 13% 91%;
-    --accent-foreground: 224 71.4% 4.1%;
+    /* PayPal Accent Yellow */
+    --accent: 43 99% 61%; /* #FFC439 */
+    --accent-foreground: 210 100% 23%; /* Dark blue text on yellow */
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 225 90% 55%;
+    --ring: 206 100% 36%;
  
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* More rounded corners */
 
-    --chart-1: 225 90% 55%;
-    --chart-2: 150 80% 45%;
-    --chart-3: 270 90% 65%;
+    --chart-1: 206 100% 36%;
+    --chart-2: 210 100% 23%;
+    --chart-3: 43 99% 61%;
     --chart-4: 34.9 98.6% 74.5%;
     --chart-5: 0 84.2% 60.2%;
 
-    --sidebar-background: 215 27.9% 16.9%;
-    --sidebar-foreground: 213 27.3% 84.7%;
-    --sidebar-primary: 213 27.3% 84.7%;
-    --sidebar-primary-foreground: 215 27.9% 16.9%;
-    --sidebar-accent: 215.4 16.3% 46.9%;
+    --sidebar-background: 210 100% 13%; /* Darkest PayPal Blue */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 210 100% 13%;
+    --sidebar-accent: 206 100% 36%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 25% 26.5%;
-    --sidebar-ring: 224 71.4% 4.1%;
+    --sidebar-border: 210 100% 23%;
+    --sidebar-ring: 210 40% 98%;
   }
  
   .dark {
-    --background: 224 71.4% 4.1%;
+    --background: 222 47% 11%; /* Dark blue-gray */
     --foreground: 210 40% 98%;
  
-    --card: 224 71.4% 4.1%;
+    --card: 222 47% 14%;
     --card-foreground: 210 40% 98%;
  
-    --popover: 224 71.4% 4.1%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* PayPal Blues for Dark Mode */
+    --primary: 206 100% 55%; /* Lighter blue for contrast */
+    --primary-foreground: 210 100% 13%;
  
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 206 100% 36%;
+    --secondary-foreground: 0 0% 100%;
  
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* PayPal Accent Yellow for Dark Mode */
+    --accent: 43 99% 61%;
+    --accent-foreground: 210 100% 23%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
  
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217.2 32.6% 25.5%;
+    --input: 217.2 32.6% 25.5%;
+    --ring: 206 100% 55%;
 
-    --chart-1: 212.7 26.8% 83.9%;
-    --chart-2: 172.8 68.9% 75.1%;
-    --chart-3: 310.2 82.6% 84.1%;
+    --chart-1: 206 100% 55%;
+    --chart-2: 210 100% 30%;
+    --chart-3: 43 99% 61%;
     --chart-4: 34.9 98.6% 74.5%;
     --chart-5: 0 72.2% 50.6%;
 
-    --sidebar-background: 224 71.4% 4.1%;
+    --sidebar-background: 222 47% 9%; /* Even darker */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 206 100% 55%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 212.7 26.8% 83.9%;
+    --sidebar-ring: 206 100% 55%;
   }
 }
 

@@ -19,6 +19,7 @@ import {
   GraduationCap,
   BrainCircuit,
   FileText,
+  Layers,
 } from "lucide-react";
 import {
   Sidebar,
@@ -86,7 +87,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <BookOpen className="size-5" />
+                <Layers className="size-5" />
             </div>
             <h1 className="text-lg font-semibold">Easy Learn AI</h1>
         </Link>
