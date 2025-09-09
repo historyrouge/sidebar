@@ -10,8 +10,7 @@ import Link from "next/link";
 import { BackButton } from "./back-button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
-
-declare const puter: any;
+import { generateEbookChapterAction } from "@/app/actions";
 
 const ebooks = [
   {
@@ -37,31 +36,6 @@ type ContentBlock = {
 }
 type ChapterContent = ContentBlock[];
 
-const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
-
-Ebook Title: {{title}}
-Chapter Number: {{chapter}}
-
-You must generate the content for this chapter in a valid JSON format. The JSON object should contain a single key, "content", which is an array of content blocks. Each block must have a 'type' ('h1', 'h2', 'p') and a 'text'.
-- Start with a single 'h1' element for the chapter title.
-- Use a mix of 'h2' elements for section headings and 'p' elements for paragraphs.
-- Generate about 5-7 content blocks in total for the chapter.
-- The content should be appropriate for the book's title and the chapter number, creating a logical progression.
-- For chapter 1, provide a strong introduction to the topic. For subsequent chapters, build upon the previous one.
-- Make the content interesting and educational.
-
-Example for a book titled "A Journey Through the Cosmos", Chapter 1:
-{
-    "content": [
-        { "type": "h1", "text": "Chapter 1: The Big Bang" },
-        { "type": "p", "text": "The Big Bang theory is the leading cosmological model..." },
-        { "type": "h2", "text": "1.1: Cosmic Inflation" },
-        { "type": "p", "text": "Cosmic inflation is a theory of exponential expansion of space in the early universe..." }
-    ]
-}
-`;
-
-
 export function EbookReader({ slug }: { slug: string }) {
   const [bookTitle, setBookTitle] = useState<string>("");
   const [chapters, setChapters] = useState<Record<number, ChapterContent>>({});
@@ -71,29 +45,25 @@ export function EbookReader({ slug }: { slug: string }) {
   const { toast } = useToast();
 
   const fetchChapter = useCallback(async (chapterNumber: number) => {
-    if (!bookTitle || typeof puter === 'undefined') return;
+    if (!bookTitle) return;
 
     const action = chapterNumber > currentChapter || Object.keys(chapters).length === 0 ? startLoading : startPrefetching;
 
     action(async () => {
       try {
-        const prompt = ebookSystemPrompt
-            .replace('{{title}}', bookTitle)
-            .replace('{{chapter}}', String(chapterNumber));
-        
-        const response = await puter.ai.chat(prompt);
-        const responseText = typeof response === 'object' && response.text ? response.text : String(response);
-        const jsonResponse = JSON.parse(responseText);
+        const result = await generateEbookChapterAction({ title: bookTitle, chapter: chapterNumber });
 
-        if (jsonResponse.content) {
-            setChapters(prev => ({ ...prev, [chapterNumber]: jsonResponse.content }));
+        if (result.error) {
+            throw new Error(result.error);
+        } else if (result.data?.content) {
+            setChapters(prev => ({ ...prev, [chapterNumber]: result.data.content }));
         } else {
              throw new Error("Invalid format from AI.");
         }
       } catch (e: any) {
          toast({
           title: `Failed to load Chapter ${chapterNumber}`,
-          description: e.message || "An error occurred with OpenAI GPT-5",
+          description: e.message || "An error occurred with the AI model.",
           variant: "destructive"
         });
       }
@@ -109,20 +79,14 @@ export function EbookReader({ slug }: { slug: string }) {
   }, [slug]);
 
   useEffect(() => {
-    if (bookTitle && !chapters[1] && typeof puter !== 'undefined') {
+    if (bookTitle && !chapters[1]) {
       fetchChapter(1);
-    } else if (typeof puter === 'undefined') {
-        toast({
-            title: "OpenAI GPT-5 not available",
-            description: "eBook generation is disabled. Please try again later.",
-            variant: "destructive"
-        });
     }
-  }, [bookTitle, chapters, fetchChapter, toast]);
+  }, [bookTitle, chapters, fetchChapter]);
 
   // Prefetch next chapter
   useEffect(() => {
-    if (bookTitle && chapters[currentChapter] && !chapters[currentChapter + 1] && typeof puter !== 'undefined') {
+    if (bookTitle && chapters[currentChapter] && !chapters[currentChapter + 1]) {
       fetchChapter(currentChapter + 1);
     }
   }, [bookTitle, chapters, currentChapter, fetchChapter]);

@@ -1,12 +1,10 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+// This hook is no longer used for model selection, as the logic is now hard-coded per feature.
+// It is kept for potential future use with other settings.
 
-// This hook is no longer used for model selection but is kept for potential future settings.
-// The model logic is now hard-coded per feature.
-
-export type ModelKey = 'gemini' | 'qwen' | 'gpt5';
+export type ModelKey = 'gemini' | 'qwen';
 
 type ModelSettings = {
   model: ModelKey;
@@ -14,16 +12,14 @@ type ModelSettings = {
 };
 
 export function useModelSettings(): ModelSettings {
-  // Default to Gemini, though it's not actively used for selection anymore.
-  const [model, setModel] = useState<ModelKey>('gemini');
+  // Default to Gemini, as it's the primary model for chat.
+  const model: ModelKey = 'gemini';
 
-  const handleSetModel = useCallback((newModel: ModelKey, isPermanent = true) => {
-    // This function is now effectively a no-op for the UI,
-    // but we can keep the state update for any component that might still use it.
-    setModel(newModel);
-  }, []);
+  const handleSetModel = (newModel: ModelKey, isPermanent = true) => {
+    // This function is currently a no-op as model selection is fixed.
+    // In the future, this could be used to update user preferences.
+    console.log(`Model selection changed to ${newModel}. This is currently a no-op.`);
+  };
 
   return { model, setModel: handleSetModel };
 }
-
-    

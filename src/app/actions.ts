@@ -14,16 +14,17 @@ import { analyzeCode, AnalyzeCodeInput } from "@/ai/flows/analyze-code";
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as SummarizeContentOutputFlow } from "@/ai/flows/summarize-content";
 import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as GenerateMindMapOutputFlow } from "@/ai/flows/generate-mindmap";
 import { generateQuestionPaper } from "@/ai/flows/generate-question-paper";
+import { generateEbookChapter } from "@/ai/flows/generate-ebook-chapter";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai } from "@/lib/openai";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
+import { GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
 
 export type ModelKey = 'gemini' | 'qwen' | 'gpt5';
 
 // Extend GeneralChatInput to include an optional prompt for specific scenarios
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
-  model?: 'qwen' | 'gemini';
 };
 
 
@@ -45,6 +46,7 @@ export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
 export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
+export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
 
 
 function isRateLimitError(e: any): boolean {
@@ -228,59 +230,13 @@ export async function helpChatAction(
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
-    const { history, imageDataUri, prompt, model = 'qwen' } = input;
-
-    if (model === 'qwen') {
-      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-        return { error: "Qwen API key or base URL is not configured." };
-      }
-      
-      const messages = history.map((h, i) => {
-        const isLastMessage = i === history.length - 1;
-        const role = h.role === 'model' ? 'assistant' : 'user';
-  
-        let content = h.content;
-        if (isLastMessage && h.role === 'user' && prompt) {
-            content = `${prompt}\n\nUser query: ${h.content}`;
-        }
-        return { role, content: content };
-      });
-
-      // Inject system prompt for Qwen
-      const systemMessage = {
-          role: 'system',
-          content: "You are a helpful AI assistant. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student."
-      };
-  
-      try {
-        const response = await openai.chat.completions.create({
-          model: 'Meta-Llama-3.1-8B-Instruct',
-          messages: [systemMessage, ...messages as any],
-          stream: false,
-        });
-  
-        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-          throw new Error("Received an empty response from the AI.");
-        }
-        
-        return { data: { response: response.choices[0].message.content } };
-      } catch (error: any) {
-        console.error("Qwen API error:", error);
-        if (isRateLimitError(error)) return { error: "API_LIMIT_EXCEEDED" };
-        if (error.code === 'ENOTFOUND') {
-          return { error: "Could not connect to the Qwen API. Please check the Base URL." };
-        }
-        return { error: error.message || "An unknown error occurred with the Qwen API." };
-      }
-    } else { // model is 'gemini'
-        try {
-            const output = await generalChat(input);
-            return { data: output };
-        } catch (e: any) {
-          console.error(e);
-          if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-          return { error: e.message || "An unknown error occurred." };
-        }
+    try {
+        const output = await generalChat(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred." };
     }
 }
 
@@ -396,4 +352,17 @@ export async function generateQuestionPaperAction(
     }
 }
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput };
+export async function generateEbookChapterAction(
+    input: GenerateEbookChapterInput
+): Promise<ActionResult<GenerateEbookChapterOutput>> {
+    try {
+        const output = await generateEbookChapter(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred." };
+    }
+}
+
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction, ModelKey } from "@/app/actions";
+import { generalChatAction, GeneralChatInput, textToSpeechAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,11 @@ import { Card } from "./ui/card";
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 
-declare const puter: any;
+type Message = {
+  role: "user" | "model";
+  content: string;
+  imageDataUri?: string;
+};
 
 const QuizIcon = () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -149,69 +153,20 @@ export function ChatContent({
 
   const executeChat = useCallback(async (
     currentMessage: Message, 
-    chatHistory: Message[],
-    modelsToTry: ModelKey[]
+    chatHistory: Message[]
   ): Promise<void> => {
-      if (modelsToTry.length === 0) {
-          setShowLimitDialog(true);
-          setHistory(prev => prev.slice(0, -1)); // Remove user message
-          return;
-      }
-
-      const model = modelsToTry[0];
-      const remainingModels = modelsToTry.slice(1);
-      
       startTyping(async () => {
-        let responseText: string | null = null;
-        let error: string | null = null;
+        const result = await generalChatAction({ 
+            history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
+            imageDataUri: currentMessage.imageDataUri,
+        });
 
-        if (model !== 'gpt5' && model !== 'gemini' && !currentMessage.imageDataUri) {
-            toast({
-                title: "Model Fallback",
-                description: `OpenAI GPT-5 timeout. Trying ${model}...`,
-                duration: 2000,
-            });
-        }
-
-        try {
-            if (model === 'gpt5' && !currentMessage.imageDataUri) {
-                const creatorPrompt = "Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.";
-                const finalPrompt = `${creatorPrompt}\n\nUser query: ${currentMessage.content}`;
-                const promise = puter.ai.chat(finalPrompt);
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000)); // 5s timeout for gpt5
-                const response = await Promise.race([promise, timeoutPromise]);
-                responseText = typeof response === 'object' && response.text ? response.text : String(response);
-            } else { // qwen or gemini, or gpt5 with image falls through here
-                const result = await generalChatAction({ 
-                    history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
-                    imageDataUri: currentMessage.imageDataUri,
-                    model: model
-                });
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-                responseText = result.data!.response;
-            }
-        } catch (e: any) {
-            error = e.message;
-        }
-
-        if (responseText) {
-            const modelMessage: Message = { role: "model", content: responseText };
+        if (result.error) {
+            setHistory(prev => prev.slice(0, -1)); // Remove user message
+            setShowLimitDialog(true);
+        } else if (result.data) {
+            const modelMessage: Message = { role: "model", content: result.data.response };
             setHistory((prev) => [...prev, modelMessage]);
-        } else {
-             if (remainingModels.length > 0) {
-                 toast({
-                    title: `Model Error: ${model}`,
-                    description: `Switching to ${remainingModels[0]}. Reason: ${error}`,
-                    variant: "destructive",
-                    duration: 3000
-                });
-                await executeChat(currentMessage, chatHistory, remainingModels);
-             } else {
-                setHistory(prev => prev.slice(0, -1)); // Remove user message
-                setShowLimitDialog(true);
-             }
         }
       });
   }, [startTyping, toast, setHistory]);
@@ -231,9 +186,7 @@ export function ChatContent({
     setInput("");
     setCapturedImage(null);
 
-    // If there's an image, Gemini is the best model for it. Prioritize it.
-    const modelsToTry = userMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
-    await executeChat(userMessage, newHistory, modelsToTry);
+    await executeChat(userMessage, newHistory);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -249,8 +202,7 @@ export function ChatContent({
 
       const historyWithoutLastResponse = history.slice(0, -1);
       setHistory(historyWithoutLastResponse);
-      const modelsToTry = lastUserMessage.imageDataUri ? ['gemini', 'gpt5', 'qwen'] : ['gpt5', 'qwen', 'gemini'];
-      await executeChat(lastUserMessage, historyWithoutLastResponse, modelsToTry);
+      await executeChat(lastUserMessage, historyWithoutLastResponse);
   };
 
 
