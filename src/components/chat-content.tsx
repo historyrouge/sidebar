@@ -22,30 +22,92 @@ import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 
 declare const puter: any;
 
+const QuizIcon = () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="24" fill="url(#quiz-gradient)"/>
+        <path d="M24.5 32H23.5C22.3954 32 21.5 31.1046 21.5 30V28C21.5 26.8954 22.3954 26 23.5 26H24.5C25.6046 26 26.5 26.8954 26.5 28V30C26.5 31.1046 25.6046 32 24.5 32Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M24.5 22C24.5 20.3431 23.1569 19 21.5 19C19.8431 19 18.5 20.3431 18.5 22C18.5 23.6569 20.3726 25.9314 21.5 26H26.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="30.5" cy="17" r="2" fill="white"/>
+        <defs>
+            <linearGradient id="quiz-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#34D399"/>
+                <stop offset="1" stopColor="#059669"/>
+            </linearGradient>
+        </defs>
+    </svg>
+);
+
+const FlashcardsIcon = () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="24" fill="url(#flash-gradient)"/>
+        <path d="M18 19H30V29H18V19Z" fill="#A78BFA" stroke="white" strokeWidth="2" strokeLinejoin="round" transform="rotate(-10 24 24)"/>
+        <path d="M22 17H34V27H22V17Z" fill="#C4B5FD" stroke="white" strokeWidth="2" strokeLinejoin="round" transform="rotate(5 24 24)"/>
+        <defs>
+            <linearGradient id="flash-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#A78BFA"/>
+                <stop offset="1" stopColor="#7C3AED"/>
+            </linearGradient>
+        </defs>
+    </svg>
+);
+
+const EbooksIcon = () => (
+     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="24" fill="url(#ebook-gradient)"/>
+        <path d="M29 16H19C17.8954 16 17 16.8954 17 18V30C17 31.1046 17.8954 32 19 32H29C30.1046 32 31 31.1046 31 30V18C31 16.8954 30.1046 16 29 16Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M26 16V32" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <defs>
+            <linearGradient id="ebook-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#6EE7B7"/>
+                <stop offset="1" stopColor="#10B981"/>
+            </linearGradient>
+        </defs>
+    </svg>
+);
+
+const NewsIcon = () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="24" fill="url(#news-gradient)"/>
+        <path d="M16 20H32" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M16 26H24" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M16 16H32V32H16V16Z" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
+        <defs>
+            <linearGradient id="news-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FBBF24"/>
+                <stop offset="1" stopColor="#F59E0B"/>
+            </linearGradient>
+        </defs>
+    </svg>
+);
+
 const suggestionPrompts = [
     {
-        icon: <FileQuestion className="text-yellow-500" />,
+        icon: <QuizIcon />,
         title: "Take a Quiz",
         description: "Test your knowledge with a custom quiz.",
-        href: "/quiz"
+        href: "/quiz",
+        gradient: "from-teal-400 to-cyan-500"
     },
     {
-        icon: <PlusSquare className="text-blue-500" />,
+        icon: <FlashcardsIcon />,
         title: "Create Flashcards",
         description: "Generate flashcards from your notes.",
-        href: "/create-flashcards"
+        href: "/create-flashcards",
+        gradient: "from-purple-400 to-indigo-500"
     },
     {
-        icon: <BookOpen className="text-green-500" />,
+        icon: <EbooksIcon />,
         title: "Browse eBooks",
         description: "Explore our library of educational books.",
-        href: "/ebooks"
+        href: "/ebooks",
+        gradient: "from-green-400 to-emerald-500"
     },
     {
-        icon: <Rss className="text-purple-500" />,
+        icon: <NewsIcon />,
         title: "Read Latest News",
         description: "Check out top headlines in tech & education.",
-        href: "/news"
+        href: "/news",
+        gradient: "from-orange-400 to-rose-500"
     },
 ];
 
@@ -410,15 +472,15 @@ export function ChatContent({
                            How can I help you today?
                         </p>
                     </div>
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
                             <Link href={prompt.href} key={i}>
-                                <Card className="p-4 h-full hover:bg-card/80 dark:hover:bg-muted/50 cursor-pointer transition-colors">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-2 bg-muted rounded-full">{prompt.icon}</div>
-                                        <div>
-                                            <h3 className="font-semibold text-left">{prompt.title}</h3>
-                                            <p className="text-sm text-muted-foreground text-left">{prompt.description}</p>
+                                <Card className={cn("p-6 h-full text-white bg-gradient-to-br hover:-translate-y-1 transition-transform duration-300 shadow-lg", prompt.gradient)}>
+                                    <div className="flex flex-col items-start gap-4 h-full">
+                                        {prompt.icon}
+                                        <div className="mt-auto">
+                                            <h3 className="font-bold text-xl">{prompt.title}</h3>
+                                            <p className="text-sm text-white/80">{prompt.description}</p>
                                         </div>
                                     </div>
                                 </Card>
