@@ -51,13 +51,13 @@
   }
  
   .dark {
-    --background: 222 47% 11%; /* Deep charcoal blue */
+    --background: 0 0% 0%; /* Hard Black */
     --foreground: 210 40% 98%;
  
-    --card: 222 47% 14%;
+    --card: 0 0% 5%; /* Very Dark Gray */
     --card-foreground: 210 40% 98%;
  
-    --popover: 222 47% 11%;
+    --popover: 0 0% 0%;
     --popover-foreground: 210 40% 98%;
  
     --primary: 217 91% 65%;
@@ -72,8 +72,8 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
  
-    --border: 217.2 32.6% 25.5%;
-    --input: 217.2 32.6% 25.5%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 217 91% 65%;
 
     --chart-1: 217 91% 65%;
@@ -82,13 +82,13 @@
     --chart-4: 343 91% 65%;
     --chart-5: 283 91% 65%;
 
-    --sidebar-background: 222 47% 9% / 0.7;
+    --sidebar-background: 0 0% 5% / 0.7;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222 47% 11%;
     --sidebar-accent: 217 91% 65% / 0.2;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5% / 0.5;
+    --sidebar-border: 0 0% 15% / 0.5;
     --sidebar-ring: 210 40% 98%;
   }
 }
@@ -101,3 +101,4 @@
     @apply bg-background text-foreground;
   }
 }
+
