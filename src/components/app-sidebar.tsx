@@ -30,6 +30,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
@@ -37,7 +38,7 @@ import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 
-const menuItems = [
+const studyTools = [
     { name: "Home", icon: <Home />, href: "/" },
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
@@ -45,12 +46,15 @@ const menuItems = [
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
     { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
+];
+
+const resources = [
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
 ];
 
-const bottomMenuItems = [
+const account = [
     { name: "Settings", icon: <Settings />, href: "/settings" },
     { name: "Help", icon: <HelpCircle />, href: "/help" },
     { name: "About Us", icon: <Info />, href: "/about" },
@@ -64,7 +68,7 @@ export function AppSidebar() {
     setOpenMobile(false);
   };
 
-  const renderMenuItems = (items: typeof menuItems | typeof bottomMenuItems) => {
+  const renderMenuItems = (items: typeof studyTools) => {
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
             <Link href={item.href} className="w-full">
@@ -74,7 +78,9 @@ export function AppSidebar() {
                 className="justify-start w-full"
                 onClick={handleLinkClick}
               >
-                  {item.icon}
+                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
+                    {item.icon}
+                  </div>
                   <span>{item.name}</span>
               </SidebarMenuButton>
             </Link>
@@ -95,11 +101,18 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
-                {renderMenuItems(menuItems)}
+                <SidebarGroupLabel>Study Tools</SidebarGroupLabel>
+                {renderMenuItems(studyTools)}
             </SidebarMenu>
             <SidebarSeparator className="my-2" />
             <SidebarMenu>
-                 {renderMenuItems(bottomMenuItems)}
+                 <SidebarGroupLabel>Resources</SidebarGroupLabel>
+                 {renderMenuItems(resources)}
+            </SidebarMenu>
+            <SidebarSeparator className="my-2" />
+            <SidebarMenu>
+                 <SidebarGroupLabel>Account</SidebarGroupLabel>
+                 {renderMenuItems(account)}
             </SidebarMenu>
         </div>
       </SidebarContent>
