@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction, AnalyzeImageContentInput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -425,7 +425,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or capture an image. Analysis is done by Qwen.</CardDescription>
+              <CardDescription>Paste text, upload a document, or capture an image. Analysis is done by {imageDataUri ? 'Gemini' : 'Qwen'}.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input placeholder="Enter a title for your material..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-semibold" disabled={isLoading} />
@@ -597,7 +597,3 @@ export function StudyNowContent() {
     </div>
   );
 }
-
-    
-
-    
