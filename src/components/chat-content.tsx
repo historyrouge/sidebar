@@ -163,13 +163,12 @@ export function ChatContent({
   
 
   const executeChat = useCallback(async (
-    currentMessage: Message, 
     chatHistory: Message[]
   ): Promise<void> => {
       startTyping(async () => {
         const result = await generalChatAction({ 
             history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
-            imageDataUri: currentMessage.imageDataUri,
+            imageDataUri: chatHistory[chatHistory.length - 1].imageDataUri,
         });
 
         if (result.error) {
@@ -217,7 +216,7 @@ export function ChatContent({
     setInput("");
     setCapturedImage(null);
 
-    await executeChat(userMessage, history);
+    await executeChat(newHistory);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, capturedImage, isRecording, history, executeChat]);
@@ -228,12 +227,12 @@ export function ChatContent({
   }
 
   const handleRegenerateResponse = async () => {
-      const lastUserMessage = history.findLast(m => m.role === 'user');
-      if (!lastUserMessage) return;
+      const lastUserMessageIndex = history.findLastIndex(m => m.role === 'user');
+      if (lastUserMessageIndex === -1) return;
 
-      const historyWithoutLastResponse = history.slice(0, -1);
-      setHistory(historyWithoutLastResponse);
-      await executeChat(lastUserMessage, historyWithoutLastResponse);
+      const historyForRegen = history.slice(0, lastUserMessageIndex + 1);
+      setHistory(historyForRegen); // Remove the old model response
+      await executeChat(historyForRegen);
   };
 
 
@@ -663,5 +662,7 @@ export function ChatContent({
     </div>
   );
 }
+
+    
 
     
