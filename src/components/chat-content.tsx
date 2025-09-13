@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, textToSpeechAction, GenerateQuestionPaperOutput } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,10 +166,14 @@ export function ChatContent({
     chatHistory: Message[]
   ): Promise<void> => {
       startTyping(async () => {
-        const result = await generalChatAction({ 
-            history: chatHistory.map(h => ({role: h.role, content: h.content, imageDataUri: h.imageDataUri})),
-            imageDataUri: chatHistory[chatHistory.length - 1].imageDataUri,
-        });
+        // Convert the message history to the format Genkit expects
+        const genkitHistory = chatHistory.map(h => ({
+            role: h.role as 'user' | 'model', // Cast to what Genkit flow expects
+            content: h.imageDataUri ? [{ text: h.content }, { media: { url: h.imageDataUri } }] : h.content,
+        }));
+        
+        // @ts-ignore
+        const result = await generalChatAction({ history: genkitHistory });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {

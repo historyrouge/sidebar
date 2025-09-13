@@ -10,9 +10,6 @@
  */
 import { openai } from '@/lib/openai';
 import { z } from 'zod';
-import { ModelKey } from '@/hooks/use-model-settings';
-
-declare const puter: any;
 
 const GenerateQuizzesSambaInputSchema = z.object({
   content: z.string().describe('The content from which to generate quizzes.'),
@@ -77,38 +74,30 @@ const buildPrompt = (input: GenerateQuizzesSambaInput): string => {
         .replace('{{content}}', input.content);
 };
 
-export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput, model: ModelKey): Promise<GenerateQuizzesSambaOutput> {
+export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput): Promise<GenerateQuizzesSambaOutput> {
     const prompt = buildPrompt(input);
     let jsonResponseString: string;
 
-    if (model === 'gpt5') {
-         if (typeof puter === 'undefined') {
-            throw new Error("OpenAI GPT-5 is not loaded or configured.");
-        }
-        const response = await puter.ai.chat(prompt);
-        jsonResponseString = typeof response === 'object' && response.text ? response.text : String(response);
-    } else { // Default to Qwen
-        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            throw new Error("Qwen API key or base URL is not configured.");
-        }
-        try {
-            const response = await openai.chat.completions.create({
-                model: 'Meta-Llama-3.1-8B-Instruct',
-                messages: [{ role: 'user', content: prompt }],
-                response_format: { type: 'json_object' },
-                temperature: 0.7,
-            });
-
-            if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-                throw new Error("Received an empty or invalid response from Qwen.");
-            }
-            jsonResponseString = response.choices[0].message.content;
-        } catch (error: any) {
-            console.error("Qwen quiz generation error:", error);
-            throw new Error(error.message || "An unknown error occurred while generating quizzes with Qwen.");
-        }
+    if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        throw new Error("Qwen API key or base URL is not configured.");
     }
+    try {
+        const response = await openai.chat.completions.create({
+            model: 'Meta-Llama-3.1-8B-Instruct',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+        });
 
+        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+            throw new Error("Received an empty or invalid response from Qwen.");
+        }
+        jsonResponseString = response.choices[0].message.content;
+    } catch (error: any) {
+        console.error("Qwen quiz generation error:", error);
+        throw new Error(error.message || "An unknown error occurred while generating quizzes with Qwen.");
+    }
+    
     try {
         const jsonResponse = JSON.parse(jsonResponseString);
         const validatedOutput = GenerateQuizzesSambaOutputSchema.parse(jsonResponse);

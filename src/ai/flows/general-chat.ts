@@ -19,11 +19,11 @@ const GeneralChatInputSchema = z.object({
       z.object({
         role: z.enum(['user', 'model', 'tool']),
         content: z.string(),
-        imageDataUri: z.string().optional().describe('An optional image from the user, as a data URI.'),
+        // Note: The Genkit representation of multipart content doesn't have a direct imageDataUri field.
+        // We will construct the media part from the content if needed.
       })
     )
     .describe('The conversation history.'),
-  imageDataUri: z.string().optional().describe('An optional image from the user for the CURRENT message, as a data URI.'),
 });
 export type GeneralChatInput = z.infer<typeof GeneralChatInputSchema>;
 
@@ -36,12 +36,8 @@ export async function generalChat(input: GeneralChatInput): Promise<GeneralChatO
   return generalChatFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generalChatPrompt',
-  input: {schema: GeneralChatInputSchema},
-  output: {schema: GeneralChatOutputSchema},
-  tools: [generateQuestionPaperTool],
-  prompt: `You are a friendly and helpful AI assistant named Easy Learn AI. Your goal is to be an expert educator who makes learning accessible and engaging.
+// System prompt remains separate as it contains instructions for the model
+const systemPrompt = `You are a friendly and helpful AI assistant named Easy Learn AI. Your goal is to be an expert educator who makes learning accessible and engaging.
 
 Your Persona:
 - Knowledgeable: You have a deep understanding of a wide variety of subjects.
@@ -56,24 +52,8 @@ Your Instructions:
 - Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read.
 - Your primary goal is to help users learn and understand, not just to provide an answer.
 - If an image is provided, analyze it and use it as the primary context for your response.
+`;
 
-{{#if imageDataUri}}
-The user has provided this image. Use it as the primary context for your response.
-{{media url=imageDataUri}}
-{{/if}}
-
-Conversation History:
----
-{{#each history}}
-**{{role}}**: {{{content}}}
-{{#if imageDataUri}}
-[IMAGE WAS ATTACHED]
-{{/if}}
-{{/each}}
----
-
-Based on the conversation history and your instructions, provide a clear, concise, and friendly response to the user's last message.`,
-});
 
 const generalChatFlow = ai.defineFlow(
   {
@@ -81,33 +61,33 @@ const generalChatFlow = ai.defineFlow(
     inputSchema: GeneralChatInputSchema,
     outputSchema: GeneralChatOutputSchema,
   },
-  async input => {
+  async (input) => {
+
+    const model = ai.getmodel('googleai/gemini-1.5-flash-latest');
+
     const response = await ai.generate({
-      prompt: prompt.prompt,
-      history: input.history as any,
-      model: 'googleai/gemini-1.5-flash-latest',
-      tools: [generateQuestionPaperTool],
-      // @ts-ignore - 'input' is implicitly passed but let's make it explicit for clarity
-      input: input, 
+        model,
+        prompt: {
+            system: systemPrompt,
+            history: input.history,
+        },
+        tools: [generateQuestionPaperTool],
     });
 
     const toolRequest = response.toolRequest();
     if (toolRequest) {
       const toolResponse = await toolRequest.run();
-      // When the tool response is available, we send it back to the model
       const finalResponse = await ai.generate({
-        prompt: prompt.prompt,
-        history: [...input.history, response.message, toolResponse] as any,
-        model: 'googleai/gemini-1.5-flash-latest',
+        model,
+        prompt: {
+            system: systemPrompt,
+            history: [...input.history, response.message, toolResponse],
+        },
         tools: [generateQuestionPaperTool],
-        input: input,
       });
 
-       // Now, the model will generate a conversational response about the tool's output.
-      // But we also want to return the actual tool data to the client.
       const toolOutput = toolResponse.output();
       if (toolOutput) {
-        // We'll stringify the tool's JSON output and send it along with the conversational part.
         const conversationalText = finalResponse.text();
         const combinedResponse = `${conversationalText}\n\n[TOOL_RESULT:questionPaper]\n${JSON.stringify(toolOutput)}`;
         return { response: combinedResponse };
