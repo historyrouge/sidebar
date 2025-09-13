@@ -30,9 +30,6 @@ const GeneralChatOutputSchema = z.object({
 });
 export type GeneralChatOutput = z.infer<typeof GeneralChatOutputSchema>;
 
-export async function generalChat(input: GeneralChatInput): Promise<GeneralChatOutput> {
-  return generalChatFlow(input);
-}
 
 // System prompt remains separate as it contains instructions for the model
 const systemPrompt = `You are a friendly and helpful AI assistant named Easy Learn AI. Your goal is to be an expert educator who makes learning accessible and engaging.
@@ -53,7 +50,7 @@ Your Instructions:
 `;
 
 
-const generalChatFlow = ai.defineFlow(
+export const generalChat = ai.defineFlow(
   {
     name: 'generalChatFlow',
     inputSchema: GeneralChatInputSchema,
