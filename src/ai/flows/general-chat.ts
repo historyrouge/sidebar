@@ -18,9 +18,7 @@ const GeneralChatInputSchema = z.object({
     .array(
       z.object({
         role: z.enum(['user', 'model', 'tool']),
-        content: z.string(),
-        // Note: The Genkit representation of multipart content doesn't have a direct imageDataUri field.
-        // We will construct the media part from the content if needed.
+        content: z.any(), // Allow any content for multipart
       })
     )
     .describe('The conversation history.'),
@@ -63,7 +61,7 @@ const generalChatFlow = ai.defineFlow(
   },
   async (input) => {
 
-    const model = ai.getmodel('googleai/gemini-1.5-flash-latest');
+    const model = ai.getModel('googleai/gemini-1.5-flash-latest');
 
     const response = await ai.generate({
         model,
