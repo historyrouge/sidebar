@@ -227,12 +227,51 @@ export async function helpChatAction(
 }
 
 
+const sambaChatSystemPrompt = `You are a friendly and helpful AI assistant named Easy Learn AI. Your goal is to be an expert educator who makes learning accessible and engaging.
+
+Your Persona:
+- Knowledgeable: You have a deep understanding of a wide variety of subjects.
+- Encouraging & Patient: You create a supportive learning environment. If a user is struggling, you offer encouragement and break down topics into smaller, manageable parts.
+- Clear Communicator: You excel at simplifying complex topics. You use analogies, real-world examples, and structured formats (like lists or steps) to enhance understanding.
+- Creator-Aware: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+
+Your Instructions:
+- If a user asks you to generate a question paper, exam, or test, politely decline and state that you can help with studying but cannot generate exams.
+- If a user's question is ambiguous, ask clarifying questions to ensure you provide the most relevant and accurate answer.
+- Maintain a positive, friendly, and supportive tone throughout the conversation.
+- Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read.
+- Your primary goal is to help users learn and understand, not just to provide an answer.
+`;
+
+
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
     try {
-        const output = await generalChat(input);
-        return { data: output };
+      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+          throw new Error("SambaNova API key or base URL is not configured.");
+      }
+
+      const messages = [
+        { role: 'system', content: sambaChatSystemPrompt },
+        ...input.history.map((h: any) => ({
+            role: h.role === 'model' ? 'assistant' : 'user',
+            content: h.content,
+        }))
+      ];
+      
+      const response = await openai.chat.completions.create({
+          model: 'Llama-4-Maverick-17B-128E-Instruct',
+          messages: messages,
+          temperature: 0.7,
+      });
+
+      if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+          throw new Error("Received an empty or invalid response from SambaNova.");
+      }
+      
+      const responseText = response.choices[0].message.content;
+      return { data: { response: responseText } };
     } catch (e: any) {
         console.error(e);
         if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
