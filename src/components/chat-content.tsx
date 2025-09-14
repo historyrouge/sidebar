@@ -503,7 +503,7 @@ export function ChatContent({
                     >
                     {message.role === "user" ? (
                          <div className="w-full max-w-xl">
-                            <div className="rounded-xl p-3 text-sm bg-muted text-chart-2">
+                            <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
