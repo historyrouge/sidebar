@@ -280,16 +280,22 @@ export function ChatContent({
   };
   
     const startCamera = useCallback(async (deviceId?: string) => {
-        // Stop any existing stream
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
         }
         setIsStreamReady(false);
+        
+        // Prefer back camera by default on mobile
+        const videoConstraints: MediaTrackConstraints = {
+            facingMode: { ideal: "environment" }
+        };
+
+        if (deviceId) {
+            videoConstraints.deviceId = { exact: deviceId };
+        }
+
         try {
-            const constraints: MediaStreamConstraints = {
-                video: deviceId ? { deviceId: { exact: deviceId } } : true,
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
             streamRef.current = stream;
             setHasCameraPermission(true);
 
@@ -308,15 +314,24 @@ export function ChatContent({
     useEffect(() => {
         const getDevicesAndStart = async () => {
             if (isCameraOpen) {
-                setHasCameraPermission(null);
-                await startCamera(currentDeviceId); // Initial start
-                
-                // Now get all devices to allow switching
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevs = devices.filter(d => d.kind === 'videoinput');
-                setVideoDevices(videoDevs);
-                if (!currentDeviceId && videoDevs.length > 0) {
-                    setCurrentDeviceId(videoDevs[0].deviceId);
+                try {
+                    setHasCameraPermission(null); // Show loading
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevs = devices.filter(d => d.kind === 'videoinput');
+                    setVideoDevices(videoDevs);
+    
+                    let initialDeviceId = currentDeviceId;
+                    if (!initialDeviceId && videoDevs.length > 0) {
+                        // Prefer back camera if available
+                        const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
+                        initialDeviceId = backCamera ? backCamera.deviceId : videoDevs[0].deviceId;
+                        setCurrentDeviceId(initialDeviceId);
+                    }
+    
+                    await startCamera(initialDeviceId);
+                } catch(e) {
+                    console.error("Failed to enumerate devices:", e);
+                    setHasCameraPermission(false);
                 }
             }
         };
@@ -484,7 +499,7 @@ export function ChatContent({
                              </div>
                         ) : (
                             <div className="space-y-3">
-                                <div className="prose dark:prose-invert max-w-none text-lg" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                                <div className="prose dark:prose-invert max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                         <Copy className="h-4 w-4" />

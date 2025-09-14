@@ -317,24 +317,26 @@ export function StudyNowContent() {
   const handleTutorChat = async (history: any) => await chatWithTutorAction({ content, history });
 
     const startCamera = useCallback(async (deviceId?: string) => {
-        // Stop any existing stream
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
         }
         setIsStreamReady(false);
+        
+        const videoConstraints: MediaTrackConstraints = {
+            facingMode: { ideal: "environment" }
+        };
+        if (deviceId) {
+            videoConstraints.deviceId = { exact: deviceId };
+        }
+
         try {
-            const constraints: MediaStreamConstraints = {
-                video: deviceId ? { deviceId: { exact: deviceId } } : true,
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
             streamRef.current = stream;
             setHasCameraPermission(true);
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.onloadedmetadata = () => {
-                    setIsStreamReady(true);
-                };
+                videoRef.current.onloadedmetadata = () => setIsStreamReady(true);
             }
         } catch (error) {
             console.error('Error accessing camera:', error);
@@ -345,15 +347,23 @@ export function StudyNowContent() {
     useEffect(() => {
         const getDevicesAndStart = async () => {
             if (isCameraOpen) {
-                setHasCameraPermission(null);
-                await startCamera(currentDeviceId); // Initial start
-                
-                // Now get all devices to allow switching
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevs = devices.filter(d => d.kind === 'videoinput');
-                setVideoDevices(videoDevs);
-                if (!currentDeviceId && videoDevs.length > 0) {
-                    setCurrentDeviceId(videoDevs[0].deviceId);
+                try {
+                    setHasCameraPermission(null);
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevs = devices.filter(d => d.kind === 'videoinput');
+                    setVideoDevices(videoDevs);
+    
+                    let initialDeviceId = currentDeviceId;
+                    if (!initialDeviceId && videoDevs.length > 0) {
+                        const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
+                        initialDeviceId = backCamera ? backCamera.deviceId : videoDevs[0].deviceId;
+                        setCurrentDeviceId(initialDeviceId);
+                    }
+    
+                    await startCamera(initialDeviceId);
+                } catch(e) {
+                    console.error("Failed to enumerate devices:", e);
+                    setHasCameraPermission(false);
                 }
             }
         };

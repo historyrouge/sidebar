@@ -162,7 +162,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
               <div
                 className={cn(
                   "max-w-md",
-                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert max-w-none prose-p:my-1"
+                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert max-w-none text-base leading-relaxed prose-p:my-1"
                 )}
                 dangerouslySetInnerHTML={{ __html: message.role === 'model' ? message.htmlContent! : message.content }}
               >
