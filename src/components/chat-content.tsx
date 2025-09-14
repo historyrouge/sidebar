@@ -22,6 +22,7 @@ import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
 import { useTypewriter } from "@/hooks/use-typewriter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Separator } from "./ui/separator";
 
 
 type Message = {
@@ -562,10 +563,7 @@ export function ChatContent({
                             )}
                         </div>
                         {index < history.length - 1 && (
-                            <hr 
-                                className="border-t-2 border-chart-2/30" 
-                                style={{boxShadow: '0 0 10px hsl(var(--chart-2))'}} 
-                            />
+                            <Separator />
                         )}
                     </React.Fragment>
                 ))
@@ -624,5 +622,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
