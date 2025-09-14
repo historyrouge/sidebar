@@ -503,8 +503,8 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="max-w-xl">
-                                <div className="rounded-xl p-3 text-sm bg-muted">
+                             <div className="max-w-xl inline-block">
+                                <div className="rounded-xl p-3 text-sm border bg-card/50" style={{'--tw-border-opacity': 0.2, borderColor: 'hsl(var(--chart-2))', boxShadow: '0 0 8px hsl(var(--chart-2), 0.7)'}}>
                                     {message.imageDataUri && (
                                         <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                     )}
@@ -563,7 +563,11 @@ export function ChatContent({
                             )}
                         </div>
                         {index < history.length - 1 && (
-                            <div className="w-full h-px my-4 bg-gradient-to-r from-transparent via-border to-transparent" />
+                             <div className="my-8 flex flex-col items-center" aria-hidden="true">
+                                <div className="w-full h-px" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.2), transparent)'}}></div>
+                                <div className="w-1/2 h-px my-1" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.5), transparent)'}}></div>
+                                <div className="w-1/4 h-px" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.2), transparent)'}}></div>
+                            </div>
                         )}
                     </React.Fragment>
                 ))
