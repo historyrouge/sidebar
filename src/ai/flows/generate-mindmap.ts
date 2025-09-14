@@ -22,7 +22,7 @@ const GenerateMindMapOutputSchema = z.object({
 });
 export type GenerateMindMapOutput = z.infer<typeof GenerateMindMapOutputSchema>;
 
-const mindMapSystemPrompt = `You are an expert at creating structured and visually engaging mind maps from text, formatted as ASCII art. Your task is to analyze the following content and organize it into a hierarchical mind map using text characters. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+const mindMapSystemPrompt = `You are an expert at creating structured and visually engaging mind maps from text, formatted as ASCII art. Your task is to analyze the following content and organize it into a hierarchical mind map using text characters. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Use characters like '│', '─', '┌', '┐', '└', '┘', '├', '┤', '┬', '┴' to create a visually clear and well-structured diagram. The mind map should be comprehensive and easy to read.
 

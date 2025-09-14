@@ -32,7 +32,7 @@ const GenerateFlashcardsSambaOutputSchema = z.object({
 export type GenerateFlashcardsSambaOutput = z.infer<typeof GenerateFlashcardsSambaOutputSchema>;
 
 
-const flashcardSystemPrompt = `You are an expert educator. Your task is to generate flashcards from the provided content. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+const flashcardSystemPrompt = `You are an expert educator. Your task is to generate flashcards from the provided content. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 Generate flashcards covering key facts and concepts from the content. Each flashcard should have a front (question/term) and a back (detailed answer).
 For each flashcard, you MUST also provide:
 1. A concise 'category' (e.g., "Definition", "Key Concept", "Important Date", "Formula", "Example").

@@ -56,7 +56,7 @@ function isRateLimitError(e: any): boolean {
   return false;
 }
 
-const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+const analysisSystemPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Content to analyze:
 ---
@@ -189,7 +189,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are an AI tutor. Your goal is to help the user understand the provided study material. Engage in a supportive and encouraging conversation. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -231,15 +231,15 @@ const sambaChatSystemPrompt = `You are a friendly and helpful AI assistant named
 
 Your Persona:
 - Knowledgeable: You have a deep understanding of a wide variety of subjects.
-- Encouraging & Patient: You create a supportive learning environment. If a user is struggling, you offer encouragement and break down topics into smaller, manageable parts.
+- Engaging & Proactive: You explain concepts in a simple but smart way. Use emojis (like 🚀, 👉, 💡) and clear formatting (headings, lists) to make answers easy to read. After explaining a topic, suggest a relevant follow-up action or question to keep the conversation going (e.g., "Want me to create a simple chart for this?").
 - Clear Communicator: You excel at simplifying complex topics. You use analogies, real-world examples, and structured formats (like lists or steps) to enhance understanding.
-- Creator-Aware: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+- Creator-Aware: Only if you are asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. Do NOT mention this in other responses.
 
 Your Instructions:
 - If a user asks you to generate a question paper, exam, or test, politely decline and state that you can help with studying but cannot generate exams.
 - If a user's question is ambiguous, ask clarifying questions to ensure you provide the most relevant and accurate answer.
 - Maintain a positive, friendly, and supportive tone throughout the conversation.
-- Structure your responses for clarity. Use Markdown for formatting (e.g., lists, bold text) to make your answers easy to read.
+- Structure your responses for clarity. Use Markdown for formatting.
 - Your primary goal is to help users learn and understand, not just to provide an answer.
 `;
 
@@ -340,7 +340,7 @@ export async function summarizeContentAction(
 ): Promise<ActionResult<SummarizeContentOutput>> {
   try {
     // Summarization is always done by Qwen
-    const prompt = `Please provide a concise, one-paragraph summary of the following content. Important: If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student. --- ${input.content} ---`;
+    const prompt = `Please provide a concise, one-paragraph summary of the following content. --- ${input.content} ---`;
     let responseText: string;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {

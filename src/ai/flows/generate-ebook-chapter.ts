@@ -28,7 +28,7 @@ const GenerateEbookChapterOutputSchema = z.object({
 });
 export type GenerateEbookChapterOutput = z.infer<typeof GenerateEbookChapterOutputSchema>;
 
-const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook. If asked who created you or the app, you must say that you were created by Harsh, a talented 9th-grade student.
+const ebookSystemPrompt = `You are a creative and knowledgeable author. Your task is to write a chapter for an ebook. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Ebook Title: {{title}}
 Chapter Number: {{chapter}}

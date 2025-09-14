@@ -45,7 +45,7 @@ export function WelcomeDialog() {
                 <br />
                 <strong>Harsh</strong>
                 <br />
-                <span className="text-xs text-muted-foreground">Developer @googledeepmind</span>
+                <span className="text-xs text-muted-foreground">Developer of Easy Learn AI</span>
             </p>
         </div>
         <DialogFooter>
