@@ -563,11 +563,7 @@ export function ChatContent({
                             )}
                         </div>
                         {index < history.length - 1 && (
-                             <div className="my-8 flex flex-col items-center" aria-hidden="true">
-                                <div className="w-full h-px" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.2), transparent)'}}></div>
-                                <div className="w-1/2 h-px my-1" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.5), transparent)'}}></div>
-                                <div className="w-1/4 h-px" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.2), transparent)'}}></div>
-                            </div>
+                             <div className="my-8 h-px w-full" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.3), transparent)'}} aria-hidden="true" />
                         )}
                     </React.Fragment>
                 ))
@@ -626,5 +622,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
