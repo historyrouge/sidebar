@@ -503,13 +503,11 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="max-w-xl inline-block">
-                                <div className="rounded-xl p-3 text-sm border" style={{borderColor: 'hsl(var(--chart-2))', boxShadow: '0 0 10px hsl(var(--chart-2), 0.7)'}}>
-                                    {message.imageDataUri && (
-                                        <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
-                                    )}
-                                    <span className="text-chart-2" style={{ textShadow: '0 0 8px hsl(var(--chart-2), 0.7)' }}>{message.content}</span>
-                                </div>
+                             <div className="inline-block p-3 border rounded-xl" style={{borderColor: '#00FFCC', boxShadow: '0 0 10px #00FFCC'}}>
+                                {message.imageDataUri && (
+                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                                )}
+                                <span className="text-chart-2" style={{textShadow: '0 0 8px hsl(var(--chart-2))'}}>{message.content}</span>
                              </div>
                         ) : (
                             <div className={cn("w-full group")}>
@@ -518,7 +516,7 @@ export function ChatContent({
                                     isLastMessage={index === history.length - 1}
                                     isTyping={isTyping}
                                 />
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center gap-1 transition-opacity mt-2">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                         <Copy className="h-4 w-4" />
                                     </Button>
@@ -563,7 +561,7 @@ export function ChatContent({
                             )}
                         </div>
                         {index < history.length - 1 && (
-                             <div className="my-8 h-px w-full" style={{background: 'linear-gradient(to right, transparent, hsl(var(--chart-2) / 0.3), transparent)'}} aria-hidden="true" />
+                             <Separator className="my-8" />
                         )}
                     </React.Fragment>
                 ))
