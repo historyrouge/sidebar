@@ -101,9 +101,9 @@
     @apply bg-background text-foreground;
   }
   .prose hr {
-    @apply my-8 border-border;
+    @apply my-8 border-gray-300;
   }
   .dark .prose hr {
-    @apply border-border;
+    @apply my-8 border-gray-700;
   }
 }
