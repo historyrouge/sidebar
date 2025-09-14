@@ -60,14 +60,14 @@ const suggestionPrompts = [
     },
 ];
 
-const ModelResponse = ({ message, index, history, isTyping, handleCopyToClipboard, handleShare, handleTextToSpeech, isSynthesizing, audioDataUri, setAudioDataUri, setIsSynthesizing, handleRegenerateResponse, handleViewQuestionPaper }: any) => {
-    const displayText = useTypewriter(message.content, 5);
-    const isLastMessage = index === history.length - 1;
+const ModelResponse = ({ message, isLastMessage, isTyping }: { message: Message, isLastMessage: boolean, isTyping: boolean }) => {
+    const textToDisplay = useTypewriter(message.content, 5);
+    const finalHtml = marked(isLastMessage && isTyping ? textToDisplay : message.content);
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_5px_rgba(255,255,255,0.3)]"
-            dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_2px_rgba(255,255,255,0.3)]"
+            dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
 };
@@ -299,7 +299,7 @@ export function ChatContent({
         setIsStreamReady(false);
         
         const videoConstraints: MediaTrackConstraints = {
-            facingMode: { ideal: "environment" }
+            facingMode: "environment"
         };
 
         if (deviceId) {
@@ -471,8 +471,13 @@ export function ChatContent({
                     </div>
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
                         {suggestionPrompts.map((prompt, i) => (
-                            <Link href={prompt.href} key={i}>
-                                <Button variant="outline" className="w-full h-auto justify-start p-4 rounded-lg border-border/70 hover:bg-muted">
+                             <Button
+                                key={i}
+                                asChild
+                                variant="outline"
+                                className="w-full h-auto justify-start p-4 rounded-lg border-border/70 hover:bg-muted"
+                                >
+                                <Link href={prompt.href}>
                                     <div className="flex items-start gap-4">
                                         {prompt.icon}
                                         <div>
@@ -480,8 +485,8 @@ export function ChatContent({
                                             <p className="text-sm text-muted-foreground text-left">{prompt.description}</p>
                                         </div>
                                     </div>
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         ))}
                     </div>
                     <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
@@ -511,19 +516,9 @@ export function ChatContent({
                         ) : (
                             <div className="space-y-3">
                                  <ModelResponse 
-                                    message={message} 
-                                    index={index}
-                                    history={history}
+                                    message={message}
+                                    isLastMessage={index === history.length - 1}
                                     isTyping={isTyping}
-                                    handleCopyToClipboard={handleCopyToClipboard}
-                                    handleShare={handleShare}
-                                    handleTextToSpeech={handleTextToSpeech}
-                                    isSynthesizing={isSynthesizing}
-                                    audioDataUri={audioDataUri}
-                                    setAudioDataUri={setAudioDataUri}
-                                    setIsSynthesizing={setIsSynthesizing}
-                                    handleRegenerateResponse={handleRegenerateResponse}
-                                    handleViewQuestionPaper={handleViewQuestionPaper}
                                 />
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
@@ -621,5 +616,7 @@ export function ChatContent({
     </div>
   );
 }
+
+    
 
     

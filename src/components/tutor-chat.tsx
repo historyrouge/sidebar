@@ -23,14 +23,14 @@ type Message = {
   content: string;
 };
 
-const TutorResponse = ({ message, index, history, isTyping }: any) => {
-    const displayText = useTypewriter(message.content, 5);
-    const isLastMessage = index === history.length - 1;
+const TutorResponse = ({ message, isLastMessage, isTyping }: { message: Message, isLastMessage: boolean, isTyping: boolean }) => {
+    const textToDisplay = useTypewriter(message.content, 5);
+    const finalHtml = marked(isLastMessage && isTyping ? textToDisplay : message.content);
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_5px_rgba(255,255,255,0.3)]"
-            dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_2px_rgba(255,255,255,0.3)]"
+            dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
 };
@@ -173,7 +173,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
             >
               {message.role === 'model' && (
                 <div className="w-full">
-                     <TutorResponse message={message} index={index} history={history} isTyping={isTyping} />
+                     <TutorResponse message={message} isLastMessage={index === history.length -1} isTyping={isTyping} />
                 </div>
               )}
               {message.role === 'user' && (
@@ -229,5 +229,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
+
+    
 
     
