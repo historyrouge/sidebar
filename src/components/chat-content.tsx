@@ -66,7 +66,7 @@ const ModelResponse = ({ message, index, history, isTyping, handleCopyToClipboar
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_8px_rgba(255,255,255,0.5)]" 
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_5px_rgba(255,255,255,0.3)]"
             dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
         />
     );
@@ -621,3 +621,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
