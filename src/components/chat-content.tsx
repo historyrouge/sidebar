@@ -504,7 +504,7 @@ export function ChatContent({
                         >
                         {message.role === "user" ? (
                              <div className="max-w-xl">
-                                <div className="rounded-xl p-3 text-sm border border-chart-2/30" style={{boxShadow: '0 0 12px hsl(var(--chart-2), 0.5)'}}>
+                                <div className="rounded-xl p-3 text-sm bg-muted">
                                     {message.imageDataUri && (
                                         <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                     )}
@@ -563,7 +563,7 @@ export function ChatContent({
                             )}
                         </div>
                         {index < history.length - 1 && (
-                            <Separator />
+                            <div className="w-full h-px my-4 bg-gradient-to-r from-transparent via-border to-transparent" />
                         )}
                     </React.Fragment>
                 ))
