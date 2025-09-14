@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
+import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 type Message = {
@@ -58,6 +59,15 @@ const suggestionPrompts = [
         href: "/news"
     },
 ];
+
+const ModelResponse = ({ message, index, history, isTyping, handleCopyToClipboard, handleShare, handleTextToSpeech, isSynthesizing, audioDataUri, setAudioDataUri, setIsSynthesizing, handleRegenerateResponse, handleViewQuestionPaper }: any) => {
+    const displayText = useTypewriter(message.content);
+    const isLastMessage = index === history.length - 1;
+
+    return (
+        <div className="prose dark:prose-invert max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }} />
+    );
+};
 
 
 export function ChatContent({
@@ -499,7 +509,21 @@ export function ChatContent({
                              </div>
                         ) : (
                             <div className="space-y-3">
-                                <div className="prose dark:prose-invert max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                                 <ModelResponse 
+                                    message={message} 
+                                    index={index}
+                                    history={history}
+                                    isTyping={isTyping}
+                                    handleCopyToClipboard={handleCopyToClipboard}
+                                    handleShare={handleShare}
+                                    handleTextToSpeech={handleTextToSpeech}
+                                    isSynthesizing={isSynthesizing}
+                                    audioDataUri={audioDataUri}
+                                    setAudioDataUri={setAudioDataUri}
+                                    setIsSynthesizing={setIsSynthesizing}
+                                    handleRegenerateResponse={handleRegenerateResponse}
+                                    handleViewQuestionPaper={handleViewQuestionPaper}
+                                />
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                         <Copy className="h-4 w-4" />
@@ -604,5 +628,7 @@ export function ChatContent({
     </div>
   );
 }
+
+    
 
     

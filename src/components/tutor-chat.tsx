@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { marked } from 'marked';
+import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 interface TutorChatProps {
@@ -20,8 +21,20 @@ interface TutorChatProps {
 type Message = {
   role: "user" | "model";
   content: string;
-  htmlContent?: string;
 };
+
+const TutorResponse = ({ message, index, history, isTyping }: any) => {
+    const displayText = useTypewriter(message.content);
+    const isLastMessage = index === history.length - 1;
+
+    return (
+        <div 
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed" 
+            dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
+        />
+    );
+};
+
 
 export function TutorChat({ content, onSendMessage }: TutorChatProps) {
   const [history, setHistory] = useState<Message[]>([]);
@@ -61,7 +74,6 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
         const modelMessage: Message = { 
           role: "model", 
           content: result.data.response,
-          htmlContent: marked(result.data.response) as string,
         };
         setHistory((prev) => [...prev, modelMessage]);
       }
@@ -159,18 +171,25 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
                 message.role === "user" ? "justify-end" : ""
               )}
             >
-              <div
-                className={cn(
-                  "max-w-md",
-                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert max-w-none text-base leading-relaxed prose-p:my-1"
-                )}
-                dangerouslySetInnerHTML={{ __html: message.role === 'model' ? message.htmlContent! : message.content }}
-              >
-              </div>
-              {message.role === "user" && (
-                <Avatar className="h-8 w-8">
-                   <AvatarFallback><User /></AvatarFallback>
-                </Avatar>
+              {message.role === 'model' && (
+                <div className="w-full max-w-md">
+                     <TutorResponse message={message} index={index} history={history} isTyping={isTyping} />
+                </div>
+              )}
+              {message.role === 'user' && (
+                <>
+                    <div
+                        className={cn(
+                        "max-w-md",
+                        "rounded-lg bg-primary text-primary-foreground p-3 text-sm"
+                        )}
+                    >
+                       {message.content}
+                    </div>
+                    <Avatar className="h-8 w-8">
+                        <AvatarFallback><User /></AvatarFallback>
+                    </Avatar>
+                </>
               )}
             </div>
           ))}
@@ -210,3 +229,5 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
+
+    
