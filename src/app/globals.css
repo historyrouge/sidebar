@@ -100,10 +100,10 @@
   body {
     @apply bg-background text-foreground;
   }
-  .prose hr {
+  .prose hr, .prose-sm hr {
     @apply my-8 border-gray-200;
   }
-  .dark .prose hr {
+  .dark .prose hr, .dark .prose-sm hr {
     @apply my-8 border-gray-600;
   }
 }
