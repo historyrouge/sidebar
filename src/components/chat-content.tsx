@@ -504,7 +504,7 @@ export function ChatContent({
                         >
                         {message.role === "user" ? (
                              <div className="max-w-xl inline-block">
-                                <div className="rounded-xl p-3 text-sm border bg-card/50" style={{'--tw-border-opacity': 0.2, borderColor: 'hsl(var(--chart-2))', boxShadow: '0 0 8px hsl(var(--chart-2), 0.7)'}}>
+                                <div className="rounded-xl p-3 text-sm border" style={{borderColor: 'hsl(var(--chart-2))', boxShadow: '0 0 10px hsl(var(--chart-2), 0.7)'}}>
                                     {message.imageDataUri && (
                                         <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                     )}
@@ -626,3 +626,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
