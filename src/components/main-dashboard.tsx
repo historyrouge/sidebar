@@ -39,7 +39,7 @@ export function MainDashboard() {
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { theme, setTheme } = useTheme();
-  const [currentModel, setCurrentModel] = useState<ChatModel>('samba');
+  const [currentModel, setCurrentModel] = useState<ChatModel>('nvidia');
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
   // Load history and model from localStorage on initial render
