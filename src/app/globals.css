@@ -100,5 +100,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  .prose hr {
+    @apply my-8 border-border/20;
+  }
+  .dark .prose hr {
+    @apply border-border/30;
+  }
 }
 
