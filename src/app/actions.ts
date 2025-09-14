@@ -16,15 +16,18 @@ import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as Generat
 import { generateQuestionPaper } from "@/ai/flows/generate-question-paper";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
-import { openai } from "@/lib/openai";
+import { openai as sambaClient } from "@/lib/openai";
+import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 
 
 export type ModelKey = 'gemini' | 'qwen';
+export type ChatModel = 'samba' | 'nvidia';
 
 // Extend GeneralChatInput to include an optional prompt for specific scenarios
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
+  model?: ChatModel;
 };
 
 
@@ -114,7 +117,7 @@ export async function analyzeContentAction(
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
         return { error: "Qwen API key or base URL is not configured." };
     }
-     const response = await openai.chat.completions.create({
+     const response = await sambaClient.chat.completions.create({
         model: 'Meta-Llama-3.1-8B-Instruct',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -194,7 +197,7 @@ export async function chatWithTutorAction(
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
     }
-    const response = await openai.chat.completions.create({
+    const response = await sambaClient.chat.completions.create({
       model: 'Meta-Llama-3.1-8B-Instruct',
       messages: [{ role: 'user', content: prompt }],
       stream: false,
@@ -251,8 +254,22 @@ export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
     try {
-      if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-          throw new Error("SambaNova API key or base URL is not configured.");
+      const model = input.model || 'samba';
+      let client;
+      let modelName;
+
+      if (model === 'nvidia') {
+        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
+            throw new Error("NVIDIA API key or base URL is not configured.");
+        }
+        client = nvidiaClient;
+        modelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
+      } else { // Default to samba
+        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+            throw new Error("SambaNova API key or base URL is not configured.");
+        }
+        client = sambaClient;
+        modelName = 'Llama-4-Maverick-17B-128E-Instruct';
       }
 
       const messages = [
@@ -263,8 +280,8 @@ export async function generalChatAction(
         }))
       ];
       
-      const response = await openai.chat.completions.create({
-          model: 'Llama-4-Maverick-17B-128E-Instruct',
+      const response = await client.chat.completions.create({
+          model: modelName,
           messages: messages,
           temperature: 0.8,
           // @ts-ignore
@@ -272,7 +289,7 @@ export async function generalChatAction(
       });
 
       if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-          throw new Error("Received an empty or invalid response from SambaNova.");
+          throw new Error("Received an empty or invalid response from the AI model.");
       }
       
       const responseText = response.choices[0].message.content;
@@ -351,7 +368,7 @@ export async function summarizeContentAction(
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
         return { error: "Qwen API key or base URL is not configured." };
     }
-      const response = await openai.chat.completions.create({
+      const response = await sambaClient.chat.completions.create({
         model: 'Meta-Llama-3.1-8B-Instruct',
         messages: [{ role: 'user', content: prompt }],
         stream: false,

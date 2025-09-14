@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun } from "lucide-react";
+import { FileEdit, Moon, Sun, ChevronsUpDown, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useState, useTransition, useEffect } from "react";
 import { ChatContent } from "./chat-content";
@@ -11,8 +11,10 @@ import { WelcomeDialog } from "./welcome-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { GenerateQuestionPaperOutput } from "@/app/actions";
-
+import { GenerateQuestionPaperOutput, ChatModel } from "@/app/actions";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
+import { cn } from "@/lib/utils";
 
 type Message = {
   role: "user" | "model";
@@ -25,22 +27,34 @@ type Message = {
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
+const CHAT_MODEL_STORAGE_KEY = 'chatModel';
+
+const chatModels: { value: ChatModel, label: string }[] = [
+    { value: "samba", label: "SambaNova" },
+    { value: "nvidia", label: "NVIDIA" },
+];
 
 export function MainDashboard() {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { theme, setTheme } = useTheme();
+  const [currentModel, setCurrentModel] = useState<ChatModel>('samba');
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
-  // Load history from localStorage on initial render
+  // Load history and model from localStorage on initial render
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
       if (savedHistory) {
         setHistory(JSON.parse(savedHistory));
       }
+      const savedModel = localStorage.getItem(CHAT_MODEL_STORAGE_KEY);
+      if (savedModel && (savedModel === 'samba' || savedModel === 'nvidia')) {
+        setCurrentModel(savedModel as ChatModel);
+      }
     } catch (error) {
-      console.error("Failed to load chat history from localStorage", error);
+      console.error("Failed to load chat state from localStorage", error);
     }
   }, []);
 
@@ -53,10 +67,18 @@ export function MainDashboard() {
     }
   }, [history]);
 
+  // Save model to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_MODEL_STORAGE_KEY, currentModel);
+    } catch (error) {
+      console.error("Failed to save chat model to localStorage", error);
+    }
+  }, [currentModel]);
+
   const handleNewChat = () => {
     setHistory([]);
     setInput("");
-    // This will trigger the useEffect above to save the empty history.
   };
 
   return (
@@ -66,6 +88,45 @@ export function MainDashboard() {
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
             <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
+            <Popover open={modelSelectorOpen} onOpenChange={setModelSelectorOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={modelSelectorOpen}
+                        className="w-[150px] justify-between"
+                    >
+                        {chatModels.find((model) => model.value === currentModel)?.label}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                        <CommandInput placeholder="Search models..." />
+                        <CommandEmpty>No model found.</CommandEmpty>
+                        <CommandGroup>
+                            {chatModels.map((model) => (
+                                <CommandItem
+                                    key={model.value}
+                                    value={model.value}
+                                    onSelect={(currentValue) => {
+                                        setCurrentModel(currentValue as ChatModel)
+                                        setModelSelectorOpen(false)
+                                    }}
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            currentModel === model.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                    {model.label}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </Command>
+                </PopoverContent>
+            </Popover>
         </div>
         <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" onClick={handleNewChat}>
@@ -109,6 +170,8 @@ export function MainDashboard() {
             setInput={setInput}
             isTyping={isTyping}
             startTyping={startTyping}
+            currentModel={currentModel}
+            setCurrentModel={setCurrentModel}
         />
       </main>
     </div>
