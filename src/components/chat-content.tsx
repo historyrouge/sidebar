@@ -507,7 +507,7 @@ export function ChatContent({
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
-                                <span className="text-chart-2" style={{textShadow: '0 0 8px hsl(var(--chart-2))'}}>{message.content}</span>
+                                <span className="text-chart-2">{message.content}</span>
                              </div>
                         ) : (
                             <div className={cn("w-full group")}>
