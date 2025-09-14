@@ -253,51 +253,59 @@ General Rules:
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
-    try {
-      const model = input.model || 'samba';
-      let client;
-      let modelName;
-
-      if (model === 'nvidia') {
-        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
-            throw new Error("NVIDIA API key or base URL is not configured.");
-        }
-        client = nvidiaClient;
-        modelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
-      } else { // Default to samba
-        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            throw new Error("SambaNova API key or base URL is not configured.");
-        }
-        client = sambaClient;
-        modelName = 'Llama-4-Maverick-17B-128E-Instruct';
-      }
-
-      const messages = [
+    const messages = [
         { role: 'system', content: sambaChatSystemPrompt },
         ...input.history.map((h: any) => ({
             role: h.role === 'model' ? 'assistant' : 'user',
             content: h.content,
         }))
       ];
-      
-      const response = await client.chat.completions.create({
-          model: modelName,
-          messages: messages,
-          temperature: 0.8,
-          // @ts-ignore
-          safe_prompt: false,
-      });
+    
+    // 1. Try SambaNova first
+    try {
+        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+            throw new Error("SambaNova API key or base URL is not configured.");
+        }
+        
+        const response = await sambaClient.chat.completions.create({
+            model: 'Llama-4-Maverick-17B-128E-Instruct',
+            messages: messages,
+            temperature: 0.8,
+        });
 
-      if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-          throw new Error("Received an empty or invalid response from the AI model.");
-      }
-      
-      const responseText = response.choices[0].message.content;
-      return { data: { response: responseText } };
-    } catch (e: any) {
-        console.error(e);
-        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-        return { error: e.message || "An unknown error occurred." };
+        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+            throw new Error("Received an empty or invalid response from SambaNova.");
+        }
+        
+        const responseText = response.choices[0].message.content;
+        return { data: { response: responseText } };
+    } catch (sambaError: any) {
+        console.warn("SambaNova failed, attempting fallback to NVIDIA.", sambaError.message);
+        
+        // 2. If SambaNova fails, try NVIDIA
+        try {
+            if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
+                throw new Error("NVIDIA API key or base URL is not configured for fallback.");
+            }
+
+            const nvidiaResponse = await nvidiaClient.chat.completions.create({
+                model: 'nvidia/nvidia-nemotron-nano-9b-v2',
+                messages: messages,
+                temperature: 0.8,
+            });
+
+            if (!nvidiaResponse.choices || nvidiaResponse.choices.length === 0 || !nvidiaResponse.choices[0].message?.content) {
+                throw new Error("Received an empty or invalid response from NVIDIA.");
+            }
+            
+            const responseText = nvidiaResponse.choices[0].message.content;
+            return { data: { response: responseText } };
+
+        } catch (nvidiaError: any) {
+            console.error("Both SambaNova and NVIDIA failed.", { sambaError: sambaError.message, nvidiaError: nvidiaError.message });
+            if (isRateLimitError(sambaError) || isRateLimitError(nvidiaError)) return { error: "API_LIMIT_EXCEEDED" };
+            return { error: nvidiaError.message || "An unknown error occurred with the fallback model." };
+        }
     }
 }
 

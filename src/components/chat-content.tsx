@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, ChevronsUpDown, Check } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -21,8 +21,6 @@ import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
 import { useTypewriter } from "@/hooks/use-typewriter";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./ui/command";
 
 
 type Message = {
@@ -74,11 +72,6 @@ const ModelResponse = ({ message, isLastMessage, isTyping }: { message: Message,
     );
 };
 
-const chatModels: { value: ChatModel, label: string }[] = [
-    { value: "samba", label: "SambaNova" },
-    { value: "nvidia", label: "NVIDIA" },
-];
-
 
 export function ChatContent({
     history, 
@@ -87,8 +80,6 @@ export function ChatContent({
     setInput, 
     isTyping, 
     startTyping,
-    currentModel,
-    setCurrentModel
 } : {
     history: Message[],
     setHistory: React.Dispatch<React.SetStateAction<Message[]>>,
@@ -96,8 +87,6 @@ export function ChatContent({
     setInput: (input: string) => void,
     isTyping: boolean,
     startTyping: React.TransitionStartFunction,
-    currentModel: ChatModel,
-    setCurrentModel: (model: ChatModel) => void
 }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -135,7 +124,7 @@ export function ChatContent({
         }));
         
         // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, model: currentModel });
+        const result = await generalChatAction({ history: genkitHistory });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -165,7 +154,7 @@ export function ChatContent({
             setHistory((prev) => [...prev, modelMessage]);
         }
       });
-  }, [startTyping, toast, setHistory, currentModel]);
+  }, [startTyping, toast, setHistory]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
