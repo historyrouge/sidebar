@@ -61,11 +61,14 @@ const suggestionPrompts = [
 ];
 
 const ModelResponse = ({ message, index, history, isTyping, handleCopyToClipboard, handleShare, handleTextToSpeech, isSynthesizing, audioDataUri, setAudioDataUri, setIsSynthesizing, handleRegenerateResponse, handleViewQuestionPaper }: any) => {
-    const displayText = useTypewriter(message.content);
+    const displayText = useTypewriter(message.content, 5);
     const isLastMessage = index === history.length - 1;
 
     return (
-        <div className="prose dark:prose-invert max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }} />
+        <div 
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_8px_rgba(255,255,255,0.5)]" 
+            dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
+        />
     );
 };
 
@@ -295,7 +298,6 @@ export function ChatContent({
         }
         setIsStreamReady(false);
         
-        // Prefer back camera by default on mobile
         const videoConstraints: MediaTrackConstraints = {
             facingMode: { ideal: "environment" }
         };
@@ -332,7 +334,6 @@ export function ChatContent({
     
                     let initialDeviceId = currentDeviceId;
                     if (!initialDeviceId && videoDevs.length > 0) {
-                        // Prefer back camera if available
                         const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
                         initialDeviceId = backCamera ? backCamera.deviceId : videoDevs[0].deviceId;
                         setCurrentDeviceId(initialDeviceId);
@@ -494,12 +495,12 @@ export function ChatContent({
                         message.role === "user" ? "justify-end" : ""
                     )}
                     >
-                    {message.role === "model" && (
-                         <Avatar className="h-9 w-9 border">
-                            <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                    {message.role === "user" && (
+                        <Avatar className="h-9 w-9 border">
+                        <AvatarFallback><User className="size-5" /></AvatarFallback>
                         </Avatar>
                     )}
-                    <div className={cn("w-full max-w-xl group")}>
+                    <div className={cn("w-full group", message.role === 'user' ? 'max-w-xl' : '')}>
                         {message.role === "user" ? (
                              <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
                                 {message.imageDataUri && (
@@ -563,19 +564,11 @@ export function ChatContent({
                                 </Card>
                             )}
                     </div>
-                    {message.role === "user" && (
-                        <Avatar className="h-9 w-9 border">
-                        <AvatarFallback><User className="size-5" /></AvatarFallback>
-                        </Avatar>
-                    )}
                     </div>
                 ))
             )}
             {isTyping && (
                 <div className="flex items-start gap-4">
-                    <Avatar className="h-9 w-9 border">
-                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                    </Avatar>
                     <div className="max-w-lg flex items-center gap-2">
                         <ThinkingIndicator />
                     </div>
@@ -628,7 +621,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
-
-    

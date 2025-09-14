@@ -24,12 +24,12 @@ type Message = {
 };
 
 const TutorResponse = ({ message, index, history, isTyping }: any) => {
-    const displayText = useTypewriter(message.content);
+    const displayText = useTypewriter(message.content, 5);
     const isLastMessage = index === history.length - 1;
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed" 
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_8px_rgba(255,255,255,0.5)]"
             dangerouslySetInnerHTML={{ __html: marked(isLastMessage && isTyping ? message.content : displayText) }}
         />
     );
@@ -172,7 +172,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
               )}
             >
               {message.role === 'model' && (
-                <div className="w-full max-w-md">
+                <div className="w-full">
                      <TutorResponse message={message} index={index} history={history} isTyping={isTyping} />
                 </div>
               )}
@@ -229,5 +229,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
-
-    
