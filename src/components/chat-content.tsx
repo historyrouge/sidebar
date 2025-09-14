@@ -503,7 +503,7 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="inline-block p-3 border rounded-xl" style={{borderColor: '#00FFCC', boxShadow: '0 0 10px #00FFCC'}}>
+                             <div className="inline-block p-3 border rounded-xl">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
