@@ -458,6 +458,7 @@ export function ChatContent({
                             </Link>
                         ))}
                     </div>
+                    <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
                 </div>
             ) : (
                 history.map((message, index) => (
@@ -468,7 +469,11 @@ export function ChatContent({
                         message.role === "user" ? "justify-end" : ""
                     )}
                     >
-                    
+                    {message.role === "model" && (
+                         <Avatar className="h-9 w-9 border">
+                            <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                        </Avatar>
+                    )}
                     <div className={cn("w-full max-w-xl group")}>
                         {message.role === "user" ? (
                              <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
@@ -478,7 +483,30 @@ export function ChatContent({
                                 {message.content}
                              </div>
                         ) : (
-                            <div className="prose dark:prose-invert max-w-none text-base" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                            <div className="space-y-3">
+                                <div className="prose dark:prose-invert max-w-none text-lg" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                        <Share2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
+                                        {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                    </Button>
+                                    {index === history.length - 1 && (
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                {audioDataUri && isSynthesizing === `tts-${index}` && (
+                                    <div className="mt-2">
+                                        <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
+                                    </div>
+                                )}
+                            </div>
                         )}
     
                              {message.toolResult?.type === 'questionPaper' && (
@@ -506,6 +534,9 @@ export function ChatContent({
             )}
             {isTyping && (
                 <div className="flex items-start gap-4">
+                    <Avatar className="h-9 w-9 border">
+                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                    </Avatar>
                     <div className="max-w-lg flex items-center gap-2">
                         <ThinkingIndicator />
                     </div>
@@ -558,3 +589,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
