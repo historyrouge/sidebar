@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,10 +5,7 @@ import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const messages = [
-  "Initializing model...",
-  "Performing multi-head attention...",
-  "Generating token sequence...",
-  "Finalizing response...",
+  "Give me a second, mate...",
 ];
 
 export function ThinkingIndicator() {
