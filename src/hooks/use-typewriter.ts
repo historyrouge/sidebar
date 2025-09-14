@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 
-export const useTypewriter = (text: string, speed: number = 20) => {
+export const useTypewriter = (text: string, speed: number = 5) => {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
@@ -27,5 +26,3 @@ export const useTypewriter = (text: string, speed: number = 20) => {
 
     return displayText;
 };
-
-    
