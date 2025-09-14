@@ -1,4 +1,3 @@
-
 "use client";
 
 import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -66,7 +65,7 @@ const ModelResponse = ({ message, isLastMessage, isTyping }: { message: Message,
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_2px_rgba(255,255,255,0.3)]"
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
@@ -299,7 +298,7 @@ export function ChatContent({
         setIsStreamReady(false);
         
         const videoConstraints: MediaTrackConstraints = {
-            facingMode: "environment"
+            facingMode: { ideal: "environment" }
         };
 
         if (deviceId) {
@@ -500,49 +499,45 @@ export function ChatContent({
                         message.role === "user" ? "justify-end" : ""
                     )}
                     >
-                    {message.role === "user" && (
-                        <Avatar className="h-9 w-9 border">
-                        <AvatarFallback><User className="size-5" /></AvatarFallback>
-                        </Avatar>
-                    )}
-                    <div className={cn("w-full group", message.role === 'user' ? 'max-w-xl' : '')}>
-                        {message.role === "user" ? (
-                             <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
+                    {message.role === "user" ? (
+                         <div className="w-full max-w-xl">
+                            <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
                                 {message.content}
-                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                 <ModelResponse 
-                                    message={message}
-                                    isLastMessage={index === history.length - 1}
-                                    isTyping={isTyping}
-                                />
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                        <Copy className="h-4 w-4" />
+                            </div>
+                         </div>
+                    ) : (
+                        <div className={cn("w-full group")}>
+                            <ModelResponse 
+                                message={message}
+                                isLastMessage={index === history.length - 1}
+                                isTyping={isTyping}
+                            />
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                                 <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                    <Share2 className="h-4 w-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
+                                    {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                </Button>
+                                {index === history.length - 1 && !isTyping && (
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                        <RefreshCw className="h-4 w-4" />
                                     </Button>
-                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                        <Share2 className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
-                                        {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                                    </Button>
-                                    {index === history.length - 1 && (
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                            <RefreshCw className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                                {audioDataUri && isSynthesizing === `tts-${index}` && (
-                                    <div className="mt-2">
-                                        <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
-                                    </div>
                                 )}
                             </div>
-                        )}
+                             {audioDataUri && isSynthesizing === `tts-${index}` && (
+                                <div className="mt-2">
+                                    <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
+                                </div>
+                            )}
+                        </div>
+                    )}
     
                              {message.toolResult?.type === 'questionPaper' && (
                                 <Card className="mt-2 bg-muted/50">
@@ -558,11 +553,15 @@ export function ChatContent({
                                     </CardContent>
                                 </Card>
                             )}
-                    </div>
+                         {message.role === "user" && (
+                            <Avatar className="h-9 w-9 border">
+                                <AvatarFallback><User className="size-5" /></AvatarFallback>
+                            </Avatar>
+                        )}
                     </div>
                 ))
             )}
-            {isTyping && (
+            {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
                     <div className="max-w-lg flex items-center gap-2">
                         <ThinkingIndicator />
@@ -602,7 +601,7 @@ export function ChatContent({
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
                         <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
-                            {isTyping ? (
+                            {isTyping && history[history.length-1]?.role === "user" ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                             <Send className="h-5 w-5" />

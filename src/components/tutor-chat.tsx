@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,7 +28,7 @@ const TutorResponse = ({ message, isLastMessage, isTyping }: { message: Message,
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed dark:[text-shadow:0_0_2px_rgba(255,255,255,0.3)]"
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
@@ -193,7 +192,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
               )}
             </div>
           ))}
-           {isTyping && (
+           {isTyping && history[history.length-1]?.role !== 'model' && (
             <div className="flex items-start gap-3">
               <div className="max-w-xs rounded-lg p-3 text-sm bg-muted flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
