@@ -156,13 +156,13 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
               key={index}
               className={cn(
                 "flex w-full items-start gap-3",
-                message.role === "user" ? "justify-end" : "justify-start"
+                message.role === "user" ? "justify-end" : ""
               )}
             >
               <div
                 className={cn(
                   "max-w-md",
-                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert prose-p:my-1 text-sm"
+                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert prose-sm max-w-none prose-p:my-1"
                 )}
                 dangerouslySetInnerHTML={{ __html: message.role === 'model' ? message.htmlContent! : message.content }}
               >
@@ -210,3 +210,5 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
+
+    

@@ -527,11 +527,11 @@ export function ChatContent({
                     key={index}
                     className={cn(
                         "flex w-full items-start gap-4",
-                        message.role === "user" ? "justify-end" : "justify-start"
+                        message.role === "user" ? "justify-end" : ""
                     )}
                     >
                     
-                    <div className={cn("w-full max-w-lg group", message.role === "model" && "pt-1")}>
+                    <div className={cn("w-full max-w-xl group")}>
                         {message.role === "user" ? (
                              <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
                                 {message.imageDataUri && (
@@ -540,7 +540,7 @@ export function ChatContent({
                                 {message.content}
                              </div>
                         ) : (
-                            <div className="prose dark:prose-invert prose-p:my-2 max-w-none" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                            <div className="prose dark:prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
                         )}
     
                              {message.toolResult?.type === 'questionPaper' && (
@@ -620,3 +620,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
