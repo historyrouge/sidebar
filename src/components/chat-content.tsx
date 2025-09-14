@@ -494,7 +494,7 @@ export function ChatContent({
             content={shareContent || ""}
         />
         <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto max-w-3xl w-full p-4 space-y-2 pb-48 sm:pb-40">
+            <div className="mx-auto max-w-3xl w-full p-4 space-y-8 pb-48 sm:pb-40">
             {history.length === 0 && !isTyping ? (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
                     <div className="mb-4">
@@ -526,28 +526,22 @@ export function ChatContent({
                     <div
                     key={index}
                     className={cn(
-                        "flex items-start gap-4",
-                        message.role === "user" ? "justify-end" : ""
+                        "flex w-full items-start gap-4",
+                        message.role === "user" ? "justify-end" : "justify-start"
                     )}
                     >
-                    {message.role === "model" && (
-                         <Avatar className="h-9 w-9 border">
-                            <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                        </Avatar>
-                    )}
-                    <div className="w-full max-w-lg group">
-                        <div
-                            className={cn(
-                            "rounded-xl p-3 text-sm",
-                            message.role === "user"
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-card border"
-                            )}
-                        >
-                             {message.imageDataUri && (
-                                <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
-                            )}
-                            <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
+                    
+                    <div className={cn("w-full max-w-lg group", message.role === "model" && "pt-1")}>
+                        {message.role === "user" ? (
+                             <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
+                                {message.imageDataUri && (
+                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                                )}
+                                {message.content}
+                             </div>
+                        ) : (
+                            <div className="prose dark:prose-invert prose-p:my-2 max-w-none" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                        )}
     
                              {message.toolResult?.type === 'questionPaper' && (
                                 <Card className="mt-2 bg-muted/50">
@@ -563,43 +557,6 @@ export function ChatContent({
                                     </CardContent>
                                 </Card>
                             )}
-                            {message.role === 'model' && (
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-2 justify-end -mb-2 -mr-2">
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                        <Copy className="h-4 w-4" />
-                                        <span className="sr-only">Copy</span>
-                                    </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                        <Share2 className="h-4 w-4" />
-                                        <span className="sr-only">Share</span>
-                                    </Button>
-                                    <Button 
-                                        size="icon" 
-                                        variant="ghost" 
-                                        className="h-7 w-7" 
-                                        onClick={() => handleTextToSpeech(message.content, `chat-${index}`)}
-                                        disabled={!!isSynthesizing && isSynthesizing !== `chat-${index}`}
-                                    >
-                                        {isSynthesizing === `chat-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                                        <span className="sr-only">Read aloud</span>
-                                    </Button>
-                                    {index === history.length -1 && (
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                            <RefreshCw className="h-4 w-4" />
-                                            <span className="sr-only">Regenerate</span>
-                                        </Button>
-                                    )}
-                                    {audioDataUri && isSynthesizing === `chat-${index}` && (
-                                        <audio 
-                                            src={audioDataUri} 
-                                            autoPlay 
-                                            onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} 
-                                            className="hidden" 
-                                        />
-                                    )}
-                                </div>
-                            )}
-                        </div>
                     </div>
                     {message.role === "user" && (
                         <Avatar className="h-9 w-9 border">
@@ -611,10 +568,7 @@ export function ChatContent({
             )}
             {isTyping && (
                 <div className="flex items-start gap-4">
-                    <Avatar className="h-9 w-9 border">
-                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                    </Avatar>
-                    <div className="max-w-lg rounded-xl p-3 text-sm bg-card border flex items-center gap-2">
+                    <div className="max-w-lg flex items-center gap-2">
                         <ThinkingIndicator />
                     </div>
                 </div>
@@ -666,7 +620,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
-
-    

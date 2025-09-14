@@ -143,7 +143,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
   return (
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="space-y-4 p-4 pr-6">
+        <div className="space-y-6 p-4 pr-6">
          {history.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 h-full">
                 <GraduationCap className="w-12 h-12 mb-4" />
@@ -155,21 +155,14 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
             <div
               key={index}
               className={cn(
-                "flex items-start gap-3",
-                message.role === "user" ? "justify-end" : ""
+                "flex w-full items-start gap-3",
+                message.role === "user" ? "justify-end" : "justify-start"
               )}
             >
-              {message.role === "model" && (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground"><GraduationCap className="size-4" /></AvatarFallback>
-                </Avatar>
-              )}
               <div
                 className={cn(
-                  "max-w-md rounded-lg p-3 text-sm prose dark:prose-invert prose-p:my-1",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                  "max-w-md",
+                   message.role === 'user' ? "rounded-lg bg-primary text-primary-foreground p-3 text-sm" : "prose dark:prose-invert prose-p:my-1 text-sm"
                 )}
                 dangerouslySetInnerHTML={{ __html: message.role === 'model' ? message.htmlContent! : message.content }}
               >
@@ -183,9 +176,6 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
           ))}
            {isTyping && (
             <div className="flex items-start gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground"><GraduationCap className="size-4" /></AvatarFallback>
-              </Avatar>
               <div className="max-w-xs rounded-lg p-3 text-sm bg-muted flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
                 <span>Tutor is thinking...</span>
@@ -220,5 +210,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
-
-    
