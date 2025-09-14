@@ -540,7 +540,7 @@ export function ChatContent({
                                 {message.content}
                              </div>
                         ) : (
-                            <div className="prose dark:prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
+                            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked(message.content) }} />
                         )}
     
                              {message.toolResult?.type === 'questionPaper' && (
@@ -620,5 +620,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
