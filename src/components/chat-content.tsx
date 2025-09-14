@@ -494,73 +494,80 @@ export function ChatContent({
                 </div>
             ) : (
                 history.map((message, index) => (
-                    <div
-                    key={index}
-                    className={cn(
-                        "flex w-full items-start gap-4",
-                        message.role === "user" ? "justify-end" : ""
-                    )}
-                    >
-                    {message.role === "user" ? (
-                         <div className="max-w-xl">
-                            <div className="rounded-xl p-3 text-sm border border-chart-2/30" style={{boxShadow: '0 0 12px hsl(var(--chart-2), 0.5)'}}>
-                                {message.imageDataUri && (
-                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
-                                )}
-                                <span className="text-chart-2" style={{ textShadow: '0 0 8px hsl(var(--chart-2), 0.7)' }}>{message.content}</span>
-                            </div>
-                         </div>
-                    ) : (
-                        <div className={cn("w-full group")}>
-                            <ModelResponse 
-                                message={message}
-                                isLastMessage={index === history.length - 1}
-                                isTyping={isTyping}
-                            />
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                                 <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                    <Share2 className="h-4 w-4" />
-                                </Button>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
-                                    {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                                </Button>
-                                {index === history.length - 1 && !isTyping && (
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                        <RefreshCw className="h-4 w-4" />
-                                    </Button>
-                                )}
-                            </div>
-                             {audioDataUri && isSynthesizing === `tts-${index}` && (
-                                <div className="mt-2">
-                                    <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
+                    <React.Fragment key={index}>
+                        <div
+                        className={cn(
+                            "flex w-full items-start gap-4",
+                            message.role === "user" ? "justify-end" : ""
+                        )}
+                        >
+                        {message.role === "user" ? (
+                             <div className="max-w-xl">
+                                <div className="rounded-xl p-3 text-sm border border-chart-2/30" style={{boxShadow: '0 0 12px hsl(var(--chart-2), 0.5)'}}>
+                                    {message.imageDataUri && (
+                                        <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                                    )}
+                                    <span className="text-chart-2" style={{ textShadow: '0 0 8px hsl(var(--chart-2), 0.7)' }}>{message.content}</span>
                                 </div>
+                             </div>
+                        ) : (
+                            <div className={cn("w-full group")}>
+                                <ModelResponse 
+                                    message={message}
+                                    isLastMessage={index === history.length - 1}
+                                    isTyping={isTyping}
+                                />
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                        <Share2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
+                                        {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                    </Button>
+                                    {index === history.length - 1 && !isTyping && (
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                 {audioDataUri && isSynthesizing === `tts-${index}` && (
+                                    <div className="mt-2">
+                                        <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+        
+                                 {message.toolResult?.type === 'questionPaper' && (
+                                    <Card className="mt-2 bg-muted/50">
+                                        <CardHeader className="p-4">
+                                            <CardTitle className="flex items-center gap-2 text-base">
+                                                <FileText className="h-5 w-5"/>
+                                                {message.toolResult.data.title}
+                                            </CardTitle>
+                                            <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-0">
+                                            <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                             {message.role === "user" && (
+                                <Avatar className="h-9 w-9 border">
+                                    <AvatarFallback><User className="size-5" /></AvatarFallback>
+                                </Avatar>
                             )}
                         </div>
-                    )}
-    
-                             {message.toolResult?.type === 'questionPaper' && (
-                                <Card className="mt-2 bg-muted/50">
-                                    <CardHeader className="p-4">
-                                        <CardTitle className="flex items-center gap-2 text-base">
-                                            <FileText className="h-5 w-5"/>
-                                            {message.toolResult.data.title}
-                                        </CardTitle>
-                                        <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                         {message.role === "user" && (
-                            <Avatar className="h-9 w-9 border">
-                                <AvatarFallback><User className="size-5" /></AvatarFallback>
-                            </Avatar>
+                        {index < history.length - 1 && (
+                            <hr 
+                                className="border-t-2 border-chart-2/30" 
+                                style={{boxShadow: '0 0 10px hsl(var(--chart-2))'}} 
+                            />
                         )}
-                    </div>
+                    </React.Fragment>
                 ))
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
