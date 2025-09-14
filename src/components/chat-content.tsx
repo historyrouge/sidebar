@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -21,6 +21,7 @@ import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
 import { useTypewriter } from "@/hooks/use-typewriter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 
 type Message = {
@@ -502,7 +503,7 @@ export function ChatContent({
                     >
                     {message.role === "user" ? (
                          <div className="w-full max-w-xl">
-                            <div className="rounded-xl p-3 text-sm bg-primary text-primary-foreground">
+                            <div className="rounded-xl p-3 text-sm bg-muted text-chart-2">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
