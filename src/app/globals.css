@@ -101,10 +101,9 @@
     @apply bg-background text-foreground;
   }
   .prose hr {
-    @apply my-8 border-border/20;
+    @apply my-8 border-border/40;
   }
   .dark .prose hr {
-    @apply border-border/30;
+    @apply border-border/50;
   }
 }
-
