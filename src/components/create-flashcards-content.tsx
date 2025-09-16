@@ -3,182 +3,288 @@
 
 import { generateFlashcardsAction, GenerateFlashcardsSambaOutput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, PlusSquare, Wand2, Moon, Sun, Mic, MicOff } from "lucide-react";
+import { Loader2, PlusSquare, Wand2, Bot, User, Mic, Send, Sparkles, X, Palette, ListChecks, FileQuestion, BookOpen, BrainCircuit, MessageSquare, Code, BookCopy } from "lucide-react";
 import React, { useState, useTransition, useEffect, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { ScrollArea } from "./ui/scroll-area";
-import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
+import { cn } from "@/lib/utils";
+import { Input } from "./ui/input";
+import { useRouter } from "next/navigation";
+
+const stylePresets = [
+    { id: 'colorful', name: 'Colorful', icon: <Palette className="w-5 h-5"/>, description: 'Bright and vibrant cards.' },
+    { id: 'minimal', name: 'Minimal', icon: <BookOpen className="w-5 h-5"/>, description: 'Clean and simple design.' },
+    { id: 'neon', name: 'Dark Neon', icon: <Sparkles className="w-5 h-5"/>, description: 'Glowing text on dark cards.' },
+    { id: 'pastel', name: 'Aesthetic', icon: <BrainCircuit className="w-5 h-5"/>, description: 'Soft and pleasing colors.' },
+];
+
+const numOptions = [5, 10, 20];
 
 export function CreateFlashcardsContent() {
-    const { theme, setTheme } = useTheme();
-    const [content, setContent] = useState("");
-    const [flashcards, setFlashcards] = useState<GenerateFlashcardsSambaOutput['flashcards'] | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [step, setStep] = useState(0);
+    const [userInput, setUserInput] = useState('');
+    const [isListening, setIsListening] = useState(false);
+    const [isProcessing, startProcessing] = useTransition();
+
+    const [subject, setSubject] = useState('');
+    const [topic, setTopic] = useState('');
+    const [numCards, setNumCards] = useState(10);
+    const [cardStyle, setCardStyle] = useState('colorful');
+
+    const [generatedFlashcards, setGeneratedFlashcards] = useState<GenerateFlashcardsSambaOutput['flashcards'] | null>(null);
     const [isGenerating, startGenerating] = useTransition();
+
     const { toast } = useToast();
-    const [isRecording, setIsRecording] = useState(false);
+    const router = useRouter();
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognitionRef.current = new SpeechRecognition();
-            const recognition = recognitionRef.current;
-            recognition.continuous = true;
-            recognition.interimResults = true;
-
-            recognition.onstart = () => setIsRecording(true);
-            recognition.onend = () => setIsRecording(false);
-            recognition.onerror = (event: any) => {
-                toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
-                setIsRecording(false);
-            };
-            recognition.onresult = (event: any) => {
-                let fullTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        fullTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (fullTranscript) {
-                    setContent(prev => prev + fullTranscript + ' ');
-                }
-            };
+        if (!SpeechRecognition) {
+            console.warn("Browser does not support SpeechRecognition.");
+            return;
         }
+
+        recognitionRef.current = new SpeechRecognition();
+        const recognition = recognitionRef.current;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => setIsListening(true);
+        recognition.onend = () => setIsListening(false);
+        recognition.onerror = (e: any) => toast({ title: "Voice Error", description: e.error, variant: 'destructive' });
+        
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setUserInput(transcript);
+        };
     }, [toast]);
 
-    const handleToggleRecording = () => {
-        if (!recognitionRef.current) {
-            toast({
-                title: "Browser Not Supported",
-                description: "Your browser does not support voice-to-text.",
-                variant: "destructive",
-            });
-            return;
-        }
-        if (isRecording) {
-            recognitionRef.current.stop();
-        } else {
-            recognitionRef.current.start();
-        }
+    const handleStartListening = () => {
+        if (isListening || !recognitionRef.current) return;
+        recognitionRef.current.start();
     };
 
+    const resetFlow = () => {
+        setStep(0);
+        setUserInput('');
+        setSubject('');
+        setTopic('');
+        setIsDialogOpen(true);
+    };
 
-    const handleGenerateFlashcards = () => {
-        if (content.trim().length < 50) {
-            toast({
-                title: "Content too short",
-                description: "Please provide at least 50 characters to generate flashcards.",
-                variant: "destructive",
-            });
-            return;
-        }
-        startGenerating(async () => {
-            // Flashcards are always generated by Qwen now
-            const result = await generateFlashcardsAction({ content });
-            if (result.error) {
-                toast({ title: "Flashcard Generation Failed", description: result.error, variant: "destructive" });
-            } else {
-                setFlashcards(result.data?.flashcards ?? []);
-                toast({ title: "Flashcards Generated!", description: "Your new flashcards are ready."});
+    const handleNextStep = () => {
+        startProcessing(() => {
+            if (step === 0) { // Greeting
+                setStep(1);
+                return;
+            }
+            if (step === 1) { // Subject
+                if (!userInput.trim()) {
+                    toast({ title: "Please enter a subject.", variant: "destructive" });
+                    return;
+                }
+                setSubject(userInput);
+                setUserInput('');
+                setStep(2);
+            } else if (step === 2) { // Topic
+                if (!userInput.trim()) {
+                    toast({ title: "Please enter a topic.", variant: "destructive" });
+                    return;
+                }
+                setTopic(userInput);
+                setUserInput('');
+                setStep(3);
+            } else if (step === 3) { // Number of cards (Handled by button click)
+                 setStep(4);
+            } else if (step === 4) { // Style (Handled by button click)
+                setStep(5);
+            } else if (step === 5) { // Confirmation
+                setIsDialogOpen(false);
+                handleGenerateFlashcards();
             }
         });
     };
 
+    const handleGenerateFlashcards = () => {
+        const content = `Subject: ${subject}. Topic: ${topic}. Please generate ${numCards} flashcards about this.`;
+        
+        startGenerating(async () => {
+            const result = await generateFlashcardsAction({ content });
+            if (result.error) {
+                toast({ title: "Generation Failed", description: result.error, variant: "destructive" });
+                setGeneratedFlashcards(null);
+            } else {
+                setGeneratedFlashcards(result.data?.flashcards ?? []);
+                toast({ title: "Success!", description: "Your new flashcard deck is ready." });
+            }
+        });
+    };
+    
+    const handlePlayQuiz = () => {
+        if (!generatedFlashcards) return;
+        const quizContent = `The flashcards are about ${subject}: ${topic}. Here are the questions and answers: ${generatedFlashcards.map(f => `${f.front}? ${f.back}`).join('\n')}`;
+        try {
+            localStorage.setItem('quizContent', quizContent);
+            router.push('/quiz/options');
+        } catch (e) {
+             toast({
+                title: "Could not start quiz",
+                description: "There was an error preparing the quiz.",
+                variant: "destructive",
+            });
+        }
+    }
+
+
+    const stepsContent = [
+        {
+            bot: "Hello! I'm here to help you create a new flashcard deck. Let's get started!",
+            action: <Button onClick={handleNextStep}>Let's go! <Sparkles className="ml-2 w-4 h-4" /></Button>
+        },
+        {
+            bot: "First, what's the subject of your new deck? (e.g., Biology, History, JavaScript)",
+            input: true
+        },
+        {
+            bot: "Great! Now, what specific topic within that subject do you want to focus on?",
+            input: true
+        },
+        {
+            bot: `Awesome choice. How many flashcards would you like me to generate for "${topic}"?`,
+            action: (
+                <div className="flex gap-2">
+                    {numOptions.map(num => <Button key={num} variant="outline" onClick={() => { setNumCards(num); handleNextStep(); }}>{num}</Button>)}
+                </div>
+            )
+        },
+        {
+            bot: `Got it, ${numCards} cards. Now, pick a style for your deck. Which one do you like?`,
+            action: (
+                <div className="grid grid-cols-2 gap-3">
+                    {stylePresets.map(s => (
+                        <Card key={s.id} className="hover:border-primary/80 hover:bg-primary/10 cursor-pointer transition-all" onClick={() => { setCardStyle(s.id); handleNextStep(); }}>
+                            <CardContent className="p-4 text-center">
+                                {s.icon}
+                                <p className="font-semibold mt-1">{s.name}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )
+        },
+        {
+            bot: (
+                <div>
+                  <p>Perfect! Here’s what I’ve got:</p>
+                  <ul className="mt-2 list-disc list-inside bg-muted/50 p-3 rounded-lg">
+                      <li><strong>Subject:</strong> {subject}</li>
+                      <li><strong>Topic:</strong> {topic}</li>
+                      <li><strong>Number of Cards:</strong> {numCards}</li>
+                      <li><strong>Style:</strong> <span className="capitalize">{cardStyle}</span></li>
+                  </ul>
+                   <p className="mt-3">Does that look right?</p>
+                </div>
+            ),
+            action: <Button onClick={handleNextStep}>Looks Good, Generate! <Wand2 className="ml-2 w-4 h-4" /></Button>
+        },
+    ];
+
     return (
-        <div className="flex h-full flex-col bg-muted/20 dark:bg-transparent">
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
+        <div className="flex h-full flex-col bg-transparent">
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-md bg-background/80 backdrop-blur-md border-primary/20">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Bot className="text-primary"/> Flashcard Assistant</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 min-h-[20rem] flex flex-col justify-between">
+                       <div className="prose prose-sm dark:prose-invert max-w-none">
+                            {stepsContent[step]?.bot}
+                       </div>
+                       <div>
+                            {stepsContent[step]?.input ? (
+                                <div className="flex items-center gap-2 mt-4">
+                                    <Input 
+                                        value={userInput}
+                                        onChange={(e) => setUserInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
+                                        placeholder="Type your answer..."
+                                        disabled={isProcessing}
+                                    />
+                                    <Button size="icon" variant="ghost" onClick={handleStartListening} disabled={isListening}>
+                                        <Mic className={cn("w-4 h-4", isListening && "text-primary animate-pulse")} />
+                                    </Button>
+                                    <Button size="icon" onClick={handleNextStep} disabled={isProcessing}>
+                                        <Send className="w-4 h-4"/>
+                                    </Button>
+                                </div>
+                            ) : stepsContent[step]?.action}
+                       </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-black/50 backdrop-blur-md px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
                     <BackButton />
                     <h1 className="text-xl font-semibold tracking-tight">Create Flashcards</h1>
                 </div>
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                    >
-                        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                        <span className="sr-only">Toggle theme</span>
-                    </Button>
-                </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 h-full">
-                    <Card className="flex flex-col">
-                        <CardHeader>
-                        <CardTitle>Generate Flashcards</CardTitle>
-                        <CardDescription>Paste your study material below to create a set of flashcards using Qwen.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                        <div className="relative h-full">
-                            <Textarea
-                                placeholder="Paste your content here..."
-                                className="h-full min-h-[300px] resize-none pr-10"
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                            />
-                            <Button
-                                size="icon"
-                                variant={isRecording ? 'destructive' : 'ghost'}
-                                onClick={handleToggleRecording}
-                                className="absolute bottom-3 right-3"
-                                >
-                                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                                <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
+                {isGenerating ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                        <h2 className="text-2xl font-semibold text-foreground">Generating Your Deck...</h2>
+                        <p>The AI is working its magic. This might take a moment.</p>
+                    </div>
+                ) : generatedFlashcards ? (
+                    <div>
+                         <div className="mb-6 text-center">
+                            <h2 className="text-3xl font-bold">Your "{topic}" Deck is Ready!</h2>
+                            <p className="text-muted-foreground">Click a card to flip it. What would you like to do next?</p>
+                            <div className="mt-4 flex justify-center gap-4">
+                                <Button variant="outline" onClick={resetFlow}>
+                                    <PlusSquare className="mr-2 h-4 w-4" /> Create Another Deck
+                                </Button>
+                                <Button onClick={handlePlayQuiz}>
+                                    <FileQuestion className="mr-2 h-4 w-4" /> Play Quiz Mode
+                                </Button>
+                            </div>
+                        </div>
+                        <ScrollArea className="h-[calc(100vh-20rem)]">
+                            <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                {generatedFlashcards.map((card, i) => <Flashcard key={i} {...card} />)}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                ) : (
+                    <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-white/5">
+                        <div className="text-center p-8">
+                            <BookCopy className="mx-auto h-16 w-16 text-muted-foreground" />
+                            <h3 className="mt-4 text-2xl font-semibold">Create a New Flashcard Deck</h3>
+                            <p className="mt-2 text-muted-foreground">
+                                Click the button below to start a conversation with our AI assistant to build your deck.
+                            </p>
+                            <Button size="lg" className="mt-6" onClick={() => setIsDialogOpen(true)}>
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                Start Creating
                             </Button>
                         </div>
-                        </CardContent>
-                        <CardFooter>
-                        <Button onClick={handleGenerateFlashcards} disabled={isGenerating || content.trim().length < 50}>
-                            {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                            Generate Flashcards
-                        </Button>
-                        </CardFooter>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                        <CardTitle>Your Flashcards</CardTitle>
-                        <CardDescription>Click on a card to flip it.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[400px] w-full">
-                                {isGenerating ? (
-                                    <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2">
-                                        <Skeleton className="h-64 w-full" />
-                                        <Skeleton className="h-64 w-full" />
-                                        <Skeleton className="h-64 w-full" />
-                                        <Skeleton className="h-64 w-full" />
-                                    </div>
-                                ) : flashcards ? (
-                                    <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2">
-                                        {flashcards.map((card, i) => <Flashcard key={i} {...card} />)}
-                                    </div>
-                                ) : (
-                                    <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-muted bg-muted/50">
-                                    <div className="text-center p-8">
-                                        <PlusSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                                        <h3 className="mt-4 text-lg font-semibold">Your flashcards will appear here</h3>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            Paste your content and click "Generate Flashcards" to start.
-                                        </p>
-                                    </div>
-                                    </div>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </div>
+                    </div>
+                )}
             </main>
         </div>
     );
 }
+
+    
 
     
