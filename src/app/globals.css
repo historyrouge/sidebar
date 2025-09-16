@@ -14,15 +14,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
  
-    /* Vibrant, clean blue */
-    --primary: 217 91% 60%; /* #3B82F6 */
+    /* Neon Green */
+    --primary: 140 100% 50%;
     --primary-foreground: 210 40% 98%;
  
     --secondary: 220 14% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
  
-    /* Warm, motivating accent */
-    --accent: 34 91% 60%; /* #F6A33B */
+    /* Neon Green Accent */
+    --accent: 140 100% 50%;
     --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
@@ -30,21 +30,21 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --ring: 140 100% 50%;
  
     --radius: 0.75rem; /* More rounded corners */
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 173 91% 60%;
-    --chart-3: 34 91% 60%;
-    --chart-4: 343 91% 60%;
-    --chart-5: 283 91% 60%;
+    --chart-1: 140 91% 60%;
+    --chart-2: 150 81% 55%;
+    --chart-3: 160 71% 50%;
+    --chart-4: 170 91% 60%;
+    --chart-5: 180 81% 55%;
 
     --sidebar-background: 222 47% 11% / 0.8;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 91% 60% / 0.2;
+    --sidebar-accent: 140 91% 60% / 0.2;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5% / 0.5;
     --sidebar-ring: 210 40% 98%;
@@ -52,41 +52,41 @@
  
   .dark {
     --background: 0 0% 0%; /* Hard Black */
-    --foreground: 210 40% 98%;
+    --foreground: 0 0% 100%;
  
     --card: 0 0% 5%; /* Very Dark Gray */
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 0 0% 100%;
  
     --popover: 0 0% 0%;
-    --popover-foreground: 210 40% 98%;
+    --popover-foreground: 0 0% 100%;
  
-    --primary: 217 91% 65%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 140 100% 50%;
+    --primary-foreground: 0 0% 0%;
  
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
  
-    --accent: 34 91% 65%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 140 100% 50%;
+    --accent-foreground: 0 0% 0%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
  
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 217 91% 65%;
+    --ring: 140 100% 50%;
 
-    --chart-1: 217 91% 65%;
-    --chart-2: 173 91% 65%;
-    --chart-3: 34 91% 65%;
-    --chart-4: 343 91% 65%;
-    --chart-5: 283 91% 65%;
+    --chart-1: 140 91% 65%;
+    --chart-2: 150 81% 60%;
+    --chart-3: 160 71% 55%;
+    --chart-4: 170 91% 65%;
+    --chart-5: 180 81% 60%;
 
     --sidebar-background: 0 0% 5% / 0.7;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 91% 65% / 0.2;
+    --sidebar-accent: 140 91% 65% / 0.2;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 0 0% 15% / 0.5;
     --sidebar-ring: 210 40% 98%;
