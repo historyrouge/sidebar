@@ -5,31 +5,29 @@
 
 @layer base {
   :root {
-    --background: 220 20% 98%; /* Softer Off-White */
-    --foreground: 224 71.4% 4.1%;
+    --background: 0 0% 0%; /* Hard Black */
+    --foreground: 140 100% 50%; /* Neon Green */
 
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card: 0 0% 5%; /* Very Dark Gray */
+    --card-foreground: 140 100% 50%; /* Neon Green */
  
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
  
-    /* Neon Green */
-    --primary: 140 100% 50%;
-    --primary-foreground: 0 0% 0%; /* Black text on green buttons */
+    --primary: 0 0% 100%; /* White */
+    --primary-foreground: 0 0% 0%; /* Black text on white buttons */
  
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
  
-    /* Neon Green Accent */
     --accent: 140 100% 50%;
     --accent-foreground: 0 0% 0%;
  
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+ 
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 140 100% 50%;
  
     --radius: 0.75rem; /* More rounded corners */
@@ -52,16 +50,16 @@
  
   .dark {
     --background: 0 0% 0%; /* Hard Black */
-    --foreground: 0 0% 100%; /* White Text */
+    --foreground: 140 100% 50%; /* Neon Green */
  
     --card: 0 0% 5%; /* Very Dark Gray */
-    --card-foreground: 0 0% 100%; /* White Text */
+    --card-foreground: 140 100% 50%; /* Neon Green */
  
     --popover: 0 0% 0%;
     --popover-foreground: 0 0% 100%;
  
-    --primary: 140 100% 50%;
-    --primary-foreground: 0 0% 0%; /* Black text on green buttons */
+    --primary: 0 0% 100%; /* White */
+    --primary-foreground: 0 0% 0%; /* Black text on white buttons */
  
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
