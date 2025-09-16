@@ -4,24 +4,24 @@
 import { generateFlashcardsAction, GenerateFlashcardsSambaOutput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, PlusSquare, Wand2, Bot, User, Mic, Send, Sparkles, X, Palette, ListChecks, FileQuestion, BookOpen, BrainCircuit, MessageSquare, Code, BookCopy } from "lucide-react";
+import { Loader2, PlusSquare, Wand2, Bot, Sparkles, Mic, Send, BookCopy, FileQuestion } from "lucide-react";
 import React, { useState, useTransition, useEffect, useRef } from "react";
 import { Flashcard } from "./flashcard";
 import { ScrollArea } from "./ui/scroll-area";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 
 const stylePresets = [
-    { id: 'colorful', name: 'Colorful', icon: <Palette className="w-5 h-5"/>, description: 'Bright and vibrant cards.' },
-    { id: 'minimal', name: 'Minimal', icon: <BookOpen className="w-5 h-5"/>, description: 'Clean and simple design.' },
-    { id: 'neon', name: 'Dark Neon', icon: <Sparkles className="w-5 h-5"/>, description: 'Glowing text on dark cards.' },
-    { id: 'pastel', name: 'Aesthetic', icon: <BrainCircuit className="w-5 h-5"/>, description: 'Soft and pleasing colors.' },
+    { id: 'colorful', name: 'Colorful', description: 'Bright and vibrant cards.' },
+    { id: 'minimal', name: 'Minimal', description: 'Clean and simple design.' },
+    { id: 'neon', name: 'Dark Neon', description: 'Glowing text on dark cards.' },
+    { id: 'pastel', name: 'Aesthetic', description: 'Soft and pleasing colors.' },
 ];
 
 const numOptions = [5, 10, 20];
@@ -147,7 +147,7 @@ export function CreateFlashcardsContent() {
     const stepsContent = [
         {
             bot: "Hello! I'm here to help you create a new flashcard deck. Let's get started!",
-            action: <Button onClick={handleNextStep}>Let's go! <Sparkles className="ml-2 w-4 h-4" /></Button>
+            action: <Button onClick={handleNextStep} className="w-full justify-center">Let's go! <Sparkles className="ml-2 w-4 h-4" /></Button>
         },
         {
             bot: "First, what's the subject of your new deck? (e.g., Biology, History, JavaScript)",
@@ -161,7 +161,7 @@ export function CreateFlashcardsContent() {
             bot: `Awesome choice. How many flashcards would you like me to generate for "${topic}"?`,
             action: (
                 <div className="flex gap-2">
-                    {numOptions.map(num => <Button key={num} variant="outline" onClick={() => { setNumCards(num); handleNextStep(); }}>{num}</Button>)}
+                    {numOptions.map(num => <Button className="flex-1" key={num} variant="outline" onClick={() => { setNumCards(num); handleNextStep(); }}>{num}</Button>)}
                 </div>
             )
         },
@@ -170,10 +170,10 @@ export function CreateFlashcardsContent() {
             action: (
                 <div className="grid grid-cols-2 gap-3">
                     {stylePresets.map(s => (
-                        <Card key={s.id} className="hover:border-primary/80 hover:bg-primary/10 cursor-pointer transition-all" onClick={() => { setCardStyle(s.id); handleNextStep(); }}>
-                            <CardContent className="p-4 text-center">
-                                {s.icon}
-                                <p className="font-semibold mt-1">{s.name}</p>
+                        <Card key={s.id} className="text-center rounded-lg bg-card/50 border-border/50 hover:border-primary/80 hover:bg-primary/10 cursor-pointer transition-all" onClick={() => { setCardStyle(s.id); handleNextStep(); }}>
+                            <CardContent className="p-4">
+                                <h3 className="font-semibold text-base">{s.name}</h3>
+                                <p className="text-xs text-muted-foreground">{s.description}</p>
                             </CardContent>
                         </Card>
                     ))}
@@ -184,7 +184,7 @@ export function CreateFlashcardsContent() {
             bot: (
                 <div>
                   <p>Perfect! Here’s what I’ve got:</p>
-                  <ul className="mt-2 list-disc list-inside bg-muted/50 p-3 rounded-lg">
+                  <ul className="mt-2 text-sm list-disc list-inside bg-white/5 p-4 rounded-lg border border-white/10">
                       <li><strong>Subject:</strong> {subject}</li>
                       <li><strong>Topic:</strong> {topic}</li>
                       <li><strong>Number of Cards:</strong> {numCards}</li>
@@ -193,38 +193,38 @@ export function CreateFlashcardsContent() {
                    <p className="mt-3">Does that look right?</p>
                 </div>
             ),
-            action: <Button onClick={handleNextStep}>Looks Good, Generate! <Wand2 className="ml-2 w-4 h-4" /></Button>
+            action: <Button onClick={handleNextStep} className="w-full justify-center">Looks Good, Generate! <Wand2 className="ml-2 w-4 h-4" /></Button>
         },
     ];
 
     return (
-        <div className="flex h-full flex-col bg-transparent">
+        <div className="flex h-full flex-col bg-black bg-grid-white/[0.05]">
              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md bg-background/80 backdrop-blur-md border-primary/20">
+                <DialogContent className="sm:max-w-md bg-black/50 backdrop-blur-md border-white/10 text-white">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><Bot className="text-primary"/> Flashcard Assistant</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2 font-normal text-lg"><Bot className="text-cyan-400"/> Flashcard Assistant</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 py-4 min-h-[20rem] flex flex-col justify-between">
-                       <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="space-y-6 py-4 min-h-[20rem] flex flex-col justify-between">
+                       <div className="prose prose-sm prose-invert max-w-none">
                             {stepsContent[step]?.bot}
                        </div>
                        <div>
                             {stepsContent[step]?.input ? (
-                                <div className="flex items-center gap-2 mt-4">
+                                <form onSubmit={(e) => { e.preventDefault(); handleNextStep(); }} className="flex items-center gap-2 mt-4">
                                     <Input 
                                         value={userInput}
                                         onChange={(e) => setUserInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
                                         placeholder="Type your answer..."
                                         disabled={isProcessing}
+                                        className="bg-white/5 border-white/10 focus:ring-cyan-400"
                                     />
-                                    <Button size="icon" variant="ghost" onClick={handleStartListening} disabled={isListening}>
-                                        <Mic className={cn("w-4 h-4", isListening && "text-primary animate-pulse")} />
+                                    <Button size="icon" variant="ghost" type="button" onClick={handleStartListening} disabled={isListening}>
+                                        <Mic className={cn("w-4 h-4", isListening && "text-cyan-400 animate-pulse")} />
                                     </Button>
-                                    <Button size="icon" onClick={handleNextStep} disabled={isProcessing}>
+                                    <Button size="icon" type="submit" disabled={isProcessing}>
                                         <Send className="w-4 h-4"/>
                                     </Button>
-                                </div>
+                                </form>
                             ) : stepsContent[step]?.action}
                        </div>
                     </div>
@@ -235,54 +235,69 @@ export function CreateFlashcardsContent() {
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
                     <BackButton />
-                    <h1 className="text-xl font-semibold tracking-tight">Create Flashcards</h1>
+                    <h1 className="text-xl font-semibold tracking-tight text-white/90">Create Flashcards</h1>
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                {isGenerating ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                        <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                        <h2 className="text-2xl font-semibold text-foreground">Generating Your Deck...</h2>
-                        <p>The AI is working its magic. This might take a moment.</p>
-                    </div>
-                ) : generatedFlashcards ? (
-                    <div>
-                         <div className="mb-6 text-center">
-                            <h2 className="text-3xl font-bold">Your "{topic}" Deck is Ready!</h2>
-                            <p className="text-muted-foreground">Click a card to flip it. What would you like to do next?</p>
-                            <div className="mt-4 flex justify-center gap-4">
-                                <Button variant="outline" onClick={resetFlow}>
-                                    <PlusSquare className="mr-2 h-4 w-4" /> Create Another Deck
-                                </Button>
-                                <Button onClick={handlePlayQuiz}>
-                                    <FileQuestion className="mr-2 h-4 w-4" /> Play Quiz Mode
+                <AnimatePresence mode="wait">
+                    {isGenerating ? (
+                        <motion.div
+                            key="generating"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex flex-col items-center justify-center h-full text-center text-muted-foreground"
+                        >
+                            <Loader2 className="w-12 h-12 animate-spin text-cyan-400 mb-4" />
+                            <h2 className="text-2xl font-semibold text-white">Generating Your Deck...</h2>
+                            <p>The AI is working its magic. This might take a moment.</p>
+                        </motion.div>
+                    ) : generatedFlashcards ? (
+                        <motion.div
+                            key="results"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
+                             <div className="mb-8 text-center">
+                                <h2 className="text-3xl font-bold text-white">Your "{topic}" Deck is Ready!</h2>
+                                <p className="text-muted-foreground">Click a card to flip it. What would you like to do next?</p>
+                                <div className="mt-6 flex justify-center gap-4">
+                                    <Button variant="outline" onClick={resetFlow} className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white">
+                                        <PlusSquare className="mr-2 h-4 w-4" /> Create Another Deck
+                                    </Button>
+                                    <Button onClick={handlePlayQuiz}>
+                                        <FileQuestion className="mr-2 h-4 w-4" /> Play Quiz Mode
+                                    </Button>
+                                </div>
+                            </div>
+                            <ScrollArea className="h-[calc(100vh-22rem)]">
+                                <div className="grid grid-cols-1 gap-6 pr-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                    {generatedFlashcards.map((card, i) => <Flashcard key={i} {...card} />)}
+                                </div>
+                            </ScrollArea>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="initial"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex h-full min-h-[300px] items-center justify-center"
+                        >
+                            <div className="text-center p-8">
+                                <BookCopy className="mx-auto h-16 w-16 text-muted-foreground" />
+                                <h3 className="mt-4 text-2xl font-semibold text-white">Create a New Flashcard Deck</h3>
+                                <p className="mt-2 text-muted-foreground">
+                                    Click the button below to start a conversation with our AI assistant to build your deck.
+                                </p>
+                                <Button size="lg" className="mt-6" onClick={() => setIsDialogOpen(true)}>
+                                    <Sparkles className="mr-2 h-5 w-5" />
+                                    Start Creating
                                 </Button>
                             </div>
-                        </div>
-                        <ScrollArea className="h-[calc(100vh-20rem)]">
-                            <div className="grid grid-cols-1 gap-4 pr-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                {generatedFlashcards.map((card, i) => <Flashcard key={i} {...card} />)}
-                            </div>
-                        </ScrollArea>
-                    </div>
-                ) : (
-                    <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-white/5">
-                        <div className="text-center p-8">
-                            <BookCopy className="mx-auto h-16 w-16 text-muted-foreground" />
-                            <h3 className="mt-4 text-2xl font-semibold">Create a New Flashcard Deck</h3>
-                            <p className="mt-2 text-muted-foreground">
-                                Click the button below to start a conversation with our AI assistant to build your deck.
-                            </p>
-                            <Button size="lg" className="mt-6" onClick={() => setIsDialogOpen(true)}>
-                                <Sparkles className="mr-2 h-5 w-5" />
-                                Start Creating
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </main>
         </div>
     );
 }
-
-    
