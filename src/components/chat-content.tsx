@@ -63,7 +63,7 @@ const suggestionPrompts = [
 ];
 
 const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
-    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 120);
+    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 200);
     const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
 
     return (
