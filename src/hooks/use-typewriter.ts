@@ -29,3 +29,5 @@ export const useTypewriter = (text: string, speed: number = 120) => {
 
     return displayText;
 };
+
+    

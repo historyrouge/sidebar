@@ -23,9 +23,9 @@ type Message = {
   content: string;
 };
 
-const TutorResponse = ({ message, isLastMessage, isTyping }: { message: Message, isLastMessage: boolean, isTyping: boolean }) => {
-    const textToDisplay = useTypewriter(message.content, 20);
-    const finalHtml = marked(isLastMessage && isTyping ? textToDisplay : message.content);
+const TutorResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
+    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 120);
+    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
 
     return (
         <div 
@@ -173,7 +173,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
             >
               {message.role === 'model' && (
                 <div className="w-full">
-                     <TutorResponse message={message} isLastMessage={index === history.length -1} isTyping={isTyping} />
+                     <TutorResponse message={message} isLastMessage={index === history.length -1} />
                 </div>
               )}
               {message.role === 'user' && (
@@ -231,4 +231,6 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
 }
 
     
+    
+
     

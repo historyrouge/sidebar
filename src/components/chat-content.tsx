@@ -62,9 +62,9 @@ const suggestionPrompts = [
     },
 ];
 
-const ModelResponse = ({ message, isLastMessage, isTyping }: { message: Message, isLastMessage: boolean, isTyping: boolean }) => {
-    const textToDisplay = useTypewriter(message.content, 20);
-    const finalHtml = marked(isLastMessage && isTyping ? textToDisplay : message.content);
+const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
+    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 120);
+    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
 
     return (
         <div 
@@ -514,7 +514,6 @@ export function ChatContent({
                                 <ModelResponse 
                                     message={message}
                                     isLastMessage={index === history.length - 1}
-                                    isTyping={isTyping}
                                 />
                                 <div className="flex items-center gap-1 transition-opacity mt-2">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
@@ -622,4 +621,6 @@ export function ChatContent({
 }
 
     
+    
+
     
