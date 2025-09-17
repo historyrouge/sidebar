@@ -591,7 +591,7 @@ export function ChatContent({
                     )}
                      <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
                         <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
-                            <Camera className="h-5 w-5" />
+                            <Camera className="h-5 h-5" />
                             <span className="sr-only">Use Camera</span>
                         </Button>
                         <Input
@@ -602,7 +602,7 @@ export function ChatContent({
                             className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
                         />
                          <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
                         <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
@@ -620,3 +620,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
