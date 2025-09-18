@@ -55,6 +55,11 @@ export function MainDashboard() {
   const handleNewChat = () => {
     setHistory([]);
     setInput("");
+    try {
+        sessionStorage.removeItem('chatScrollPosition');
+    } catch (e) {
+        console.error("Could not clear session storage", e);
+    }
   };
 
   return (
@@ -99,7 +104,7 @@ export function MainDashboard() {
             </DropdownMenu>
         </div>
       </header>
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <ChatContent
             history={history}
             setHistory={setHistory}
@@ -112,3 +117,5 @@ export function MainDashboard() {
     </div>
   );
 }
+
+  
