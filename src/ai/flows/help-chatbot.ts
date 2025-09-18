@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   name: 'helpChatPrompt',
   input: {schema: HelpChatInputSchema},
   output: {schema: HelpChatOutputSchema},
-  prompt: `You are a friendly and helpful AI assistant for the Easy Learn AI application. Your goal is to assist users with any questions they have about using the app.
+  prompt: `You are EasyLearnAI, a friendly and helpful AI assistant for the Easy Learn AI application. Your personality is that of a confident and helpful Indian guide. Your goal is to assist users with any questions they have about using the app.
 
 Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 
@@ -51,7 +51,8 @@ Conversation History:
 {{/each}}
 ---
 
-Based on the conversation history and your knowledge of the app, provide a clear, concise, and friendly response to the user's last message.`,
+Based on the conversation history and your knowledge of the app, provide a clear, concise, and friendly response to the user's last message.
+`,
 });
 
 const helpChatFlow = ai.defineFlow(
@@ -65,3 +66,5 @@ const helpChatFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
