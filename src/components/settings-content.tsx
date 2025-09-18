@@ -18,7 +18,7 @@ const accentColors = [
 ];
 
 export function SettingsContent() {
-  const { setTheme, theme, accentColor, setAccentColor } = useTheme();
+  const { accentColor, setAccentColor } = useTheme();
 
   return (
     <div className="flex flex-col h-full bg-muted/40">
@@ -28,31 +28,19 @@ export function SettingsContent() {
                 <BackButton />
                 <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
             </div>
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                >
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
-                </Button>
-            </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
             <div className="mx-auto max-w-2xl space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Appearance</CardTitle>
-                        <CardDescription>Customize the look and feel of the app.</CardDescription>
+                        <CardDescription>Customize the look and feel of the app. Light mode has been disabled.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center justify-between">
                             <Label>Theme</Label>
                             <div className="flex items-center gap-2 rounded-lg border p-1">
-                                <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme("light")}><Sun /></Button>
-                                <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme("dark")}><Moon /></Button>
+                                <Button variant={'secondary'} size="icon"><Moon /></Button>
                             </div>
                         </div>
                          <div className="flex items-center justify-between">
@@ -93,5 +81,3 @@ export function SettingsContent() {
     </div>
   );
 }
-
-    

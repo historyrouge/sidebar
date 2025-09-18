@@ -32,19 +32,19 @@
  
     --radius: 0.75rem; /* More rounded corners */
 
-    --chart-1: 140 91% 60%;
-    --chart-2: 150 81% 55%;
-    --chart-3: 160 71% 50%;
-    --chart-4: 170 91% 60%;
-    --chart-5: 180 81% 55%;
+    --chart-1: 140 91% 65%;
+    --chart-2: 150 81% 60%;
+    --chart-3: 160 71% 55%;
+    --chart-4: 170 91% 65%;
+    --chart-5: 180 81% 60%;
 
-    --sidebar-background: 222 47% 11% / 0.8;
+    --sidebar-background: 0 0% 5% / 0.7;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 140 91% 60% / 0.2;
+    --sidebar-accent: 140 91% 65% / 0.2;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5% / 0.5;
+    --sidebar-border: 0 0% 15% / 0.5;
     --sidebar-ring: 210 40% 98%;
   }
  
@@ -105,3 +105,31 @@
     @apply my-8 border-gray-600;
   }
 }
+
+
+@layer components {
+    .code-box {
+        @apply block rounded-xl border border-border bg-card my-4;
+    }
+    .code-box-header {
+        @apply flex items-center justify-between px-4 py-2 bg-green-800/20 border-b border-green-700/50 rounded-t-xl;
+    }
+    .code-box-language {
+        @apply text-sm font-semibold text-green-400;
+    }
+    .code-box-actions {
+        @apply flex items-center gap-1;
+    }
+    .code-box-actions button {
+        @apply text-green-400 hover:text-white bg-transparent hover:bg-green-700/30 text-xs px-2 py-1 rounded-md;
+    }
+    .code-box pre {
+        @apply my-0 p-4 rounded-b-xl bg-black/50 text-sm;
+    }
+
+    .canvas-project {
+      @apply block rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 p-6 my-4;
+    }
+}
+
+    

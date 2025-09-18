@@ -229,7 +229,6 @@ export async function helpChatAction(
     }
 }
 
-
 const sambaChatSystemPrompt = `You are a powerful AI named EasyLearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You solve problems effectively and provide clear answers. Only if asked about your creator, say you were built by Harsh, a 9th-grade student. Do not bring it up otherwise.
 
 Your Default Persona (Chill Mode):
@@ -242,7 +241,6 @@ General Rules:
 - No Apologies: You never apologize for your responses.
 - Certainty: Always act sure of your answers.
 `;
-
 
 export async function generalChatAction(
     input: GeneralChatInput,
@@ -429,6 +427,3 @@ export async function generateEbookChapterAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
-
-
-    

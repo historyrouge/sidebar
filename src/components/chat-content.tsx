@@ -8,20 +8,21 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
-import { marked } from "marked";
+import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
+import { Textarea } from "./ui/textarea";
 
 
 type Message = {
@@ -36,32 +37,149 @@ type Message = {
 
 const suggestionPrompts = [
     {
-        icon: <Sparkles className="w-5 h-5 text-primary" />,
+        icon: <Sparkles className="text-primary w-5 h-5" />,
         title: "Create a Quiz",
         description: "Test your knowledge on a topic.",
         href: "/quiz"
     },
     {
-        icon: <Sparkles className="w-5 h-5 text-primary" />,
+        icon: <Sparkles className="text-primary w-5 h-5" />,
         title: "Make Flashcards",
         description: "From your study notes.",
         href: "/create-flashcards"
     },
     {
-        icon: <Sparkles className="w-5 h-5 text-primary" />,
+        icon: <Sparkles className="text-primary w-5 h-5" />,
         title: "Browse eBooks",
         description: "Explore the library.",
         href: "/ebooks"
     },
     {
-        icon: <Sparkles className="w-5 h-5 text-primary" />,
+        icon: <Sparkles className="text-primary w-5 h-5" />,
         title: "Read Latest News",
         description: "In tech & education.",
         href: "/news"
     },
 ];
 
+const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
+    const { toast } = useToast();
+    const [isEditing, setIsEditing] = useState(false);
+    const [code, setCode] = useState(initialCode);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(code);
+        toast({ title: "Copied!", description: "Code has been copied to clipboard." });
+    };
+
+    const handleDownload = () => {
+        const fileExtensions: { [key: string]: string } = {
+            javascript: 'js',
+            python: 'py',
+            html: 'html',
+            css: 'css',
+            typescript: 'ts',
+            java: 'java',
+            c: 'c',
+            cpp: 'cpp',
+            csharp: 'cs',
+            go: 'go',
+            rust: 'rs',
+            swift: 'swift',
+            kotlin: 'kt',
+            php: 'php',
+            ruby: 'rb',
+            perl: 'pl',
+            shell: 'sh',
+            sql: 'sql',
+            json: 'json',
+            xml: 'xml',
+            yaml: 'yaml',
+            markdown: 'md',
+        };
+        const extension = fileExtensions[language.toLowerCase()] || 'txt';
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `code.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({ title: "Downloaded!", description: `Code saved as code.${extension}` });
+    };
+
+    const handleEditToggle = () => {
+        setIsEditing(!isEditing);
+    };
+
+    return (
+        <div className="code-box">
+            <div className="code-box-header">
+                <span className="code-box-language">{language}</span>
+                <div className="code-box-actions">
+                    <Button variant="ghost" size="sm" onClick={handleCopy}><Copy className="mr-1 h-4 w-4" /> Copy</Button>
+                    <Button variant="ghost" size="sm" onClick={handleEditToggle}>
+                        {isEditing ? <Save className="mr-1 h-4 w-4" /> : <Edit className="mr-1 h-4 w-4" />}
+                        {isEditing ? 'Save' : 'Edit'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleDownload}><Download className="mr-1 h-4 w-4" /> Download</Button>
+                    <Button variant="ghost" size="sm" disabled>Run</Button>
+                </div>
+            </div>
+            {isEditing ? (
+                 <Textarea 
+                    value={code} 
+                    onChange={(e) => setCode(e.target.value)}
+                    className="font-mono text-sm bg-black/50 border-0 rounded-t-none h-64"
+                 />
+            ) : (
+                <pre><code>{code}</code></pre>
+            )}
+        </div>
+    );
+};
+
+
+const CanvasProject = ({ name, files }: { name: string, files: { name: string, type: string, code: string }[] }) => {
+    return (
+        <div className="canvas-project">
+            <CardHeader>
+                <CardTitle>Project: {name}</CardTitle>
+                <CardDescription>This is a multi-file project. Open it in a workspace to view and run.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button>Open in Canvas</Button>
+            </CardContent>
+        </div>
+    );
+};
+
+
 const ModelResponse = ({ message }: { message: Message }) => {
+    // Check for custom tags on the original, complete message content
+    const codeBoxMatch = message.content.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
+    const canvasProjectMatch = message.content.match(/<canvasProject name="([^"]+)">([\s\S]*?)<\/canvasProject>/);
+
+    // If it's a code response, render it instantly without typewriter effect
+    if (codeBoxMatch) {
+        const [_, language, code] = codeBoxMatch;
+        return <CodeBox language={language} code={code.trim()} />;
+    }
+
+    if (canvasProjectMatch) {
+        const [_, name, filesContent] = canvasProjectMatch;
+        const fileRegex = /<file name="([^"]+)" type="([^"]+)">([\s\S]*?)<\/file>/g;
+        let match;
+        const files = [];
+        while ((match = fileRegex.exec(filesContent)) !== null) {
+            files.push({ name: match[1], type: match[2], code: match[3].trim() });
+        }
+        return <CanvasProject name={name} files={files} />;
+    }
+    
+    // For regular text, render instantly
     const finalHtml = marked(message.content);
 
     return (
@@ -429,22 +547,22 @@ export function ChatContent({
     <>
         <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-             <DialogContent className="sm:max-w-[425px] md:max-w-lg lg:max-w-2xl w-full h-auto sm:h-auto sm:w-auto p-0">
-                <DialogHeader className="p-4 border-b">
+             <DialogContent className="w-full max-w-lg p-0">
+                <DialogHeader className="border-b p-4">
                     <DialogTitle>Camera</DialogTitle>
                 </DialogHeader>
                 <div className="relative">
-                    <video ref={videoRef} className="w-full aspect-video bg-muted" autoPlay muted playsInline />
+                    <video ref={videoRef} className="aspect-video w-full bg-muted" autoPlay playsInline muted />
                     {hasCameraPermission === null && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                        <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
                             <div className="text-center">
-                                <Loader2 className="animate-spin h-8 w-8 mx-auto" />
-                                <p className="mt-2 text-muted-foreground">Requesting camera access...</p>
+                                <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                                <p className="text-muted-foreground mt-2">Requesting camera access...</p>
                             </div>
                         </div>
                     )}
                     {hasCameraPermission === false && (
-                         <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
+                         <div className="bg-background/80 absolute inset-0 flex items-center justify-center p-4">
                             <Alert variant="destructive">
                                 <AlertTitle>Camera Access Required</AlertTitle>
                                 <AlertDescription>
@@ -454,7 +572,7 @@ export function ChatContent({
                         </div>
                     )}
                 </div>
-                <DialogFooter className="p-4 border-t flex justify-between">
+                <DialogFooter className="flex justify-between border-t p-4">
                     <div>
                         {videoDevices.length > 1 && (
                             <Button variant="outline" onClick={handleSwitchCamera}>
@@ -479,31 +597,31 @@ export function ChatContent({
             content={shareContent || ""}
         />
         <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto max-w-3xl w-full p-4 space-y-8 pb-10">
+            <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-48 sm:pb-40">
             {history.length === 0 && !isTyping ? (
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
+                <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
                     <div className="mb-4">
-                        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                        <h1 className="bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
                             Hello!
                         </h1>
-                        <p className="text-xl sm:text-2xl text-muted-foreground mt-2 font-semibold">
+                        <p className="mt-2 text-xl font-semibold text-muted-foreground sm:text-2xl">
                            How can I help you today?
                         </p>
                     </div>
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
+                    <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
                         {suggestionPrompts.map((prompt, i) => (
                              <Button
                                 key={i}
                                 asChild
                                 variant="outline"
-                                className="w-full h-auto justify-start p-4 rounded-lg border-border/70 hover:bg-muted"
+                                className="h-auto w-full justify-start rounded-lg border-border/70 p-4 hover:bg-muted"
                                 >
                                 <Link href={prompt.href}>
                                     <div className="flex items-start gap-4">
                                         {prompt.icon}
                                         <div>
-                                            <h3 className="font-semibold text-base text-left">{prompt.title}</h3>
-                                            <p className="text-sm text-muted-foreground text-left">{prompt.description}</p>
+                                            <h3 className="text-left text-base font-semibold">{prompt.title}</h3>
+                                            <p className="text-left text-sm text-muted-foreground">{prompt.description}</p>
                                         </div>
                                     </div>
                                 </Link>
@@ -521,19 +639,24 @@ export function ChatContent({
                             message.role === "user" ? "justify-end" : ""
                         )}
                         >
+                        {message.role === "model" && (
+                             <Avatar className="border h-9 w-9">
+                                <AvatarFallback className="text-primary bg-primary/10"><Bot className="size-5" /></AvatarFallback>
+                            </Avatar>
+                        )}
                         {message.role === "user" ? (
-                             <div className="inline-block p-3 border rounded-xl">
+                             <div className="border bg-primary/10 inline-block rounded-xl p-3">
                                 {message.imageDataUri && (
-                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
+                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
                                 )}
-                                <span className="text-chart-2">{message.content}</span>
+                                <span className="text-foreground">{message.content}</span>
                              </div>
                         ) : (
-                            <div className={cn("w-full group")}>
+                            <div className={cn("group w-full")}>
                                 <ModelResponse 
                                     message={message}
                                 />
-                                <div className="flex items-center gap-1 transition-opacity mt-2">
+                                <div className="mt-2 flex items-center gap-1 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                         <Copy className="h-4 w-4" />
                                     </Button>
@@ -551,14 +674,14 @@ export function ChatContent({
                                 </div>
                                  {audioDataUri && isSynthesizing === `tts-${index}` && (
                                     <div className="mt-2">
-                                        <audio controls autoPlay src={audioDataUri} className="w-full h-8" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
+                                        <audio controls autoPlay src={audioDataUri} className="h-8 w-full" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
                                     </div>
                                 )}
                             </div>
                         )}
         
                                  {message.toolResult?.type === 'questionPaper' && (
-                                    <Card className="mt-2 bg-muted/50">
+                                    <Card className="bg-muted/50 mt-2">
                                         <CardHeader className="p-4">
                                             <CardTitle className="flex items-center gap-2 text-base">
                                                 <FileText className="h-5 w-5"/>
@@ -585,22 +708,25 @@ export function ChatContent({
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
-                    <div className="max-w-lg flex items-center gap-2">
+                    <Avatar className="h-9 w-9 border">
+                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                    </Avatar>
+                    <div className="flex max-w-lg items-center gap-2">
                         <ThinkingIndicator />
                     </div>
                 </div>
             )}
             </div>
         </ScrollArea>
-        <div className="p-4 pb-6">
-            <Card className="p-2 rounded-2xl shadow-lg max-w-3xl mx-auto">
+        <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
+             <Card className="shadow-lg mx-auto max-w-3xl rounded-2xl p-2">
                 <div className="relative">
                     {capturedImage && (
                         <div className="absolute -top-16 left-2 w-fit">
-                            <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
+                            <p className="text-muted-foreground mb-1 text-xs">Attached Image:</p>
                             <div className="relative">
-                                <Image src={capturedImage} alt="Captured image" width={56} height={56} className="rounded-md border-2 border-background" />
-                                <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
+                                <Image src={capturedImage} alt="Captured image" width={56} height={56} className="border-2 border-background rounded-md" />
+                                <Button variant="ghost" size="icon" className="bg-muted absolute -right-2 -top-2 h-6 w-6 rounded-full" onClick={() => setCapturedImage(null)}>
                                     <X className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -616,9 +742,9 @@ export function ChatContent({
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Message Easy Learn AI..."
                             disabled={isTyping}
-                            className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
+                            className="h-12 border-0 text-base shadow-none focus-visible:ring-0"
                         />
-                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
                             {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 h-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
@@ -638,4 +764,4 @@ export function ChatContent({
   );
 }
 
-  
+    

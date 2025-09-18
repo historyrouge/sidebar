@@ -227,5 +227,4 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
-
-  
+    
