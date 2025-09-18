@@ -239,7 +239,10 @@ When a user asks for code:
 </codeBox>
 
 - Always wrap code inside <codeBox>.
-- Show buttons: Copy, Edit, Download.
+- Show buttons: Copy, Edit, Download, Run.
+- Only one code block.
+- Do not explain unless asked.
+- Add correct language for syntax highlighting.
 
 2. If the request is for a full project, app, or multiple files, respond in this format:
 
@@ -456,3 +459,7 @@ export async function generateEbookChapterAction(
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
 
     
+    
+
+    
+

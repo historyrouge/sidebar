@@ -105,3 +105,31 @@
     @apply my-8 border-gray-600;
   }
 }
+
+
+@layer components {
+    codebox {
+        @apply block rounded-xl border border-border bg-card my-4;
+    }
+    codebox-header {
+        @apply flex items-center justify-between px-4 py-2 bg-green-800/20 border-b border-green-700/50 rounded-t-xl;
+    }
+    codebox-language {
+        @apply text-sm font-semibold text-green-400;
+    }
+    codebox-actions {
+        @apply flex items-center gap-2;
+    }
+    codebox-actions button {
+        @apply text-green-400 hover:text-white bg-transparent hover:bg-green-700/30 text-xs px-2 py-1 rounded-md;
+    }
+    codebox pre {
+        @apply my-0 p-4 rounded-b-xl;
+    }
+    canvasproject {
+      @apply block rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 p-6 my-4 text-center;
+    }
+    canvasproject p {
+        @apply text-primary/80;
+    }
+}

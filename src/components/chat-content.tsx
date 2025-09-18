@@ -63,8 +63,8 @@ const suggestionPrompts = [
 ];
 
 const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
-    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 10);
-    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
+    const textToDisplay = useTypewriter(isLastMessage ? message.content : message.content, 10);
+    const finalHtml = marked(textToDisplay);
 
     return (
         <div 
@@ -619,12 +619,3 @@ export function ChatContent({
     </div>
   );
 }
-
-    
-    
-
-    
-
-
-
-    
