@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain, Edit, Download } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -62,20 +62,68 @@ const suggestionPrompts = [
     },
 ];
 
-const renderer = new Renderer();
-renderer.html = (html) => {
-  // This is a simplified renderer that allows our custom tags to pass through.
-  // In a real-world scenario with untrusted content, more robust sanitization would be needed.
-  return html;
+const CodeBox = ({ language, code }: { language: string, code: string }) => {
+    const { toast } = useToast();
+    const handleCopy = () => {
+        navigator.clipboard.writeText(code);
+        toast({ title: "Copied!", description: "Code has been copied to clipboard." });
+    };
+    return (
+        <div className="code-box">
+            <div className="code-box-header">
+                <span className="code-box-language">{language}</span>
+                <div className="code-box-actions">
+                    <Button variant="ghost" size="sm" onClick={handleCopy}><Copy className="w-4 h-4 mr-1" /> Copy</Button>
+                    <Button variant="ghost" size="sm"><Edit className="w-4 h-4 mr-1" /> Edit</Button>
+                    <Button variant="ghost" size="sm"><Download className="w-4 h-4 mr-1" /> Download</Button>
+                    <Button variant="ghost" size="sm">Run</Button>
+                </div>
+            </div>
+            <pre><code>{code}</code></pre>
+        </div>
+    );
 };
 
-marked.setOptions({ renderer });
+const CanvasProject = ({ name, files }: { name: string, files: { name: string, type: string, code: string }[] }) => {
+    return (
+        <div className="canvas-project">
+            <CardHeader>
+                <CardTitle>Project: {name}</CardTitle>
+                <CardDescription>This is a multi-file project. Open it in a workspace to view and run.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button>Open in Canvas</Button>
+            </CardContent>
+        </div>
+    );
+};
 
 
 const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
     const textToDisplay = useTypewriter(isLastMessage ? message.content : message.content, 10);
-    const finalHtml = marked(textToDisplay);
+    
+    // Check for custom tags
+    const codeBoxMatch = textToDisplay.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
+    const canvasProjectMatch = textToDisplay.match(/<canvasProject name="([^"]+)">([\s\S]*?)<\/canvasProject>/);
 
+    if (codeBoxMatch) {
+        const [_, language, code] = codeBoxMatch;
+        return <CodeBox language={language} code={code.trim()} />;
+    }
+
+    if (canvasProjectMatch) {
+        const [_, name, filesContent] = canvasProjectMatch;
+        const fileRegex = /<file name="([^"]+)" type="([^"]+)">([\s\S]*?)<\/file>/g;
+        let match;
+        const files = [];
+        while ((match = fileRegex.exec(filesContent)) !== null) {
+            files.push({ name: match[1], type: match[2], code: match[3].trim() });
+        }
+        return <CanvasProject name={name} files={files} />;
+    }
+    
+    // Fallback to markdown rendering for normal text
+    const finalHtml = marked(textToDisplay);
     return (
         <div 
             className="prose dark:prose-invert max-w-none text-base leading-relaxed"
@@ -513,11 +561,11 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="inline-block p-3 border rounded-xl">
+                             <div className="inline-block p-3 border rounded-xl bg-primary/10">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="rounded-md mb-2" />
                                 )}
-                                <span className="text-chart-2">{message.content}</span>
+                                <span className="text-foreground">{message.content}</span>
                              </div>
                         ) : (
                             <div className={cn("w-full group")}>
@@ -629,3 +677,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    
