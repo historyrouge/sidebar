@@ -22,7 +22,6 @@ import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
-import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 type Message = {
@@ -63,8 +62,7 @@ const suggestionPrompts = [
 ];
 
 const ModelResponse = ({ message }: { message: Message }) => {
-    const animatedText = useTypewriter(message.content);
-    const finalHtml = marked(animatedText);
+    const finalHtml = marked(message.content);
 
     return (
         <div 
