@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain, Edit, Download } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useTypewriter } from "@/hooks/use-typewriter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
+import { Textarea } from "./ui/textarea";
 
 
 type Message = {
@@ -62,27 +63,85 @@ const suggestionPrompts = [
     },
 ];
 
-const CodeBox = ({ language, code }: { language: string, code: string }) => {
+const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
     const { toast } = useToast();
+    const [isEditing, setIsEditing] = useState(false);
+    const [code, setCode] = useState(initialCode);
+
     const handleCopy = () => {
         navigator.clipboard.writeText(code);
         toast({ title: "Copied!", description: "Code has been copied to clipboard." });
     };
+
+    const handleDownload = () => {
+        const fileExtensions: { [key: string]: string } = {
+            javascript: 'js',
+            python: 'py',
+            html: 'html',
+            css: 'css',
+            typescript: 'ts',
+            java: 'java',
+            c: 'c',
+            cpp: 'cpp',
+            csharp: 'cs',
+            go: 'go',
+            rust: 'rs',
+            swift: 'swift',
+            kotlin: 'kt',
+            php: 'php',
+            ruby: 'rb',
+            perl: 'pl',
+            shell: 'sh',
+            sql: 'sql',
+            json: 'json',
+            xml: 'xml',
+            yaml: 'yaml',
+            markdown: 'md',
+        };
+        const extension = fileExtensions[language.toLowerCase()] || 'txt';
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `code.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({ title: "Downloaded!", description: `Code saved as code.${extension}` });
+    };
+
+    const handleEditToggle = () => {
+        setIsEditing(!isEditing);
+    };
+
     return (
         <div className="code-box">
             <div className="code-box-header">
                 <span className="code-box-language">{language}</span>
                 <div className="code-box-actions">
                     <Button variant="ghost" size="sm" onClick={handleCopy}><Copy className="mr-1 h-4 w-4" /> Copy</Button>
-                    <Button variant="ghost" size="sm"><Edit className="mr-1 h-4 w-4" /> Edit</Button>
-                    <Button variant="ghost" size="sm"><Download className="mr-1 h-4 w-4" /> Download</Button>
-                    <Button variant="ghost" size="sm">Run</Button>
+                    <Button variant="ghost" size="sm" onClick={handleEditToggle}>
+                        {isEditing ? <Save className="mr-1 h-4 w-4" /> : <Edit className="mr-1 h-4 w-4" />}
+                        {isEditing ? 'Save' : 'Edit'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleDownload}><Download className="mr-1 h-4 w-4" /> Download</Button>
+                    <Button variant="ghost" size="sm" disabled>Run</Button>
                 </div>
             </div>
-            <pre><code>{code}</code></pre>
+            {isEditing ? (
+                 <Textarea 
+                    value={code} 
+                    onChange={(e) => setCode(e.target.value)}
+                    className="font-mono text-sm bg-black/50 border-0 rounded-t-none h-64"
+                 />
+            ) : (
+                <pre><code>{code}</code></pre>
+            )}
         </div>
     );
 };
+
 
 const CanvasProject = ({ name, files }: { name: string, files: { name: string, type: string, code: string }[] }) => {
     return (
@@ -99,7 +158,7 @@ const CanvasProject = ({ name, files }: { name: string, files: { name: string, t
 };
 
 
-const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
+const ModelResponse = ({ message }: { message: Message }) => {
     // Check for custom tags on the original, complete message content
     const codeBoxMatch = message.content.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
     const canvasProjectMatch = message.content.match(/<canvasProject name="([^"]+)">([\s\S]*?)<\/canvasProject>/);
@@ -121,10 +180,9 @@ const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMes
         return <CanvasProject name={name} files={files} />;
     }
     
-    // For regular text, use the typewriter effect only on the last message
-    const textToAnimate = isLastMessage ? message.content : '';
-    const textToDisplay = useTypewriter(textToAnimate, 10);
-    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
+    // For regular text, use the typewriter effect
+    const textToDisplay = useTypewriter(message.content, 10);
+    const finalHtml = marked(textToDisplay);
 
     return (
         <div 
@@ -578,7 +636,6 @@ export function ChatContent({
                             <div className={cn("group w-full")}>
                                 <ModelResponse 
                                     message={message}
-                                    isLastMessage={index === history.length - 1}
                                 />
                                 <div className="mt-2 flex items-center gap-1 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
