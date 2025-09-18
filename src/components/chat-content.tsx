@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
-import { marked } from "marked";
+import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
@@ -61,6 +61,22 @@ const suggestionPrompts = [
         href: "/news"
     },
 ];
+
+const renderer = new Renderer();
+renderer.html = (html) => {
+  // Allow specific custom tags
+  const allowedTags = ['codebox', 'codebox-header', 'codebox-language', 'codebox-actions', 'canvasproject', 'file'];
+  const tag = (html.match(/<\/?([a-zA-Z0-9-]+)/) || [])[1];
+
+  if (tag && allowedTags.some(allowed => html.includes(allowed))) {
+      return html;
+  }
+  // Return an empty string for disallowed tags to prevent XSS
+  return '';
+};
+
+marked.setOptions({ renderer });
+
 
 const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
     const textToDisplay = useTypewriter(isLastMessage ? message.content : message.content, 10);
@@ -601,7 +617,7 @@ export function ChatContent({
                             className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
                         />
                          <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                            {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 w-5" />}
+                            {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 h-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
                         <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
