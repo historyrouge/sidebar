@@ -24,7 +24,7 @@ type Message = {
 };
 
 const TutorResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
-    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 50);
+    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 10);
     const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
 
     return (
@@ -235,3 +235,6 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
 
     
 
+
+
+    
