@@ -16,7 +16,6 @@ import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { TutorChat } from "./tutor-chat";
-import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
@@ -56,7 +55,6 @@ export function StudyNowContent() {
   const [isGeneratingImage, startGeneratingImage] = useTransition();
   const [imageGenerationProgress, setImageGenerationProgress] = useState(0);
   const [imageGenerationStep, setImageGenerationStep] = useState(0);
-  const { theme, setTheme } = useTheme();
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -466,13 +464,6 @@ export function StudyNowContent() {
             <SidebarTrigger className="lg:hidden" />
             <BackButton />
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
-        </div>
-        <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-            </Button>
         </div>
       </header>
       <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">

@@ -26,8 +26,8 @@ export default function RootLayout({
       <body className={cn("min-h-screen bg-background font-body antialiased")} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
             <PageLoader>
@@ -39,5 +39,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    

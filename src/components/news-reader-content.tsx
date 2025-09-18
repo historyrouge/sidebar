@@ -15,7 +15,6 @@ import { Skeleton } from "./ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./back-button";
-import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
 
 type Message = {
@@ -47,7 +46,6 @@ const dummyPrompts = [
 export function NewsReaderContent() {
   const { toast } = useToast();
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const [article, setArticle] = useState<Article | null>(null);
@@ -148,17 +146,6 @@ export function NewsReaderContent() {
                 <SidebarTrigger className="lg:hidden" />
                 <BackButton />
                 <h1 className="text-xl font-semibold tracking-tight">News Reader</h1>
-            </div>
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                >
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
-                </Button>
             </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
@@ -283,5 +270,3 @@ export function NewsReaderContent() {
     </div>
   );
 }
-
-    

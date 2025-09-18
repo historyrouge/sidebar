@@ -9,19 +9,15 @@ const ACCENT_COLOR_KEY = 'accent-color';
 
 const accentColors: Record<string, Record<string, string>> = {
   default: {
-    light: '217 91% 60%',
     dark: '217 91% 65%',
   },
   rose: {
-    light: '347 77% 55%',
     dark: '347 87% 60%',
   },
   orange: {
-    light: '25 95% 53%',
     dark: '25 95% 58%',
   },
   green: {
-    light: '142 71% 45%',
     dark: '142 71% 50%',
   },
 };
@@ -38,21 +34,13 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps & { def
 
   React.useEffect(() => {
     const root = document.documentElement;
-    const currentTheme = root.classList.contains('dark') ? 'dark' : 'light';
-    const color = accentColors[accentColor]?.[currentTheme] || accentColors.default[currentTheme];
+    const color = accentColors[accentColor]?.dark || accentColors.default.dark;
     root.style.setProperty('--primary', color);
     localStorage.setItem(ACCENT_COLOR_KEY, accentColor);
-  }, [accentColor, props.theme, props.systemTheme]);
-
-  const extendedSetTheme = (theme: string) => {
-    if (props.setTheme) {
-      props.setTheme(theme);
-    }
-  };
+  }, [accentColor]);
 
   const value = {
     ...props,
-    setTheme: extendedSetTheme,
     accentColor: accentColor,
     setAccentColor: (color: string) => {
       if (accentColors[color]) {
@@ -81,5 +69,3 @@ export const useTheme = () => {
     }
     return { ...nextThemesContext, ...context };
 };
-
-    
