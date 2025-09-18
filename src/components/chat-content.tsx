@@ -397,14 +397,12 @@ export function ChatContent({
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-        setTimeout(() => {
-            const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
-            if (viewport) {
-                viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-            }
-        }, 100);
+        const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
+        if (viewport) {
+            viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        }
     }
-  }, [history]);
+  }, [history.length]);
 
   return (
     <div className="relative h-full">
@@ -459,7 +457,7 @@ export function ChatContent({
             onOpenChange={(open) => !open && setShareContent(null)}
             content={shareContent || ""}
         />
-        <ScrollArea className="absolute h-full w-full" ref={scrollAreaRef}>
+        <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto max-w-3xl w-full p-4 space-y-8 pb-48 sm:pb-40">
             {history.length === 0 && !isTyping ? (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-18rem)] text-center">
@@ -574,54 +572,50 @@ export function ChatContent({
             )}
             </div>
         </ScrollArea>
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background/90 via-background/80 to-transparent p-4 pb-6">
-             <Card className="max-w-3xl mx-auto p-2 rounded-2xl shadow-lg">
-                <div className="relative">
-                    {capturedImage && (
-                        <div className="absolute -top-16 left-2 w-fit">
-                            <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
-                            <div className="relative">
-                                <Image src={capturedImage} alt="Captured image" width={56} height={56} className="rounded-md border-2 border-background" />
-                                <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 via-background/80 to-transparent">
+             <div className="max-w-3xl mx-auto p-4 pb-6">
+                <Card className="p-2 rounded-2xl shadow-lg">
+                    <div className="relative">
+                        {capturedImage && (
+                            <div className="absolute -top-16 left-2 w-fit">
+                                <p className="text-xs text-muted-foreground mb-1">Attached Image:</p>
+                                <div className="relative">
+                                    <Image src={capturedImage} alt="Captured image" width={56} height={56} className="rounded-md border-2 border-background" />
+                                    <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-muted rounded-full" onClick={() => setCapturedImage(null)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                     <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
-                            <Camera className="h-5 h-5" />
-                            <span className="sr-only">Use Camera</span>
-                        </Button>
-                        <Input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Message Easy Learn AI..."
-                            disabled={isTyping}
-                            className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
-                        />
-                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                            {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 w-5" />}
-                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                        </Button>
-                        <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
-                            {isTyping && history[history.length-1]?.role === "user" ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                            <Send className="h-5 w-5" />
-                            )}
-                            <span className="sr-only">Send</span>
-                        </Button>
-                    </form>
-                </div>
-             </Card>
+                        )}
+                        <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
+                            <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
+                                <Camera className="h-5 h-5" />
+                                <span className="sr-only">Use Camera</span>
+                            </Button>
+                            <Input
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Message Easy Learn AI..."
+                                disabled={isTyping}
+                                className="h-12 text-base shadow-none border-0 focus-visible:ring-0"
+                            />
+                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                                {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 w-5" />}
+                                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+                            </Button>
+                            <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
+                                {isTyping && history[history.length-1]?.role === "user" ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                <Send className="h-5 w-5" />
+                                )}
+                                <span className="sr-only">Send</span>
+                            </Button>
+                        </form>
+                    </div>
+                </Card>
+            </div>
         </div>
     </div>
   );
 }
-
-    
-    
-
-    
-
