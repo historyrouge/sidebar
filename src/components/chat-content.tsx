@@ -20,7 +20,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
-import { useTypewriter } from "@/hooks/use-typewriter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 
@@ -62,9 +61,8 @@ const suggestionPrompts = [
     },
 ];
 
-const ModelResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
-    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 50);
-    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
+const ModelResponse = ({ message }: { message: Message }) => {
+    const finalHtml = marked(message.content);
 
     return (
         <div 
@@ -511,7 +509,6 @@ export function ChatContent({
                             <div className={cn("w-full group")}>
                                 <ModelResponse 
                                     message={message}
-                                    isLastMessage={index === history.length - 1}
                                 />
                                 <div className="flex items-center gap-1 transition-opacity mt-2">
                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
@@ -619,3 +616,5 @@ export function ChatContent({
     </div>
   );
 }
+
+    

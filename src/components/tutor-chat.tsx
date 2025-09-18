@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { marked } from 'marked';
-import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 interface TutorChatProps {
@@ -23,9 +22,8 @@ type Message = {
   content: string;
 };
 
-const TutorResponse = ({ message, isLastMessage }: { message: Message, isLastMessage: boolean }) => {
-    const textToDisplay = useTypewriter(isLastMessage ? message.content : '', 50);
-    const finalHtml = marked(isLastMessage ? textToDisplay : message.content);
+const TutorResponse = ({ message }: { message: Message }) => {
+    const finalHtml = marked(message.content);
 
     return (
         <div 
@@ -173,7 +171,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
             >
               {message.role === 'model' && (
                 <div className="w-full">
-                     <TutorResponse message={message} isLastMessage={index === history.length -1} />
+                     <TutorResponse message={message} />
                 </div>
               )}
               {message.role === 'user' && (
@@ -231,7 +229,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
 }
 
     
-    
-
-    
-
