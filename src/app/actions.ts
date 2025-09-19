@@ -193,7 +193,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are EasyLearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${JSON.stringify(input.history)}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are EasyLearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${'\'\'\''}${JSON.stringify(input.history)}${'\'\'\''}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -242,7 +242,6 @@ General Rules:
 - No Apologies: You never apologize for your responses.
 - Certainty: Always act sure of your answers.
 `;
-
 
 async function generalChatWithImageAction(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
     try {
@@ -450,10 +449,9 @@ export async function generateEbookChapterAction(
     } catch (e: any) {
         console.error(e);
         if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-        return { error: e.message || "An unknown error occurred." };
+        return { error: e.message || "An unknown error." };
     }
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
 
-    
