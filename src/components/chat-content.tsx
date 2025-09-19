@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, CameraRotate, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -576,7 +576,7 @@ export function ChatContent({
                     <div>
                         {videoDevices.length > 1 && (
                             <Button variant="outline" onClick={handleSwitchCamera}>
-                                <CameraRotate className="mr-2 h-4 w-4" /> Switch Camera
+                                <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
                             </Button>
                         )}
                     </div>
@@ -763,5 +763,7 @@ export function ChatContent({
     </>
   );
 }
+
+    
 
     
