@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, Camera, X, FileQuestion, PlusSquare, BookOpen, Rss, WifiOff, FileText, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -218,17 +218,6 @@ export function ChatContent({
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
   
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isStreamReady, setIsStreamReady] = useState(false);
-  
-  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
-  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
-  const streamRef = useRef<MediaStream | null>(null);
-
-
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   
 
@@ -278,22 +267,21 @@ export function ChatContent({
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !capturedImage) return;
+    if (!messageToSend.trim()) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: capturedImage || undefined };
+    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: undefined };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
-    setCapturedImage(null);
 
     await executeChat(newHistory);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, capturedImage, isRecording, history, executeChat]);
+  }, [input, isRecording, history, executeChat]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -411,97 +399,6 @@ export function ChatContent({
     }
   };
   
-    const startCamera = useCallback(async (deviceId?: string) => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-        }
-        setIsStreamReady(false);
-        
-        const videoConstraints: MediaTrackConstraints = {
-            facingMode: { ideal: "environment" }
-        };
-
-        if (deviceId) {
-            videoConstraints.deviceId = { exact: deviceId };
-        }
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
-            streamRef.current = stream;
-            setHasCameraPermission(true);
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.onloadedmetadata = () => {
-                    setIsStreamReady(true);
-                };
-            }
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            setHasCameraPermission(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        const getDevicesAndStart = async () => {
-            if (isCameraOpen) {
-                try {
-                    setHasCameraPermission(null); // Show loading
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const videoDevs = devices.filter(d => d.kind === 'videoinput');
-                    setVideoDevices(videoDevs);
-    
-                    let initialDeviceId = currentDeviceId;
-                    if (!initialDeviceId && videoDevs.length > 0) {
-                        const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
-                        initialDeviceId = backCamera ? backCamera.deviceId : videoDevs[0].deviceId;
-                        setCurrentDeviceId(initialDeviceId);
-                    }
-    
-                    await startCamera(initialDeviceId);
-                } catch(e) {
-                    console.error("Failed to enumerate devices:", e);
-                    setHasCameraPermission(false);
-                }
-            }
-        };
-
-        getDevicesAndStart();
-
-        return () => {
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-            }
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
-        };
-    }, [isCameraOpen, currentDeviceId, startCamera]);
-
-    const handleSwitchCamera = () => {
-        if (videoDevices.length > 1) {
-            const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
-            const nextIndex = (currentIndex + 1) % videoDevices.length;
-            setCurrentDeviceId(videoDevices[nextIndex].deviceId);
-        }
-    };
-
-
-    const handleCaptureImage = () => {
-        if (videoRef.current) {
-            const canvas = document.createElement('canvas');
-            canvas.width = videoRef.current.videoWidth;
-            canvas.height = videoRef.current.videoHeight;
-            const context = canvas.getContext('2d');
-            if (context) {
-                context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-                const dataUri = canvas.toDataURL('image/png'); // Use PNG for higher quality
-                setCapturedImage(dataUri);
-                setIsCameraOpen(false);
-            }
-        }
-    };
-
   const handleViewQuestionPaper = (paper: GenerateQuestionPaperOutput) => {
     try {
         localStorage.setItem('questionPaper', JSON.stringify(paper));
@@ -546,51 +443,6 @@ export function ChatContent({
   return (
     <>
         <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
-        <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-             <DialogContent className="w-full max-w-lg p-0">
-                <DialogHeader className="border-b p-4">
-                    <DialogTitle>Camera</DialogTitle>
-                </DialogHeader>
-                <div className="relative">
-                    <video ref={videoRef} className="aspect-video w-full bg-muted" autoPlay playsInline muted />
-                    {hasCameraPermission === null && (
-                        <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
-                            <div className="text-center">
-                                <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-                                <p className="text-muted-foreground mt-2">Requesting camera access...</p>
-                            </div>
-                        </div>
-                    )}
-                    {hasCameraPermission === false && (
-                         <div className="bg-background/80 absolute inset-0 flex items-center justify-center p-4">
-                            <Alert variant="destructive">
-                                <AlertTitle>Camera Access Required</AlertTitle>
-                                <AlertDescription>
-                                    Please allow camera access in your browser settings to use this feature. You may need to reload the page after granting permission.
-                                </AlertDescription>
-                            </Alert>
-                        </div>
-                    )}
-                </div>
-                <DialogFooter className="flex justify-between border-t p-4">
-                    <div>
-                        {videoDevices.length > 1 && (
-                            <Button variant="outline" onClick={handleSwitchCamera}>
-                                <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
-                            </Button>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
-                            {isStreamReady ? 'Capture' : 'Starting Camera...'}
-                        </Button>
-                    </div>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
         <ShareDialog
             isOpen={!!shareContent}
             onOpenChange={(open) => !open && setShareContent(null)}
@@ -721,22 +573,7 @@ export function ChatContent({
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
              <Card className="shadow-lg mx-auto max-w-3xl rounded-2xl p-2">
                 <div className="relative">
-                    {capturedImage && (
-                        <div className="absolute -top-16 left-2 w-fit">
-                            <p className="text-muted-foreground mb-1 text-xs">Attached Image:</p>
-                            <div className="relative">
-                                <Image src={capturedImage} alt="Captured image" width={56} height={56} className="border-2 border-background rounded-md" />
-                                <Button variant="ghost" size="icon" className="bg-muted absolute -right-2 -top-2 h-6 w-6 rounded-full" onClick={() => setCapturedImage(null)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
                     <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="ghost" className="h-10 w-10 flex-shrink-0" onClick={() => setIsCameraOpen(true)} disabled={isTyping}>
-                            <Camera className="h-5 h-5" />
-                            <span className="sr-only">Use Camera</span>
-                        </Button>
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -748,7 +585,7 @@ export function ChatContent({
                             {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 h-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || (!input.trim() && !capturedImage)}>
+                        <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || !input.trim()}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (

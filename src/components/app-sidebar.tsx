@@ -66,26 +66,6 @@ const account = [
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const [lastChat, setLastChat] = useState<{title: string, href: string} | null>(null);
-
-  useEffect(() => {
-    // This is a simplified example. In a real app, you'd fetch a list of chats.
-    try {
-        const savedHistory = localStorage.getItem('chatHistory');
-        if (savedHistory) {
-            const history = JSON.parse(savedHistory);
-            if (history.length > 0) {
-                const firstUserMessage = history.find((m: any) => m.role === 'user');
-                setLastChat({
-                    title: firstUserMessage ? firstUserMessage.content.substring(0, 25) + '...' : "Last Chat",
-                    href: "/" // All chats point home for now
-                });
-            }
-        }
-    } catch (e) {
-        console.error("Could not load chat history for sidebar", e);
-    }
-  }, [pathname]);
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -97,7 +77,7 @@ export function AppSidebar() {
             <Link href={item.href} className="w-full">
               <SidebarMenuButton
                 tooltip={item.name}
-                isActive={pathname === item.href && !lastChat}
+                isActive={pathname === item.href}
                 className="justify-start w-full"
                 onClick={handleLinkClick}
               >
@@ -128,27 +108,6 @@ export function AppSidebar() {
                 {renderMenuItems(studyTools)}
             </SidebarMenu>
             
-            {lastChat && (
-                <SidebarGroup>
-                    <SidebarGroupLabel>Previous Chats</SidebarGroupLabel>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                             <Link href={lastChat.href} className="w-full">
-                                <SidebarMenuButton
-                                    tooltip={lastChat.title}
-                                    isActive={pathname === lastChat.href}
-                                    className="justify-start w-full"
-                                    onClick={handleLinkClick}
-                                >
-                                    <MessageSquare />
-                                    <span>{lastChat.title}</span>
-                                </SidebarMenuButton>
-                            </Link>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
-            )}
-
             <SidebarSeparator className="my-2" />
             
             <SidebarMenu>
