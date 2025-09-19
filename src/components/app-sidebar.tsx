@@ -40,6 +40,7 @@ import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const studyTools = [
     { name: "Home", icon: <Home />, href: "/" },
@@ -78,7 +79,10 @@ export function AppSidebar() {
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start w-full"
+                className={cn(
+                    "justify-start w-full gap-2 px-3",
+                    pathname === item.href && "bg-sidebar-active text-sidebar-active-foreground font-semibold"
+                )}
                 onClick={handleLinkClick}
               >
                   <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
@@ -92,10 +96,10 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.03)] dark:shadow-none">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Layers className="size-5" />
             </div>
             <h1 className="text-lg font-semibold">Easy Learn AI</h1>
@@ -104,19 +108,19 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
-                <SidebarGroupLabel>Study Tools</SidebarGroupLabel>
+                <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Study Tools</SidebarGroupLabel>
                 {renderMenuItems(studyTools)}
             </SidebarMenu>
             
             <SidebarSeparator className="my-2" />
             
             <SidebarMenu>
-                 <SidebarGroupLabel>Resources</SidebarGroupLabel>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Resources</SidebarGroupLabel>
                  {renderMenuItems(resources)}
             </SidebarMenu>
             <SidebarSeparator className="my-2" />
             <SidebarMenu>
-                 <SidebarGroupLabel>Account</SidebarGroupLabel>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Account</SidebarGroupLabel>
                  {renderMenuItems(account)}
             </SidebarMenu>
         </div>

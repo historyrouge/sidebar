@@ -454,7 +454,7 @@ export function ChatContent({
             {history.length === 0 && !isTyping ? (
                 <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
                     <div className="mb-4">
-                        <h1 className="bg-gradient-to-br from-primary via-blue-500 to-purple-600 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
+                        <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                             Hello!
                         </h1>
                         <p className="mt-2 text-xl font-semibold text-muted-foreground sm:text-2xl">
@@ -572,7 +572,7 @@ export function ChatContent({
             </div>
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
-             <Card className="shadow-lg mx-auto max-w-3xl rounded-xl p-2">
+             <Card className="shadow-lg mx-auto max-w-3xl rounded-3xl p-2 bg-card border border-border/80 focus-within:border-primary focus-within:shadow-md focus-within:shadow-primary/20">
                 <div className="relative">
                     <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
                         <Input
@@ -580,7 +580,7 @@ export function ChatContent({
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Message Easy Learn AI..."
                             disabled={isTyping}
-                            className="h-12 border-0 text-base shadow-none focus-visible:ring-0"
+                            className="h-12 border-0 text-base shadow-none focus-visible:ring-0 bg-transparent"
                         />
                          <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
                             {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 h-5" />}
