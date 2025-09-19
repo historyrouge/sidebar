@@ -19,6 +19,7 @@ import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
+import { ai } from "@/ai/genkit";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -242,9 +243,33 @@ General Rules:
 - Certainty: Always act sure of your answers.
 `;
 
+
+async function generalChatWithImageAction(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
+    try {
+        const { response } = await ai.generate({
+            history: input.history,
+            prompt: sambaChatSystemPrompt, // You can have a different system prompt for image chats if needed
+        });
+        return { data: { response: response.text } };
+    } catch (e: any) {
+        console.error("Gemini chat with image error:", e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred with the image chat model." };
+    }
+}
+
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
+
+    const lastUserMessage = input.history.findLast(h => h.role === 'user');
+    // @ts-ignore
+    const hasImage = lastUserMessage && lastUserMessage.content.some(c => c.media);
+
+    if (hasImage) {
+        return generalChatWithImageAction(input);
+    }
+    
     const messages = [
         { role: 'system', content: sambaChatSystemPrompt },
         ...input.history.map((h: any) => ({
