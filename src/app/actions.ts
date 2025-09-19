@@ -250,7 +250,7 @@ export async function generalChatAction(
     const lastUserMessage = input.history.findLast(h => h.role === 'user');
     let hasImage = false;
     if (lastUserMessage && Array.isArray(lastUserMessage.content)) {
-        hasImage = lastUserMessage.content.some(c => !!(c as any).media);
+        hasImage = lastUserMessage.content.some(c => typeof c === 'object' && c !== null && 'media' in c);
     }
     
     if (hasImage) {
@@ -450,5 +450,3 @@ export async function generateEbookChapterAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
-
-
