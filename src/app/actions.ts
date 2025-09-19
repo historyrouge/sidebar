@@ -19,7 +19,7 @@ import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
-import { ai } from "@/ai/genkit";
+import { ai, visionModel } from "@/ai/genkit";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -193,7 +193,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are EasyLearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: ${'\'\'\''}${JSON.stringify(input.history)}${'\'\'\''}. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are EasyLearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student. The conversation history is: '''${JSON.stringify(input.history)}'''. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -243,20 +243,6 @@ General Rules:
 - Certainty: Always act sure of your answers.
 `;
 
-async function generalChatWithImageAction(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
-    try {
-        const { response } = await ai.generate({
-            history: input.history,
-            prompt: sambaChatSystemPrompt, // You can have a different system prompt for image chats if needed
-        });
-        return { data: { response: response.text } };
-    } catch (e: any) {
-        console.error("Gemini chat with image error:", e);
-        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-        return { error: e.message || "An unknown error occurred with the image chat model." };
-    }
-}
-
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
@@ -264,12 +250,22 @@ export async function generalChatAction(
     const lastUserMessage = input.history.findLast(h => h.role === 'user');
     let hasImage = false;
     if (lastUserMessage && Array.isArray(lastUserMessage.content)) {
-        // @ts-ignore
-        hasImage = lastUserMessage.content.some(c => c.media);
+        hasImage = lastUserMessage.content.some(c => !!(c as any).media);
     }
-
+    
     if (hasImage) {
-        return generalChatWithImageAction(input);
+        try {
+            const { response } = await ai.generate({
+                model: visionModel,
+                history: input.history as any, // Cast because Genkit types are slightly different
+                prompt: sambaChatSystemPrompt,
+            });
+            return { data: { response: response.text } };
+        } catch (e: any) {
+            console.error("Gemini Vision chat error:", e);
+            if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+            return { error: e.message || "An unknown error occurred with the image chat model." };
+        }
     }
     
     const messages = [
@@ -454,4 +450,5 @@ export async function generateEbookChapterAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
+
 
