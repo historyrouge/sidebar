@@ -18,7 +18,7 @@ const accentColors = [
 ];
 
 export function SettingsContent() {
-  const { accentColor, setAccentColor } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex flex-col h-full bg-muted/40">
@@ -34,28 +34,30 @@ export function SettingsContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Appearance</CardTitle>
-                        <CardDescription>Customize the look and feel of the app. Light mode has been disabled.</CardDescription>
+                        <CardDescription>Customize the look and feel of the app.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center justify-between">
                             <Label>Theme</Label>
                             <div className="flex items-center gap-2 rounded-lg border p-1">
-                                <Button variant={'secondary'} size="icon"><Moon /></Button>
+                                <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('light')}><Sun/></Button>
+                                <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('dark')}><Moon /></Button>
                             </div>
                         </div>
                          <div className="flex items-center justify-between">
                             <Label>Accent Color</Label>
                              <div className="flex items-center gap-2">
+                                {/* Accent color functionality is temporarily disabled for theme refactor */}
                                 {accentColors.map((item) => (
                                     <Button
                                         key={item.name}
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => setAccentColor(item.name)}
-                                        className={cn("h-8 w-8 rounded-full", accentColor === item.name && "border-2 border-foreground")}
+                                        disabled
+                                        className={cn("h-8 w-8 rounded-full", theme === item.name && "border-2 border-foreground")}
                                         style={{ backgroundColor: item.color }}
                                     >
-                                        {accentColor === item.name && <Check className="h-4 w-4 text-white" />}
+                                        {theme === item.name && <Check className="h-4 w-4 text-white" />}
                                         <span className="sr-only">{item.name}</span>
                                     </Button>
                                 ))}

@@ -26,8 +26,8 @@ export default function RootLayout({
       <body className={cn("min-h-screen bg-background font-body antialiased")} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
             <PageLoader>
