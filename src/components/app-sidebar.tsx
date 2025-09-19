@@ -108,19 +108,19 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
-                <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Study Tools</SidebarGroupLabel>
+                <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Study Tools</SidebarGroupLabel>
                 {renderMenuItems(studyTools)}
             </SidebarMenu>
             
             <SidebarSeparator className="my-2" />
             
             <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Resources</SidebarGroupLabel>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Resources</SidebarGroupLabel>
                  {renderMenuItems(resources)}
             </SidebarMenu>
             <SidebarSeparator className="my-2" />
             <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2">Account</SidebarGroupLabel>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Account</SidebarGroupLabel>
                  {renderMenuItems(account)}
             </SidebarMenu>
         </div>
