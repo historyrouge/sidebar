@@ -571,7 +571,7 @@ export function ChatContent({
             </div>
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
-             <Card className="shadow-lg mx-auto max-w-3xl rounded-2xl p-2">
+             <Card className="shadow-lg mx-auto max-w-3xl rounded-xl p-2">
                 <div className="relative">
                     <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
                         <Input
@@ -600,7 +600,3 @@ export function ChatContent({
     </>
   );
 }
-
-    
-
-    
