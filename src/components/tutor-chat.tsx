@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { GraduationCap, Loader2, Send, User, Mic, MicOff } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { marked } from 'marked';
+import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 interface TutorChatProps {
@@ -23,7 +24,8 @@ type Message = {
 };
 
 const TutorResponse = ({ message }: { message: Message }) => {
-    const finalHtml = marked(message.content);
+    const textToDisplay = useTypewriter(message.content, 10);
+    const finalHtml = marked(textToDisplay);
 
     return (
         <div 
@@ -227,4 +229,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
-    

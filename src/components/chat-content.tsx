@@ -8,11 +8,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
-import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
@@ -23,6 +22,8 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
+import { useTypewriter } from "@/hooks/use-typewriter";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 
 type Message = {
@@ -179,8 +180,9 @@ const ModelResponse = ({ message }: { message: Message }) => {
         return <CanvasProject name={name} files={files} />;
     }
     
-    // For regular text, render instantly
-    const finalHtml = marked(message.content);
+    // For regular text, use the typewriter effect
+    const textToDisplay = useTypewriter(message.content, 10);
+    const finalHtml = marked(textToDisplay);
 
     return (
         <div 
@@ -225,10 +227,9 @@ export function ChatContent({
     chatHistory: Message[]
   ): Promise<void> => {
       startTyping(async () => {
-        // Convert the message history to the format Genkit expects
         const genkitHistory = chatHistory.map(h => ({
-            role: h.role as 'user' | 'model', // Cast to what Genkit flow expects
-            content: h.imageDataUri ? [{ text: h.content }, { media: { url: h.imageDataUri } }] : h.content,
+          role: h.role as 'user' | 'model',
+          content: Array.isArray(h.content) ? h.content : (h.imageDataUri ? [{ text: h.content }, { media: { url: h.imageDataUri } }] : h.content),
         }));
         
         // @ts-ignore

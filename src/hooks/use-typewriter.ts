@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 
-export const useTypewriter = (text: string, speed: number = 120) => {
+export const useTypewriter = (text: string, speed: number = 10) => {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
@@ -29,5 +29,3 @@ export const useTypewriter = (text: string, speed: number = 120) => {
 
     return displayText;
 };
-
-    

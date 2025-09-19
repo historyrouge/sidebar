@@ -26,6 +26,7 @@ type Message = {
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
 
 export function MainDashboard() {
+  const { theme, setTheme } = useTheme();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
@@ -61,6 +62,10 @@ export function MainDashboard() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
   return (
     <div className="flex h-full flex-col bg-muted/20 dark:bg-transparent">
       <WelcomeDialog />
@@ -73,6 +78,11 @@ export function MainDashboard() {
             <Button variant="outline" size="sm" onClick={handleNewChat}>
                 <FileEdit className="mr-2 h-4 w-4" />
                 New Chat
+            </Button>
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
