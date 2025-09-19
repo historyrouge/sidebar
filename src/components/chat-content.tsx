@@ -23,7 +23,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { useTypewriter } from "@/hooks/use-typewriter";
-import { ThinkingIndicator } from "./thinking-indicator";
 
 
 type Message = {
@@ -473,7 +472,7 @@ export function ChatContent({
                                     <div className="flex items-start gap-4">
                                         {prompt.icon}
                                         <div>
-                                            <h3 className="text-left text-base font-semibold text-muted-foreground">{prompt.title}</h3>
+                                            <h3 className="text-left text-base font-semibold text-foreground">{prompt.title}</h3>
                                             <p className="text-left text-sm text-muted-foreground">{prompt.description}</p>
                                         </div>
                                     </div>
@@ -602,5 +601,7 @@ export function ChatContent({
     </>
   );
 }
+
+    
 
     
