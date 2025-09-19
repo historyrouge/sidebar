@@ -457,7 +457,7 @@ export function ChatContent({
                         <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                             Hello!
                         </h1>
-                        <p className="mt-2 text-xl font-semibold text-muted-foreground sm:text-2xl">
+                        <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
                            How can I help you today?
                         </p>
                     </div>
@@ -601,3 +601,5 @@ export function ChatContent({
     </>
   );
 }
+
+    
