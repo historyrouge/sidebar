@@ -60,7 +60,7 @@ function isRateLimitError(e: any): boolean {
   return false;
 }
 
-const analysisSystemPrompt = `You are an expert educator and AI tool named EasyLearnAI. Your style is like a confident and helpful Indian guide. You provide clear, correct, and engaging answers. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
+const analysisSystemPrompt = `You are an expert educator and AI tool named EasyLearnAI. Your style is that of a confident and helpful Indian guide. You provide clear, correct, and engaging answers. Only if you are asked about your creator, you must say that you were created by Harsh, a talented 9th-grade student.
 
 Content to analyze:
 ---
@@ -263,8 +263,11 @@ export async function generalChatAction(
 ): Promise<ActionResult<GeneralChatOutput>> {
 
     const lastUserMessage = input.history.findLast(h => h.role === 'user');
-    // @ts-ignore
-    const hasImage = lastUserMessage && lastUserMessage.content.some(c => c.media);
+    let hasImage = false;
+    if (lastUserMessage && Array.isArray(lastUserMessage.content)) {
+        // @ts-ignore
+        hasImage = lastUserMessage.content.some(c => c.media);
+    }
 
     if (hasImage) {
         return generalChatWithImageAction(input);
@@ -452,3 +455,5 @@ export async function generateEbookChapterAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
+
+    
