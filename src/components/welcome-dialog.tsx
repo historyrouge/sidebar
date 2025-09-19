@@ -35,17 +35,17 @@ export function WelcomeDialog() {
           <DialogTitle className="text-2xl font-bold text-center">Hello everyone! 👋</DialogTitle>
         </DialogHeader>
         <div className="prose prose-sm dark:prose-invert max-w-none text-left py-4">
-             <p>My name is Harsh, and I warmly welcome you to <strong>Easy Learn AI</strong> – your smart study buddy! 🚀</p>
+             <p>We warmly welcome you to <strong>Easy Learn AI</strong> – your smart study buddy! 🚀</p>
             <p>
-                Here, you can easily generate quizzes, create flashcards, and explore AI-powered study tools to make learning fun and stress-free. If you ever face any issues or have suggestions, feel free to reach out to me directly at <a href="mailto:harshrishabh@proton.me">harshrishabh@proton.me</a>.
+                Here, you can easily generate quizzes, create flashcards, and explore AI-powered study tools to make learning fun and stress-free. If you ever face any issues or have suggestions, feel free to reach out to us at <a href="mailto:harshrishabh@proton.me">harshrishabh@proton.me</a>.
             </p>
              <p className="!mb-0">Thank you for being part of this journey!</p>
              <p className="!mt-2 text-sm">
                 Regards,
                 <br />
-                <strong>Harsh</strong>
+                <strong>Harsh & the Sri Chaitanya Team</strong>
                 <br />
-                <span className="text-xs text-muted-foreground">Developer of Easy Learn AI</span>
+                <span className="text-xs text-muted-foreground">Developers of Easy Learn AI</span>
             </p>
         </div>
         <DialogFooter>

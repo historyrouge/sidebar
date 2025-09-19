@@ -24,13 +24,13 @@ export function AboutContent() {
                       <AvatarImage src="https://placehold.co/128x128.png" alt="Harsh" data-ai-hint="profile picture" />
                       <AvatarFallback>H</AvatarFallback>
                     </Avatar>
-                    <CardTitle className="text-4xl font-bold mt-6">A Message from the Developer</CardTitle>
+                    <CardTitle className="text-4xl font-bold mt-6">A Message from the Developers</CardTitle>
                     <CardDescription className="text-xl text-muted-foreground mt-2">&mdash; The story behind Easy Learn AI &mdash;</CardDescription>
                 </div>
                 <CardContent className="prose prose-lg dark:prose-invert max-w-none mx-auto text-left px-4 sm:px-8 py-8 bg-background">
                     <p className="lead text-center text-2xl font-semibold !mt-0">Hey there, fellow learners! 👋</p>
                     <p>
-                        I'm Harsh, a 9th-grade student from Sri Chaitanya School, and I'm super excited to introduce my very own app: <strong>Easy Learn AI</strong>! 🚀 As someone who's always juggling schoolwork, exams, and a bit of fun, I know how tough it can be to stay organized and motivated while studying. That's why I built Easy Learn AI – an app designed specifically to make learning easier, smarter, and way more enjoyable.
+                        We're a group of students from Sri Chaitanya School, led by Harsh, and we're super excited to introduce our app: <strong>Easy Learn AI</strong>! 🚀 As people who are always juggling schoolwork, exams, and a bit of fun, we know how tough it can be to stay organized and motivated while studying. That's why we built Easy Learn AI – an app designed specifically to make learning easier, smarter, and way more enjoyable.
                     </p>
                     <p>
                         Here's what makes Easy Learn AI your ultimate study buddy:
@@ -42,17 +42,17 @@ export function AboutContent() {
                         <li><strong>AI Image Generation</strong>: Create visual aids for your notes based on the study material.</li>
                     </ul>
                     <p>
-                        I poured my heart into this during late-night coding sessions (while still acing my classes 😉). Whether you're prepping for boards or just wanting to level up your grades, Easy Learn AI is here to spark that love for learning!
+                        We poured our hearts into this during late-night coding sessions (while still acing our classes 😉). Whether you're prepping for boards or just wanting to level up your grades, Easy Learn AI is here to spark that love for learning!
                     </p>
                     <p>
-                        What do you think? Drop your feedback – I'd love to hear from you!
+                        What do you think? Drop your feedback – we'd love to hear from you!
                     </p>
                     <p className="text-right font-semibold mt-12 text-base">
                         Cheers,
                         <br />
-                        <span className="text-primary font-bold">Harsh</span>
+                        <span className="text-primary font-bold">Harsh & the Sri Chaitanya Team</span>
                         <br />
-                        <span className="text-xs font-normal text-muted-foreground">(9th Grader &amp; Aspiring Developer @ Sri Chaitanya)</span>
+                        <span className="text-xs font-normal text-muted-foreground">(Aspiring Developers @ Sri Chaitanya)</span>
                     </p>
                 </CardContent>
               </Card>
