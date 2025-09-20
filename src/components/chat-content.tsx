@@ -486,11 +486,6 @@ export function ChatContent({
                             message.role === "user" ? "justify-end" : ""
                         )}
                         >
-                        {message.role === "model" && (
-                             <Avatar className="border h-9 w-9">
-                                <AvatarFallback className="text-primary bg-primary/10"><Bot className="size-5" /></AvatarFallback>
-                            </Avatar>
-                        )}
                         {message.role === "user" ? (
                              <div className="border bg-primary/10 inline-block rounded-xl p-3">
                                 {message.imageDataUri && (
@@ -555,9 +550,6 @@ export function ChatContent({
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
-                    <Avatar className="h-9 w-9 border">
-                        <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                    </Avatar>
                     <div className="flex max-w-lg items-center gap-2">
                         <Loader2 className="size-4 animate-spin" />
                         <span>Generating...</span>
@@ -596,7 +588,3 @@ export function ChatContent({
     </>
   );
 }
-
-    
-
-    
