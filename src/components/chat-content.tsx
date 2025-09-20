@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw, Paperclip } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -461,7 +461,7 @@ export function ChatContent({
                                 key={i}
                                 asChild
                                 variant="outline"
-                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted"
+                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted border-border"
                                 >
                                 <Link href={prompt.href}>
                                     <div className="flex items-start gap-4">
@@ -559,31 +559,38 @@ export function ChatContent({
             </div>
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
-             <Card className="shadow-lg mx-auto max-w-3xl rounded-3xl p-2 bg-card border border-border/80 focus-within:border-primary focus-within:shadow-md focus-within:shadow-primary/20">
-                <div className="relative">
-                    <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
-                        <Input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Message Easy Learn AI..."
-                            disabled={isTyping}
-                            className="h-12 border-0 text-base shadow-none focus-visible:ring-0 bg-transparent"
-                        />
-                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-10 w-10 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                            {isRecording ? <MicOff className="h-5 h-5" /> : <Mic className="h-5 h-5" />}
+            <div className="mx-auto max-w-3xl">
+                <form 
+                    onSubmit={handleFormSubmit} 
+                    className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+                >
+                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled>
+                        <Paperclip className="h-5 w-5" />
+                        <span className="sr-only">Attach file</span>
+                    </Button>
+                    <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Message Easy Learn AI..."
+                        disabled={isTyping}
+                        className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+                    />
+                    <div className="flex items-center gap-1">
+                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-10 w-10 flex-shrink-0" disabled={isTyping || !input.trim()}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || !input.trim()}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                            <Send className="h-5 w-5" />
+                                <Send className="h-5 w-5" />
                             )}
                             <span className="sr-only">Send</span>
                         </Button>
-                    </form>
-                </div>
-            </Card>
+                    </div>
+                </form>
+            </div>
         </div>
     </>
   );
