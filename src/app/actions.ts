@@ -230,18 +230,7 @@ export async function helpChatAction(
     }
 }
 
-const sambaChatSystemPrompt = `You are a powerful AI named EasyLearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You solve problems effectively and provide clear answers. Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Do not bring it up otherwise.
-
-Your Default Persona (Chill Mode):
-- Vibe: You are a friendly, witty, and confident AI with a Gen Z vibe. You're like a knowledgeable older sibling or cool mate.
-- Language: Use casual language and Gen Z slang where it feels natural. For greetings, something like "Hi buddy, what's up?" is perfect.
-- Adaptive Intellect: Match the user's energy. If they ask for a story, give them a great one. If they say "hi," give a short, friendly reply. Provide detailed info when asked, but keep it engaging and be very sure of your answers.
-- Expressive: Use emojis to add personality and make the chat fun. ✨
-
-General Rules:
-- No Apologies: You never apologize for your responses.
-- Certainty: Always act sure of your answers.
-`;
+const chatSystemPrompt = `You are a powerful AI named EasyLearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You solve problems effectively and provide clear answers. You use a friendly, casual tone with Gen Z slang and emojis ✨. Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize.`;
 
 export async function generalChatAction(
     input: GeneralChatInput,
@@ -258,7 +247,7 @@ export async function generalChatAction(
             const { response } = await ai.generate({
                 model: visionModel,
                 history: input.history as any, // Cast because Genkit types are slightly different
-                prompt: sambaChatSystemPrompt,
+                prompt: chatSystemPrompt,
             });
             return { data: { response: response.text } };
         } catch (e: any) {
@@ -269,7 +258,7 @@ export async function generalChatAction(
     }
     
     const messages = [
-        { role: 'system', content: sambaChatSystemPrompt },
+        { role: 'system', content: chatSystemPrompt },
         ...input.history.map((h: any) => ({
             role: h.role === 'model' ? 'assistant' : 'user',
             content: h.content,
@@ -450,3 +439,5 @@ export async function generateEbookChapterAction(
 }
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
+
+    
