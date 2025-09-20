@@ -179,7 +179,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
                     <div
                         className={cn(
                         "max-w-md",
-                        "rounded-lg bg-primary text-primary-foreground p-3 text-sm"
+                        "rounded-lg bg-muted text-muted-foreground p-3 text-sm"
                         )}
                     >
                        {message.content}
