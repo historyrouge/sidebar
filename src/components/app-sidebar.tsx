@@ -96,7 +96,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.03)] dark:shadow-none">
+    <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.03)] dark:shadow-none border-r">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">

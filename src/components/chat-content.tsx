@@ -461,7 +461,7 @@ export function ChatContent({
                                 key={i}
                                 asChild
                                 variant="outline"
-                                className="h-auto w-full justify-start rounded-lg border-border/70 p-4 hover:bg-muted"
+                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted"
                                 >
                                 <Link href={prompt.href}>
                                     <div className="flex items-start gap-4">
