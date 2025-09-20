@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
-import { useTypewriter } from "@/hooks/use-typewriter";
 
 
 type Message = {
@@ -158,11 +157,9 @@ const CanvasProject = ({ name, files }: { name: string, files: { name: string, t
 
 
 const ModelResponse = ({ message }: { message: Message }) => {
-    // Check for custom tags on the original, complete message content
     const codeBoxMatch = message.content.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
     const canvasProjectMatch = message.content.match(/<canvasProject name="([^"]+)">([\s\S]*?)<\/canvasProject>/);
 
-    // If it's a code response, render it instantly without typewriter effect
     if (codeBoxMatch) {
         const [_, language, code] = codeBoxMatch;
         return <CodeBox language={language} code={code.trim()} />;
@@ -179,9 +176,7 @@ const ModelResponse = ({ message }: { message: Message }) => {
         return <CanvasProject name={name} files={files} />;
     }
     
-    // For regular text, use the typewriter effect
-    const textToDisplay = useTypewriter(message.content, 10);
-    const finalHtml = marked(textToDisplay);
+    const finalHtml = marked(message.content);
 
     return (
         <div 
