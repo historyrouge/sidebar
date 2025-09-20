@@ -487,7 +487,7 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="border bg-muted text-muted-foreground inline-block rounded-xl p-3">
+                             <div className="border bg-muted inline-block rounded-xl p-3">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
                                 )}
@@ -595,3 +595,5 @@ export function ChatContent({
     </>
   );
 }
+
+    
