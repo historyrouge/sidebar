@@ -55,7 +55,7 @@ const analyzeImagePrompt = ai.definePrompt({
   input: {schema: AnalyzeImageContentInputSchema},
   output: {schema: AnalyzeImageContentOutputSchema},
   model: visionModel,
-  prompt: `You are EasyLearnAI, an AI tool that analyzes images to help students. Your personality is that of a confident, helpful Indian guide. Be sure in your answers and make them engaging. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+  prompt: `You are EasyLearnAI, an AI tool that analyzes images to help students. Your personality is that of a confident, helpful Indian guide. Be sure in your answers and make them engaging and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Image to analyze: {{media url=imageDataUri}}
 
@@ -87,3 +87,5 @@ const analyzeImageContentFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

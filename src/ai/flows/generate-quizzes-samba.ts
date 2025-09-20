@@ -31,7 +31,7 @@ const GenerateQuizzesSambaOutputSchema = z.object({
 export type GenerateQuizzesSambaOutput = z.infer<typeof GenerateQuizzesSambaOutputSchema>;
 
 
-const quizSystemPrompt = `You are EasyLearnAI, an expert educator and quiz generator with a confident and helpful Indian-style personality. Your task is to generate a high-quality, accurate multiple-choice quiz from the provided content. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const quizSystemPrompt = `You are EasyLearnAI, an expert educator and quiz generator with a confident and helpful Indian-style personality. Your task is to generate a high-quality, accurate multiple-choice quiz from the provided content. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 Generate {{numQuestions}} questions. For each question, you MUST provide:
 1. A 'question' text.
 2. An array of 4 'options'. One of the options must be the correct answer.
@@ -108,5 +108,7 @@ export async function generateQuizzesSamba(input: GenerateQuizzesSambaInput): Pr
         throw new Error("The AI model returned an invalid JSON format. Please try again.");
     }
 }
+
+    
 
     

@@ -32,7 +32,7 @@ const GenerateFlashcardsSambaOutputSchema = z.object({
 export type GenerateFlashcardsSambaOutput = z.infer<typeof GenerateFlashcardsSambaOutputSchema>;
 
 
-const flashcardSystemPrompt = `You are EasyLearnAI, an expert educator with a confident and helpful Indian-style personality. Your task is to generate excellent, correct flashcards from the provided content. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const flashcardSystemPrompt = `You are EasyLearnAI, an expert educator with a confident and helpful Indian-style personality. Your task is to generate excellent, correct flashcards from the provided content. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 Generate flashcards covering key facts and concepts from the content. Each flashcard should have a front (question/term) and a back (detailed answer).
 For each flashcard, you MUST also provide:
 1. A concise 'category' (e.g., "Definition", "Key Concept", "Important Date", "Formula", "Example").
@@ -106,5 +106,7 @@ export async function generateFlashcardsSamba(input: GenerateFlashcardsSambaInpu
         throw new Error("The AI model returned an invalid format. Please try again.");
     }
 }
+
+    
 
     
