@@ -2,8 +2,6 @@
 import { streamTextToSpeech } from '@/app/actions';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 export async function POST(req: NextRequest) {
   try {
     const { text } = await req.json();
