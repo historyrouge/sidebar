@@ -19,7 +19,7 @@ import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
-import { ai, visionModel } from "@/ai/genkit";
+import { ai, visionModel, googleAI } from "@/ai/genkit";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -328,6 +328,36 @@ export async function textToSpeechAction(
     if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
     return { error: e.message || "An unknown error occurred." };
   }
+}
+
+export async function streamTextToSpeech(text: string): Promise<ReadableStream<Uint8Array>> {
+    const { stream } = await ai.generate({
+      model: googleAI.model('gemini-2.5-flash-preview-tts'),
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+          },
+        },
+      },
+      prompt: text,
+      stream: true,
+    });
+
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+            if (chunk.media) {
+                const audioContent = chunk.media.url.substring(chunk.media.url.indexOf(',') + 1);
+                controller.enqueue(Buffer.from(audioContent, 'base64'));
+            }
+        }
+        controller.close();
+      },
+    });
+
+    return readableStream;
 }
 
 export async function getYoutubeTranscriptAction(

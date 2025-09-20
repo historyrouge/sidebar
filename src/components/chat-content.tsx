@@ -1,14 +1,14 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw, Paperclip } from "lucide-react";
+import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw, Paperclip, StopCircle } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { marked, Renderer } from "marked";
 import { ShareDialog } from "./share-dialog";
@@ -209,13 +209,17 @@ export function ChatContent({
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
   const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
+  
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
   
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioQueueRef = useRef<ArrayBuffer[]>([]);
+  const isPlayingRef = useRef(false);
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+
 
   const executeChat = useCallback(async (
     chatHistory: Message[]
@@ -302,26 +306,99 @@ export function ChatContent({
     setShareContent(text);
   };
 
-  const handleTextToSpeech = async (text: string, id: string) => {
-    if (isSynthesizing === id) {
-      setAudioDataUri(null);
-      setIsSynthesizing(null);
-      return;
+  const stopCurrentAudio = useCallback(() => {
+    if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current.disconnect();
+        sourceNodeRef.current = null;
     }
-    setIsSynthesizing(id);
-    setAudioDataUri(null);
-    try {
-      const result = await textToSpeechAction({ text });
-      if (result.error) {
-        toast({ title: 'Audio Generation Failed', description: result.error, variant: 'destructive' });
-        setIsSynthesizing(null);
-      } else if (result.data) {
-        setAudioDataUri(result.data.audioDataUri);
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    setIsSynthesizing(null);
+  }, []);
+
+  const playAudio = useCallback(async () => {
+      if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
+  
+      isPlayingRef.current = true;
+      const audioData = audioQueueRef.current.shift();
+      if (!audioData || !audioContextRef.current) {
+          isPlayingRef.current = false;
+          return;
       }
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
-      setIsSynthesizing(null);
-    }
+  
+      try {
+          const audioBuffer = await audioContextRef.current.decodeAudioData(audioData);
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioContextRef.current.destination);
+          source.onended = () => {
+              isPlayingRef.current = false;
+              if (audioQueueRef.current.length > 0) {
+                  playAudio();
+              } else {
+                  setIsSynthesizing(null); // All chunks played
+              }
+          };
+          source.start();
+          sourceNodeRef.current = source;
+      } catch (error) {
+          console.error("Error decoding or playing audio:", error);
+          isPlayingRef.current = false;
+          setIsSynthesizing(null);
+          toast({ title: 'Audio Playback Error', description: 'Could not play the generated audio.', variant: 'destructive' });
+      }
+  }, [toast]);
+  
+
+  const handleTextToSpeech = async (text: string, id: string) => {
+      if (isSynthesizing === id) {
+          stopCurrentAudio();
+          return;
+      }
+
+      // Stop any previously playing audio before starting a new one
+      stopCurrentAudio();
+      setIsSynthesizing(id);
+
+      if (!audioContextRef.current) {
+          try {
+              audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
+                  sampleRate: 24000,
+              });
+          } catch (e) {
+              toast({ title: 'Browser Not Supported', description: 'Your browser does not support the Web Audio API.', variant: 'destructive'});
+              setIsSynthesizing(null);
+              return;
+          }
+      }
+
+      try {
+          const response = await fetch('/api/tts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text }),
+          });
+
+          if (!response.ok || !response.body) {
+              throw new Error('Failed to get audio stream.');
+          }
+
+          const reader = response.body.getReader();
+          while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              const pcmData = value.buffer;
+              audioQueueRef.current.push(pcmData);
+              if (!isPlayingRef.current) {
+                  playAudio();
+              }
+          }
+      } catch (e: any) {
+          toast({ title: 'Audio Generation Failed', description: e.message, variant: 'destructive' });
+          stopCurrentAudio();
+      }
   };
 
 
@@ -505,8 +582,8 @@ export function ChatContent({
                                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
                                         <Share2 className="h-4 w-4" />
                                     </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)} disabled={!!isSynthesizing}>
-                                        {isSynthesizing === `tts-${index}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
+                                        {isSynthesizing === `tts-${index}` ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                                     </Button>
                                     {index === history.length - 1 && !isTyping && (
                                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
@@ -514,11 +591,6 @@ export function ChatContent({
                                         </Button>
                                     )}
                                 </div>
-                                 {audioDataUri && isSynthesizing === `tts-${index}` && (
-                                    <div className="mt-2">
-                                        <audio controls autoPlay src={audioDataUri} className="h-8 w-full" onEnded={() => { setAudioDataUri(null); setIsSynthesizing(null); }} />
-                                    </div>
-                                )}
                             </div>
                         )}
         
@@ -595,4 +667,5 @@ export function ChatContent({
     </>
   );
 }
+
 
