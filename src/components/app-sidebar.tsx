@@ -21,6 +21,7 @@ import {
   FileText,
   Layers,
   MessageSquare,
+  Cpu
 } from "lucide-react";
 import {
   Sidebar,
@@ -56,6 +57,7 @@ const resources = [
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
+    { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
 ];
 
 const account = [
