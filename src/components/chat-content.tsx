@@ -180,7 +180,7 @@ const ModelResponse = ({ message }: { message: Message }) => {
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed"
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground"
             dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
@@ -461,7 +461,7 @@ export function ChatContent({
                                 key={i}
                                 asChild
                                 variant="outline"
-                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted border-border"
+                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted"
                                 >
                                 <Link href={prompt.href}>
                                     <div className="flex items-start gap-4">
@@ -491,7 +491,7 @@ export function ChatContent({
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
                                 )}
-                                <span className="text-foreground">{message.content}</span>
+                                <span className="text-foreground text-base">{message.content}</span>
                              </div>
                         ) : (
                             <div className={cn("group w-full")}>
@@ -596,4 +596,3 @@ export function ChatContent({
   );
 }
 
-    

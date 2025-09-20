@@ -202,7 +202,7 @@ export function NewsReaderContent() {
                                                     : "bg-muted"
                                                 )}
                                             >
-                                                <div className="prose dark:prose-invert prose-p:my-2" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
+                                                <div className="prose dark:prose-invert prose-p:my-2 text-foreground" dangerouslySetInnerHTML={{ __html: message.role === 'model' ? marked(message.content) : message.content }} />
                                             </div>
                                         </div>
                                         {message.role === "user" && (

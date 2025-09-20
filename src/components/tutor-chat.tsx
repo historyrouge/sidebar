@@ -27,7 +27,7 @@ const TutorResponse = ({ message }: { message: Message }) => {
 
     return (
         <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed"
+            className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground"
             dangerouslySetInnerHTML={{ __html: finalHtml as string }}
         />
     );
@@ -179,7 +179,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
                     <div
                         className={cn(
                         "max-w-md",
-                        "rounded-lg bg-muted text-foreground p-3 text-sm"
+                        "rounded-lg bg-muted text-foreground p-3 text-base"
                         )}
                     >
                        {message.content}
@@ -228,4 +228,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
   );
 }
 
-    
