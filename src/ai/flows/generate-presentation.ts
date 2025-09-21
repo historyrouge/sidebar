@@ -18,56 +18,79 @@ const GeneratePresentationInputSchema = z.object({
 export type GeneratePresentationInput = z.infer<typeof GeneratePresentationInputSchema>;
 
 const SlideSchema = z.object({
+  slideType: z.enum(['title', 'overview', 'content', 'summary', 'closing']).describe("The type of the slide, which determines its layout."),
   title: z.string().describe("The title of the slide."),
   content: z.array(z.string()).describe("An array of key points or content for the slide body, formatted as bullet points."),
   speakerNotes: z.string().describe("Notes for the speaker for this slide, explaining what to say."),
+  visualSuggestion: z.string().optional().describe("A suggestion for a relevant visual element, like an icon or diagram description."),
 });
 
 const GeneratePresentationOutputSchema = z.object({
   title: z.string().describe('The main title of the overall presentation.'),
-  slides: z.array(SlideSchema).min(5).max(10).describe('An array of 5 to 10 slides for the presentation.'),
+  colorTheme: z.object({
+    background: z.string().describe("A hex code for the slide background color (e.g., #F4F4F8)."),
+    primary: z.string().describe("A hex code for primary text and headings (e.g., #0A0A0A)."),
+    accent: z.string().describe("A hex code for accents, like bullets or highlights (e.g., #607EA3)."),
+  }).describe("A suggested color theme for the presentation."),
+  slides: z.array(SlideSchema).min(5).max(8).describe('An array of 5 to 8 slides for the presentation.'),
 });
 export type GeneratePresentationOutput = z.infer<typeof GeneratePresentationOutputSchema>;
 
-const presentationSystemPrompt = `You are EasyLearnAI, an expert presentation creator with a confident and helpful Indian-style personality. Your task is to generate a complete, well-structured presentation on a given topic. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const presentationSystemPrompt = `You are EasyLearnAI, an expert presentation designer with a confident and helpful Indian-style personality. Your task is to generate a complete, well-structured, and visually appealing presentation on a given topic. Your answers should be professional and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Topic: {{topic}}
 
-You must generate the presentation in a valid JSON format. The JSON object should match the following schema:
+You must generate the presentation in a valid JSON format, adhering strictly to the schema below. The response should be a single JSON object.
+
+Please provide the following content:
+1.  **Main Title**: Create a compelling title for the entire presentation.
+2.  **Color Theme**: Suggest a color theme with hex codes for 'background', 'primary' text, and an 'accent' color.
+3.  **Slides**: Generate between 5 and 8 slides with a logical flow.
+    *   **Slide 1**: A 'title' slide.
+    *   **Slide 2**: An 'overview' or agenda slide.
+    *   **Slides 3-5**: 'content' slides covering key aspects.
+    *   **Next to last slide**: A 'summary' slide.
+    *   **Last slide**: A 'closing' slide (e.g., "Thank You" or "Q&A").
+4.  **For each slide, you MUST provide**:
+    *   A \`slideType\` from the enum: 'title', 'overview', 'content', 'summary', 'closing'.
+    *   A clear and concise **title**.
+    *   A \`content\` array with 2-4 bullet points.
+    *   Detailed **speaker notes** explaining what the presenter should say.
+    *   A brief \`visualSuggestion\` for a relevant icon or simple diagram (e.g., "An icon of a lightbulb" or "A simple flowchart for the process").
+
+JSON Schema to follow:
 {
   "type": "object",
   "properties": {
     "title": { "type": "string" },
+    "colorTheme": {
+        "type": "object",
+        "properties": {
+            "background": { "type": "string" },
+            "primary": { "type": "string" },
+            "accent": { "type": "string" }
+        },
+        "required": ["background", "primary", "accent"]
+    },
     "slides": {
       "type": "array",
       "minItems": 5,
-      "maxItems": 10,
+      "maxItems": 8,
       "items": {
         "type": "object",
         "properties": {
+          "slideType": { "type": "string", "enum": ["title", "overview", "content", "summary", "closing"] },
           "title": { "type": "string" },
           "content": { "type": "array", "items": { "type": "string" } },
-          "speakerNotes": { "type": "string" }
+          "speakerNotes": { "type": "string" },
+          "visualSuggestion": { "type": "string" }
         },
-        "required": ["title", "content", "speakerNotes"]
+        "required": ["slideType", "title", "content", "speakerNotes", "visualSuggestion"]
       }
     }
   },
-  "required": ["title", "slides"]
+  "required": ["title", "colorTheme", "slides"]
 }
-
-Please provide the following content:
-1.  **Main Title**: Create a compelling title for the entire presentation.
-2.  **Slides**: Generate between 5 and 10 slides.
-3.  **For each slide**:
-    *   A clear and concise **title**.
-    *   A \`content\` array with 3-5 bullet points.
-    *   Detailed **speaker notes** explaining what the presenter should say for that slide.
-
-The presentation should have a logical flow:
-- Start with an introduction/title slide.
-- Follow with several body slides covering key aspects of the topic.
-- End with a conclusion or summary slide.
 `;
 
 export async function generatePresentation(input: GeneratePresentationInput): Promise<GeneratePresentationOutput> {
