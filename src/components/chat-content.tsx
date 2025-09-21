@@ -587,55 +587,57 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="border bg-muted inline-block rounded-xl p-3 max-w-md">
-                                {message.imageDataUri && (
-                                    <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
-                                )}
-                                {message.content && <p className="text-foreground text-base whitespace-pre-wrap">{message.content}</p>}
-                             </div>
+                            <div className="flex items-start gap-4 justify-end">
+                                <div className="border bg-primary text-primary-foreground inline-block rounded-xl p-3 max-w-md">
+                                    {message.imageDataUri && (
+                                        <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
+                                    )}
+                                    {message.content && <p className="text-base whitespace-pre-wrap">{message.content}</p>}
+                                </div>
+                                <Avatar className="h-9 w-9 border">
+                                    <AvatarFallback><User className="size-5" /></AvatarFallback>
+                                </Avatar>
+                            </div>
                         ) : (
-                            <div className={cn("group w-full")}>
-                                <ModelResponse 
-                                    message={message}
-                                />
-                                <div className="mt-2 flex items-center gap-1 transition-opacity">
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                        <Share2 className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
-                                        {isSynthesizing === `tts-${index}` ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                                    </Button>
-                                    {index === history.length - 1 && !isTyping && (
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                            <RefreshCw className="h-4 w-4" />
+                            <div className={cn("group w-full flex items-start gap-4")}>
+                                <Avatar className="h-9 w-9 border">
+                                    <AvatarFallback className="bg-primary/10"><Bot className="size-5 text-primary" /></AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <ModelResponse message={message} />
+                                    <div className="mt-2 flex items-center gap-1 transition-opacity">
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                            <Copy className="h-4 w-4" />
                                         </Button>
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                            <Share2 className="h-4 w-4" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
+                                            {isSynthesizing === `tts-${index}` ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                                        </Button>
+                                        {index === history.length - 1 && !isTyping && (
+                                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                                <RefreshCw className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {message.toolResult?.type === 'questionPaper' && (
+                                        <Card className="bg-muted/50 mt-2">
+                                            <CardHeader className="p-4">
+                                                <CardTitle className="flex items-center gap-2 text-base">
+                                                    <FileText className="h-5 w-5"/>
+                                                    {message.toolResult.data.title}
+                                                </CardTitle>
+                                                <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="p-4 pt-0">
+                                                <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                                            </CardContent>
+                                        </Card>
                                     )}
                                 </div>
                             </div>
                         )}
-        
-                                 {message.toolResult?.type === 'questionPaper' && (
-                                    <Card className="bg-muted/50 mt-2">
-                                        <CardHeader className="p-4">
-                                            <CardTitle className="flex items-center gap-2 text-base">
-                                                <FileText className="h-5 w-5"/>
-                                                {message.toolResult.data.title}
-                                            </CardTitle>
-                                            <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                             {message.role === "user" && (
-                                <Avatar className="h-9 w-9 border">
-                                    <AvatarFallback><User className="size-5" /></AvatarFallback>
-                                </Avatar>
-                            )}
                         </div>
                         {index < history.length - 1 && (
                              <Separator className="my-8" />
@@ -645,7 +647,10 @@ export function ChatContent({
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
-                    <div className="flex max-w-lg items-center gap-2">
+                     <Avatar className="h-9 w-9 border">
+                        <AvatarFallback className="bg-primary/10"><Bot className="size-5 text-primary" /></AvatarFallback>
+                    </Avatar>
+                    <div className="flex max-w-lg items-center gap-2 rounded-lg p-3 text-sm bg-muted text-muted-foreground">
                         <Loader2 className="size-4 animate-spin" />
                         <span>Generating...</span>
                     </div>
@@ -699,5 +704,3 @@ export function ChatContent({
     </>
   );
 }
-
-    
