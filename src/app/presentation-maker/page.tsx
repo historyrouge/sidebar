@@ -19,7 +19,12 @@ const PresentationMakerContent = dynamic(() => import('@/components/presentation
                         <Skeleton className="h-7 w-2/3" />
                         <Skeleton className="h-5 w-full mt-1" />
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-6">
+                        <Skeleton className="h-10 w-full" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
                         <Skeleton className="h-10 w-full" />
                         <Skeleton className="h-10 w-40 mt-2" />
                     </CardContent>

@@ -14,6 +14,9 @@ import { z } from 'zod';
 
 const GeneratePresentationInputSchema = z.object({
   topic: z.string().describe('The topic for the presentation.'),
+  numSlides: z.number().min(5).max(10).describe('The desired number of slides.'),
+  style: z.enum(['colorful', 'simple']).describe('The visual style preference for the presentation.'),
+  colors: z.string().optional().describe('Optional user-preferred colors (e.g., "blue and yellow").'),
 });
 export type GeneratePresentationInput = z.infer<typeof GeneratePresentationInputSchema>;
 
@@ -32,25 +35,29 @@ const GeneratePresentationOutputSchema = z.object({
     primary: z.string().describe("A hex code for primary text and headings (e.g., #0A0A0A)."),
     accent: z.string().describe("A hex code for accents, like bullets or highlights (e.g., #607EA3)."),
   }).describe("A suggested color theme for the presentation."),
-  slides: z.array(SlideSchema).min(5).max(8).describe('An array of 5 to 8 slides for the presentation.'),
+  slides: z.array(SlideSchema).describe('An array of slides for the presentation.'),
 });
 export type GeneratePresentationOutput = z.infer<typeof GeneratePresentationOutputSchema>;
 
-const presentationSystemPrompt = `You are EasyLearnAI, an expert presentation designer with a confident and helpful Indian-style personality. Your task is to generate a complete, well-structured, and visually appealing presentation on a given topic. Your answers should be professional and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const presentationSystemPrompt = `You are EasyLearnAI, an expert presentation designer with a confident and helpful Indian-style personality. Your task is to generate a complete, well-structured, and visually appealing presentation based on the user's preferences. Your answers should be professional and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
-Topic: {{topic}}
+User Preferences:
+- Topic: {{topic}}
+- Number of Slides: {{numSlides}}
+- Style: {{style}}
+{{#if colors}}- Preferred Colors: {{colors}}{{/if}}
 
-You must generate the presentation in a valid JSON format, adhering strictly to the schema below. The response should be a single JSON object.
+You must generate the presentation in a valid JSON format, adhering strictly to the schema below.
 
 Please provide the following content:
 1.  **Main Title**: Create a compelling title for the entire presentation.
-2.  **Color Theme**: Suggest a color theme with hex codes for 'background', 'primary' text, and an 'accent' color.
-3.  **Slides**: Generate between 5 and 8 slides with a logical flow.
-    *   **Slide 1**: A 'title' slide.
-    *   **Slide 2**: An 'overview' or agenda slide.
-    *   **Slides 3-5**: 'content' slides covering key aspects.
-    *   **Next to last slide**: A 'summary' slide.
-    *   **Last slide**: A 'closing' slide (e.g., "Thank You" or "Q&A").
+2.  **Color Theme**: Based on the user's style and color preference, suggest a theme with hex codes for 'background', 'primary' text, and an 'accent' color. A 'colorful' style should have vibrant, contrasting colors. A 'simple' style should have muted, professional colors.
+3.  **Slides**: Generate exactly {{numSlides}} slides with a logical flow.
+    *   The first slide must be a 'title' slide.
+    *   The second slide should be an 'overview' or agenda slide.
+    *   The middle slides should be 'content' slides covering key aspects of the topic.
+    *   The second to last slide must be a 'summary' slide.
+    *   The last slide must be a 'closing' slide (e.g., "Thank You" or "Q&A").
 4.  **For each slide, you MUST provide**:
     *   A \`slideType\` from the enum: 'title', 'overview', 'content', 'summary', 'closing'.
     *   A clear and concise **title**.
@@ -64,18 +71,12 @@ JSON Schema to follow:
   "properties": {
     "title": { "type": "string" },
     "colorTheme": {
-        "type": "object",
-        "properties": {
-            "background": { "type": "string" },
-            "primary": { "type": "string" },
-            "accent": { "type": "string" }
-        },
-        "required": ["background", "primary", "accent"]
+      "type": "object",
+      "properties": { "background": { "type": "string" }, "primary": { "type": "string" }, "accent": { "type": "string" } },
+      "required": ["background", "primary", "accent"]
     },
     "slides": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 8,
       "items": {
         "type": "object",
         "properties": {
@@ -100,7 +101,16 @@ export async function generatePresentation(input: GeneratePresentationInput): Pr
     
     let jsonResponseString;
     try {
-        const prompt = presentationSystemPrompt.replace('{{topic}}', input.topic);
+        let prompt = presentationSystemPrompt
+            .replace('{{topic}}', input.topic)
+            .replace(/{{numSlides}}/g, String(input.numSlides))
+            .replace('{{style}}', input.style);
+
+        if (input.colors) {
+            prompt = prompt.replace('{{#if colors}}- Preferred Colors: {{colors}}{{/if}}', `- Preferred Colors: ${input.colors}`);
+        } else {
+            prompt = prompt.replace('{{#if colors}}- Preferred Colors: {{colors}}{{/if}}', '');
+        }
 
         const response = await openai.chat.completions.create({
             model: 'Llama-4-Maverick-17B-128E-Instruct',
@@ -122,6 +132,13 @@ export async function generatePresentation(input: GeneratePresentationInput): Pr
     try {
         const jsonResponse = JSON.parse(jsonResponseString);
         const validatedOutput = GeneratePresentationOutputSchema.parse(jsonResponse);
+        
+        // Ensure the number of slides matches the request
+        if (validatedOutput.slides.length !== input.numSlides) {
+            console.warn(`AI generated ${validatedOutput.slides.length} slides but ${input.numSlides} were requested. Trimming/padding might be needed or prompt adjusted.`);
+            // For now, we'll just return what we got, but this indicates a need for better prompt adherence.
+        }
+
         return validatedOutput;
     } catch (error) {
         console.error("JSON parsing or validation error:", error);

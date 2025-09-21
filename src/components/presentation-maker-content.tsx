@@ -14,7 +14,8 @@ import { generatePresentationAction, GeneratePresentationOutput } from "@/app/ac
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import React from "react";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 const SlideIcon = ({ type }: { type: string }) => {
     switch (type) {
@@ -27,12 +28,14 @@ const SlideIcon = ({ type }: { type: string }) => {
     }
 }
 
-
 export function PresentationMakerContent() {
     const [topic, setTopic] = useState("");
+    const [numSlides, setNumSlides] = useState("7");
+    const [style, setStyle] = useState("colorful");
+    const [colors, setColors] = useState("");
+    
     const [presentation, setPresentation] = useState<GeneratePresentationOutput | null>(null);
     const [error, setError] = useState<string | null>(null);
-
     const [isGenerating, startGenerating] = useTransition();
     const { toast } = useToast();
 
@@ -59,7 +62,7 @@ export function PresentationMakerContent() {
         setError(null);
         setPresentation(null);
         startGenerating(async () => {
-            const result = await generatePresentationAction({ topic });
+            const result = await generatePresentationAction({ topic, numSlides: parseInt(numSlides), style, colors });
             if (result.error) {
                 setError(result.error);
                 toast({ title: "Generation Failed", description: result.error, variant: "destructive" });
@@ -102,6 +105,7 @@ ${slide.speakerNotes}
                 </div>
                 {presentation && (
                     <div className="flex items-center gap-2">
+                        <Button variant="ghost" onClick={() => setPresentation(null)}>New Presentation</Button>
                         <Button variant="outline" onClick={handleDownload}>
                             <Download className="mr-2 h-4 w-4" />
                             Download MD
@@ -121,13 +125,48 @@ ${slide.speakerNotes}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Create a New Presentation</CardTitle>
-                                <CardDescription>Enter a topic, and our AI will generate a structured slide deck for you.</CardDescription>
+                                <CardDescription>Enter a topic and customize the options, and our AI will generate a slide deck for you.</CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="topic">Presentation Topic</Label>
+                                    <Label htmlFor="topic">1. Presentation Topic</Label>
                                     <Input id="topic" placeholder="e.g., The Future of Renewable Energy" value={topic} onChange={e => setTopic(e.target.value)} />
                                 </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="num-slides">2. Number of Slides</Label>
+                                        <Select value={numSlides} onValueChange={setNumSlides}>
+                                            <SelectTrigger id="num-slides">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="5">5 Slides</SelectItem>
+                                                <SelectItem value="7">7 Slides</SelectItem>
+                                                <SelectItem value="10">10 Slides</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>3. Style Preference</Label>
+                                        <RadioGroup value={style} onValueChange={setStyle} className="flex gap-4 pt-2">
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="colorful" id="colorful" />
+                                                <Label htmlFor="colorful">Colorful</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="simple" id="simple" />
+                                                <Label htmlFor="simple">Simple</Label>
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="colors">4. Preferred Colors (Optional)</Label>
+                                    <Input id="colors" placeholder="e.g., blue and yellow" value={colors} onChange={e => setColors(e.target.value)} />
+                                </div>
+
                                 {error && (
                                     <Alert variant="destructive" className="mt-4">
                                         <AlertTitle>Generation Failed</AlertTitle>
@@ -150,7 +189,7 @@ ${slide.speakerNotes}
                         '--slide-accent': presentation.colorTheme.accent,
                       } as React.CSSProperties}>
                          <h2 className="text-3xl font-bold text-center mb-2">{presentation.title}</h2>
-                         <p className="text-center text-muted-foreground mb-8">A presentation generated by Easy Learn AI</p>
+                         <p className="text-center text-muted-foreground mb-8">A presentation on "{topic}" generated by Easy Learn AI</p>
 
                         <Carousel setApi={setApi} className="w-full">
                             <CarouselContent>
