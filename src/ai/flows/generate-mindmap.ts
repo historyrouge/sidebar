@@ -22,7 +22,7 @@ const GenerateMindMapOutputSchema = z.object({
 });
 export type GenerateMindMapOutput = z.infer<typeof GenerateMindMapOutputSchema>;
 
-const mindMapSystemPrompt = `You are EasyLearnAI, an expert at creating structured and visually engaging mind maps from text, formatted as ASCII art. Your personality is that of a confident and helpful Indian guide. Your task is to analyze the following content and organize it into a hierarchical mind map using text characters. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const mindMapSystemPrompt = `You are SearnAI, an expert at creating structured and visually engaging mind maps from text, formatted as ASCII art. Your personality is that of a confident and helpful Indian guide. Your task is to analyze the following content and organize it into a hierarchical mind map using text characters. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Use characters like '│', '─', '┌', '┐', '└', '┘', '├', '┤', '┬', '┴' to create a visually clear and well-structured diagram. The mind map should be comprehensive and easy to read.
 
@@ -93,7 +93,3 @@ export async function generateMindMap(input: GenerateMindMapInput): Promise<Gene
         throw new Error(error.message || "An unknown error occurred while generating the mind map.");
     }
 }
-
-    
-
-    

@@ -21,7 +21,7 @@ export function HelpContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Help Assistant</CardTitle>
-                            <CardDescription>Have questions? Ask our AI assistant for help with using the Easy Learn AI app.</CardDescription>
+                            <CardDescription>Have questions? Ask our AI assistant for help with using the SearnAI app.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <HelpChatbot />

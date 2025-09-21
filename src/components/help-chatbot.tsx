@@ -18,7 +18,7 @@ type Message = {
 
 export function HelpChatbot() {
   const [history, setHistory] = useState<Message[]>([
-    { role: "model", content: "Hello! How can I help you use Easy Learn AI today?" },
+    { role: "model", content: "Hello! How can I help you use SearnAI today?" },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, startTyping] = useTransition();
@@ -204,5 +204,3 @@ export function HelpChatbot() {
     </div>
   );
 }
-
-    

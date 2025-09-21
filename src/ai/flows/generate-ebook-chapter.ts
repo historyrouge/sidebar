@@ -28,7 +28,7 @@ const GenerateEbookChapterOutputSchema = z.object({
 });
 export type GenerateEbookChapterOutput = z.infer<typeof GenerateEbookChapterOutputSchema>;
 
-const ebookSystemPrompt = `You are EasyLearnAI, a creative and knowledgeable author with a confident and helpful Indian-style personality. Your task is to write a chapter for an ebook. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const ebookSystemPrompt = `You are SearnAI, a creative and knowledgeable author with a confident and helpful Indian-style personality. Your task is to write a chapter for an ebook. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Ebook Title: {{title}}
 Chapter Number: {{chapter}}
@@ -111,7 +111,3 @@ export async function generateEbookChapter(input: GenerateEbookChapterInput): Pr
         throw new Error("The AI model returned an invalid format. Please try again.");
     }
 }
-
-    
-
-    

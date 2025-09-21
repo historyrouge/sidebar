@@ -642,7 +642,7 @@ export function ChatContent({
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Message Easy Learn AI..."
+                        placeholder="Message SearnAI..."
                         disabled={isTyping}
                         className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
@@ -666,5 +666,3 @@ export function ChatContent({
     </>
   );
 }
-
-    

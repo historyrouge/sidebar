@@ -1,5 +1,4 @@
 
-
 "use server";
 
 import { analyzeContent, AnalyzeContentOutput as AnalyzeContentOutputFlow } from "@/ai/flows/analyze-content";
@@ -63,7 +62,7 @@ function isRateLimitError(e: any): boolean {
   return false;
 }
 
-const analysisSystemPrompt = `You are an expert educator and AI tool named EasyLearnAI. Your style is that of a confident and helpful Indian guide. You provide clear, correct, and engaging answers. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+const analysisSystemPrompt = `You are an expert educator and AI tool named SearnAI. Your style is that of a confident and helpful Indian guide. You provide clear, correct, and engaging answers. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Content to analyze:
 ---
@@ -196,7 +195,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are EasyLearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. The conversation history is: '''${JSON.stringify(input.history)}'''. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are SearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. The conversation history is: '''${JSON.stringify(input.history)}'''. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -233,7 +232,7 @@ export async function helpChatAction(
     }
 }
 
-const chatSystemPrompt = `You are a powerful AI named EasyLearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You solve problems effectively and provide clear, well-structured answers with headings and lists. Use a friendly, casual tone with emojis ✨.
+const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You solve problems effectively and provide clear, well-structured answers with headings and lists. Use a friendly, casual tone with emojis ✨.
 
 Your goal is to be collaborative. First, provide a solid, accurate answer to the user's question. Then, proactively ask a follow-up question to see if they want to dive deeper. For example, ask if they want a flowchart, a mind map, more examples, or a mnemonic. Do NOT generate complex ASCII diagrams unless the user explicitly asks for them.
 
@@ -424,7 +423,7 @@ export async function summarizeContentAction(
 ): Promise<ActionResult<SummarizeContentOutput>> {
   try {
     // Summarization is always done by Qwen
-    const prompt = `You are EasyLearnAI. Your personality is that of a confident and helpful Indian guide. Please provide a concise, one-paragraph summary of the following content. --- ${input.content} ---`;
+    const prompt = `You are SearnAI. Your personality is that of a confident and helpful Indian guide. Please provide a concise, one-paragraph summary of the following content. --- ${input.content} ---`;
     let responseText: string;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
@@ -503,6 +502,3 @@ export async function generatePresentationAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput };
-
-    
-    

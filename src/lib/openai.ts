@@ -14,8 +14,6 @@ export const openai = new OpenAI({
   apiKey: process.env.SAMBANOVA_API_KEY,
   defaultHeaders: {
     "HTTP-Referer": process.env.YOUR_SITE_URL || "", // Optional, for tracking
-    "X-Title": process.env.YOUR_SITE_NAME || "Easy Learn AI", // Optional, for tracking
+    "X-Title": process.env.YOUR_SITE_NAME || "SearnAI", // Optional, for tracking
   },
 });
-
-    

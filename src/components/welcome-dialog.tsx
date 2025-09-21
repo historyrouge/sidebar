@@ -35,7 +35,7 @@ export function WelcomeDialog() {
           <DialogTitle className="text-2xl font-bold text-center">Hello everyone! 👋</DialogTitle>
         </DialogHeader>
         <div className="prose prose-sm dark:prose-invert max-w-none text-left py-4">
-             <p>We warmly welcome you to <strong>Easy Learn AI</strong> – your smart study buddy! 🚀</p>
+             <p>We warmly welcome you to <strong>SearnAI</strong> – your smart study buddy! 🚀</p>
             <p>
                 Here, you can easily generate quizzes, create flashcards, and explore AI-powered study tools to make learning fun and stress-free. If you ever face any issues or have suggestions, feel free to reach out to us at <a href="mailto:harshrishabh@proton.me">harshrishabh@proton.me</a>.
             </p>
@@ -45,7 +45,7 @@ export function WelcomeDialog() {
                 <br />
                 <strong>Harsh & the Sri Chaitanya Team</strong>
                 <br />
-                <span className="text-xs text-muted-foreground">Developers of Easy Learn AI</span>
+                <span className="text-xs text-muted-foreground">Developers of SearnAI</span>
             </p>
         </div>
         <DialogFooter>
