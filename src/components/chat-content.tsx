@@ -668,9 +668,9 @@ export function ChatContent({
                     className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
                 >
                     <input type="file" ref={fileInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={handleAttachmentClick}>
+                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={handleAttachmentClick} title="Attach an image to extract text">
                         <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Attach file</span>
+                        <span className="sr-only">Attach an image to extract text</span>
                     </Button>
                     <Input
                         value={input}
