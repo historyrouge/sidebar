@@ -267,53 +267,74 @@ export async function generalChatAction(
             role: h.role === 'model' ? 'assistant' : 'user',
             content: h.content,
         }))
-      ];
+    ];
+
+    const sambaModels = [
+        'gpt-oss-120b',
+        'Llama-4-Maverick-17B-128E-Instruct',
+        'DeepSeek-R1-0528',
+        'DeepSeek-V3-0324',
+        'DeepSeek-V3.1',
+        'Meta-Llama-3.1-8B-Instruct',
+        'DeepSeek-R1-Distill-Llama-70B',
+        'Meta-Llama-3.3-70B-Instruct',
+        'Qwen3-32B',
+        'Llama-3.3-Swallow-70B-Instruct-v0.4',
+    ];
     
-    // 1. Try SambaNova first
-    try {
-        if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            throw new Error("SambaNova API key or base URL is not configured.");
-        }
+    let lastError: any = null;
+
+    // 1. Try SambaNova models in order
+    if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
+        for (const model of sambaModels) {
+            try {
+                const response = await sambaClient.chat.completions.create({
+                    model: model,
+                    messages: messages,
+                    temperature: 0.8,
+                });
         
-        const response = await sambaClient.chat.completions.create({
-            model: 'Llama-4-Maverick-17B-128E-Instruct',
+                if (response.choices?.[0]?.message?.content) {
+                    return { data: { response: response.choices[0].message.content } };
+                }
+            } catch (sambaError: any) {
+                lastError = sambaError;
+                console.warn(`SambaNova model '${model}' failed. Trying next model.`, sambaError.message);
+                // If it's a rate limit error on any SambaNova model, we should stop trying them.
+                if (isRateLimitError(sambaError)) {
+                    console.warn("SambaNova rate limit reached. Proceeding to final fallback.");
+                    break; 
+                }
+            }
+        }
+    } else {
+        console.warn("SambaNova API credentials not configured. Skipping SambaNova models.");
+    }
+        
+    // 2. If all SambaNova models fail, try NVIDIA as the last resort
+    try {
+        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
+            throw new Error("NVIDIA API key or base URL is not configured for fallback.");
+        }
+
+        const nvidiaResponse = await nvidiaClient.chat.completions.create({
+            model: 'nvidia/nvidia-nemotron-nano-9b-v2',
             messages: messages,
             temperature: 0.8,
         });
 
-        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-            throw new Error("Received an empty or invalid response from SambaNova.");
+        if (nvidiaResponse.choices?.[0]?.message?.content) {
+            return { data: { response: nvidiaResponse.choices[0].message.content } };
+        } else {
+            throw new Error("Received an empty or invalid response from NVIDIA.");
         }
-        
-        const responseText = response.choices[0].message.content;
-        return { data: { response: responseText } };
-    } catch (sambaError: any) {
-        console.warn("SambaNova failed, attempting fallback to NVIDIA.", sambaError.message);
-        
-        // 2. If SambaNova fails, try NVIDIA
-        try {
-            if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
-                throw new Error("NVIDIA API key or base URL is not configured for fallback.");
-            }
 
-            const nvidiaResponse = await nvidiaClient.chat.completions.create({
-                model: 'nvidia/nvidia-nemotron-nano-9b-v2',
-                messages: messages,
-                temperature: 0.8,
-            });
-
-            if (!nvidiaResponse.choices || nvidiaResponse.choices.length === 0 || !nvidiaResponse.choices[0].message?.content) {
-                throw new Error("Received an empty or invalid response from NVIDIA.");
-            }
-            
-            const responseText = nvidiaResponse.choices[0].message.content;
-            return { data: { response: responseText } };
-
-        } catch (nvidiaError: any) {
-            console.error("Both SambaNova and NVIDIA failed.", { sambaError: sambaError.message, nvidiaError: nvidiaError.message });
-            if (isRateLimitError(sambaError) || isRateLimitError(nvidiaError)) return { error: "API_LIMIT_EXCEEDED" };
-            return { error: nvidiaError.message || "An unknown error occurred with the fallback model." };
+    } catch (nvidiaError: any) {
+        console.error("All models failed.", { lastSambaError: lastError?.message, nvidiaError: nvidiaError.message });
+        if (isRateLimitError(lastError) || isRateLimitError(nvidiaError)) {
+            return { error: "API_LIMIT_EXCEEDED" };
         }
+        return { error: nvidiaError.message || "All AI models are currently unavailable. Please try again later." };
     }
 }
 
@@ -330,35 +351,48 @@ export async function textToSpeechAction(
   }
 }
 
-export async function streamTextToSpeech(text: string): Promise<ReadableStream<Uint8Array>> {
-    const { stream } = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash-preview-tts'),
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
-          },
-        },
-      },
-      prompt: text,
-      stream: true,
-    });
+export async function streamTextToSpeech(text: string): Promise<Response> {
+    try {
+        const { stream } = await ai.generate({
+            model: googleAI.model('gemini-2.5-flash-preview-tts'),
+            config: {
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: 'Algenib' },
+                    },
+                },
+            },
+            prompt: text,
+            stream: true,
+        });
 
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of stream) {
-            if (chunk.media) {
-                const audioContent = chunk.media.url.substring(chunk.media.url.indexOf(',') + 1);
-                controller.enqueue(Buffer.from(audioContent, 'base64'));
-            }
-        }
-        controller.close();
-      },
-    });
+        const readableStream = new ReadableStream({
+            async start(controller) {
+                for await (const chunk of stream) {
+                    if (chunk.media) {
+                        const audioContent = chunk.media.url.substring(chunk.media.url.indexOf(',') + 1);
+                        controller.enqueue(Buffer.from(audioContent, 'base64'));
+                    }
+                }
+                controller.close();
+            },
+        });
+        
+        return new Response(readableStream, {
+            headers: {
+                'Content-Type': 'audio/pcm',
+            },
+        });
 
-    return readableStream;
+    } catch (error: any) {
+        console.error('TTS Streaming Error:', error);
+        return new Response(error.message || 'Failed to generate audio', {
+            status: 500,
+        });
+    }
 }
+
 
 export async function getYoutubeTranscriptAction(
   input: GetYoutubeTranscriptInput
@@ -474,4 +508,5 @@ export async function generateEbookChapterAction(
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
 
+    
     
