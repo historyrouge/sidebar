@@ -23,7 +23,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn("min-h-screen bg-background font-body antialiased")} suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-body antialiased")}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
