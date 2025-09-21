@@ -217,11 +217,11 @@ ${slide.speakerNotes}
                                                         </ul>
                                                     </div>
                                                     <div className="md:col-span-1 space-y-4">
-                                                        <div className="bg-muted/30 p-4 rounded-lg">
+                                                        <div className="bg-background/20 p-4 rounded-lg backdrop-blur-sm">
                                                             <h4 className="font-semibold mb-2" style={{color: 'var(--slide-accent)'}}>Speaker Notes</h4>
                                                             <p className="text-sm italic" style={{color: 'var(--slide-text)'}}>{slide.speakerNotes}</p>
                                                         </div>
-                                                        <div className="bg-muted/30 p-4 rounded-lg">
+                                                        <div className="bg-background/20 p-4 rounded-lg backdrop-blur-sm">
                                                             <h4 className="font-semibold mb-2 flex items-center gap-2" style={{color: 'var(--slide-accent)'}}><Lightbulb/>Visual Suggestion</h4>
                                                             <p className="text-sm" style={{color: 'var(--slide-text)'}}>{slide.visualSuggestion}</p>
                                                         </div>
@@ -245,3 +245,5 @@ ${slide.speakerNotes}
         </div>
     );
 }
+
+    
