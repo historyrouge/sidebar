@@ -21,7 +21,8 @@ import {
   FileText,
   Layers,
   MessageSquare,
-  Cpu
+  Cpu,
+  Presentation,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const studyTools = [
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
     { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
+    { name: "Presentation Maker", icon: <Presentation />, href: "/presentation-maker" },
 ];
 
 const resources = [

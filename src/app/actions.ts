@@ -15,6 +15,7 @@ import { summarizeContent, SummarizeContentInput, SummarizeContentOutput as Summ
 import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as GenerateMindMapOutputFlow } from "@/ai/flows/generate-mindmap";
 import { generateQuestionPaper } from "@/ai/flows/generate-question-paper";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
+import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput as GeneratePresentationOutputFlow } from "@/ai/flows/generate-presentation";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
@@ -51,6 +52,7 @@ export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
 export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
 export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
+export type GeneratePresentationOutput = GeneratePresentationOutputFlow;
 
 
 function isRateLimitError(e: any): boolean {
@@ -506,7 +508,21 @@ export async function generateEbookChapterAction(
     }
 }
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput };
+export async function generatePresentationAction(
+    input: GeneratePresentationInput
+): Promise<ActionResult<GeneratePresentationOutput>> {
+    try {
+        const output = await generatePresentation(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error." };
+    }
+}
+
+
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput };
 
     
     

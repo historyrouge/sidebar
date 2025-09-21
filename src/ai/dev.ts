@@ -8,6 +8,8 @@ import '@/ai/flows/generate-image.ts';
 import '@/ai/flows/analyze-code.ts';
 import '@/ai/flows/generate-mindmap.ts';
 import '@/ai/flows/generate-question-paper.ts';
+import '@/ai/flows/generate-presentation.ts';
 import '@/ai/training-data.ts';
+
 
 
