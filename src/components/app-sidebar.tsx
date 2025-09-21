@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -23,6 +22,7 @@ import {
   MessageSquare,
   Cpu,
   Presentation,
+  File,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +59,7 @@ const resources = [
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
+    { name: "PDF Hub", icon: <File />, href: "/pdf-hub" },
     { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
 ];
 
