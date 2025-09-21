@@ -22,13 +22,11 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
-import imageToDataUri from "image-to-data-uri";
 
 
 type Message = {
   role: "user" | "model";
   content: string;
-  imageDataUri?: string;
   toolResult?: {
     type: 'questionPaper',
     data: GenerateQuestionPaperOutput
@@ -210,8 +208,6 @@ export function ChatContent({
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
   const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
@@ -230,7 +226,7 @@ export function ChatContent({
       startTyping(async () => {
         const genkitHistory = chatHistory.map(h => ({
           role: h.role as 'user' | 'model',
-          content: Array.isArray(h.content) ? h.content : (h.imageDataUri ? [{ text: h.content }, { media: { url: h.imageDataUri } }] : h.content),
+          content: h.content,
         }));
         
         // @ts-ignore
@@ -269,22 +265,21 @@ export function ChatContent({
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !imagePreview) return;
+    if (!messageToSend.trim()) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = { role: "user", content: messageToSend, imageDataUri: imagePreview ?? undefined };
+    const userMessage: Message = { role: "user", content: messageToSend };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
-    setImagePreview(null);
 
     await executeChat(newHistory);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, imagePreview]);
+  }, [input, isRecording, history, executeChat]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -484,24 +479,6 @@ export function ChatContent({
     }
   };
 
-  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-        try {
-            const dataUri = await imageToDataUri(URL.createObjectURL(file));
-            setImagePreview(dataUri);
-            if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
-        } catch (error) {
-            toast({ title: "Image processing failed", description: "Could not read the image file.", variant: "destructive" });
-        }
-    } else if (file) {
-        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
-    }
-  };
-
-  const handleAttachmentClick = () => {
-      fileInputRef.current?.click();
-  }
 
 
   useEffect(() => {
@@ -545,7 +522,7 @@ export function ChatContent({
         />
         <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
             <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-48 sm:pb-40">
-            {history.length === 0 && !isTyping && !imagePreview ? (
+            {history.length === 0 && !isTyping ? (
                 <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
                     <div className="mb-4">
                         <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
@@ -590,9 +567,6 @@ export function ChatContent({
                         {message.role === "user" ? (
                             <div className="flex items-start gap-4 justify-end">
                                 <div className="border bg-primary text-primary-foreground inline-block rounded-xl p-3 max-w-md">
-                                    {message.imageDataUri && (
-                                        <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
-                                    )}
                                     {message.content && <p className="text-base whitespace-pre-wrap">{message.content}</p>}
                                 </div>
                                 <Avatar className="h-9 w-9 border">
@@ -661,23 +635,10 @@ export function ChatContent({
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
             <div className="mx-auto max-w-3xl">
-                 {imagePreview && (
-                    <div className="mb-4 relative w-fit mx-auto">
-                        <Image src={imagePreview} alt="Preview" width={80} height={80} className="rounded-lg border" />
-                        <Button size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => setImagePreview(null)}>
-                            <X className="h-4 w-4"/>
-                        </Button>
-                    </div>
-                )}
                 <form 
                     onSubmit={handleFormSubmit} 
                     className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
                 >
-                    <input type="file" ref={fileInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={handleAttachmentClick} title="Attach an image to extract text">
-                        <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Attach an image to extract text</span>
-                    </Button>
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -690,7 +651,7 @@ export function ChatContent({
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imagePreview)}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || !input.trim()}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
@@ -705,3 +666,5 @@ export function ChatContent({
     </>
   );
 }
+
+    

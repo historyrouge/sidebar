@@ -22,7 +22,6 @@ import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 import { ai, visionModel, googleAI } from "@/ai/genkit";
-import { imageToText } from "@/ai/flows/image-to-text";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -243,43 +242,12 @@ Only if asked about your creator, say you were built by Harsh and some Srichaita
 export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
-
-    const lastUserMessage = input.history.findLast(h => h.role === 'user');
-    let historyToProcess = [...input.history];
-
-    if (lastUserMessage && typeof lastUserMessage.content === 'object' && Array.isArray(lastUserMessage.content)) {
-        const imagePart = lastUserMessage.content.find(c => typeof c === 'object' && c !== null && 'media' in c) as { media: { url: string } } | undefined;
-        const textPart = lastUserMessage.content.find(c => typeof c === 'object' && c !== null && 'text' in c) as { text: string } | undefined;
-        
-        if (imagePart?.media.url) {
-            try {
-                // 1. Perform OCR
-                const ocrResult = await imageToText({ imageDataUri: imagePart.media.url });
-                const extractedText = ocrResult.text;
-
-                // 2. Modify the history
-                // Replace the original user message with a new one that contains the extracted text.
-                const newUserMessageContent = `I've uploaded an image. Here is the text I extracted from it: --- "${extractedText}" --- My question is: "${textPart?.text || ''}"`;
-                
-                // We'll replace the last message in the history
-                historyToProcess[historyToProcess.length - 1] = {
-                    role: 'user',
-                    content: newUserMessageContent
-                };
-
-            } catch (ocrError: any) {
-                console.error("OCR process failed:", ocrError);
-                return { error: `Failed to extract text from the image. ${ocrError.message}` };
-            }
-        }
-    }
     
     const messages = [
         { role: 'system', content: chatSystemPrompt },
-        ...historyToProcess.map((h: any) => ({
+        ...input.history.map((h: any) => ({
             role: h.role === 'model' ? 'assistant' : 'user',
-            // Ensure content is always a string for text models
-            content: Array.isArray(h.content) ? (h.content.find((p: any) => p.text)?.text || '') : h.content,
+            content: h.content,
         }))
     ];
 
@@ -536,4 +504,5 @@ export async function generatePresentationAction(
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput };
 
+    
     
