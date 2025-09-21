@@ -119,13 +119,13 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
             <div className="code-box-header">
                 <span className="code-box-language">{language}</span>
                 <div className="code-box-actions">
-                    <Button variant="ghost" size="sm" onClick={handleCopy}><Copy className="mr-1 h-4 w-4" /> Copy</Button>
-                    <Button variant="ghost" size="sm" onClick={handleEditToggle}>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleCopy}><Copy className="mr-1 h-4 w-4" /> Copy</Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleEditToggle}>
                         {isEditing ? <Save className="mr-1 h-4 w-4" /> : <Edit className="mr-1 h-4 w-4" />}
                         {isEditing ? 'Save' : 'Edit'}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={handleDownload}><Download className="mr-1 h-4 w-4" /> Download</Button>
-                    <Button variant="ghost" size="sm" disabled>Run</Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleDownload}><Download className="mr-1 h-4 w-4" /> Download</Button>
+                    <Button type="button" variant="ghost" size="sm" disabled>Run</Button>
                 </div>
             </div>
             {isEditing ? (
@@ -150,7 +150,7 @@ const CanvasProject = ({ name, files }: { name: string, files: { name: string, t
                 <CardDescription>This is a multi-file project. Open it in a workspace to view and run.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Button>Open in Canvas</Button>
+                <Button type="button">Open in Canvas</Button>
             </CardContent>
         </div>
     );
@@ -560,6 +560,7 @@ export function ChatContent({
                              <Button
                                 key={i}
                                 asChild
+                                type="button"
                                 variant="outline"
                                 className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted"
                                 >
@@ -606,17 +607,17 @@ export function ChatContent({
                                 <div className="flex-1">
                                     <ModelResponse message={message} />
                                     <div className="mt-2 flex items-center gap-1 transition-opacity">
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                             <Copy className="h-4 w-4" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
                                             <Share2 className="h-4 w-4" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
+                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
                                             {isSynthesizing === `tts-${index}` ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                                         </Button>
                                         {index === history.length - 1 && !isTyping && (
-                                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
                                                 <RefreshCw className="h-4 w-4" />
                                             </Button>
                                         )}
@@ -631,7 +632,7 @@ export function ChatContent({
                                                 <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
                                             </CardHeader>
                                             <CardContent className="p-4 pt-0">
-                                                <Button className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                                                <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
                                             </CardContent>
                                         </Card>
                                     )}
