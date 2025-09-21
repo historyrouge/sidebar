@@ -33,6 +33,8 @@ type Message = {
   }
 };
 
+const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
+
 const suggestionPrompts = [
     {
         icon: <Sparkles className="text-primary w-5 h-5" />,
@@ -186,21 +188,7 @@ const ModelResponse = ({ message }: { message: Message }) => {
 };
 
 
-export function ChatContent({
-    history, 
-    setHistory, 
-    input, 
-    setInput, 
-    isTyping, 
-    startTyping,
-} : {
-    history: Message[],
-    setHistory: React.Dispatch<React.SetStateAction<Message[]>>,
-    input: string,
-    setInput: (input: string) => void,
-    isTyping: boolean,
-    startTyping: React.TransitionStartFunction,
-}) {
+export function ChatContent() {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -209,6 +197,10 @@ export function ChatContent({
   const recognitionRef = useRef<any>(null);
   const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  const [history, setHistory] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isTyping, startTyping] = useTransition();
+
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
   
@@ -218,6 +210,27 @@ export function ChatContent({
   const audioQueueRef = useRef<ArrayBuffer[]>([]);
   const isPlayingRef = useRef(false);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+
+  // Load history from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+      if (savedHistory) {
+        setHistory(JSON.parse(savedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to load chat state from localStorage", error);
+    }
+  }, []);
+
+  // Save history to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error("Failed to save chat history to localStorage", error);
+    }
+  }, [history]);
 
 
   const executeChat = useCallback(async (

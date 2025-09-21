@@ -13,52 +13,16 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { GenerateQuestionPaperOutput } from "@/app/actions";
 
-type Message = {
-  role: "user" | "model";
-  content: string;
-  imageDataUri?: string;
-  toolResult?: {
-    type: 'questionPaper',
-    data: GenerateQuestionPaperOutput
-  }
-};
-
-const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
-
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
-  const [history, setHistory] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isTyping, startTyping] = useTransition();
-
-  // Load history from localStorage on initial render
-  useEffect(() => {
-    try {
-      const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
-      if (savedHistory) {
-        setHistory(JSON.parse(savedHistory));
-      }
-    } catch (error) {
-      console.error("Failed to load chat state from localStorage", error);
-    }
-  }, []);
-
-  // Save history to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
-    } catch (error) {
-      console.error("Failed to save chat history to localStorage", error);
-    }
-  }, [history]);
 
   const handleNewChat = () => {
-    setHistory([]);
-    setInput("");
     try {
+        localStorage.removeItem('chatHistory');
         sessionStorage.removeItem('chatScrollPosition');
+        window.location.reload(); // Easiest way to reset child state
     } catch (e) {
-        console.error("Could not clear session storage", e);
+        console.error("Could not clear storage", e);
     }
   };
 
@@ -105,14 +69,7 @@ export function MainDashboard() {
         </div>
       </header>
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ChatContent
-            history={history}
-            setHistory={setHistory}
-            input={input}
-            setInput={setInput}
-            isTyping={isTyping}
-            startTyping={startTyping}
-        />
+        <ChatContent />
       </main>
     </div>
   );
