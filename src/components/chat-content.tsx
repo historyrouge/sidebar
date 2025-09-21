@@ -587,11 +587,11 @@ export function ChatContent({
                         )}
                         >
                         {message.role === "user" ? (
-                             <div className="border bg-muted inline-block rounded-xl p-3">
+                             <div className="border bg-muted inline-block rounded-xl p-3 max-w-md">
                                 {message.imageDataUri && (
                                     <Image src={message.imageDataUri} alt="User upload" width={300} height={200} className="mb-2 rounded-md" />
                                 )}
-                                {message.content && <span className="text-foreground text-base">{message.content}</span>}
+                                {message.content && <p className="text-foreground text-base whitespace-pre-wrap">{message.content}</p>}
                              </div>
                         ) : (
                             <div className={cn("group w-full")}>
@@ -699,3 +699,5 @@ export function ChatContent({
     </>
   );
 }
+
+    
