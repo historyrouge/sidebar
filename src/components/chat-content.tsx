@@ -229,13 +229,28 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
       setAudioDataUri(null);
 
       try {
-          const result = await textToSpeechAction({ text });
-          if (result.error) {
-              throw new Error(result.error);
+          const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          });
+
+          if (!response.ok || !response.body) {
+              throw new Error('Failed to get audio stream.');
           }
-          if (result.data?.audioDataUri) {
-              setAudioDataUri(result.data.audioDataUri);
+          
+          const reader = response.body.getReader();
+          const audioChunks: BlobPart[] = [];
+          
+          while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              audioChunks.push(value);
           }
+          
+          const audioBlob = new Blob(audioChunks, { type: 'audio/pcm' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          setAudioDataUri(audioUrl);
       } catch (e: any) {
           toast({ title: 'Audio Generation Failed', description: e.message, variant: 'destructive' });
           setIsSynthesizing(null);
@@ -544,7 +559,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                 </div>
             ) : (
                 history.map((message, index) => (
-                    <React.Fragment key={message.id}>
+                    <React.Fragment key={`${message.id}-${index}`}>
                         <div
                         className={cn(
                             "flex w-full items-start gap-4",
@@ -691,3 +706,5 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
+    
