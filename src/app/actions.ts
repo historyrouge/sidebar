@@ -32,6 +32,7 @@ export type ChatModel = 'samba' | 'nvidia';
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
   model?: ChatModel;
+  imageDataUri?: string | null;
 };
 
 
@@ -242,6 +243,7 @@ You solve problems effectively and provide clear, well-structured answers.
 - For simple, short questions, give a short, direct answer, mate.
 - If the user asks for "details", "study", or something "important", then provide a longer, more detailed explanation with headings and lists.
 - Use a friendly, casual tone with emojis ✨.
+- If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do NOT tell the user how to create the file themselves; simply provide the content.
 
 Your goal is to be collaborative. First, provide a solid, accurate answer to the user's question. Then, proactively ask a follow-up question to see if they want to dive deeper. For example, ask if they want a flowchart, a mind map, more examples, or a mnemonic.
 
@@ -257,20 +259,52 @@ export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    let messages: any[] = [
-        { role: 'system', content: chatSystemPrompt },
-        ...input.history.map((h: any) => {
-            return {
-                role: h.role === 'model' ? 'assistant' : 'user',
-                content: h.content,
+    let messages: any[] = [];
+    
+    // Add system prompt
+    messages.push({ role: 'system', content: chatSystemPrompt });
+
+    // Add conversation history
+    input.history.forEach((h: any) => {
+        if (h.role === 'user') {
+            const userMessage: any = { role: 'user', content: [] };
+            
+            // Handle text content
+            if (typeof h.content === 'string') {
+                userMessage.content.push({ type: 'text', text: h.content });
+            } else if (Array.isArray(h.content)) { // Handle multipart content from previous turns
+                 h.content.forEach((part: any) => {
+                    if (part.type === 'text') {
+                        userMessage.content.push({ type: 'text', text: part.text });
+                    } else if (part.type === 'image_url') {
+                        userMessage.content.push({ type: 'image_url', image_url: { url: part.image_url.url } });
+                    }
+                });
             }
-        })
-    ];
+
+            // Add the new image for the current turn, if it exists
+            if (h.role === 'user' && input.history[input.history.length - 1] === h && input.imageDataUri) {
+                userMessage.content.push({ type: 'image_url', image_url: { url: input.imageDataUri } });
+            }
+
+            messages.push(userMessage);
+
+        } else if (h.role === 'model') {
+            messages.push({ role: 'assistant', content: h.content });
+        }
+    });
 
     if (input.fileContent) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
-            lastUserMessage.content = `The user has provided a file with the following content, please use it as context for your response:\n\n---\n${input.fileContent}\n---\n\nUser's message: ${lastUserMessage.content}`;
+             // Find the text part and amend it. If no text part, add one.
+            let textPart = lastUserMessage.content.find((p: any) => p.type === 'text');
+            const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${input.fileContent}\n---`;
+            if (textPart) {
+                textPart.text += fileContext;
+            } else {
+                lastUserMessage.content.unshift({ type: 'text', text: fileContext });
+            }
         }
     }
 
@@ -294,9 +328,17 @@ export async function generalChatAction(
     if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
         for (const model of sambaModels) {
             try {
+                // If there's an image, we must use a vision-capable model.
+                // We'll skip non-vision models in SambaNova for now and fall back to Gemini.
+                // This is a placeholder for where you would check if the SambaNova model supports vision.
+                if (input.imageDataUri) {
+                     console.warn(`SambaNova model '${model}' does not support vision. Skipping.`);
+                     continue;
+                }
+
                 const response = await sambaClient.chat.completions.create({
                     model: model,
-                    messages: messages,
+                    messages: messages.filter(m => m.role !== 'system' && !Array.isArray(m.content)).map(m => ({ role: m.role, content: m.content })),
                     temperature: 0.8,
                 });
         
@@ -306,9 +348,8 @@ export async function generalChatAction(
             } catch (sambaError: any) {
                 lastError = sambaError;
                 console.warn(`SambaNova model '${model}' failed. Trying next model.`, sambaError.message);
-                // If it's a rate limit error on any SambaNova model, we should stop trying them.
                 if (isRateLimitError(sambaError)) {
-                    console.warn("SambaNova rate limit reached. Proceeding to final fallback.");
+                    console.warn("SambaNova rate limit reached. Proceeding to fallback.");
                     break; 
                 }
             }
@@ -317,30 +358,47 @@ export async function generalChatAction(
         console.warn("SambaNova API credentials not configured. Skipping SambaNova models.");
     }
         
-    // 2. If all SambaNova models fail, try NVIDIA as the last resort
+    // 2. Fallback to Gemini (for vision) or NVIDIA
     try {
-        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
-            throw new Error("NVIDIA API key or base URL is not configured for fallback.");
+        if (input.imageDataUri) { // Use Gemini for vision
+             if (!process.env.GEMINI_API_KEY) {
+                throw new Error("GEMINI_API_KEY is not configured for vision fallback.");
+            }
+            const { output } = await ai.generate({
+                model: visionModel,
+                prompt: {
+                    messages: messages.filter(m => m.role !== 'system')
+                },
+            });
+            if (output) {
+                return { data: { response: output.candidates[0].message.content[0].text as string } };
+            } else {
+                 throw new Error("Received an empty or invalid response from Gemini Vision.");
+            }
+
+        } else { // Use NVIDIA for text
+             if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
+                throw new Error("NVIDIA API key or base URL is not configured for fallback.");
+            }
+
+            const nvidiaResponse = await nvidiaClient.chat.completions.create({
+                model: 'nvidia/nvidia-nemotron-nano-9b-v2',
+                messages: messages.filter(m => m.role !== 'system' && !Array.isArray(m.content)).map(m => ({ role: m.role, content: m.content })),
+                temperature: 0.8,
+            });
+
+            if (nvidiaResponse.choices?.[0]?.message?.content) {
+                return { data: { response: nvidiaResponse.choices[0].message.content } };
+            } else {
+                throw new Error("Received an empty or invalid response from NVIDIA.");
+            }
         }
-
-        const nvidiaResponse = await nvidiaClient.chat.completions.create({
-            model: 'nvidia/nvidia-nemotron-nano-9b-v2',
-            messages: messages,
-            temperature: 0.8,
-        });
-
-        if (nvidiaResponse.choices?.[0]?.message?.content) {
-            return { data: { response: nvidiaResponse.choices[0].message.content } };
-        } else {
-            throw new Error("Received an empty or invalid response from NVIDIA.");
-        }
-
-    } catch (nvidiaError: any) {
-        console.error("All models failed.", { lastSambaError: lastError?.message, nvidiaError: nvidiaError.message });
-        if (isRateLimitError(lastError) || isRateLimitError(nvidiaError)) {
+    } catch (fallbackError: any) {
+        console.error("All models failed.", { lastSambaError: lastError?.message, fallbackError: fallbackError.message });
+        if (isRateLimitError(lastError) || isRateLimitError(fallbackError)) {
             return { error: "API_LIMIT_EXCEEDED" };
         }
-        return { error: nvidiaError.message || "All AI models are currently unavailable. Please try again later." };
+        return { error: fallbackError.message || "All AI models are currently unavailable. Please try again later." };
     }
 }
 
@@ -557,4 +615,5 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
     
+
 
