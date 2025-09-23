@@ -265,6 +265,7 @@ export async function generalChatAction(
     if (input.imageDataUri) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
+            // When an image is present, the last message content becomes an array
             lastUserMessage.content = [
                 { type: "text", text: lastUserMessage.content },
                 { type: "image_url", image_url: { url: input.imageDataUri }},
