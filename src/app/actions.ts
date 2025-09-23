@@ -249,7 +249,7 @@ def hello_world():
 Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always suggest a next step or ask a clarifying question.`;
 
 export async function generalChatAction(
-    input: GeneralChatInput & { imageDataUri?: string },
+    input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
     let messages: any[] = [
@@ -262,14 +262,10 @@ export async function generalChatAction(
         })
     ];
 
-    if (input.imageDataUri) {
+    if (input.fileContent) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
-            // When an image is present, the last message content becomes an array
-            lastUserMessage.content = [
-                { type: "text", text: lastUserMessage.content },
-                { type: "image_url", image_url: { url: input.imageDataUri }},
-            ]
+            lastUserMessage.content = `The user has provided a file with the following content, please use it as context for your response:\n\n---\n${input.fileContent}\n---\n\nUser's message: ${lastUserMessage.content}`;
         }
     }
 
@@ -552,5 +548,7 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
+
+    
 
     

@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
-import imageToDataUri from "image-to-data-uri";
 
 type Message = {
   role: "user" | "model";
@@ -184,8 +183,8 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const isPlayingRef = useRef(false);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
 
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load history from localStorage on initial render
   useEffect(() => {
@@ -211,7 +210,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   const executeChat = useCallback(async (
     chatHistory: Message[],
-    imageUri?: string | null
+    fileContent?: string | null
   ): Promise<void> => {
       startTyping(async () => {
         const genkitHistory = chatHistory.map(h => ({
@@ -220,7 +219,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         }));
         
         // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, imageDataUri: imageUri });
+        const result = await generalChatAction({ history: genkitHistory, fileContent: fileContent });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -255,7 +254,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !imageDataUri) return;
+    if (!messageToSend.trim() && !file) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
@@ -265,13 +264,22 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
-    const imageToSend = imageDataUri;
-    setImageDataUri(null); // Clear image after sending
 
-    await executeChat(newHistory, imageToSend);
+    let fileContent: string | null = null;
+    if (file) {
+        try {
+            fileContent = await file.text();
+        } catch (error) {
+            toast({ title: "File read error", description: "Could not read the selected file.", variant: "destructive" });
+            return;
+        }
+    }
+    setFile(null);
+
+    await executeChat(newHistory, fileContent);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, imageDataUri]);
+  }, [input, isRecording, history, executeChat, file]);
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -504,19 +512,16 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     }
   }, [history]);
 
-  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      try {
-        const dataUri = await imageToDataUri(URL.createObjectURL(file));
-        setImageDataUri(dataUri);
-      } catch (error) {
-        toast({ title: "Image processing failed", description: "Could not read the image file.", variant: "destructive" });
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      if (selectedFile.type === "text/plain") {
+        setFile(selectedFile);
+      } else {
+        toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
       }
-    } else {
-        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
     }
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -642,19 +647,20 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
             <div className="mx-auto max-w-3xl">
-                {imageDataUri && (
-                    <div className="relative mb-2 w-24 h-24 rounded-md border p-1 bg-card">
-                        <Image src={imageDataUri} alt="Image preview" fill style={{objectFit: 'cover'}} className="rounded-md" />
-                        <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => setImageDataUri(null)}><X className="h-4 w-4" /></Button>
+                {file && (
+                    <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
+                        <FileText className="h-4 w-4" />
+                        <span className="flex-1 truncate">{file.name}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFile(null)}><X className="h-4 w-4" /></Button>
                     </div>
                 )}
                 <form 
                     onSubmit={handleFormSubmit} 
                     className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
                 >
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => imageInputRef.current?.click()} disabled={isTyping}>
+                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => fileInputRef.current?.click()} disabled={isTyping}>
                         <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Attach image</span>
+                        <span className="sr-only">Attach file</span>
                     </Button>
                     <Input
                         value={input}
@@ -663,7 +669,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         disabled={isTyping}
                         className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
-                     <input type="file" ref={imageInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
+                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
                     <div className="flex items-center gap-1">
                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0 lg:hidden" onClick={toggleEditor} disabled={isTyping}>
                            <Brush className="h-5 w-5" />
@@ -673,7 +679,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri)}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !file)}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
@@ -688,5 +694,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
+    
 
     
