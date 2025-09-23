@@ -16,6 +16,7 @@ import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput as Generat
 import { generateQuestionPaper } from "@/ai/flows/generate-question-paper";
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput as GenerateEbookChapterOutputFlow } from "@/ai/flows/generate-ebook-chapter";
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput as GeneratePresentationOutputFlow } from "@/ai/flows/generate-presentation";
+import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput as GenerateEditedContentOutputFlow } from "@/ai/flows/generate-edited-content";
 import { AnalyzeCodeOutput } from "@/lib/code-analysis-types";
 import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
@@ -30,6 +31,7 @@ export type ChatModel = 'samba' | 'nvidia';
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
   model?: ChatModel;
+  imageDataUri?: string;
 };
 
 
@@ -53,6 +55,7 @@ export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
 export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
 export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
 export type GeneratePresentationOutput = GeneratePresentationOutputFlow;
+export type GenerateEditedContentOutput = GenerateEditedContentOutputFlow;
 
 
 function isRateLimitError(e: any): boolean {
@@ -248,13 +251,31 @@ export async function generalChatAction(
     input: GeneralChatInput,
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    const messages = [
+    let messages: any[] = [
         { role: 'system', content: chatSystemPrompt },
-        ...input.history.map((h: any) => ({
-            role: h.role === 'model' ? 'assistant' : 'user',
-            content: h.content,
-        }))
+        ...input.history.map((h: any) => {
+            const content = Array.isArray(h.content) ? h.content : [{type: "text", text: h.content}];
+            return {
+                role: h.role === 'model' ? 'assistant' : 'user',
+                content: content,
+            }
+        })
     ];
+
+    if (input.imageDataUri) {
+        const lastUserMessage = messages[messages.length - 1];
+        if (lastUserMessage.role === 'user') {
+             if (Array.isArray(lastUserMessage.content)) {
+                lastUserMessage.content.push({ type: "image_url", image_url: { url: input.imageDataUri }});
+            } else {
+                 lastUserMessage.content = [
+                    { type: "text", text: lastUserMessage.content },
+                    { type: "image_url", image_url: { url: input.imageDataUri }}
+                 ];
+            }
+        }
+    }
+
 
     const sambaModels = [
         'gpt-oss-120b',
@@ -506,5 +527,18 @@ export async function generatePresentationAction(
     }
 }
 
+export async function generateEditedContentAction(
+    input: GenerateEditedContentInput
+): Promise<ActionResult<GenerateEditedContentOutput>> {
+    try {
+        const output = await generateEditedContent(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error(e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error." };
+    }
+}
 
-export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput };
+
+export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput };
