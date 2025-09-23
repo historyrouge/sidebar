@@ -200,7 +200,7 @@ export async function chatWithTutorAction(
   try {
      // Tutor chat always uses Qwen
     const lastMessage = input.history[input.history.length - 1];
-    const prompt = `You are SearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. The conversation history is: '''${JSON.stringify(input.history)}'''. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
+    const prompt = `You are SearnAI, an expert AI tutor. Your style is that of a confident and helpful Indian guide who provides clear and engaging answers. Your goal is to help the user understand the provided study material. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. The conversation history is: '''${'\"'}'''${JSON.stringify(input.history)}'''${'\"'}'''. The full study material is: --- ${input.content} ---. Now, please respond to the last user message: "${lastMessage.content}".`;
 
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
       return { error: "Qwen API key or base URL is not configured." };
@@ -326,11 +326,15 @@ export async function generalChatAction(
 
     // 1. Try SambaNova models in order
     if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
+        const sambaMessages = messages
+            .filter(m => m.role !== 'system')
+            .map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : m.content.find((p:any) => p.type === 'text')?.text || '' }))
+            .filter(m => m.content); // Filter out messages that became empty
+            
         for (const model of sambaModels) {
             try {
                 // If there's an image, we must use a vision-capable model.
                 // We'll skip non-vision models in SambaNova for now and fall back to Gemini.
-                // This is a placeholder for where you would check if the SambaNova model supports vision.
                 if (input.imageDataUri) {
                      console.warn(`SambaNova model '${model}' does not support vision. Skipping.`);
                      continue;
@@ -338,7 +342,7 @@ export async function generalChatAction(
 
                 const response = await sambaClient.chat.completions.create({
                     model: model,
-                    messages: messages.filter(m => m.role !== 'system' && !Array.isArray(m.content)).map(m => ({ role: m.role, content: m.content })),
+                    messages: sambaMessages,
                     temperature: 0.8,
                 });
         
@@ -381,9 +385,14 @@ export async function generalChatAction(
                 throw new Error("NVIDIA API key or base URL is not configured for fallback.");
             }
 
+            const nvidiaMessages = messages
+                .filter(m => m.role !== 'system')
+                .map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : m.content.find((p:any) => p.type === 'text')?.text || '' }))
+                .filter(m => m.content); // Filter out messages that became empty
+                
             const nvidiaResponse = await nvidiaClient.chat.completions.create({
                 model: 'nvidia/nvidia-nemotron-nano-9b-v2',
-                messages: messages.filter(m => m.role !== 'system' && !Array.isArray(m.content)).map(m => ({ role: m.role, content: m.content })),
+                messages: nvidiaMessages,
                 temperature: 0.8,
             });
 
@@ -615,5 +624,6 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
     
+
 
 
