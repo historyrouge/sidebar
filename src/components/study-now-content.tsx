@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction, AnalyzeImageContentInput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction, imageToTextAction, AnalyzeImageContentInput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -293,14 +293,28 @@ export function StudyNowContent() {
     const file = event.target.files?.[0];
     if (file) {
         if (file.type.startsWith("image/")) {
-            try {
-                const dataUri = await imageToDataUri(URL.createObjectURL(file));
-                setImageDataUri(dataUri);
-                setContent(""); setTitle(file.name); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
-                toast({ title: "Image loaded", description: "You can add a text prompt to guide the analysis." });
-            } catch (error) {
-                toast({ title: "Image processing failed", description: "Could not read the image file.", variant: "destructive" });
-            }
+            startLoadingMaterial(async () => {
+                try {
+                    const dataUri = await imageToDataUri(URL.createObjectURL(file));
+                    setImageDataUri(dataUri);
+
+                    const ocrResult = await imageToTextAction({ imageDataUri: dataUri });
+                    if (ocrResult.error) {
+                        throw new Error(ocrResult.error);
+                    }
+
+                    setContent(ocrResult.data?.text || "");
+                    setTitle(file.name);
+                    setAnalysis(null); 
+                    setFlashcards(null); 
+                    setGeneratedImage(null);
+                    
+                    toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
+                } catch (error: any) {
+                    toast({ title: "Image processing failed", description: error.message || "Could not read the image file or extract text.", variant: "destructive" });
+                    setImageDataUri(null);
+                }
+            });
         } else {
             toast({ title: "Invalid file type", description: "Please upload an image file (e.g., PNG, JPG).", variant: "destructive" });
         }
@@ -387,22 +401,42 @@ export function StudyNowContent() {
     };
 
 
-  const handleCaptureImage = () => {
-      if (videoRef.current) {
-          const canvas = document.createElement('canvas');
-          canvas.width = videoRef.current.videoWidth;
-          canvas.height = videoRef.current.videoHeight;
-          const context = canvas.getContext('2d');
-          if (context) {
-            context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            const dataUri = canvas.toDataURL('image/png'); // Use PNG for higher quality
-            setImageDataUri(dataUri);
-            setContent(""); setTitle("Camera Capture"); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
+    const handleCaptureImage = () => {
+        if (!videoRef.current) return;
+
+        startLoadingMaterial(async () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current!.videoWidth;
+            canvas.height = videoRef.current!.videoHeight;
+            const context = canvas.getContext('2d');
+            if (!context) {
+                toast({ title: "Capture failed", description: "Could not get canvas context.", variant: "destructive" });
+                return;
+            }
+            context.drawImage(videoRef.current!, 0, 0, canvas.width, canvas.height);
+            const dataUri = canvas.toDataURL('image/png');
+            
             setIsCameraOpen(false);
-            toast({ title: "Image captured!", description: "The captured image is ready for analysis." });
-          }
-      }
-  };
+            setImageDataUri(dataUri);
+
+            try {
+                const ocrResult = await imageToTextAction({ imageDataUri: dataUri });
+                if (ocrResult.error) throw new Error(ocrResult.error);
+
+                setContent(ocrResult.data?.text || "");
+                setTitle("Camera Capture");
+                setAnalysis(null);
+                setFlashcards(null);
+                setGeneratedImage(null);
+
+                toast({ title: "Image Captured & Text Extracted!", description: "The captured image is ready for analysis." });
+            } catch (error: any) {
+                toast({ title: "OCR Failed", description: error.message || "Could not extract text from the captured image.", variant: "destructive" });
+                // Keep image but content will be empty
+                setContent("");
+            }
+        });
+    };
 
   const isLoading = isAnalyzing || isLoadingMaterial || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingImage;
   
@@ -452,8 +486,8 @@ export function StudyNowContent() {
                     </div>
                     <div className="flex gap-2">
                         <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady}>
-                            {isStreamReady ? 'Capture Image' : 'Starting Camera...'}
+                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady || isLoadingMaterial}>
+                            {isLoadingMaterial ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isStreamReady ? 'Capture & OCR' : 'Starting...'}
                         </Button>
                     </div>
                 </DialogFooter>
@@ -489,7 +523,7 @@ export function StudyNowContent() {
                     </Button>
                 </div>
               )}
-               {imageDataUri && <Textarea placeholder="Add an optional prompt to guide the AI..." className="h-24 resize-none" value={content} onChange={(e) => setContent(e.target.value)} />}
+               {imageDataUri && <Textarea placeholder="Text extracted via OCR will appear here. You can edit it before analysis." className="h-24 resize-none" value={content} onChange={(e) => setContent(e.target.value)} />}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
               <Button onClick={handleAnalyze} disabled={isLoading || (!imageDataUri && content.trim().length < 50)}>
