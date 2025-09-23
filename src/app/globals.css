@@ -5,50 +5,50 @@
 
 @layer base {
   :root {
-    --background: 240 10% 97%; /* #f5f5f7 - very light grey */
-    --foreground: 0 0% 10%; /* Dark Grey */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 0 0% 13%; /* #212121 */
 
-    --card: 0 0% 100%; /* #ffffff - White */
-    --card-foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
  
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 13%;
  
-    --primary: 258 70% 55%; /* #5d3de3 - Purple */
+    --primary: 258 56% 50%; /* #673AB7 */
     --primary-foreground: 0 0% 100%;
  
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 0 0% 96%; /* #F5F5F5 */
+    --secondary-foreground: 0 0% 13%;
  
-    --accent: 258 70% 96%; /* light purple for hovers */
-    --accent-foreground: 258 70% 45%;
+    --accent: 258 56% 95%; /* Lighter purple for hovers */
+    --accent-foreground: 258 56% 40%;
  
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%; /* #F44336 */
     --destructive-foreground: 0 0% 100%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 0 0% 96%; /* #F5F5F5 */
+    --muted-foreground: 0 0% 46%; /* #757575 */
  
-    --border: 0 0% 90%;
-    --input: 0 0% 95%;
-    --ring: 258 70% 55%;
+    --border: 0 0% 94%; /* #BDBDBD */
+    --input: 0 0% 94%;
+    --ring: 258 56% 50%;
  
-    --radius: 0.875rem; /* 14px */
+    --radius: 0.75rem; /* 12px */
 
-    --chart-1: 258 70% 55%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 258 56% 50%;
+    --chart-2: 145 63% 42%; /* Green */
+    --chart-3: 4 90% 58%; /* Red */
+    --chart-4: 214 90% 58%; /* Blue */
+    --chart-5: 258 44% 62%; /* #7E57C2 */
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-accent: 258 70% 96%; /* light purple */
-    --sidebar-accent-foreground: 258 70% 55%;
-    --sidebar-active: 258 70% 55%; /* active highlight */
+    --sidebar-foreground: 0 0% 13%;
+    --sidebar-border: 0 0% 94%;
+    --sidebar-accent: 258 56% 95%;
+    --sidebar-accent-foreground: 258 56% 50%;
+    --sidebar-active: 258 56% 50%;
     --sidebar-active-foreground: 0 0% 100%;
-    --sidebar-group-foreground: 0 0% 40%;
+    --sidebar-group-foreground: 0 0% 46%;
   }
  
   .dark {
@@ -112,7 +112,7 @@
     @apply my-8 border-gray-600;
   }
   h1, .heading {
-    @apply text-3xl font-extrabold tracking-tight;
+    @apply text-xl font-semibold;
   }
 }
 
