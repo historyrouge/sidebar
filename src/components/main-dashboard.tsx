@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { FileEdit, Moon, Sun, PanelRight, PanelRightClose } from "lucide-react";
 import { useTheme } from "next-themes";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
@@ -14,10 +14,23 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { AiEditorContent } from "./ai-editor-content";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import { cn } from "@/lib/utils";
+import type { ImperativePanelGroupHandle } from "react-resizable-panels";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
   const [isEditorVisible, setIsEditorVisible] = useState(false);
+  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
+
+  useEffect(() => {
+    const group = panelGroupRef.current;
+    if (group) {
+      if (isEditorVisible) {
+        group.setLayout([60, 40]);
+      } else {
+        group.setLayout([100, 0]);
+      }
+    }
+  }, [isEditorVisible]);
 
   const handleNewChat = () => {
     try {
@@ -76,7 +89,7 @@ export function MainDashboard() {
         </div>
       </header>
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
+        <ResizablePanelGroup direction="horizontal" className="flex-1" ref={panelGroupRef}>
           <ResizablePanel defaultSize={100} minSize={30}>
             <ChatContent toggleEditor={() => setIsEditorVisible(!isEditorVisible)} />
           </ResizablePanel>
