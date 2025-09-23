@@ -43,7 +43,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const studyTools = [
