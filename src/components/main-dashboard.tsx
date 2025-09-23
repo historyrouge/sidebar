@@ -2,19 +2,22 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun } from "lucide-react";
+import { FileEdit, Moon, Sun, PanelRight, PanelRightClose } from "lucide-react";
 import { useTheme } from "next-themes";
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState } from "react";
 import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { WelcomeDialog } from "./welcome-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { GenerateQuestionPaperOutput } from "@/app/actions";
+import { AiEditorContent } from "./ai-editor-content";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
+import { cn } from "@/lib/utils";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
 
   const handleNewChat = () => {
     try {
@@ -43,6 +46,10 @@ export function MainDashboard() {
                 <FileEdit className="mr-2 h-4 w-4" />
                 New Chat
             </Button>
+            <Button variant="ghost" size="icon" onClick={() => setIsEditorVisible(!isEditorVisible)} className="hidden lg:inline-flex">
+              {isEditorVisible ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
+              <span className="sr-only">Toggle AI Editor</span>
+            </Button>
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -69,7 +76,15 @@ export function MainDashboard() {
         </div>
       </header>
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ChatContent />
+        <ResizablePanelGroup direction="horizontal" className="flex-1">
+          <ResizablePanel defaultSize={100} minSize={30}>
+            <ChatContent toggleEditor={() => setIsEditorVisible(!isEditorVisible)} />
+          </ResizablePanel>
+          <ResizableHandle withHandle className={cn("hidden lg:flex", !isEditorVisible && "hidden")} />
+          <ResizablePanel defaultSize={0} minSize={30} collapsible collapsedSize={0} onCollapse={() => setIsEditorVisible(false)} onExpand={() => setIsEditorVisible(true)} className={cn("hidden lg:block", !isEditorVisible && "hidden")}>
+             <AiEditorContent embedded />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </main>
     </div>
   );

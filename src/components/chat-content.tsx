@@ -161,7 +161,7 @@ const ModelResponse = ({ message }: { message: Message }) => {
 };
 
 
-export function ChatContent() {
+export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -633,7 +633,7 @@ export function ChatContent() {
                         className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
                     <div className="flex items-center gap-1">
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => router.push('/ai-editor')} disabled={isTyping}>
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0 lg:hidden" onClick={toggleEditor} disabled={isTyping}>
                            <Brush className="h-5 w-5" />
                            <span className="sr-only">Open AI Editor</span>
                         </Button>
