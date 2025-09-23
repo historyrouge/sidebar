@@ -5,50 +5,50 @@
 
 @layer base {
   :root {
-    --background: 240 5% 96%; /* #f3f4f6 - soft gray */
-    --foreground: 0 0% 0%; /* Black */
+    --background: 240 10% 97%; /* #f5f5f7 - very light grey */
+    --foreground: 0 0% 10%; /* Dark Grey */
 
     --card: 0 0% 100%; /* #ffffff - White */
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 10%;
  
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 10%;
  
-    --primary: 221 83% 53%; /* #2563eb - Blue-600 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 258 70% 55%; /* #5d3de3 - Purple */
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 0 0% 10%;
  
-    --accent: 210 100% 95%; /* light sky blue / sidebar hover */
-    --accent-foreground: 221 83% 45%;
+    --accent: 258 70% 96%; /* light purple for hovers */
+    --accent-foreground: 258 70% 45%;
  
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 0 0% 0%; /* Black */
+    --muted: 240 5% 96%;
+    --muted-foreground: 0 0% 40%;
  
-    --border: 0 0% 0%; /* Black */
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 258 70% 55%;
  
     --radius: 0.875rem; /* 14px */
 
-    --chart-1: 221 83% 53%;
+    --chart-1: 258 70% 55%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 0%;
-    --sidebar-accent: 210 100% 95%; /* light blue */
-    --sidebar-accent-foreground: 221 83% 53%;
-    --sidebar-active: 220 95% 91%; /* active highlight */
-    --sidebar-active-foreground: 221 83% 48%;
-    --sidebar-group-foreground: 0 0% 0%; /* Black */
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-accent: 258 70% 96%; /* light purple */
+    --sidebar-accent-foreground: 258 70% 55%;
+    --sidebar-active: 258 70% 55%; /* active highlight */
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-group-foreground: 0 0% 40%;
   }
  
   .dark {
