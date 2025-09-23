@@ -44,6 +44,7 @@ import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import React, { useEffect, useState } from "react";
 
 const studyTools = [
     { name: "Home", icon: <Home />, href: "/" },
@@ -74,6 +75,11 @@ const account = [
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -85,7 +91,7 @@ export function AppSidebar() {
             <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
-                isActive={pathname === item.href}
+                isActive={isClient ? pathname === item.href : false}
                 className="justify-start w-full gap-2 px-3"
                 onClick={handleLinkClick}
               >
