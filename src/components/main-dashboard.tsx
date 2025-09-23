@@ -21,19 +21,17 @@ export function MainDashboard() {
   const [isEditorVisible, setIsEditorVisible] = useState(false);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
-  useEffect(() => {
+  const toggleEditorPanel = () => {
     const group = panelGroupRef.current;
     if (group) {
-      if (isEditorVisible) {
-        group.setLayout([60, 40]);
-      } else {
-        group.setLayout([100, 0]);
-      }
+        const layout = group.getLayout();
+        // If the editor panel (at index 1) is collapsed, expand it. Otherwise, collapse it.
+        if (layout[1] < 5) {
+            group.setLayout([60, 40]);
+        } else {
+            group.setLayout([100, 0]);
+        }
     }
-  }, [isEditorVisible]);
-
-  const toggleEditorPanel = () => {
-    setIsEditorVisible(prev => !prev);
   };
 
   const handleNewChat = () => {
