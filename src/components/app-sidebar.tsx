@@ -25,6 +25,7 @@ import {
   Presentation,
   File,
   Brush,
+  Volume2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,7 +63,7 @@ const resources = [
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
-    { name: "PDF Hub", icon: <File />, href: "/pdf-hub" },
+    { name: "Text-to-Speech", icon: <Volume2 />, href: "/text-to-speech" },
     { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
 ];
 
@@ -75,11 +76,6 @@ const account = [
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -91,7 +87,7 @@ export function AppSidebar() {
             <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
-                isActive={isClient ? pathname === item.href : false}
+                isActive={pathname === item.href}
                 className="justify-start w-full gap-2 px-3"
                 onClick={handleLinkClick}
               >
