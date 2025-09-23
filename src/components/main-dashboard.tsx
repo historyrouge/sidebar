@@ -25,9 +25,16 @@ export function MainDashboard() {
     const group = panelGroupRef.current;
     if (group) {
       if (isEditorVisible) {
-        group.setLayout([60, 40]);
+        // Only set layout if the panel is not already expanded to the target state
+        const layout = group.getLayout();
+        if(layout[1] < 10) {
+            group.setLayout([60, 40]);
+        }
       } else {
-        group.setLayout([100, 0]);
+        const layout = group.getLayout();
+        if(layout[1] > 0) {
+            group.setLayout([100, 0]);
+        }
       }
     }
   }, [isEditorVisible]);
@@ -93,8 +100,8 @@ export function MainDashboard() {
           <ResizablePanel defaultSize={100} minSize={30}>
             <ChatContent toggleEditor={() => setIsEditorVisible(!isEditorVisible)} />
           </ResizablePanel>
-          <ResizableHandle withHandle className={cn("hidden lg:flex", !isEditorVisible && "hidden")} />
-          <ResizablePanel defaultSize={0} minSize={30} collapsible collapsedSize={0} onCollapse={() => setIsEditorVisible(false)} onExpand={() => setIsEditorVisible(true)} className={cn("hidden lg:block", !isEditorVisible && "hidden")}>
+          <ResizableHandle withHandle className={cn("hidden lg:flex")} />
+          <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} onCollapse={() => setIsEditorVisible(false)} onExpand={() => setIsEditorVisible(true)} className={cn("hidden lg:block")}>
              <AiEditorContent embedded />
           </ResizablePanel>
         </ResizablePanelGroup>
