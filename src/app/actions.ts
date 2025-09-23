@@ -267,14 +267,19 @@ export async function generalChatAction(
     if (input.imageDataUri) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
-             if (Array.isArray(lastUserMessage.content)) {
-                lastUserMessage.content.push({ type: "image_url", image_url: { url: input.imageDataUri }});
-            } else {
-                 lastUserMessage.content = [
-                    { type: "text", text: lastUserMessage.content },
-                    { type: "image_url", image_url: { url: input.imageDataUri }}
-                 ];
+            const contentParts = [];
+            
+            // Ensure existing content is preserved as a text part
+            if (typeof lastUserMessage.content === 'string') {
+                contentParts.push({ type: "text", text: lastUserMessage.content });
+            } else if (Array.isArray(lastUserMessage.content)) {
+                // If it's already an array, just use it
+                contentParts.push(...lastUserMessage.content);
             }
+    
+            // Add the new image part
+            contentParts.push({ type: "image_url", image_url: { url: input.imageDataUri }});
+            lastUserMessage.content = contentParts;
         }
     }
 
@@ -557,5 +562,3 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
-
-    
