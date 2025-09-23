@@ -21,17 +21,19 @@ export function MainDashboard() {
   const [isEditorVisible, setIsEditorVisible] = useState(false);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
-  const toggleEditorPanel = () => {
+  useEffect(() => {
     const group = panelGroupRef.current;
     if (group) {
-        const layout = group.getLayout();
-        // If editor is collapsed or not visible, expand it. Otherwise, collapse it.
-        if (layout[1] < 10) {
-            group.setLayout([60, 40]);
-        } else {
-            group.setLayout([100, 0]);
-        }
+      if (isEditorVisible) {
+        group.setLayout([60, 40]);
+      } else {
+        group.setLayout([100, 0]);
+      }
     }
+  }, [isEditorVisible]);
+
+  const toggleEditorPanel = () => {
+    setIsEditorVisible(prev => !prev);
   };
 
   const handleNewChat = () => {
@@ -96,10 +98,11 @@ export function MainDashboard() {
           className="flex-1" 
           ref={panelGroupRef}
           onLayout={(sizes: number[]) => {
+            // This syncs the state if user manually resizes
             if (sizes[1] > 5) {
-                setIsEditorVisible(true);
+                if (!isEditorVisible) setIsEditorVisible(true);
             } else {
-                setIsEditorVisible(false);
+                if (isEditorVisible) setIsEditorVisible(false);
             }
           }}
         >
@@ -107,7 +110,7 @@ export function MainDashboard() {
             <ChatContent toggleEditor={toggleEditorPanel} />
           </ResizablePanel>
           <ResizableHandle withHandle className={cn("hidden lg:flex")} />
-          <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} onCollapse={() => setIsEditorVisible(false)} onExpand={() => setIsEditorVisible(true)} className={cn("hidden lg:block")}>
+          <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} className={cn("hidden lg:block")}>
              <AiEditorContent embedded />
           </ResizablePanel>
         </ResizablePanelGroup>
