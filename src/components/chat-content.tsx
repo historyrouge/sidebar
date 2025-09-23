@@ -24,6 +24,7 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 
 type Message = {
+  id: string;
   role: "user" | "model";
   content: string;
   toolResult?: {
@@ -178,12 +179,14 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioQueueRef = useRef<ArrayBuffer[]>([]);
-  const isPlayingRef = useRef(false);
-  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [fileContent, setFileContent] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load history from localStorage on initial render
@@ -207,9 +210,41 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     }
   }, [history]);
 
+  const handleTextToSpeech = useCallback(async (text: string, id: string) => {
+      if (isSynthesizing === id) {
+          if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+          }
+          setAudioDataUri(null);
+          setIsSynthesizing(null);
+          return;
+      }
+
+      // Stop any previously playing audio before starting a new one
+      if (audioRef.current) {
+          audioRef.current.pause();
+      }
+      setIsSynthesizing(id);
+      setAudioDataUri(null);
+
+      try {
+          const result = await textToSpeechAction({ text });
+          if (result.error) {
+              throw new Error(result.error);
+          }
+          if (result.data?.audioDataUri) {
+              setAudioDataUri(result.data.audioDataUri);
+          }
+      } catch (e: any) {
+          toast({ title: 'Audio Generation Failed', description: e.message, variant: 'destructive' });
+          setIsSynthesizing(null);
+      }
+  }, [isSynthesizing, toast]);
 
   const executeChat = useCallback(async (
     chatHistory: Message[],
+    currentImageDataUri?: string | null,
     currentFileContent?: string | null
   ): Promise<void> => {
       startTyping(async () => {
@@ -219,7 +254,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         }));
         
         // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, fileContent: currentFileContent });
+        const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -244,32 +279,39 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                     console.error("Failed to parse tool result JSON", e);
                 }
             }
-
-            const modelMessage: Message = { role: "model", content: conversationalPart, toolResult };
+            const messageId = Date.now().toString();
+            const modelMessage: Message = { id: messageId, role: "model", content: conversationalPart, toolResult };
             setHistory((prev) => [...prev, modelMessage]);
+            handleTextToSpeech(conversationalPart, messageId);
         }
       });
-  }, [startTyping, toast, setHistory]);
+  }, [startTyping, toast, setHistory, handleTextToSpeech]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !fileContent) return;
+    if (!messageToSend.trim() && !imageDataUri && !fileContent) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
-
-    const userMessage: Message = { role: "user", content: messageToSend };
+    const messageId = Date.now().toString();
+    const userMessage: Message = { id: messageId, role: "user", content: messageToSend };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
 
-    await executeChat(newHistory, fileContent);
+    await executeChat(newHistory, imageDataUri, fileContent);
+    
+    // Clear attachments after sending
+    setImageDataUri(null);
     setFileContent(null);
+    setFileName(null);
+    if(imageInputRef.current) imageInputRef.current.value = "";
+    if(fileInputRef.current) fileInputRef.current.value = "";
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, fileContent]);
+  }, [input, isRecording, history, executeChat, imageDataUri, fileContent]);
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,102 +336,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const handleShare = (text: string) => {
     setShareContent(text);
   };
-
-  const stopCurrentAudio = useCallback(() => {
-    if (sourceNodeRef.current) {
-        sourceNodeRef.current.stop();
-        sourceNodeRef.current.disconnect();
-        sourceNodeRef.current = null;
-    }
-    audioQueueRef.current = [];
-    isPlayingRef.current = false;
-    setIsSynthesizing(null);
-  }, []);
-
-  const playAudio = useCallback(async () => {
-      if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
-  
-      isPlayingRef.current = true;
-      const audioData = audioQueueRef.current.shift();
-      if (!audioData || !audioContextRef.current) {
-          isPlayingRef.current = false;
-          return;
-      }
-  
-      try {
-          const audioBuffer = await audioContextRef.current.decodeAudioData(audioData);
-          const source = audioContextRef.current.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(audioContextRef.current.destination);
-          source.onended = () => {
-              isPlayingRef.current = false;
-              if (audioQueueRef.current.length > 0) {
-                  playAudio();
-              } else {
-                  setIsSynthesizing(null); // All chunks played
-              }
-          };
-          source.start();
-          sourceNodeRef.current = source;
-      } catch (error) {
-          console.error("Error decoding or playing audio:", error);
-          isPlayingRef.current = false;
-          setIsSynthesizing(null);
-          toast({ title: 'Audio Playback Error', description: 'Could not play the generated audio.', variant: 'destructive' });
-      }
-  }, [toast]);
-  
-
-  const handleTextToSpeech = async (text: string, id: string) => {
-      if (isSynthesizing === id) {
-          stopCurrentAudio();
-          return;
-      }
-
-      // Stop any previously playing audio before starting a new one
-      stopCurrentAudio();
-      setIsSynthesizing(id);
-
-      if (!audioContextRef.current) {
-          try {
-              audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
-                  sampleRate: 24000,
-              });
-          } catch (e) {
-              toast({ title: 'Browser Not Supported', description: 'Your browser does not support the Web Audio API.', variant: 'destructive'});
-              setIsSynthesizing(null);
-              return;
-          }
-      }
-
-      try {
-          const response = await fetch('/api/tts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text }),
-          });
-
-          if (!response.ok || !response.body) {
-              throw new Error('Failed to get audio stream.');
-          }
-
-          const reader = response.body.getReader();
-          while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              
-              const pcmData = value.buffer;
-              audioQueueRef.current.push(pcmData);
-              if (!isPlayingRef.current) {
-                  playAudio();
-              }
-          }
-      } catch (e: any) {
-          toast({ title: 'Audio Generation Failed', description: e.message, variant: 'destructive' });
-          stopCurrentAudio();
-      }
-  };
-
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -469,6 +415,23 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     }
   };
 
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImageDataUri(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        setFileContent(null);
+        setFileName(null);
+      } else {
+        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
+      }
+    }
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
 
 
   useEffect(() => {
@@ -509,6 +472,8 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         const reader = new FileReader();
         reader.onload = (e) => {
             setFileContent(e.target?.result as string);
+            setFileName(file.name);
+            setImageDataUri(null);
         };
         reader.readAsText(file);
       } else {
@@ -516,6 +481,22 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
       }
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+  
+  const handleOpenFileDialog = () => {
+    if (fileInputRef.current) {
+        fileInputRef.current.accept = ".txt";
+        fileInputRef.current.onchange = handleFileChange;
+        fileInputRef.current.click();
+    }
+  };
+
+  const handleOpenImageDialog = () => {
+    if (fileInputRef.current) {
+        fileInputRef.current.accept = "image/*";
+        fileInputRef.current.onchange = handleImageFileChange;
+        fileInputRef.current.click();
+    }
   };
 
   return (
@@ -535,7 +516,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             Hello!
                         </h1>
                         <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
-                           How can I help you today?
+                           How can I help you today, mate?
                         </p>
                     </div>
                     <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
@@ -563,7 +544,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                 </div>
             ) : (
                 history.map((message, index) => (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={message.id}>
                         <div
                         className={cn(
                             "flex w-full items-start gap-4",
@@ -583,6 +564,15 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             <div className={cn("group w-full flex items-start gap-4")}>
                                 <div className="flex-1">
                                     <ModelResponse message={message} />
+                                    {audioDataUri && isSynthesizing === message.id && (
+                                        <audio
+                                            ref={audioRef}
+                                            src={audioDataUri}
+                                            autoPlay
+                                            onEnded={() => setIsSynthesizing(null)}
+                                            onPause={() => setIsSynthesizing(null)} 
+                                        />
+                                    )}
                                     <div className="mt-2 flex items-center gap-1 transition-opacity">
                                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                             <Copy className="h-4 w-4" />
@@ -590,8 +580,8 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
                                             <Share2 className="h-4 w-4" />
                                         </Button>
-                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, `tts-${index}`)}>
-                                            {isSynthesizing === `tts-${index}` ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                                            {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                                         </Button>
                                         {index === history.length - 1 && !isTyping && (
                                             <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
@@ -635,21 +625,40 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
             <div className="mx-auto max-w-3xl">
-                {fileContent && (
+                {imageDataUri && (
+                    <div className="relative mb-2">
+                        <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
+                        <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+                {fileContent && fileName && (
                     <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
                         <FileText className="h-4 w-4" />
-                        <span className="flex-1 truncate">File attached for context</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFileContent(null)}><X className="h-4 w-4" /></Button>
+                        <span className="flex-1 truncate">{fileName}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
                 )}
                 <form 
                     onSubmit={handleFormSubmit} 
                     className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
                 >
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => fileInputRef.current?.click()} disabled={isTyping}>
-                        <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Attach file</span>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
+                            <Paperclip className="h-5 w-5" />
+                            <span className="sr-only">Attach file</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -657,7 +666,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         disabled={isTyping}
                         className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
-                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
+                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                     <div className="flex items-center gap-1">
                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0 lg:hidden" onClick={toggleEditor} disabled={isTyping}>
                            <Brush className="h-5 w-5" />
@@ -667,7 +676,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !fileContent)}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
@@ -682,8 +691,3 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
-
-    
-
-    
-
