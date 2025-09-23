@@ -183,7 +183,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const isPlayingRef = useRef(false);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
 
-  const [file, setFile] = useState<File | null>(null);
+  const [fileContent, setFileContent] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load history from localStorage on initial render
@@ -210,7 +210,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   const executeChat = useCallback(async (
     chatHistory: Message[],
-    fileContent?: string | null
+    currentFileContent?: string | null
   ): Promise<void> => {
       startTyping(async () => {
         const genkitHistory = chatHistory.map(h => ({
@@ -219,7 +219,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         }));
         
         // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, fileContent: fileContent });
+        const result = await generalChatAction({ history: genkitHistory, fileContent: currentFileContent });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -254,7 +254,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !file) return;
+    if (!messageToSend.trim() && !fileContent) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
@@ -265,21 +265,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     setHistory(newHistory);
     setInput("");
 
-    let fileContent: string | null = null;
-    if (file) {
-        try {
-            fileContent = await file.text();
-        } catch (error) {
-            toast({ title: "File read error", description: "Could not read the selected file.", variant: "destructive" });
-            return;
-        }
-    }
-    setFile(null);
-
     await executeChat(newHistory, fileContent);
+    setFileContent(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, file]);
+  }, [input, isRecording, history, executeChat, fileContent]);
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -513,10 +503,14 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   }, [history]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.type === "text/plain") {
-        setFile(selectedFile);
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setFileContent(e.target?.result as string);
+        };
+        reader.readAsText(file);
       } else {
         toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
       }
@@ -641,11 +635,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
             <div className="mx-auto max-w-3xl">
-                {file && (
+                {fileContent && (
                     <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
                         <FileText className="h-4 w-4" />
-                        <span className="flex-1 truncate">{file.name}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFile(null)}><X className="h-4 w-4" /></Button>
+                        <span className="flex-1 truncate">File attached for context</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFileContent(null)}><X className="h-4 w-4" /></Button>
                     </div>
                 )}
                 <form 
@@ -673,7 +667,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !file)}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !fileContent)}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
@@ -692,3 +686,4 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     
 
     
+
