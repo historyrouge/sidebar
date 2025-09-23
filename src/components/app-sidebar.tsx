@@ -82,14 +82,11 @@ export function AppSidebar() {
   const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
     return items.map((item) => (
         <SidebarMenuItem key={item.name}>
-            <Link href={item.href} className="w-full">
+            <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className={cn(
-                    "justify-start w-full gap-2 px-3",
-                    pathname === item.href && "bg-sidebar-active text-sidebar-active-foreground font-semibold"
-                )}
+                className="justify-start w-full gap-2 px-3"
                 onClick={handleLinkClick}
               >
                   <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
