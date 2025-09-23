@@ -24,6 +24,7 @@ import {
   Cpu,
   Presentation,
   File,
+  Brush,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +49,7 @@ import { cn } from "@/lib/utils";
 const studyTools = [
     { name: "Home", icon: <Home />, href: "/" },
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
+    { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
     { name: "Create Flashcards", icon: <Plus />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },

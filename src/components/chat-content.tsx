@@ -178,11 +178,10 @@ export function ChatContent() {
   const [shareContent, setShareContent] = useState<string | null>(null);
   
   const [showLimitDialog, setShowLimitDialog] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<ArrayBuffer[]>([]);
-  const isPlayingRef = useRef(isPlaying);
+  const isPlayingRef = useRef(false);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
 
   // Load history from localStorage on initial render
@@ -634,9 +633,9 @@ export function ChatContent() {
                         className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
                     <div className="flex items-center gap-1">
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => {}} disabled={isTyping}>
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => router.push('/ai-editor')} disabled={isTyping}>
                            <Brush className="h-5 w-5" />
-                           <span className="sr-only">Open Canvas</span>
+                           <span className="sr-only">Open AI Editor</span>
                         </Button>
                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -657,5 +656,3 @@ export function ChatContent() {
     </>
   );
 }
-
-    
