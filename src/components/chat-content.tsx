@@ -587,9 +587,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <Avatar className="h-9 w-9 border">
-                                    <AvatarFallback className="bg-primary/10"><Bot className="size-5 text-primary" /></AvatarFallback>
-                                </Avatar>
                                 <div className="flex-1">
                                     <ModelResponse message={message} />
                                     <div className="mt-2 flex items-center gap-1 transition-opacity">
@@ -634,9 +631,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
-                     <Avatar className="h-9 w-9 border">
-                        <AvatarFallback className="bg-primary/10"><Bot className="size-5 text-primary" /></AvatarFallback>
-                    </Avatar>
                     <div className="flex max-w-lg items-center gap-2 rounded-lg p-3 text-sm bg-muted text-muted-foreground">
                         <Loader2 className="size-4 animate-spin" />
                         <span>Generating...</span>
