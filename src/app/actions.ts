@@ -32,7 +32,6 @@ export type ChatModel = 'samba' | 'nvidia';
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
   model?: ChatModel;
-  imageDataUri?: string;
 };
 
 
@@ -250,16 +249,15 @@ def hello_world():
 Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always suggest a next step or ask a clarifying question.`;
 
 export async function generalChatAction(
-    input: GeneralChatInput,
+    input: GeneralChatInput & { imageDataUri?: string },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
     let messages: any[] = [
         { role: 'system', content: chatSystemPrompt },
         ...input.history.map((h: any) => {
-            const content = Array.isArray(h.content) ? h.content : [{type: "text", text: h.content}];
             return {
                 role: h.role === 'model' ? 'assistant' : 'user',
-                content: content,
+                content: h.content,
             }
         })
     ];
@@ -267,19 +265,10 @@ export async function generalChatAction(
     if (input.imageDataUri) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
-            const contentParts = [];
-            
-            // Ensure existing content is preserved as a text part
-            if (typeof lastUserMessage.content === 'string') {
-                contentParts.push({ type: "text", text: lastUserMessage.content });
-            } else if (Array.isArray(lastUserMessage.content)) {
-                // If it's already an array, just use it
-                contentParts.push(...lastUserMessage.content);
-            }
-    
-            // Add the new image part
-            contentParts.push({ type: "image_url", image_url: { url: input.imageDataUri }});
-            lastUserMessage.content = contentParts;
+            lastUserMessage.content = [
+                { type: "text", text: lastUserMessage.content },
+                { type: "image_url", image_url: { url: input.imageDataUri }},
+            ]
         }
     }
 
@@ -562,3 +551,5 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
+
+    

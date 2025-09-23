@@ -22,8 +22,6 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
-import imageToDataUri from "image-to-data-uri";
-
 
 type Message = {
   role: "user" | "model";
@@ -107,7 +105,7 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(a.href);
         toast({ title: "Downloaded!", description: `Code saved as code.${extension}` });
     };
 
@@ -184,8 +182,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const audioQueueRef = useRef<ArrayBuffer[]>([]);
   const isPlayingRef = useRef(false);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
 
   // Load history from localStorage on initial render
   useEffect(() => {
@@ -210,8 +206,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
 
   const executeChat = useCallback(async (
-    chatHistory: Message[],
-    imageUri?: string | null
+    chatHistory: Message[]
   ): Promise<void> => {
       startTyping(async () => {
         const genkitHistory = chatHistory.map(h => ({
@@ -220,7 +215,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         }));
         
         // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, imageDataUri: imageUri });
+        const result = await generalChatAction({ history: genkitHistory });
 
         if (result.error) {
             if (result.error === "API_LIMIT_EXCEEDED") {
@@ -255,7 +250,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
-    if (!messageToSend.trim() && !imageDataUri) return;
+    if (!messageToSend.trim()) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
@@ -265,27 +260,12 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
-    setImageDataUri(null);
 
-    await executeChat(newHistory, imageDataUri);
+    await executeChat(newHistory);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, imageDataUri]);
+  }, [input, isRecording, history, executeChat]);
   
-  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      try {
-        const dataUri = await imageToDataUri(URL.createObjectURL(file));
-        setImageDataUri(dataUri);
-      } catch (error) {
-        toast({ title: "Image processing failed", description: "Could not read image file.", variant: "destructive"});
-      }
-    } else {
-        toast({ title: "Invalid file", description: "Please select an image file.", variant: "destructive" });
-    }
-  };
-
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
@@ -572,7 +552,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         {message.role === "user" ? (
                             <div className="flex items-start gap-4 justify-end">
                                 <div className="border bg-primary text-primary-foreground inline-block rounded-xl p-3 max-w-md">
-                                    {message.content && <p className="text-base whitespace-pre-wrap">{message.content}</p>}
+                                    <p className="text-base whitespace-pre-wrap">{message.content}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border">
                                     <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -640,28 +620,10 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
         </ScrollArea>
         <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
             <div className="mx-auto max-w-3xl">
-                 {imageDataUri && (
-                    <div className="relative mb-2 w-24 h-24 rounded-lg border-2 border-primary overflow-hidden">
-                        <Image src={imageDataUri} alt="Preview" fill style={{objectFit: 'cover'}} />
-                        <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-0 right-0 h-6 w-6"
-                            onClick={() => setImageDataUri(null)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
                 <form 
                     onSubmit={handleFormSubmit} 
                     className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
                 >
-                    <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => imageInputRef.current?.click()} disabled={isTyping}>
-                        <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Attach Image</span>
-                    </Button>
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -678,7 +640,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri)}>
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || !input.trim()}>
                             {isTyping && history[history.length-1]?.role === "user" ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
@@ -693,3 +655,5 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
+    
