@@ -21,17 +21,18 @@ export function MainDashboard() {
   const [isEditorVisible, setIsEditorVisible] = useState(false);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
-  useEffect(() => {
+  const toggleEditorPanel = () => {
     const group = panelGroupRef.current;
     if (group) {
-      const layout = group.getLayout();
-      if (isEditorVisible && layout[1] === 0) {
-        group.setLayout([60, 40]);
-      } else if (!isEditorVisible && layout[1] > 0) {
-        group.setLayout([100, 0]);
-      }
+        const layout = group.getLayout();
+        // If editor is collapsed or not visible, expand it. Otherwise, collapse it.
+        if (layout[1] < 10) {
+            group.setLayout([60, 40]);
+        } else {
+            group.setLayout([100, 0]);
+        }
     }
-  }, [isEditorVisible]);
+  };
 
   const handleNewChat = () => {
     try {
@@ -60,7 +61,7 @@ export function MainDashboard() {
                 <FileEdit className="mr-2 h-4 w-4" />
                 New Chat
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setIsEditorVisible(!isEditorVisible)} className="hidden lg:inline-flex">
+            <Button variant="ghost" size="icon" onClick={toggleEditorPanel} className="hidden lg:inline-flex">
               {isEditorVisible ? <PanelRightClose className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
               <span className="sr-only">Toggle AI Editor</span>
             </Button>
@@ -94,16 +95,16 @@ export function MainDashboard() {
           direction="horizontal" 
           className="flex-1" 
           ref={panelGroupRef}
-          onLayout={(sizes) => {
-            if (sizes[1] > 0 && !isEditorVisible) {
-              setIsEditorVisible(true);
-            } else if (sizes[1] === 0 && isEditorVisible) {
-              setIsEditorVisible(false);
+          onLayout={(sizes: number[]) => {
+            if (sizes[1] > 5) {
+                setIsEditorVisible(true);
+            } else {
+                setIsEditorVisible(false);
             }
           }}
         >
           <ResizablePanel defaultSize={100} minSize={30}>
-            <ChatContent toggleEditor={() => setIsEditorVisible(!isEditorVisible)} />
+            <ChatContent toggleEditor={toggleEditorPanel} />
           </ResizablePanel>
           <ResizableHandle withHandle className={cn("hidden lg:flex")} />
           <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} onCollapse={() => setIsEditorVisible(false)} onExpand={() => setIsEditorVisible(true)} className={cn("hidden lg:block")}>
