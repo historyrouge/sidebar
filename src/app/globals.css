@@ -136,8 +136,4 @@
     .code-box pre {
         @apply my-0 p-4 rounded-b-xl bg-card text-sm;
     }
-
-    .canvas-project {
-      @apply block rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 p-6 my-4;
-    }
 }

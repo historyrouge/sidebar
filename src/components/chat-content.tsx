@@ -142,39 +142,12 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 };
 
 
-const CanvasProject = ({ name, files }: { name: string, files: { name: string, type: string, code: string }[] }) => {
-    return (
-        <div className="canvas-project">
-            <CardHeader>
-                <CardTitle>Project: {name}</CardTitle>
-                <CardDescription>This is a multi-file project. Open it in a workspace to view and run.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button type="button">Open in Canvas</Button>
-            </CardContent>
-        </div>
-    );
-};
-
-
 const ModelResponse = ({ message }: { message: Message }) => {
     const codeBoxMatch = message.content.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
-    const canvasProjectMatch = message.content.match(/<canvasProject name="([^"]+)">([\s\S]*?)<\/canvasProject>/);
 
     if (codeBoxMatch) {
         const [_, language, code] = codeBoxMatch;
         return <CodeBox language={language} code={code.trim()} />;
-    }
-
-    if (canvasProjectMatch) {
-        const [_, name, filesContent] = canvasProjectMatch;
-        const fileRegex = /<file name="([^"]+)" type="([^"]+)">([\s\S]*?)<\/file>/g;
-        let match;
-        const files = [];
-        while ((match = fileRegex.exec(filesContent)) !== null) {
-            files.push({ name: match[1], type: match[2], code: match[3].trim() });
-        }
-        return <CanvasProject name={name} files={files} />;
     }
     
     const finalHtml = marked(message.content);
