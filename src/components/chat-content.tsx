@@ -642,7 +642,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
             <div className="mx-auto max-w-3xl">
                  {imageDataUri && (
                     <div className="relative mb-2 w-24 h-24 rounded-lg border-2 border-primary overflow-hidden">
-                        <Image src={imageDataUri} alt="Preview" layout="fill" objectFit="cover" />
+                        <Image src={imageDataUri} alt="Preview" fill style={{objectFit: 'cover'}} />
                         <Button
                             variant="destructive"
                             size="icon"
