@@ -24,17 +24,11 @@ export function MainDashboard() {
   useEffect(() => {
     const group = panelGroupRef.current;
     if (group) {
-      if (isEditorVisible) {
-        // Only set layout if the panel is not already expanded to the target state
-        const layout = group.getLayout();
-        if(layout[1] < 10) {
-            group.setLayout([60, 40]);
-        }
-      } else {
-        const layout = group.getLayout();
-        if(layout[1] > 0) {
-            group.setLayout([100, 0]);
-        }
+      const layout = group.getLayout();
+      if (isEditorVisible && layout[1] === 0) {
+        group.setLayout([60, 40]);
+      } else if (!isEditorVisible && layout[1] > 0) {
+        group.setLayout([100, 0]);
       }
     }
   }, [isEditorVisible]);
@@ -96,7 +90,18 @@ export function MainDashboard() {
         </div>
       </header>
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="flex-1" ref={panelGroupRef}>
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="flex-1" 
+          ref={panelGroupRef}
+          onLayout={(sizes) => {
+            if (sizes[1] > 0 && !isEditorVisible) {
+              setIsEditorVisible(true);
+            } else if (sizes[1] === 0 && isEditorVisible) {
+              setIsEditorVisible(false);
+            }
+          }}
+        >
           <ResizablePanel defaultSize={100} minSize={30}>
             <ChatContent toggleEditor={() => setIsEditorVisible(!isEditorVisible)} />
           </ResizablePanel>
