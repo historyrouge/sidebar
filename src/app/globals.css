@@ -20,8 +20,8 @@
     --secondary: 0 0% 96%; /* #F5F5F5 */
     --secondary-foreground: 0 0% 13%;
  
-    --accent: 258 56% 95%; /* Lighter purple for hovers */
-    --accent-foreground: 258 56% 40%;
+    --accent: 258 56% 97%; /* Lighter purple for hovers */
+    --accent-foreground: 258 56% 45%;
  
     --destructive: 0 84% 60%; /* #F44336 */
     --destructive-foreground: 0 0% 100%;
@@ -29,8 +29,8 @@
     --muted: 0 0% 96%; /* #F5F5F5 */
     --muted-foreground: 0 0% 46%; /* #757575 */
  
-    --border: 0 0% 94%; /* #BDBDBD */
-    --input: 0 0% 94%;
+    --border: 0 0% 90%; /* #E6E6E6 */
+    --input: 0 0% 90%;
     --ring: 258 56% 50%;
  
     --radius: 0.75rem; /* 12px */
@@ -43,8 +43,8 @@
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 13%;
-    --sidebar-border: 0 0% 94%;
-    --sidebar-accent: 258 56% 95%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-accent: 258 56% 97%;
     --sidebar-accent-foreground: 258 56% 50%;
     --sidebar-active: 258 56% 50%;
     --sidebar-active-foreground: 0 0% 100%;
