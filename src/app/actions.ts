@@ -50,7 +50,7 @@ export type HelpChatOutput = HelpChatOutputFlow;
 export type GeneralChatOutput = GeneralChatOutputFlow;
 export type TextToSpeechOutput = TextToSpeechOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
-export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
+export type GetYoutubeTranscriptOutput = GenerateYoutubeTranscriptOutputFlow;
 export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
 export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
@@ -239,21 +239,14 @@ export async function helpChatAction(
 
 const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You use the word "mate" casually.
 
-You solve problems effectively and provide clear, well-structured answers.
-- For simple, short questions, give a short, direct answer, mate.
-- If the user asks for "details", "study", or something "important", then provide a longer, more detailed explanation with headings and lists.
-- Use a friendly, casual tone with emojis ✨.
-- If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do NOT tell the user how to create the file themselves; simply provide the content.
-
-Your goal is to be collaborative. First, provide a solid, accurate answer to the user's question. Then, proactively ask a follow-up question to see if they want to dive deeper. For example, ask if they want a flowchart, a mind map, more examples, or a mnemonic.
-
-When you need to provide a code snippet, you MUST format it using the special <codeBox> tag. For example:
-<codeBox language="python">
-def hello_world():
-    print("Hello, World!")
-</codeBox>
-
-Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always suggest a next step or ask a clarifying question.`;
+Your primary goal is to provide clear, accurate, and well-structured answers. Follow these rules:
+1.  **Direct Answer First**: Always start with a direct and concise answer to the user's question.
+2.  **Structured Explanations**: If the question is about something important, for study, or requires detail, follow the direct answer with a "---" separator and then a detailed explanation. Use headings, bullet points, and markdown for clarity.
+3.  **Natural Language**: Write in a natural, conversational, and helpful tone. Use emojis ✨ to add personality.
+4.  **No Code for Non-Code**: Do NOT wrap your general text responses in any kind of code block or markdown fence. Use formatting like bold, italics, and lists naturally within the text.
+5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do NOT tell the user how to create the file themselves; simply provide the content.
+6.  **Proactive Assistance**: After answering, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
+7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
 export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
@@ -328,7 +321,14 @@ export async function generalChatAction(
     if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
         const sambaMessages = messages
             .filter(m => m.role !== 'system')
-            .map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : m.content.find((p:any) => p.type === 'text')?.text || '' }))
+             .map(m => {
+                if (Array.isArray(m.content)) {
+                    // For now, only take the text part for SambaNova
+                    const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
+                    return { role: m.role, content: textPart };
+                }
+                return { role: m.role, content: m.content };
+            })
             .filter(m => m.content); // Filter out messages that became empty
             
         for (const model of sambaModels) {
@@ -387,7 +387,14 @@ export async function generalChatAction(
 
             const nvidiaMessages = messages
                 .filter(m => m.role !== 'system')
-                .map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : m.content.find((p:any) => p.type === 'text')?.text || '' }))
+                .map(m => {
+                    if (Array.isArray(m.content)) {
+                        // For now, only take the text part for NVIDIA
+                        const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
+                        return { role: m.role, content: textPart };
+                    }
+                    return { role: m.role, content: m.content };
+                })
                 .filter(m => m.content); // Filter out messages that became empty
                 
             const nvidiaResponse = await nvidiaClient.chat.completions.create({
@@ -624,6 +631,7 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
     
+
 
 
 
