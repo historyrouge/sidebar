@@ -278,7 +278,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                     console.error("Failed to parse tool result JSON", e);
                 }
             }
-            const messageId = Date.now().toString();
+            const messageId = `${Date.now()}-${chatHistory.length}`;
             const modelMessage: Message = { id: messageId, role: "model", content: conversationalPart, toolResult };
             setHistory((prev) => [...prev, modelMessage]);
             handleTextToSpeech(conversationalPart, messageId);
@@ -709,5 +709,3 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
-
-    
