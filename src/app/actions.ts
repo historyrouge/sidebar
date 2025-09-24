@@ -246,7 +246,7 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
     *   Use headings (e.g., \`### Section Title\`) for main sections.
     *   Use tables for comparisons or data.
     *   Use bullet points for lists.
-    *   Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$).
+    *   **CRITICAL**: Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$). Do NOT use any other delimiters like square brackets.
 3.  **Natural Language**: Write in a helpful, educational, and professional tone. Avoid overly casual slang, but you can use the word "mate" occasionally in conversational contexts.
 4.  **No Code for Non-Code**: Do NOT wrap your general text responses in markdown code fences (\`\`\`).
 5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do not ask the user to create the file themselves.
@@ -395,7 +395,7 @@ export async function generalChatAction(
                     if (Array.isArray(m.content)) {
                         // NVIDIA does not support multipart messages, so extract text
                         const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
-                        return { role: m.role, content: textPart };
+                        return { role: m.role === 'assistant' ? 'assistant' : 'user', content: textPart };
                     }
                     return m.role === 'assistant' ? { role: 'assistant', content: m.content} : { role: 'user', content: m.content };
                 })
