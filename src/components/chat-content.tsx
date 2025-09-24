@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
@@ -566,7 +567,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
-                                        className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground"
+                                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
                                         components={{
                                             code({node, inline, className, children, ...props}) {
                                                 const match = /language-(\w+)/.exec(className || '')
@@ -706,3 +707,4 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
