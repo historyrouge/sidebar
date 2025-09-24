@@ -75,7 +75,14 @@ const account = [
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
-  const pathname = usePathname();
+  const currentPathname = usePathname();
+  const [pathname, setPathname] = useState("");
+
+  useEffect(() => {
+    // This ensures usePathname() is only called on the client after hydration
+    setPathname(currentPathname);
+  }, [currentPathname]);
+
 
   const handleLinkClick = () => {
     setOpenMobile(false);
