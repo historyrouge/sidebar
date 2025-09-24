@@ -562,7 +562,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="flex-1 rounded-xl bg-transparent border p-3">
+                                <div className="flex-1 bg-transparent">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
