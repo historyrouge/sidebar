@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
+import { streamGeneralChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,6 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
-import { ThinkingIndicator } from "./thinking-indicator";
 
 type Message = {
   id: string;
@@ -157,7 +156,8 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isTyping, startTyping] = useTransition();
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
@@ -247,45 +247,64 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     currentImageDataUri?: string | null,
     currentFileContent?: string | null
   ): Promise<void> => {
-      startTyping(async () => {
-        const genkitHistory = chatHistory.map(h => ({
-          role: h.role as 'user' | 'model',
-          content: h.content,
-        }));
-        
-        // @ts-ignore
-        const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
+      setIsTyping(true);
+      const modelMessageId = `${Date.now()}-model`;
+      setActiveMessageId(modelMessageId);
+      setHistory((prev) => [...prev, { id: modelMessageId, role: "model", content: "" }]);
 
-        if (result.error) {
-            if (result.error === "API_LIMIT_EXCEEDED") {
-                setHistory(prev => prev.slice(0, -1)); // Remove user message
-                setShowLimitDialog(true);
-            } else {
-                 toast({ title: "Chat Error", description: result.error, variant: "destructive" });
-                 setHistory(prev => prev.slice(0, -1));
-            }
-        } else if (result.data) {
-            let responseText = result.data.response;
-            let conversationalPart = responseText;
-            let toolResult: Message['toolResult'] | undefined = undefined;
-
-            if (responseText.includes('[TOOL_RESULT:questionPaper]')) {
-                const parts = responseText.split('\n\n[TOOL_RESULT:questionPaper]\n');
-                conversationalPart = parts[0];
-                try {
-                    const toolData = JSON.parse(parts[1]);
-                    toolResult = { type: 'questionPaper', data: toolData };
-                } catch (e) {
-                    console.error("Failed to parse tool result JSON", e);
-                }
-            }
-            const messageId = `${Date.now()}-${chatHistory.length}`;
-            const modelMessage: Message = { id: messageId, role: "model", content: conversationalPart, toolResult };
-            setHistory((prev) => [...prev, modelMessage]);
-            handleTextToSpeech(conversationalPart, messageId);
-        }
+      const genkitHistory = chatHistory.map(h => ({
+        role: h.role as 'user' | 'model',
+        content: h.content,
+      }));
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent })
       });
-  }, [startTyping, toast, setHistory, handleTextToSpeech]);
+
+      setIsTyping(false);
+      setActiveMessageId(null);
+
+      if (!response.ok) {
+          const errorText = await response.text();
+          if (errorText.includes("API_LIMIT_EXCEEDED")) {
+              setHistory(prev => prev.slice(0, -2)); // Remove user message and empty model message
+              setShowLimitDialog(true);
+          } else {
+              toast({ title: "Chat Error", description: errorText, variant: "destructive" });
+              setHistory(prev => prev.slice(0, -1)); // Remove empty model message
+          }
+          return;
+      }
+
+      if (!response.body) {
+        toast({ title: "Chat Error", description: "The response body is empty.", variant: "destructive" });
+        return;
+      }
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        
+        setHistory(prevHistory => {
+            const newHistory = [...prevHistory];
+            const lastMessage = newHistory[newHistory.length - 1];
+            if (lastMessage.role === 'model') {
+                lastMessage.content += chunk;
+            }
+            return newHistory;
+        });
+      }
+      
+  }, [toast]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -554,7 +573,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         {message.role === "user" ? (
                             <div className="flex items-start gap-4 justify-end">
                                 <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                                    <p className="text-base whitespace-pre-wrap bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent">{message.content}</p>
+                                    <p className="text-base whitespace-pre-wrap text-white">{message.content}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border">
                                     <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -562,7 +581,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="flex-1 bg-transparent">
+                                <div className="flex-1">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
@@ -582,6 +601,9 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                     >
                                         {message.content}
                                     </ReactMarkdown>
+                                    {isTyping && activeMessageId === message.id && (
+                                        <Loader2 className="size-4 animate-spin mt-2" />
+                                    )}
                                     {audioDataUri && isSynthesizing === message.id && (
                                         <audio
                                             ref={audioRef}
@@ -591,6 +613,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                             onPause={() => setIsSynthesizing(null)} 
                                         />
                                     )}
+                                    {!isTyping && message.id === history[history.length - 1].id && (
                                     <div className="mt-2 flex items-center gap-1 transition-opacity">
                                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                             <Copy className="h-4 w-4" />
@@ -601,12 +624,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
                                             {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                                         </Button>
-                                        {index === history.length - 1 && !isTyping && (
-                                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                                <RefreshCw className="h-4 w-4" />
-                                            </Button>
-                                        )}
+                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
                                     </div>
+                                    )}
                                     {message.toolResult?.type === 'questionPaper' && (
                                         <Card className="bg-muted/50 mt-2">
                                             <CardHeader className="p-4">
@@ -630,11 +652,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         )}
                     </React.Fragment>
                 ))
-            )}
-            {isTyping && history[history.length-1]?.role !== "model" && (
-                <div className="flex items-start gap-4">
-                    <ThinkingIndicator />
-                </div>
             )}
             </div>
         </ScrollArea>
@@ -692,7 +709,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
                         <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
-                            {isTyping && history[history.length-1]?.role === "user" ? (
+                            {isTyping ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                                 <Send className="h-5 w-5" />
@@ -706,3 +723,5 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
+    
