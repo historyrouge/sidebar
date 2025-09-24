@@ -562,11 +562,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="flex-1 border bg-transparent rounded-xl p-3">
+                                <div className="flex-1 rounded-xl bg-muted p-3">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
-                                        className="prose dark:prose-invert max-w-none text-base leading-relaxed bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent"
+                                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
                                         components={{
                                             code({node, inline, className, children, ...props}) {
                                                 const match = /language-(\w+)/.exec(className || '')
