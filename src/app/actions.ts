@@ -233,18 +233,23 @@ export async function helpChatAction(
     } catch (e: any) {
       console.error(e);
       if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-      return { error: e.message || "An unknown error occurred." };
+      return { error: e.message || "An unexpected error occurred." };
     }
 }
 
-const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You should use the word "mate" casually in conversation.
+const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and expert Indian guide.
 
-Your primary goal is to provide clear, accurate, and well-structured answers. Follow these rules:
-1.  **Direct & Concise First**: For simple questions, give a short, direct answer.
-2.  **Detailed Explanations for Study**: If the user asks about a study topic, an important concept, or asks for details, provide a more thorough, well-structured explanation. Use headings, bullet points, and markdown for clarity.
-3.  **Natural Language**: Write in a natural, conversational, and helpful tone.
-4.  **No Code for Non-Code**: Do NOT wrap your general text responses in any kind of code block or markdown fence. Use formatting like bold, italics, and lists naturally within the text.
-5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do NOT tell the user how to create the file themselves; simply provide the content.
+Your primary goal is to provide clear, accurate, and exceptionally well-structured answers. Follow these rules:
+1.  **Direct & Concise First**: For simple, factual questions, give a short, direct answer first.
+2.  **Detailed Explanations for Study Topics**: If the user asks about an academic or complex topic, provide a thorough, well-structured explanation. Use Markdown for clarity:
+    *   Start with a summary or definition.
+    *   Use headings (\`###\`) for main sections.
+    *   Use tables to compare or list data.
+    *   Use bullet points for lists.
+    *   Use LaTeX for all mathematical formulas (e.g., \\( a^2 + b^2 = c^2 \\)).
+3.  **Natural Language**: Write in a helpful, educational, and professional tone. Avoid overly casual slang, but you can use the word "mate" occasionally in conversational contexts.
+4.  **No Code for Non-Code**: Do NOT wrap your general text responses in markdown code fences (\`\`\`).
+5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown.
 6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
 7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
@@ -320,10 +325,10 @@ export async function generalChatAction(
     // 1. Try SambaNova models in order
     if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
         const sambaMessages = messages
-            .filter(m => m.role !== 'system')
-             .map(m => {
+            .map(m => {
+                if (m.role === 'system') return m;
                 if (Array.isArray(m.content)) {
-                    // For now, only take the text part for SambaNova
+                    // For now, only take the text part for SambaNova, as it doesn't support images
                     const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
                     return { role: m.role, content: textPart };
                 }
@@ -334,9 +339,8 @@ export async function generalChatAction(
         for (const model of sambaModels) {
             try {
                 // If there's an image, we must use a vision-capable model.
-                // We'll skip non-vision models in SambaNova for now and fall back to Gemini.
+                // We'll skip non-vision models in SambaNova and fall back to Gemini.
                 if (input.imageDataUri) {
-                     console.warn(`SambaNova model '${model}' does not support vision. Skipping.`);
                      continue;
                 }
 
@@ -389,7 +393,7 @@ export async function generalChatAction(
                 .filter(m => m.role !== 'system')
                 .map(m => {
                     if (Array.isArray(m.content)) {
-                        // For now, only take the text part for NVIDIA
+                        // NVIDIA does not support multipart messages, so extract text
                         const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
                         return { role: m.role, content: textPart };
                     }
@@ -631,6 +635,8 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
     
+
+
 
 
 
