@@ -1,14 +1,14 @@
 
 "use client";
 
-import { streamGeneralChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw, Paperclip, StopCircle, X, Brush } from "lucide-react";
+import { Bot, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileText, PlusSquare, BookOpen, Rss, Brush, Paperclip, X, Edit, Save, Download, StopCircle } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 type Message = {
   id: string;
@@ -38,32 +39,6 @@ type Message = {
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
 
-const suggestionPrompts = [
-    {
-        icon: <Sparkles className="text-primary w-5 h-5" />,
-        title: "Create a Quiz",
-        description: "Test your knowledge on a topic.",
-        href: "/quiz"
-    },
-    {
-        icon: <Sparkles className="text-primary w-5 h-5" />,
-        title: "Make Flashcards",
-        description: "From your study notes.",
-        href: "/create-flashcards"
-    },
-    {
-        icon: <Sparkles className="text-primary w-5 h-5" />,
-        title: "Browse eBooks",
-        description: "Explore the library.",
-        href: "/ebooks"
-    },
-    {
-        icon: <Sparkles className="text-primary w-5 h-5" />,
-        title: "Read Latest News",
-        description: "In tech & education.",
-        href: "/news"
-    },
-];
 
 const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
     const { toast } = useToast();
@@ -157,7 +132,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
@@ -249,59 +223,30 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   ): Promise<void> => {
       setIsTyping(true);
       const modelMessageId = `${Date.now()}-model`;
-      setActiveMessageId(modelMessageId);
-      setHistory((prev) => [...prev, { id: modelMessageId, role: "model", content: "" }]);
-
+      
       const genkitHistory = chatHistory.map(h => ({
         role: h.role as 'user' | 'model',
         content: h.content,
       }));
       
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent })
-      });
+      const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
 
       setIsTyping(false);
-      setActiveMessageId(null);
 
-      if (!response.ok) {
-          const errorText = await response.text();
-          if (errorText.includes("API_LIMIT_EXCEEDED")) {
-              setHistory(prev => prev.slice(0, -2)); // Remove user message and empty model message
+      if (result.error) {
+          if (result.error.includes("API_LIMIT_EXCEEDED")) {
+              setHistory(prev => prev.slice(0, -1)); // Remove user message
               setShowLimitDialog(true);
           } else {
-              toast({ title: "Chat Error", description: errorText, variant: "destructive" });
-              setHistory(prev => prev.slice(0, -1)); // Remove empty model message
+              toast({ title: "Chat Error", description: result.error, variant: "destructive" });
+              setHistory(prev => prev.slice(0, -1)); // Remove user message on error
           }
           return;
       }
 
-      if (!response.body) {
-        toast({ title: "Chat Error", description: "The response body is empty.", variant: "destructive" });
-        return;
-      }
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        
-        setHistory(prevHistory => {
-            const newHistory = [...prevHistory];
-            const lastMessage = newHistory[newHistory.length - 1];
-            if (lastMessage.role === 'model') {
-                lastMessage.content += chunk;
-            }
-            return newHistory;
-        });
+       if (result.data) {
+        const modelMessage: Message = { id: modelMessageId, role: "model", content: result.data.response };
+        setHistory((prev) => [...prev, modelMessage]);
       }
       
   }, [toast]);
@@ -538,27 +483,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                            How can I help you today, mate?
                         </p>
                     </div>
-                    <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
-                        {suggestionPrompts.map((prompt, i) => (
-                             <Button
-                                key={i}
-                                asChild
-                                type="button"
-                                variant="outline"
-                                className="h-auto w-full justify-start rounded-lg border p-4 hover:bg-muted"
-                                >
-                                <Link href={prompt.href}>
-                                    <div className="flex items-start gap-4">
-                                        {prompt.icon}
-                                        <div>
-                                            <h3 className="text-left text-base font-semibold text-foreground">{prompt.title}</h3>
-                                            <p className="text-left text-sm text-muted-foreground">{prompt.description}</p>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </Button>
-                        ))}
-                    </div>
                     <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
                 </div>
             ) : (
@@ -573,7 +497,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         {message.role === "user" ? (
                             <div className="flex items-start gap-4 justify-end">
                                 <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                                    <p className="text-base whitespace-pre-wrap text-white">{message.content}</p>
+                                    <p className="text-base whitespace-pre-wrap">{message.content}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border">
                                     <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -581,7 +505,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="flex-1">
+                                <div className="p-4 rounded-lg bg-red-950/20 w-full">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
@@ -601,9 +525,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                     >
                                         {message.content}
                                     </ReactMarkdown>
-                                    {isTyping && activeMessageId === message.id && (
-                                        <Loader2 className="size-4 animate-spin mt-2" />
-                                    )}
+                                    
                                     {audioDataUri && isSynthesizing === message.id && (
                                         <audio
                                             ref={audioRef}
@@ -613,7 +535,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                             onPause={() => setIsSynthesizing(null)} 
                                         />
                                     )}
-                                    {!isTyping && message.id === history[history.length - 1].id && (
                                     <div className="mt-2 flex items-center gap-1 transition-opacity">
                                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                             <Copy className="h-4 w-4" />
@@ -628,7 +549,6 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                                             <RefreshCw className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    )}
                                     {message.toolResult?.type === 'questionPaper' && (
                                         <Card className="bg-muted/50 mt-2">
                                             <CardHeader className="p-4">
@@ -652,6 +572,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         )}
                     </React.Fragment>
                 ))
+            )}
+            {isTyping && (
+                <div className="mt-4">
+                    <ThinkingIndicator />
+                </div>
             )}
             </div>
         </ScrollArea>
@@ -709,11 +634,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
                         <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
-                            {isTyping ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <Send className="h-5 w-5" />
-                            )}
+                           <Send className="h-5 w-5" />
                             <span className="sr-only">Send</span>
                         </Button>
                     </div>
@@ -724,4 +645,5 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   );
 }
 
+    
     
