@@ -50,7 +50,7 @@ export type HelpChatOutput = HelpChatOutputFlow;
 export type GeneralChatOutput = GeneralChatOutputFlow;
 export type TextToSpeechOutput = TextToSpeechOutputFlow;
 export type GenerateImageOutput = GenerateImageOutputFlow;
-export type GetYoutubeTranscriptOutput = GenerateYoutubeTranscriptOutputFlow;
+export type GetYoutubeTranscriptOutput = GetYoutubeTranscriptOutputFlow;
 export type SummarizeContentOutput = SummarizeContentOutputFlow;
 export type GenerateMindMapOutput = GenerateMindMapOutputFlow;
 export type GenerateQuestionPaperOutput = GenerateQuestionPaperOutputFlow;
@@ -237,15 +237,15 @@ export async function helpChatAction(
     }
 }
 
-const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You use the word "mate" casually.
+const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and helpful Indian guide. You should use the word "mate" casually in conversation.
 
 Your primary goal is to provide clear, accurate, and well-structured answers. Follow these rules:
-1.  **Direct Answer First**: Always start with a direct and concise answer to the user's question.
-2.  **Structured Explanations**: If the question is about something important, for study, or requires detail, follow the direct answer with a "---" separator and then a detailed explanation. Use headings, bullet points, and markdown for clarity.
-3.  **Natural Language**: Write in a natural, conversational, and helpful tone. Use emojis ✨ to add personality.
+1.  **Direct & Concise First**: For simple questions, give a short, direct answer.
+2.  **Detailed Explanations for Study**: If the user asks about a study topic, an important concept, or asks for details, provide a more thorough, well-structured explanation. Use headings, bullet points, and markdown for clarity.
+3.  **Natural Language**: Write in a natural, conversational, and helpful tone.
 4.  **No Code for Non-Code**: Do NOT wrap your general text responses in any kind of code block or markdown fence. Use formatting like bold, italics, and lists naturally within the text.
 5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do NOT tell the user how to create the file themselves; simply provide the content.
-6.  **Proactive Assistance**: After answering, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
+6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
 7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
 export async function generalChatAction(
@@ -631,6 +631,7 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
     
+
 
 
 
