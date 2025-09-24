@@ -10,7 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, Send, User, Mic, MicOff, Copy, Share2, Volume2, RefreshCw, FileQuestion, PlusSquare, BookOpen, Rss, FileText, Sparkles, Brain, Edit, Download, Save, RefreshCcw, Paperclip, StopCircle, X, Brush } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
-import { marked, Renderer } from "marked";
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { ShareDialog } from "./share-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "./ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
@@ -143,20 +146,15 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 
 
 const ModelResponse = ({ message }: { message: Message }) => {
-    const codeBoxMatch = message.content.match(/<codeBox language="([^"]+)">([\s\S]*?)<\/codeBox>/);
-
-    if (codeBoxMatch) {
-        const [_, language, code] = codeBoxMatch;
-        return <CodeBox language={language} code={code.trim()} />;
-    }
-    
-    const finalHtml = marked(message.content);
-
     return (
-        <div 
-            className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground"
-            dangerouslySetInnerHTML={{ __html: finalHtml as string }}
-        />
+        <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground">
+            <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+            >
+                {message.content}
+            </ReactMarkdown>
+        </div>
     );
 };
 
@@ -310,7 +308,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     if (isRecording) {
       recognitionRef.current?.stop();
     }
-    const messageId = Date.now().toString();
+    const messageId = `${Date.now()}`;
     const userMessage: Message = { id: messageId, role: "user", content: messageToSend };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
@@ -706,5 +704,3 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
-
-    

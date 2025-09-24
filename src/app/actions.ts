@@ -243,13 +243,13 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 1.  **Direct & Concise First**: For simple, factual questions, give a short, direct answer first.
 2.  **Detailed Explanations for Study Topics**: If the user asks about an academic or complex topic, provide a thorough, well-structured explanation. Use Markdown for clarity:
     *   Start with a summary or definition.
-    *   Use headings (\`###\`) for main sections.
-    *   Use tables to compare or list data.
+    *   Use headings (e.g., \`### Section Title\`) for main sections.
+    *   Use tables for comparisons or data.
     *   Use bullet points for lists.
-    *   Use LaTeX for all mathematical formulas (e.g., \\( a^2 + b^2 = c^2 \\)).
+    *   Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$).
 3.  **Natural Language**: Write in a helpful, educational, and professional tone. Avoid overly casual slang, but you can use the word "mate" occasionally in conversational contexts.
 4.  **No Code for Non-Code**: Do NOT wrap your general text responses in markdown code fences (\`\`\`).
-5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown.
+5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do not ask the user to create the file themselves.
 6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
 7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
@@ -397,7 +397,7 @@ export async function generalChatAction(
                         const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
                         return { role: m.role, content: textPart };
                     }
-                    return { role: m.role, content: m.content };
+                    return m.role === 'assistant' ? { role: 'assistant', content: m.content} : { role: 'user', content: m.content };
                 })
                 .filter(m => m.content); // Filter out messages that became empty
                 
@@ -631,14 +631,3 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
-
-    
-
-    
-
-
-
-
-
-
-
