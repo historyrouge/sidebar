@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 type Message = {
   id: string;
@@ -562,26 +563,25 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
                                 <div className="flex-1">
-                                    <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkMath]}
-                                            rehypePlugins={[rehypeKatex]}
-                                            components={{
-                                                code({node, inline, className, children, ...props}) {
-                                                    const match = /language-(\w+)/.exec(className || '')
-                                                    return !inline && match ? (
-                                                        <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                                                    ) : (
-                                                        <code className={className} {...props}>
-                                                            {children}
-                                                        </code>
-                                                    )
-                                                }
-                                            }}
-                                        >
-                                            {message.content}
-                                        </ReactMarkdown>
-                                    </div>
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
+                                        className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground"
+                                        components={{
+                                            code({node, inline, className, children, ...props}) {
+                                                const match = /language-(\w+)/.exec(className || '')
+                                                return !inline && match ? (
+                                                    <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                                                ) : (
+                                                    <code className={className} {...props}>
+                                                        {children}
+                                                    </code>
+                                                )
+                                            }
+                                        }}
+                                    >
+                                        {message.content}
+                                    </ReactMarkdown>
                                     {audioDataUri && isSynthesizing === message.id && (
                                         <audio
                                             ref={audioRef}
@@ -633,10 +633,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
             )}
             {isTyping && history[history.length-1]?.role !== "model" && (
                 <div className="flex items-start gap-4">
-                    <div className="flex max-w-lg items-center gap-2 rounded-lg p-3 text-sm bg-muted text-muted-foreground">
-                        <Loader2 className="size-4 animate-spin" />
-                        <span>Generating...</span>
-                    </div>
+                    <ThinkingIndicator />
                 </div>
             )}
             </div>
