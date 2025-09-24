@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { generalChatAction, textToSpeechAction, GenerateQuestionPaperOutput, ChatModel, streamTextToSpeech } from "@/app/actions";
@@ -554,8 +553,8 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         >
                         {message.role === "user" ? (
                             <div className="flex items-start gap-4 justify-end">
-                                <div className="border bg-primary text-primary-foreground inline-block rounded-xl p-3 max-w-md">
-                                    <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                                <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                                    <p className="text-base whitespace-pre-wrap bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent">{message.content}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border">
                                     <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -563,11 +562,11 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                             </div>
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="flex-1">
+                                <div className="flex-1 border bg-transparent rounded-xl p-3">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
-                                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
+                                        className="prose dark:prose-invert max-w-none text-base leading-relaxed bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent"
                                         components={{
                                             code({node, inline, className, children, ...props}) {
                                                 const match = /language-(\w+)/.exec(className || '')
@@ -708,3 +707,4 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   );
 }
 
+    
