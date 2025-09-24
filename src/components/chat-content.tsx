@@ -145,20 +145,6 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 };
 
 
-const ModelResponse = ({ message }: { message: Message }) => {
-    return (
-        <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground">
-            <ReactMarkdown
-                remarkPlugins={[remarkMath]}
-                rehypePlugins={[rehypeKatex]}
-            >
-                {message.content}
-            </ReactMarkdown>
-        </div>
-    );
-};
-
-
 export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -576,7 +562,26 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
                         ) : (
                             <div className={cn("group w-full flex items-start gap-4")}>
                                 <div className="flex-1">
-                                    <ModelResponse message={message} />
+                                    <div className="prose dark:prose-invert max-w-none text-base leading-relaxed text-foreground">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkMath]}
+                                            rehypePlugins={[rehypeKatex]}
+                                            components={{
+                                                code({node, inline, className, children, ...props}) {
+                                                    const match = /language-(\w+)/.exec(className || '')
+                                                    return !inline && match ? (
+                                                        <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                                                    ) : (
+                                                        <code className={className} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                }
+                                            }}
+                                        >
+                                            {message.content}
+                                        </ReactMarkdown>
+                                    </div>
                                     {audioDataUri && isSynthesizing === message.id && (
                                         <audio
                                             ref={audioRef}
@@ -704,3 +709,5 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
     </>
   );
 }
+
+    
