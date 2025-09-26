@@ -443,7 +443,7 @@ export function ChatContent() {
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
             {showWelcome ? (
-               <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
+               <div className="flex h-full flex-col items-center justify-center text-center">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Layers className="size-7" />
@@ -571,7 +571,7 @@ export function ChatContent() {
           )}
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 p-2 shadow-lg focus-within:border-primary backdrop-blur-sm"
+              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -610,3 +610,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
