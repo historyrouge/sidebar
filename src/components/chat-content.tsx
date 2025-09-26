@@ -387,16 +387,16 @@ export function ChatContent() {
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
           {history.length === 0 && !isTyping ? (
-            <div className="flex h-full min-h-[calc(100vh-20rem)] flex-col items-center justify-center text-center">
-              <div className="mb-4">
+            <div className="flex h-full flex-grow items-center justify-center text-center">
+              <div>
                 <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                   Hello!
                 </h1>
-                <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
+                <p className="mt-1 text-xl font-semibold text-gray-500 sm:text-2xl">
                   How can I help you today, mate?
                 </p>
+                 <p className="text-sm text-muted-foreground !mt-2">Or ask me anything...</p>
               </div>
-              <p className="text-sm text-muted-foreground !mt-2">Or ask me anything...</p>
             </div>
           ) : (
             history.map((message, index) => (
@@ -576,5 +576,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
