@@ -439,11 +439,10 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-      <div className="relative flex-1">
-        <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
-          <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+          <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-24">
             {showWelcome ? (
-               <div className="flex h-full flex-col items-center justify-center text-center">
+               <div className="flex h-full min-h-[calc(100vh-18rem)] flex-col items-center justify-end text-center pb-8">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Layers className="size-7" />
@@ -548,10 +547,9 @@ export function ChatContent() {
             )}
           </div>
         </ScrollArea>
-      </div>
 
-       <div className="p-4 w-full">
-        <div className="mx-auto max-w-3xl">
+       <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
+        <div className="mx-auto max-w-3xl p-4">
           {imageDataUri && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
@@ -610,5 +608,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
