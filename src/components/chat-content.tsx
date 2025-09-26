@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -437,12 +436,11 @@ export function ChatContent() {
         <div className="flex h-full flex-col items-center justify-center p-4">
              <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                 <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Edit this image of a cat to be a dog')}>Image Edit</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create a simple landing page with HTML and Tailwind CSS')}>Web Dev</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate an image of a futuristic city')}>Image Generation</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create a presentation about artificial intelligence')}>Create Presentation</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Show me the latest news in technology')}>News</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search for the latest AI trends</Button>
                 </div>
+                <h1 className="text-4xl font-bold mt-4">SearnAI</h1>
                 <form
                     onSubmit={handleFormSubmit}
                     className="relative w-full rounded-2xl bg-chat-input p-4 pr-16 shadow-lg"
