@@ -388,7 +388,7 @@ export function ChatContent() {
         <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
           {history.length === 0 && !isTyping ? (
             <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
-              <div className="mb-2">
+              <div className="mb-4">
                 <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl !mb-0">
                   Hello!
                 </h1>
@@ -396,7 +396,7 @@ export function ChatContent() {
                   How can I help you today, mate?
                 </p>
               </div>
-              <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
+              <p className="text-sm text-muted-foreground !mt-2">Or ask me anything...</p>
             </div>
           ) : (
             history.map((message, index) => (
