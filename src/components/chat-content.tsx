@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -23,7 +23,8 @@ import { useRouter } from "next/navigation";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
-import { ChatInput } from "./chat-input";
+import { Input } from "./ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 type Message = {
   id: string;
@@ -118,7 +119,7 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 };
 
 
-export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
+export function ChatContent() {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -142,6 +143,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load history from localStorage on initial render
   useEffect(() => {
@@ -386,15 +388,15 @@ export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
         <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
           {history.length === 0 && !isTyping ? (
             <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
-              <div className="mb-4">
-                <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+              <div className="mb-2">
+                <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl !mb-0">
                   Hello!
                 </h1>
-                <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
+                <p className="!mt-1 text-xl font-semibold text-gray-500 sm:text-2xl">
                   How can I help you today, mate?
                 </p>
               </div>
-              <p className="text-sm text-muted-foreground">Or ask me anything...</p>
+              <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
             </div>
           ) : (
             history.map((message, index) => (
@@ -490,21 +492,89 @@ export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
           )}
         </div>
       </ScrollArea>
-      <ChatInput 
-        input={input}
-        setInput={setInput}
-        isTyping={isTyping}
-        isRecording={isRecording}
-        handleSendMessage={handleSendMessage}
-        handleToggleRecording={handleToggleRecording}
-        toggleEditor={toggleEditor}
-        imageDataUri={imageDataUri}
-        setImageDataUri={setImageDataUri}
-        fileContent={fileContent}
-        setFileContent={setFileContent}
-        fileName={fileName}
-        setFileName={setFileName}
-      />
+      <div className="p-4 border-t bg-background">
+        <div className="mx-auto max-w-3xl">
+          {imageDataUri && (
+            <div className="relative mb-2 w-fit">
+              <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {fileContent && fileName && (
+            <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
+              <FileText className="h-4 w-4" />
+              <span className="flex-1 truncate">{fileName}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+            className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
+                  <Paperclip className="h-5 w-5" />
+                  <span className="sr-only">Attach file</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>Image</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>Text File</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message SearnAI..."
+              disabled={isTyping}
+              className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+            />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                if (file.type.startsWith('image/')) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setImageDataUri(reader.result as string);
+                    setFileContent(null);
+                    setFileName(null);
+                  };
+                  reader.readAsDataURL(file);
+                } else if (file.type === 'text/plain') {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                    setFileContent(e.target?.result as string);
+                    setFileName(file.name);
+                    setImageDataUri(null);
+                  };
+                  reader.readAsText(file);
+                } else {
+                  toast({ title: "Invalid file type", description: "Please upload an image or a .txt file.", variant: "destructive" });
+                }
+              }
+              e.target.value = '';
+            }} />
+            <div className="flex items-center gap-1">
+              <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+              </Button>
+              <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Send</span>
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
+
+    
