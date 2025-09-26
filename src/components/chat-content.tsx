@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -432,6 +432,49 @@ export function ChatContent() {
   
   const showWelcome = history.length === 0 && !isTyping;
 
+  if (showWelcome) {
+    return (
+        <div className="flex h-full flex-col items-center justify-center p-4">
+             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                <div className="flex gap-2">
+                    <Button variant="outline" className="rounded-full">Image Edit</Button>
+                    <Button variant="outline" className="rounded-full">Web Dev</Button>
+                    <Button variant="outline" className="rounded-full">Image Generation</Button>
+                </div>
+                <form
+                    onSubmit={handleFormSubmit}
+                    className="relative w-full rounded-2xl bg-chat-input p-4 pr-16 shadow-lg"
+                >
+                    <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="How can I help you today?"
+                        className="h-24 resize-none border-0 bg-transparent text-base shadow-none focus-visible:ring-0 placeholder:text-muted-foreground"
+                    />
+                    <div className="absolute right-4 top-4 flex items-center h-full">
+                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled>
+                            <Layers className="h-5 w-5" />
+                        </Button>
+                    </div>
+                     <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                        <Button type="button" size="icon" variant="ghost" className="rounded-full h-9 w-9">
+                            <Plus className="h-5 w-5" />
+                        </Button>
+                        <Button type="button" variant="outline" className="rounded-full">Thinking</Button>
+                        <Button type="button" variant="outline" className="rounded-full">Search</Button>
+                    </div>
+                    <div className="absolute right-4 bottom-4 flex items-center">
+                        <Button type="submit" size="icon" className="h-9 w-9 rounded-full" disabled={isTyping || !input.trim()}>
+                            <ArrowUp className="h-5 w-5" />
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
@@ -442,20 +485,7 @@ export function ChatContent() {
       />
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-            {showWelcome ? (
-               <div className="flex h-full min-h-[calc(100vh-18rem)] flex-col items-center justify-end pb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <Layers className="size-7" />
-                        </div>
-                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                           Hello!
-                        </h1>
-                    </div>
-                     <p className="text-muted-foreground">How can I help you today?</p>
-                </div>
-            ) : (
-              history.map((message, index) => (
+              {history.map((message, index) => (
                 <React.Fragment key={`${message.id}-${index}`}>
                   <div
                     className={cn(
@@ -540,7 +570,7 @@ export function ChatContent() {
                   )}
                 </React.Fragment>
               ))
-            )}
+            }
             {isTyping && (
               <div className="mt-4">
                 <ThinkingIndicator />

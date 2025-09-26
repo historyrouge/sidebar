@@ -49,6 +49,8 @@
     --sidebar-active: 0 0% 12%;
     --sidebar-active-foreground: 0 0% 98%;
     --sidebar-group-foreground: 0 0% 63%;
+
+    --chat-input-background: 222 22% 14%;
   }
  
   .dark {
@@ -94,6 +96,8 @@
     --sidebar-active: 0 0% 12%;
     --sidebar-active-foreground: 0 0% 98%;
     --sidebar-group-foreground: 0 0% 63%;
+
+    --chat-input-background: 222 22% 14%;
   }
 }
 
@@ -135,5 +139,9 @@
     }
     .code-box pre {
         @apply my-0 p-4 rounded-b-xl bg-card text-sm;
+    }
+
+    .bg-chat-input {
+      background-color: hsl(var(--chat-input-background));
     }
 }
