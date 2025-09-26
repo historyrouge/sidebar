@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -394,7 +394,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
                   How can I help you today, mate?
                 </p>
               </div>
-              <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
+              <p className="mt-4 text-sm text-muted-foreground">Or ask me anything...</p>
             </div>
           ) : (
             history.map((message, index) => (
