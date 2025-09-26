@@ -27,7 +27,7 @@ const accentColors: Record<string, Record<string, string>> = {
 };
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps & { defaultAccent?: string }) {
-  const [accentColor, setAccentColor] = React.useState('default');
+  const [accentColor, setAccentColor] = React.useState('orange');
 
   React.useEffect(() => {
     const storedAccent = localStorage.getItem(ACCENT_COLOR_KEY);
