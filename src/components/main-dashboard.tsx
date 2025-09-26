@@ -16,7 +16,6 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resiz
 import { cn } from "@/lib/utils";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
 import { ChatInput } from "./chat-input";
-import { ScrollArea } from "./ui/scroll-area";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -106,9 +105,7 @@ export function MainDashboard() {
           }}
         >
           <ResizablePanel defaultSize={100} minSize={30}>
-            <div className="h-full flex flex-col">
-              <ChatContent />
-            </div>
+            <ChatContent />
           </ResizablePanel>
           <ResizableHandle withHandle className={cn("hidden lg:flex")} />
           <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} className={cn("hidden lg:block")}>
