@@ -24,7 +24,7 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Message = {
   id: string;
@@ -368,6 +368,63 @@ export function ChatContent() {
         toast({ title: "Storage Error", description: "Could not store the generated paper.", variant: "destructive" });
     }
   };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setFileContent(e.target?.result as string);
+            setFileName(file.name);
+            setImageDataUri(null);
+        };
+        reader.readAsText(file);
+      } else {
+        toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImageDataUri(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        setFileContent(null);
+        setFileName(null);
+      } else {
+        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleOpenFileDialog = () => {
+    if (fileInputRef.current) {
+        fileInputRef.current.accept = ".txt";
+        fileInputRef.current.onchange = handleFileChange;
+        fileInputRef.current.click();
+    }
+  };
+
+  const handleOpenImageDialog = () => {
+      if (fileInputRef.current) {
+          fileInputRef.current.accept = "image/*";
+          fileInputRef.current.onchange = handleImageFileChange;
+          fileInputRef.current.click();
+      }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage();
+  };
 
   useEffect(() => {
     const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
@@ -388,12 +445,12 @@ export function ChatContent() {
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
             {history.length === 0 && !isTyping ? (
-              <div className="flex h-full min-h-[calc(100vh-14rem)] flex-col items-center justify-end pb-8 text-center">
-                <div className="flex flex-col items-center">
+              <div className="flex h-full min-h-[calc(100vh-14rem)] flex-col items-center justify-center pb-8">
+                <div className="flex flex-col items-center text-center">
                   <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                     Hello!
                   </h1>
-                  <p className="text-xl font-semibold text-gray-500 sm:text-2xl">
+                  <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
                     How can I help you today, mate?
                   </p>
                   <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
@@ -494,8 +551,67 @@ export function ChatContent() {
           </div>
         </ScrollArea>
       </div>
+      <div className="p-4 border-t bg-background">
+        <div className="mx-auto max-w-3xl">
+          {imageDataUri && (
+            <div className="relative mb-2 w-fit">
+              <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
+                  <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {fileContent && fileName && (
+            <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
+              <FileText className="h-4 w-4" />
+              <span className="flex-1 truncate">{fileName}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
+                  <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <form
+              onSubmit={handleFormSubmit}
+              className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+          >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
+                      <Paperclip className="h-5 w-5" />
+                      <span className="sr-only">Attach file</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Message SearnAI..."
+                disabled={isTyping}
+                className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+              />
+              <input type="file" ref={fileInputRef} className="hidden" />
+              <div className="flex items-center gap-1">
+                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                    {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                    <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+                </Button>
+                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
+                    <Send className="h-5 w-5" />
+                    <span className="sr-only">Send</span>
+                </Button>
+              </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
+
+    
 
     
