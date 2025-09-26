@@ -377,23 +377,23 @@ export function ChatContent() {
   }, [history]);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
       <ShareDialog
         isOpen={!!shareContent}
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-      <div className="flex-1 relative">
+      <div className="relative flex-1">
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
             {history.length === 0 && !isTyping ? (
-              <div className="flex h-full flex-grow items-end justify-center text-center pb-16">
+              <div className="flex h-[calc(100vh-18rem)] flex-col items-end justify-end pb-8 text-center">
                 <div>
-                  <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+                  <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                     Hello!
                   </h1>
-                  <p className="mt-1 text-xl font-semibold text-gray-500 sm:text-2xl">
+                  <p className="text-xl font-semibold text-gray-500 sm:text-2xl">
                     How can I help you today, mate?
                   </p>
                   <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
@@ -578,3 +578,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
