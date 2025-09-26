@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2 } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -436,10 +436,12 @@ export function ChatContent() {
     return (
         <div className="flex h-full flex-col items-center justify-center p-4">
              <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-full">Image Edit</Button>
-                    <Button variant="outline" className="rounded-full">Web Dev</Button>
-                    <Button variant="outline" className="rounded-full">Image Generation</Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Edit this image of a cat to be a dog')}>Image Edit</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create a simple landing page with HTML and Tailwind CSS')}>Web Dev</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate an image of a futuristic city')}>Image Generation</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create a presentation about artificial intelligence')}>Create Presentation</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Show me the latest news in technology')}>News</Button>
                 </div>
                 <form
                     onSubmit={handleFormSubmit}
@@ -453,15 +455,15 @@ export function ChatContent() {
                     />
                     <div className="absolute right-4 top-4 flex items-center h-full">
                          <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled>
-                            <Layers className="h-5 w-5" />
+                            <Wand2 className="h-5 w-5" />
                         </Button>
                     </div>
                      <div className="absolute bottom-4 left-4 flex items-center gap-2">
                         <Button type="button" size="icon" variant="ghost" className="rounded-full h-9 w-9">
                             <Plus className="h-5 w-5" />
                         </Button>
-                        <Button type="button" variant="outline" className="rounded-full">Thinking</Button>
-                        <Button type="button" variant="outline" className="rounded-full">Search</Button>
+                        <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('What are you thinking about?')}>Thinking</Button>
+                        <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search</Button>
                     </div>
                     <div className="absolute right-4 bottom-4 flex items-center">
                         <Button type="submit" size="icon" className="h-9 w-9 rounded-full" disabled={isTyping || !input.trim()}>
@@ -580,7 +582,7 @@ export function ChatContent() {
         </ScrollArea>
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
-        <div className="p-4">
+        <div className="p-4 mx-auto max-w-3xl">
           {imageDataUri && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
@@ -600,7 +602,7 @@ export function ChatContent() {
           )}
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary max-w-3xl mx-auto"
+              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -639,3 +641,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
