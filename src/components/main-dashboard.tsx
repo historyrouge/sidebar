@@ -91,7 +91,7 @@ export function MainDashboard() {
             </DropdownMenu>
         </div>
       </header>
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col">
         <ResizablePanelGroup 
           direction="horizontal" 
           className="flex-1" 
