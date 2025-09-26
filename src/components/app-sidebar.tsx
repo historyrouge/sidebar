@@ -90,7 +90,7 @@ export function AppSidebar() {
 
   const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
     return items.map((item) => (
-        <SidebarMenuItem key={item.name}>
+        <SidebarMenuItem key={item.name} className="mt-1">
             <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
