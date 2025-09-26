@@ -388,8 +388,8 @@ export function ChatContent() {
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
             {history.length === 0 && !isTyping ? (
-              <div className="flex h-[calc(100vh-18rem)] flex-col items-end justify-end pb-8 text-center">
-                <div>
+              <div className="flex h-full min-h-[calc(100vh-14rem)] flex-col items-center justify-end pb-8 text-center">
+                <div className="flex flex-col items-center">
                   <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
                     Hello!
                   </h1>
@@ -493,87 +493,6 @@ export function ChatContent() {
             )}
           </div>
         </ScrollArea>
-      </div>
-      <div className="p-4 border-t bg-background">
-        <div className="mx-auto max-w-3xl">
-          {imageDataUri && (
-            <div className="relative mb-2 w-fit">
-              <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
-              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          {fileContent && fileName && (
-            <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
-              <FileText className="h-4 w-4" />
-              <span className="flex-1 truncate">{fileName}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          <form
-            onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-            className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
-                  <Paperclip className="h-5 w-5" />
-                  <span className="sr-only">Attach file</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>Image</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>Text File</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message SearnAI..."
-              disabled={isTyping}
-              className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
-            />
-            <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                if (file.type.startsWith('image/')) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setImageDataUri(reader.result as string);
-                    setFileContent(null);
-                    setFileName(null);
-                  };
-                  reader.readAsDataURL(file);
-                } else if (file.type === 'text/plain') {
-                  const reader = new FileReader();
-                  reader.onload = (e) => {
-                    setFileContent(e.target?.result as string);
-                    setFileName(file.name);
-                    setImageDataUri(null);
-                  };
-                  reader.readAsText(file);
-                } else {
-                  toast({ title: "Invalid file type", description: "Please upload an image or a .txt file.", variant: "destructive" });
-                }
-              }
-              e.target.value = '';
-            }} />
-            <div className="flex items-center gap-1">
-              <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-              </Button>
-              <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Send</span>
-              </Button>
-            </div>
-          </form>
-        </div>
       </div>
     </div>
   );
