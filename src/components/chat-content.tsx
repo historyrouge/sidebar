@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -442,7 +443,7 @@ export function ChatContent() {
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
             {showWelcome ? (
-               <div className="flex h-full min-h-[calc(100vh-18rem)] flex-col items-center justify-end text-center pb-8">
+               <div className="flex h-full min-h-[calc(100vh-18rem)] flex-col items-center justify-end pb-8">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Layers className="size-7" />
@@ -549,7 +550,7 @@ export function ChatContent() {
         </ScrollArea>
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
-        <div className="max-w-3xl p-4 ml-auto">
+        <div className="p-4">
           {imageDataUri && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
@@ -569,7 +570,7 @@ export function ChatContent() {
           )}
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
+              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary max-w-3xl ml-auto"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
