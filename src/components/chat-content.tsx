@@ -384,114 +384,116 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
-          {history.length === 0 && !isTyping ? (
-            <div className="flex h-full flex-grow items-center justify-center text-center">
-              <div>
-                <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
-                  Hello!
-                </h1>
-                <p className="mt-1 text-xl font-semibold text-gray-500 sm:text-2xl">
-                  How can I help you today, mate?
-                </p>
-                 <p className="text-sm text-muted-foreground !mt-2">Or ask me anything...</p>
-              </div>
-            </div>
-          ) : (
-            history.map((message, index) => (
-              <React.Fragment key={`${message.id}-${index}`}>
-                <div
-                  className={cn(
-                    "flex w-full items-start gap-4",
-                    message.role === "user" ? "justify-end" : ""
-                  )}
-                >
-                  {message.role === "user" ? (
-                    <div className="flex items-start gap-4 justify-end">
-                      <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                        <p className="text-base whitespace-pre-wrap">{message.content}</p>
-                      </div>
-                      <Avatar className="h-9 w-9 border">
-                        <AvatarFallback><User className="size-5" /></AvatarFallback>
-                      </Avatar>
-                    </div>
-                  ) : (
-                    <div className={cn("group w-full flex items-start gap-4")}>
-                      <div className="w-full">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
-                          className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-                          components={{
-                            code({ node, inline, className, children, ...props }) {
-                              const match = /language-(\w+)/.exec(className || '');
-                              return !inline && match ? (
-                                <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                              ) : (
-                                <code className={className} {...props}>
-                                  {children}
-                                </code>
-                              );
-                            }
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
-                        {audioDataUri && isSynthesizing === message.id && (
-                          <audio
-                            ref={audioRef}
-                            src={audioDataUri}
-                            autoPlay
-                            onEnded={() => setIsSynthesizing(null)}
-                            onPause={() => setIsSynthesizing(null)}
-                          />
-                        )}
-                        <div className="mt-2 flex items-center gap-1 transition-opacity">
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
-                            {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                          </Button>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        {message.toolResult?.type === 'questionPaper' && (
-                          <Card className="bg-muted/50 mt-2">
-                            <CardHeader className="p-4">
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <FileText className="h-5 w-5" />
-                                {message.toolResult.data.title}
-                              </CardTitle>
-                              <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-0">
-                              <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-                    </div>
-                  )}
+      <div className="flex-1 relative">
+        <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
+          <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
+            {history.length === 0 && !isTyping ? (
+              <div className="flex h-full flex-grow items-end justify-center text-center pb-16">
+                <div>
+                  <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+                    Hello!
+                  </h1>
+                  <p className="mt-1 text-xl font-semibold text-gray-500 sm:text-2xl">
+                    How can I help you today, mate?
+                  </p>
+                  <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
                 </div>
-                {index < history.length - 1 && (
-                  <Separator className="my-8" />
-                )}
-              </React.Fragment>
-            ))
-          )}
-          {isTyping && (
-            <div className="mt-4">
-              <ThinkingIndicator />
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+              </div>
+            ) : (
+              history.map((message, index) => (
+                <React.Fragment key={`${message.id}-${index}`}>
+                  <div
+                    className={cn(
+                      "flex w-full items-start gap-4",
+                      message.role === "user" ? "justify-end" : ""
+                    )}
+                  >
+                    {message.role === "user" ? (
+                      <div className="flex items-start gap-4 justify-end">
+                        <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                          <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                        </div>
+                        <Avatar className="h-9 w-9 border">
+                          <AvatarFallback><User className="size-5" /></AvatarFallback>
+                        </Avatar>
+                      </div>
+                    ) : (
+                      <div className={cn("group w-full flex items-start gap-4")}>
+                        <div className="w-full">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                            className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                            components={{
+                              code({ node, inline, className, children, ...props }) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                  <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                                ) : (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              }
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                          {audioDataUri && isSynthesizing === message.id && (
+                            <audio
+                              ref={audioRef}
+                              src={audioDataUri}
+                              autoPlay
+                              onEnded={() => setIsSynthesizing(null)}
+                              onPause={() => setIsSynthesizing(null)}
+                            />
+                          )}
+                          <div className="mt-2 flex items-center gap-1 transition-opacity">
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                              {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                            </Button>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {message.toolResult?.type === 'questionPaper' && (
+                            <Card className="bg-muted/50 mt-2">
+                              <CardHeader className="p-4">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <FileText className="h-5 w-5" />
+                                  {message.toolResult.data.title}
+                                </CardTitle>
+                                <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                              </CardHeader>
+                              <CardContent className="p-4 pt-0">
+                                <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {index < history.length - 1 && (
+                    <Separator className="my-8" />
+                  )}
+                </React.Fragment>
+              ))
+            )}
+            {isTyping && (
+              <div className="mt-4">
+                <ThinkingIndicator />
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
       <div className="p-4 border-t bg-background">
         <div className="mx-auto max-w-3xl">
           {imageDataUri && (
