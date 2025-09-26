@@ -394,7 +394,7 @@ export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
                   How can I help you today, mate?
                 </p>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">Or ask me anything...</p>
+              <p className="text-sm text-muted-foreground">Or ask me anything...</p>
             </div>
           ) : (
             history.map((message, index) => (
