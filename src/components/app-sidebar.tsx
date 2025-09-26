@@ -26,6 +26,7 @@ import {
   File,
   Brush,
   Volume2,
+  FileEdit,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,11 +49,10 @@ import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 
 const studyTools = [
-    { name: "Home", icon: <Home />, href: "/" },
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
     { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
-    { name: "Create Flashcards", icon: <Plus />, href: "/create-flashcards" },
+    { name: "Flashcards", icon: <Layers />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
     { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
     { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
@@ -67,10 +67,8 @@ const resources = [
     { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
 ];
 
-const account = [
-    { name: "Settings", icon: <Settings />, href: "/settings" },
-    { name: "Help", icon: <HelpCircle />, href: "/help" },
-    { name: "About Us", icon: <Info />, href: "/about" },
+const mainNav = [
+    { name: "Home", icon: <Home />, href: "/" },
 ]
 
 export function AppSidebar() {
@@ -79,7 +77,6 @@ export function AppSidebar() {
   const [pathname, setPathname] = useState("");
 
   useEffect(() => {
-    // This ensures usePathname() is only called on the client after hydration
     setPathname(currentPathname);
   }, [currentPathname]);
 
@@ -88,20 +85,36 @@ export function AppSidebar() {
     setOpenMobile(false);
   };
 
+  const handleNewChat = () => {
+    handleLinkClick();
+    try {
+        if (pathname === '/') {
+            localStorage.removeItem('chatHistory');
+            sessionStorage.removeItem('chatScrollPosition');
+            window.location.reload();
+        } else {
+            router.push('/');
+        }
+    } catch (e) {
+        console.error("Could not clear storage", e);
+    }
+  };
+
+
   const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
     return items.map((item) => (
-        <SidebarMenuItem key={item.name} className="mt-1">
+        <SidebarMenuItem key={item.name}>
             <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start w-full gap-2 px-3"
+                className="justify-start w-full gap-2.5 px-3"
                 onClick={handleLinkClick}
               >
                   <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
                     {item.icon}
                   </div>
-                  <span>{item.name}</span>
+                  <span className="text-sm">{item.name}</span>
               </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
@@ -109,7 +122,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="shadow-[2px_0_8px_rgba(0,0,0,0.03)] dark:shadow-none border-r">
+    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -121,20 +134,30 @@ export function AppSidebar() {
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
-                <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Study Tools</SidebarGroupLabel>
-                {renderMenuItems(studyTools)}
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        onClick={handleNewChat}
+                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+                    >
+                        <FileEdit />
+                        <span className="text-sm">New Chat</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 {renderMenuItems(mainNav)}
             </SidebarMenu>
             
-            <SidebarSeparator className="my-2" />
+            <SidebarSeparator className="my-4" />
             
             <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Resources</SidebarGroupLabel>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Study Tools</SidebarGroupLabel>
+                 {renderMenuItems(studyTools)}
+            </SidebarMenu>
+
+            <SidebarSeparator className="my-4" />
+
+            <SidebarMenu>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Resources</SidebarGroupLabel>
                  {renderMenuItems(resources)}
-            </SidebarMenu>
-            <SidebarSeparator className="my-2" />
-            <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold text-sidebar-group-foreground tracking-wider px-3 my-2 text-gray-500">Account</SidebarGroupLabel>
-                 {renderMenuItems(account)}
             </SidebarMenu>
         </div>
       </SidebarContent>

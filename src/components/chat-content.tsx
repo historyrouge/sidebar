@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -145,7 +145,6 @@ export function ChatContent() {
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load history from localStorage on initial render
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
@@ -157,7 +156,6 @@ export function ChatContent() {
     }
   }, []);
 
-  // Save history to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
@@ -177,7 +175,6 @@ export function ChatContent() {
           return;
       }
 
-      // Stop any previously playing audio before starting a new one
       if (audioRef.current) {
           audioRef.current.pause();
       }
@@ -232,11 +229,11 @@ export function ChatContent() {
 
       if (result.error) {
           if (result.error.includes("API_LIMIT_EXCEEDED")) {
-              setHistory(prev => prev.slice(0, -1)); // Remove user message
+              setHistory(prev => prev.slice(0, -1));
               setShowLimitDialog(true);
           } else {
               toast({ title: "Chat Error", description: result.error, variant: "destructive" });
-              setHistory(prev => prev.slice(0, -1)); // Remove user message on error
+              setHistory(prev => prev.slice(0, -1));
           }
           return;
       }
@@ -264,7 +261,6 @@ export function ChatContent() {
 
     await executeChat(newHistory, imageDataUri, fileContent);
     
-    // Clear attachments after sending
     setImageDataUri(null);
     setFileContent(null);
     setFileName(null);
@@ -277,7 +273,7 @@ export function ChatContent() {
       if (lastUserMessageIndex === -1) return;
 
       const historyForRegen = history.slice(0, lastUserMessageIndex + 1);
-      setHistory(historyForRegen); // Remove the old model response
+      setHistory(historyForRegen);
       await executeChat(historyForRegen);
   };
 
@@ -313,7 +309,7 @@ export function ChatContent() {
         }
         
         let interimTranscript = '';
-        finalTranscript = ''; // Reset final transcript for current event
+        finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
@@ -330,7 +326,7 @@ export function ChatContent() {
             // Debounce sending the message
            audioSendTimeoutRef.current = setTimeout(() => {
                 handleSendMessage(finalTranscript);
-           }, 1000); // Send after 1 second of silence
+           }, 1000);
         }
       };
     } else {
@@ -432,6 +428,8 @@ export function ChatContent() {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
   }, [history]);
+  
+  const showWelcome = history.length === 0 && !isTyping;
 
   return (
     <div className="flex h-full flex-col">
@@ -444,19 +442,7 @@ export function ChatContent() {
       <div className="relative flex-1">
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
-            {history.length === 0 && !isTyping ? (
-              <div className="flex h-full min-h-[calc(100vh-14rem)] flex-col items-center justify-center pb-8">
-                <div className="flex flex-col items-center text-center">
-                  <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
-                    Hello!
-                  </h1>
-                  <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
-                    How can I help you today, mate?
-                  </p>
-                  <p className="text-sm text-muted-foreground !mt-0">Or ask me anything...</p>
-                </div>
-              </div>
-            ) : (
+            {!showWelcome ? (
               history.map((message, index) => (
                 <React.Fragment key={`${message.id}-${index}`}>
                   <div
@@ -542,7 +528,7 @@ export function ChatContent() {
                   )}
                 </React.Fragment>
               ))
-            )}
+            ) : null }
             {isTyping && (
               <div className="mt-4">
                 <ThinkingIndicator />
@@ -551,7 +537,20 @@ export function ChatContent() {
           </div>
         </ScrollArea>
       </div>
-      <div className="p-4 border-t bg-background">
+
+       <div className={cn("p-4 w-full transition-all duration-300", showWelcome ? "absolute bottom-1/3 left-1/2 -translate-x-1/2" : "relative")}>
+        {showWelcome && (
+             <div className="flex flex-col items-center justify-end h-full text-center">
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <Layers className="size-7" />
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                        How can I help?
+                    </h1>
+                </div>
+            </div>
+        )}
         <div className="mx-auto max-w-3xl">
           {imageDataUri && (
             <div className="relative mb-2 w-fit">
@@ -572,7 +571,7 @@ export function ChatContent() {
           )}
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+              className="relative flex items-center rounded-xl border bg-card/80 p-2 shadow-lg focus-within:border-primary backdrop-blur-sm"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -611,7 +610,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-
-    
