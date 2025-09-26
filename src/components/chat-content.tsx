@@ -120,7 +120,7 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 };
 
 
-export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
+export function ChatContent({ toggleEditor }: { toggleEditor?: () => void }) {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -465,185 +465,183 @@ export function ChatContent({ toggleEditor }: { toggleEditor: () => void }) {
 
   return (
     <>
-        <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
-        <ShareDialog
-            isOpen={!!shareContent}
-            onOpenChange={(open) => !open && setShareContent(null)}
-            content={shareContent || ""}
-        />
-        <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
-            <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-48 sm:pb-40">
-            {history.length === 0 && !isTyping ? (
-                <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
-                    <div className="mb-4">
-                        <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
-                            Hello!
-                        </h1>
-                        <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
-                           How can I help you today, mate?
-                        </p>
-                    </div>
-                    <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
-                </div>
-            ) : (
-                history.map((message, index) => (
-                    <React.Fragment key={`${message.id}-${index}`}>
-                        <div
-                        className={cn(
-                            "flex w-full items-start gap-4",
-                            message.role === "user" ? "justify-end" : ""
-                        )}
-                        >
-                        {message.role === "user" ? (
-                            <div className="flex items-start gap-4 justify-end">
-                                <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                                    <p className="text-base whitespace-pre-wrap">{message.content}</p>
-                                </div>
-                                <Avatar className="h-9 w-9 border">
-                                    <AvatarFallback><User className="size-5" /></AvatarFallback>
-                                </Avatar>
-                            </div>
-                        ) : (
-                            <div className={cn("group w-full flex items-start gap-4")}>
-                                <div className="p-4 rounded-lg bg-red-950/20 w-full">
-                                    <ReactMarkdown
-                                        remarkPlugins={[remarkMath]}
-                                        rehypePlugins={[rehypeKatex]}
-                                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-                                        components={{
-                                            code({node, inline, className, children, ...props}) {
-                                                const match = /language-(\w+)/.exec(className || '')
-                                                return !inline && match ? (
-                                                    <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                                                ) : (
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                )
-                                            }
-                                        }}
-                                    >
-                                        {message.content}
-                                    </ReactMarkdown>
-                                    
-                                    {audioDataUri && isSynthesizing === message.id && (
-                                        <audio
-                                            ref={audioRef}
-                                            src={audioDataUri}
-                                            autoPlay
-                                            onEnded={() => setIsSynthesizing(null)}
-                                            onPause={() => setIsSynthesizing(null)} 
-                                        />
-                                    )}
-                                    <div className="mt-2 flex items-center gap-1 transition-opacity">
-                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                            <Share2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
-                                            {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                                        </Button>
-                                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                            <RefreshCw className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    {message.toolResult?.type === 'questionPaper' && (
-                                        <Card className="bg-muted/50 mt-2">
-                                            <CardHeader className="p-4">
-                                                <CardTitle className="flex items-center gap-2 text-base">
-                                                    <FileText className="h-5 w-5"/>
-                                                    {message.toolResult.data.title}
-                                                </CardTitle>
-                                                <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="p-4 pt-0">
-                                                <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                        </div>
-                        {index < history.length - 1 && (
-                             <Separator className="my-8" />
-                        )}
-                    </React.Fragment>
-                ))
-            )}
-            {isTyping && (
-                <div className="mt-4">
-                    <ThinkingIndicator />
-                </div>
-            )}
+      <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
+      <ShareDialog
+        isOpen={!!shareContent}
+        onOpenChange={(open) => !open && setShareContent(null)}
+        content={shareContent || ""}
+      />
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+        <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
+          {history.length === 0 && !isTyping ? (
+            <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
+              <div className="mb-4">
+                <h1 className="heading bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+                  Hello!
+                </h1>
+                <p className="mt-2 text-xl font-semibold text-gray-500 sm:text-2xl">
+                  How can I help you today, mate?
+                </p>
+              </div>
+              <p className="mt-8 text-sm text-muted-foreground">Or ask me anything...</p>
             </div>
-        </ScrollArea>
-        <div className="from-background/90 via-background/80 to-transparent absolute bottom-0 left-0 w-full bg-gradient-to-t p-4 pb-6">
-            <div className="mx-auto max-w-3xl">
-                {imageDataUri && (
-                    <div className="relative mb-2">
-                        <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
-                        <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
-                {fileContent && fileName && (
-                    <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
-                        <FileText className="h-4 w-4" />
-                        <span className="flex-1 truncate">{fileName}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
-                <form 
-                    onSubmit={handleFormSubmit} 
-                    className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+          ) : (
+            history.map((message, index) => (
+              <React.Fragment key={`${message.id}-${index}`}>
+                <div
+                  className={cn(
+                    "flex w-full items-start gap-4",
+                    message.role === "user" ? "justify-end" : ""
+                  )}
                 >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
-                            <Paperclip className="h-5 w-5" />
-                            <span className="sr-only">Attach file</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Message SearnAI..."
-                        disabled={isTyping}
-                        className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
-                    />
-                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-                    <div className="flex items-center gap-1">
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0 lg:hidden" onClick={toggleEditor} disabled={isTyping}>
-                           <Brush className="h-5 w-5" />
-                           <span className="sr-only">Open AI Editor</span>
-                        </Button>
-                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
-                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                        </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
-                           <Send className="h-5 w-5" />
-                            <span className="sr-only">Send</span>
-                        </Button>
+                  {message.role === "user" ? (
+                    <div className="flex items-start gap-4 justify-end">
+                      <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                        <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                      <Avatar className="h-9 w-9 border">
+                        <AvatarFallback><User className="size-5" /></AvatarFallback>
+                      </Avatar>
                     </div>
-                </form>
+                  ) : (
+                    <div className={cn("group w-full flex items-start gap-4")}>
+                      <div className="w-full">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                          className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                          components={{
+                            code({ node, inline, className, children, ...props }) {
+                              const match = /language-(\w+)/.exec(className || '');
+                              return !inline && match ? (
+                                <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                              ) : (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            }
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                        {audioDataUri && isSynthesizing === message.id && (
+                          <audio
+                            ref={audioRef}
+                            src={audioDataUri}
+                            autoPlay
+                            onEnded={() => setIsSynthesizing(null)}
+                            onPause={() => setIsSynthesizing(null)}
+                          />
+                        )}
+                        <div className="mt-2 flex items-center gap-1 transition-opacity">
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                            {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                          </Button>
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {message.toolResult?.type === 'questionPaper' && (
+                          <Card className="bg-muted/50 mt-2">
+                            <CardHeader className="p-4">
+                              <CardTitle className="flex items-center gap-2 text-base">
+                                <FileText className="h-5 w-5" />
+                                {message.toolResult.data.title}
+                              </CardTitle>
+                              <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                              <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {index < history.length - 1 && (
+                  <Separator className="my-8" />
+                )}
+              </React.Fragment>
+            ))
+          )}
+          {isTyping && (
+            <div className="mt-4">
+              <ThinkingIndicator />
             </div>
+          )}
         </div>
+      </ScrollArea>
+      <div className="p-4 border-t bg-background">
+        <div className="mx-auto max-w-3xl">
+          {imageDataUri && (
+            <div className="relative mb-2 w-fit">
+              <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {fileContent && fileName && (
+            <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
+              <FileText className="h-4 w-4" />
+              <span className="flex-1 truncate">{fileName}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <form
+            onSubmit={handleFormSubmit}
+            className="relative flex items-center rounded-full border bg-card p-2 shadow-lg focus-within:border-primary"
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
+                  <Paperclip className="h-5 w-5" />
+                  <span className="sr-only">Attach file</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message SearnAI..."
+              disabled={isTyping}
+              className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            <div className="flex items-center gap-1">
+              {toggleEditor && (
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0 lg:hidden" onClick={toggleEditor} disabled={isTyping}>
+                  <Brush className="h-5 w-5" />
+                  <span className="sr-only">Open AI Editor</span>
+                </Button>
+              )}
+              <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+              </Button>
+              <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Send</span>
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </>
   );
 }
-
-    
-    

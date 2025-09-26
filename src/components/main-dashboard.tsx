@@ -15,6 +15,8 @@ import { AiEditorContent } from "./ai-editor-content";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import { cn } from "@/lib/utils";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
+import { ChatInput } from "./chat-input";
+import { ScrollArea } from "./ui/scroll-area";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -96,7 +98,6 @@ export function MainDashboard() {
           className="flex-1" 
           ref={panelGroupRef}
           onLayout={(sizes: number[]) => {
-            // This syncs the state if user manually resizes
             if (sizes[1] > 5) {
                 if (!isEditorVisible) setIsEditorVisible(true);
             } else {
@@ -105,7 +106,9 @@ export function MainDashboard() {
           }}
         >
           <ResizablePanel defaultSize={100} minSize={30}>
-            <ChatContent toggleEditor={toggleEditorPanel} />
+            <div className="h-full flex flex-col">
+              <ChatContent />
+            </div>
           </ResizablePanel>
           <ResizableHandle withHandle className={cn("hidden lg:flex")} />
           <ResizablePanel defaultSize={0} minSize={30} maxSize={50} collapsible collapsedSize={0} className={cn("hidden lg:block")}>
