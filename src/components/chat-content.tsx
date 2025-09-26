@@ -442,7 +442,19 @@ export function ChatContent() {
       <div className="relative flex-1">
         <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4">
-            {!showWelcome ? (
+            {showWelcome ? (
+               <div className="flex h-[calc(100vh-18rem)] flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Layers className="size-7" />
+                        </div>
+                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                           Hello!
+                        </h1>
+                    </div>
+                     <p className="text-muted-foreground">How can I help you today?</p>
+                </div>
+            ) : (
               history.map((message, index) => (
                 <React.Fragment key={`${message.id}-${index}`}>
                   <div
@@ -528,7 +540,7 @@ export function ChatContent() {
                   )}
                 </React.Fragment>
               ))
-            ) : null }
+            )}
             {isTyping && (
               <div className="mt-4">
                 <ThinkingIndicator />
@@ -538,19 +550,7 @@ export function ChatContent() {
         </ScrollArea>
       </div>
 
-       <div className={cn("p-4 w-full transition-all duration-300", showWelcome ? "absolute bottom-1/3 left-1/2 -translate-x-1/2" : "relative")}>
-        {showWelcome && (
-             <div className="flex flex-col items-center justify-end h-full text-center">
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Layers className="size-7" />
-                    </div>
-                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                        How can I help?
-                    </h1>
-                </div>
-            </div>
-        )}
+       <div className="p-4 w-full">
         <div className="mx-auto max-w-3xl">
           {imageDataUri && (
             <div className="relative mb-2 w-fit">

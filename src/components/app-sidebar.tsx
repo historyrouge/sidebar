@@ -47,6 +47,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const studyTools = [
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
@@ -73,6 +74,7 @@ const mainNav = [
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
+  const router = useRouter();
   const currentPathname = usePathname();
   const [pathname, setPathname] = useState("");
 
@@ -160,6 +162,26 @@ export function AppSidebar() {
                  {renderMenuItems(resources)}
             </SidebarMenu>
         </div>
+        <SidebarFooter className="p-2 border-t border-sidebar-border">
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <Link href="/settings">
+                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3">
+                            <Settings />
+                            <span className="text-sm">Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/about">
+                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3">
+                            <Info />
+                             <span className="text-sm">About Us</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
       </SidebarContent>
     </Sidebar>
   );
