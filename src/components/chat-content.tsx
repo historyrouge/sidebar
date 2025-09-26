@@ -570,7 +570,7 @@ export function ChatContent() {
           )}
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary max-w-3xl ml-auto"
+              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary max-w-3xl mx-auto"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
