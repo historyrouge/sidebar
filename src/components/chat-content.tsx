@@ -639,7 +639,7 @@ export function ChatContent() {
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
               {isOcrProcessing && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md">
-                    <p className="text-white font-bold text-lg">{Math.round(ocrProgress)}%</p>
+                    <p className="text-primary font-bold text-base drop-shadow-md">{Math.round(ocrProgress)}%</p>
                 </div>
               )}
               <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)} disabled={isOcrProcessing}>
@@ -698,3 +698,6 @@ export function ChatContent() {
   );
 }
 
+
+
+    
