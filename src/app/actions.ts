@@ -339,7 +339,7 @@ export async function generalChatAction(
         for (const model of sambaModels) {
             try {
                 // If there's an image, we must use a vision-capable model.
-                // We'll skip non-vision models in SambaNova and fall back to Gemini.
+                // We'll skip non-vision models in SambaNova and fall back to NVIDIA
                 if (input.imageDataUri) {
                      continue;
                 }
@@ -368,54 +368,36 @@ export async function generalChatAction(
         console.warn("SambaNova API credentials not configured. Skipping SambaNova models.");
     }
         
-    // 2. Fallback to Gemini (for vision) or NVIDIA
+    // 2. Fallback to NVIDIA
     try {
-        if (input.imageDataUri) { // Use Gemini for vision
-             if (!process.env.GEMINI_API_KEY) {
-                throw new Error("GEMINI_API_KEY is not configured for vision fallback.");
-            }
-            const { output } = await ai.generate({
-                model: visionModel,
-                prompt: {
-                    messages: messages.filter(m => m.role !== 'system')
-                },
-            });
-            if (output) {
-                return { data: { response: output.candidates[0].message.content[0].text as string } };
-            } else {
-                 throw new Error("Received an empty or invalid response from Gemini Vision.");
-            }
+        const nvidiaModelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
+        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL || !nvidiaModelName) {
+           throw new Error("NVIDIA API key, base URL, or model name is not configured for fallback.");
+       }
 
-        } else { // Use NVIDIA for text
-             const nvidiaModelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
-             if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL || !nvidiaModelName) {
-                throw new Error("NVIDIA API key, base URL, or model name is not configured for fallback.");
-            }
+       const nvidiaMessages = messages
+           .filter(m => m.role !== 'system')
+           .map(m => {
+               if (Array.isArray(m.content)) {
+                   // NVIDIA does not support multipart messages, so extract text
+                   const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
+                   return { role: m.role === 'assistant' ? 'assistant' : 'user', content: textPart };
+               }
+               return m.role === 'assistant' ? { role: 'assistant', content: m.content} : { role: 'user', content: m.content };
+           })
+           .filter(m => m.content); // Filter out messages that became empty
+           
+       const nvidiaResponse = await nvidiaClient.chat.completions.create({
+           model: nvidiaModelName,
+           messages: nvidiaMessages,
+           temperature: 0.8,
+       });
 
-            const nvidiaMessages = messages
-                .filter(m => m.role !== 'system')
-                .map(m => {
-                    if (Array.isArray(m.content)) {
-                        // NVIDIA does not support multipart messages, so extract text
-                        const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
-                        return { role: m.role === 'assistant' ? 'assistant' : 'user', content: textPart };
-                    }
-                    return m.role === 'assistant' ? { role: 'assistant', content: m.content} : { role: 'user', content: m.content };
-                })
-                .filter(m => m.content); // Filter out messages that became empty
-                
-            const nvidiaResponse = await nvidiaClient.chat.completions.create({
-                model: nvidiaModelName,
-                messages: nvidiaMessages,
-                temperature: 0.8,
-            });
-
-            if (nvidiaResponse.choices?.[0]?.message?.content) {
-                return { data: { response: nvidiaResponse.choices[0].message.content } };
-            } else {
-                throw new Error("Received an empty or invalid response from NVIDIA.");
-            }
-        }
+       if (nvidiaResponse.choices?.[0]?.message?.content) {
+           return { data: { response: nvidiaResponse.choices[0].message.content } };
+       } else {
+           throw new Error("Received an empty or invalid response from NVIDIA.");
+       }
     } catch (fallbackError: any) {
         console.error("All models failed.", { lastSambaError: lastError?.message, fallbackError: fallbackError.message });
         if (isRateLimitError(lastError) || isRateLimitError(fallbackError)) {
@@ -635,4 +617,5 @@ export async function imageToTextAction(
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
 
+    
     
