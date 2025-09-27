@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -229,7 +230,7 @@ export function ChatContent() {
         content: h.content,
       }));
       
-      const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
+      const result = await generalChatAction({ history: genkitHistory, imageDataUri: null, fileContent: currentFileContent });
 
       setIsTyping(false);
 
@@ -633,16 +634,15 @@ export function ChatContent() {
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
-          {isOcrProcessing && (
-              <div className="mb-2">
-                  <Progress value={ocrProgress} className="w-full h-1" />
-                  <p className="text-xs text-muted-foreground text-center mt-1">Extracting text from image...</p>
-              </div>
-          )}
-          {imageDataUri && !isOcrProcessing && (
+          {imageDataUri && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
-              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
+              {isOcrProcessing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md">
+                    <p className="text-white font-bold text-lg">{Math.round(ocrProgress)}%</p>
+                </div>
+              )}
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)} disabled={isOcrProcessing}>
                   <X className="h-4 w-4" />
               </Button>
             </div>
@@ -697,3 +697,4 @@ export function ChatContent() {
     </div>
   );
 }
+
