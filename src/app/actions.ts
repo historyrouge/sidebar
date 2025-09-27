@@ -344,6 +344,8 @@ export async function generalChatAction(
                      continue;
                 }
 
+                if (!model) continue; // Skip if model name is empty
+
                 const response = await sambaClient.chat.completions.create({
                     model: model,
                     messages: sambaMessages,
@@ -385,8 +387,9 @@ export async function generalChatAction(
             }
 
         } else { // Use NVIDIA for text
-             if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL) {
-                throw new Error("NVIDIA API key or base URL is not configured for fallback.");
+             const nvidiaModelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
+             if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL || !nvidiaModelName) {
+                throw new Error("NVIDIA API key, base URL, or model name is not configured for fallback.");
             }
 
             const nvidiaMessages = messages
@@ -402,7 +405,7 @@ export async function generalChatAction(
                 .filter(m => m.content); // Filter out messages that became empty
                 
             const nvidiaResponse = await nvidiaClient.chat.completions.create({
-                model: 'nvidia/nvidia-nemotron-nano-9b-v2',
+                model: nvidiaModelName,
                 messages: nvidiaMessages,
                 temperature: 0.8,
             });
@@ -631,3 +634,5 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
+
+    
