@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput, imageToTextAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -383,17 +383,34 @@ export function ChatContent() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setImageDataUri(reader.result as string);
+        reader.onloadend = async () => {
+          const dataUri = reader.result as string;
+          setImageDataUri(dataUri);
+          setFileContent(null); // Clear text file if image is uploaded
+          setFileName(null);
+
+          // Automatically extract text from image
+          const result = await imageToTextAction({ imageDataUri: dataUri });
+          if(result.data) {
+            setFileContent(result.data.text);
+            toast({
+              title: "Image Processed",
+              description: `Extracted ${result.data.text.split(' ').length} words. You can now ask questions about the image.`,
+            });
+          } else {
+            toast({
+              title: "OCR Failed",
+              description: result.error || "Could not extract text from the image.",
+              variant: "destructive"
+            })
+          }
         };
         reader.readAsDataURL(file);
-        setFileContent(null);
-        setFileName(null);
       } else {
         toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
       }
@@ -439,6 +456,8 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search for the latest AI trends</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create Presentation')}>Create Presentation</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                 <h1 className="text-4xl font-bold mt-4">SearnAI</h1>
                 <form
@@ -457,9 +476,18 @@ export function ChatContent() {
                         </Button>
                     </div>
                      <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                        <Button type="button" size="icon" variant="ghost" className="rounded-full h-9 w-9">
-                            <Plus className="h-5 w-5" />
-                        </Button>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" size="icon" variant="ghost" className="rounded-full h-9 w-9">
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                         <input type="file" ref={fileInputRef} className="hidden" />
                         <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('What are you thinking about?')}>Thinking</Button>
                         <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search</Button>
                     </div>
@@ -639,5 +667,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
