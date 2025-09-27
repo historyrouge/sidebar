@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -48,7 +49,16 @@ const imageToTextFlow = ai.defineFlow(
     outputSchema: ImageToTextOutputSchema,
   },
   async input => {
-    const {output} = await ocrPrompt(input);
-    return { text: output?.text ?? '' };
+    try {
+      const {output} = await ocrPrompt(input);
+      // Safely access the text property and provide a fallback.
+      return { text: output?.text ?? '' };
+    } catch (error) {
+      console.error("Error in imageToTextFlow:", error);
+      // Ensure a valid output is always returned, even on error.
+      return { text: '' };
+    }
   }
 );
+
+    
