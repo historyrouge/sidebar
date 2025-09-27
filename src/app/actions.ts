@@ -617,19 +617,17 @@ export async function generateEditedContentAction(
 }
 
 export async function imageToTextAction(
-  input: ImageToTextInput
+    input: ImageToTextInput
 ): Promise<ActionResult<ImageToTextOutput>> {
-  try {
-    const output = await imageToText(input);
-    return { data: output };
-  } catch (e: any) {
-    console.error("imageToTextAction Error:", e);
-    if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-    return { error: e.message || "An unknown error occurred while extracting text from the image." };
-  }
+    try {
+        const output = await imageToText(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error("imageToTextAction Error:", e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred while extracting text from the image." };
+    }
 }
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
-
-    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput, imageToTextAction } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,6 +25,9 @@ import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Progress } from "./ui/progress";
+import Tesseract from 'tesseract.js';
+
 
 type Message = {
   id: string;
@@ -144,6 +147,9 @@ export function ChatContent() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
 
   useEffect(() => {
     try {
@@ -280,7 +286,7 @@ export function ChatContent() {
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: "The response has been copied to your clipboard." });
+    toast({ title: "Copied!", description: "The response has been copied to clipboard." });
   };
   
   const handleShare = (text: string) => {
@@ -385,38 +391,55 @@ export function ChatContent() {
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const dataUri = reader.result as string;
-          setImageDataUri(dataUri);
-          setFileContent(null); // Clear text file if image is uploaded
-          setFileName(null);
+    if (!file) return;
 
-          // Automatically extract text from image
-          const result = await imageToTextAction({ imageDataUri: dataUri });
-          if(result.data) {
-            setFileContent(result.data.text);
+    if (!file.type.startsWith("image/")) {
+        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+        const dataUri = reader.result as string;
+        setImageDataUri(dataUri);
+        setFileContent(null);
+        setFileName(null);
+        setIsOcrProcessing(true);
+        setOcrProgress(0);
+
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                dataUri,
+                'eng',
+                { 
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            setOcrProgress(m.progress * 100);
+                        }
+                    }
+                }
+            );
+            setFileContent(text);
             toast({
               title: "Image Processed",
-              description: `Extracted ${result.data.text.split(' ').length} words. You can now ask questions about the image.`,
+              description: `Extracted ${text.split(' ').length} words. You can now ask questions about the image.`,
             });
-          } else {
+        } catch (error) {
+            console.error("Tesseract Error:", error);
             toast({
               title: "OCR Failed",
-              description: result.error || "Could not extract text from the image.",
+              description: "Could not extract text from the image.",
               variant: "destructive"
-            })
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
-      }
-    }
+            });
+        } finally {
+            setIsOcrProcessing(false);
+        }
+    };
+    reader.readAsDataURL(file);
+
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
 
   const handleOpenFileDialog = () => {
     if (fileInputRef.current) {
@@ -447,6 +470,7 @@ export function ChatContent() {
   }, [history]);
   
   const showWelcome = history.length === 0 && !isTyping;
+  const isInputDisabled = isTyping || isOcrProcessing;
 
   if (showWelcome) {
     return (
@@ -609,7 +633,13 @@ export function ChatContent() {
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
-          {imageDataUri && (
+          {isOcrProcessing && (
+              <div className="mb-2">
+                  <Progress value={ocrProgress} className="w-full h-1" />
+                  <p className="text-xs text-muted-foreground text-center mt-1">Extracting text from image...</p>
+              </div>
+          )}
+          {imageDataUri && !isOcrProcessing && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
               <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)}>
@@ -617,7 +647,7 @@ export function ChatContent() {
               </Button>
             </div>
           )}
-          {fileContent && fileName && (
+          {fileContent && fileName && !isOcrProcessing && (
             <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
               <FileText className="h-4 w-4" />
               <span className="flex-1 truncate">{fileName}</span>
@@ -632,7 +662,7 @@ export function ChatContent() {
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isTyping}>
+                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
                       <Paperclip className="h-5 w-5" />
                       <span className="sr-only">Attach file</span>
                     </Button>
@@ -646,17 +676,17 @@ export function ChatContent() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Message SearnAI..."
-                disabled={isTyping}
+                placeholder={isOcrProcessing ? "Processing image..." : "Message SearnAI..."}
+                disabled={isInputDisabled}
                 className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
               />
               <input type="file" ref={fileInputRef} className="hidden" />
               <div className="flex items-center gap-1">
-                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isTyping}>
+                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isTyping || (!input.trim() && !imageDataUri && !fileContent)}>
+                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Send</span>
                 </Button>
