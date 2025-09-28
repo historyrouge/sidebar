@@ -83,19 +83,19 @@ export function SettingsContent() {
 
                  <Card>
                     <CardContent className="p-2">
-                        <SettingsItem icon={<Bell className="h-5 w-5 text-muted-foreground" />} label="Notifications" href="#" />
+                        <SettingsItem icon={<Bell className="h-5 w-5 text-muted-foreground" />} label="Notifications" href="/settings/notifications" />
                         <Separator />
-                        <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & Privacy" href="#" />
+                        <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & Privacy" href="/settings/security" />
                          <Separator />
-                        <SettingsItem icon={<Users className="h-5 w-5 text-muted-foreground" />} label="Accounts" href="#" />
+                        <SettingsItem icon={<Users className="h-5 w-5 text-muted-foreground" />} label="Accounts" href="/settings/accounts" />
                     </CardContent>
                 </Card>
 
                  <Card>
                     <CardContent className="p-2">
-                        <SettingsItem icon={<Globe className="h-5 w-5 text-muted-foreground" />} label="Language" value="English" href="#" />
+                        <SettingsItem icon={<Globe className="h-5 w-5 text-muted-foreground" />} label="Language" value="English" href="/settings/language" />
                         <Separator />
-                        <SettingsItem icon={<ThumbsUp className="h-5 w-5 text-muted-foreground" />} label="Feedback" href="#" />
+                        <SettingsItem icon={<ThumbsUp className="h-5 w-5 text-muted-foreground" />} label="Feedback" href="/settings/feedback" />
                          <Separator />
                         <SettingsItem icon={<Info className="h-5 w-5 text-muted-foreground" />} label="About Us" href="/about" />
                     </CardContent>
