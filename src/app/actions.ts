@@ -254,71 +254,146 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
 7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
+const sambaModelFallbackOrder = [
+    'Llama-4-Maverick-17B-128E-Instruct',
+    'Meta-Llama-3.1-8B-Instruct',
+    'Qwen3-32B',
+    'DeepSeek-R1-0528',
+];
+
+const nvidiaModelFallbackOrder = [
+    'nvidia/llama3-70b',
+];
+
+
+async function tryChatCompletion(
+    provider: 'samba' | 'nvidia' | 'gemini',
+    models: string[],
+    prompt: string | MessageData[]
+): Promise<string> {
+    
+    let client: typeof sambaClient | typeof nvidiaClient | null = null;
+    let isConfigured = false;
+    
+    if (provider === 'samba') {
+        if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
+            client = sambaClient;
+            isConfigured = true;
+        }
+    } else if (provider === 'nvidia') {
+         if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
+            client = nvidiaClient;
+            isConfigured = true;
+        }
+    } else if (provider === 'gemini') {
+        isConfigured = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
+    }
+
+    if (!isConfigured) {
+        throw new Error(`Provider ${provider} is not configured.`);
+    }
+
+    if (provider === 'gemini') {
+         const { text } = await ai.generate({
+             prompt: prompt as MessageData[], // Gemini uses Genkit's `generate` with a prompt array
+         });
+         return text;
+    }
+
+    // For Samba and NVIDIA
+    for (const modelName of models) {
+        try {
+            console.log(`Trying model: ${modelName} with provider: ${provider}`);
+            const response = await (client as typeof sambaClient).chat.completions.create({
+                model: modelName,
+                messages: [{ role: 'user', content: prompt as string }],
+                stream: false,
+            });
+
+            if (response.choices?.[0]?.message?.content) {
+                return response.choices[0].message.content;
+            }
+            throw new Error('Empty response from model.');
+        } catch (error: any) {
+            console.warn(`Model ${modelName} failed:`, error.message);
+            if (isRateLimitError(error)) {
+                continue; // Try the next model if it's a rate limit error
+            }
+            throw error; // Rethrow other errors
+        }
+    }
+    throw new Error(`All models for provider ${provider} failed or were rate-limited.`);
+}
+
+
 export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    const { history, prompt: contextPrompt, model, imageDataUri, fileContent } = input;
+    const { history, prompt: contextPrompt, imageDataUri, fileContent } = input;
     const lastUserMessage = history[history.length - 1];
 
-    let fullPrompt = chatSystemPrompt;
-    if (contextPrompt) {
-        fullPrompt = `${contextPrompt}\n\n${fullPrompt}`;
-    }
-
-    const conversationHistory = history.slice(0, -1).map(h => `${h.role === 'user' ? 'User' : 'SearnAI'}: ${h.content}`).join('\n\n');
-    fullPrompt += `\n\n--- Conversation History ---\n${conversationHistory}`;
-
-    let userContent = lastUserMessage.content as string;
-
-    if (fileContent) {
-        const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
-        userContent += fileContext;
-    }
-    
-    if (imageDataUri) {
-        userContent += `\n\n[The user has also attached an image. Please analyze it and incorporate it into your response.]`;
-    }
-
-    fullPrompt += `\n\nUser: ${userContent}\n\nSearnAI:`;
-    
     try {
         let responseText: string;
-        let client: typeof nvidiaClient | typeof sambaClient;
-        let modelName: string;
 
-        // Fallback Logic: Prioritize SambaNova, then fallback to NVIDIA
-        if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
-            client = sambaClient;
-            modelName = 'Meta-Llama-3.1-8B-Instruct';
-        } else if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
-            client = nvidiaClient;
-            modelName = 'nvidia/llama3-70b';
+        // If there's an image, we must use a multimodal model (Gemini)
+        if (imageDataUri) {
+            const messages: MessageData[] = history.map(h => ({
+                role: h.role,
+                content: [{ text: h.content as string }]
+            }));
+            const lastMessage = messages[messages.length - 1];
+            lastMessage.content.push({ media: { url: imageDataUri } });
+
+            responseText = await tryChatCompletion('gemini', [], messages);
         } else {
-             return { error: "No chat models are configured. Please set API keys for SambaNova or NVIDIA in your environment variables." };
-        }
-        
-        const response = await client.chat.completions.create({
-            model: modelName,
-            messages: [{ role: 'user', content: fullPrompt }],
-            stream: false,
-        });
+             // Construct the unified prompt string for non-image chats
+            let fullPrompt = chatSystemPrompt;
+            if (contextPrompt) {
+                fullPrompt = `${contextPrompt}\n\n${fullPrompt}`;
+            }
 
-        if (!response.choices?.[0]?.message?.content) {
-            throw new Error("Received an empty response from the AI.");
+            const conversationHistory = history.slice(0, -1).map(h => `${h.role === 'user' ? 'User' : 'SearnAI'}: ${h.content}`).join('\n\n');
+            fullPrompt += `\n\n--- Conversation History ---\n${conversationHistory}`;
+            
+            let userContent = lastUserMessage.content as string;
+            if (fileContent) {
+                userContent += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+            }
+            fullPrompt += `\n\nUser: ${userContent}\n\nSearnAI:`;
+
+            try {
+                responseText = await tryChatCompletion('samba', sambaModelFallbackOrder, fullPrompt);
+            } catch (sambaError: any) {
+                console.warn("SambaNova models failed, falling back to NVIDIA.", sambaError.message);
+                try {
+                    responseText = await tryChatCompletion('nvidia', nvidiaModelFallbackOrder, fullPrompt);
+                } catch (nvidiaError: any) {
+                    console.warn("NVIDIA models failed, falling back to Gemini.", nvidiaError.message);
+                    // For Gemini, we need to convert the prompt back to MessageData[]
+                     const geminiHistory: MessageData[] = history.map(h => ({
+                        role: h.role as 'user' | 'model',
+                        content: [{ text: h.content as string }],
+                    }));
+                     if (fileContent) {
+                        geminiHistory[geminiHistory.length - 1].content.push({ text: `\n\n[File Content for Context]:\n${fileContent}` });
+                    }
+                    responseText = await tryChatCompletion('gemini', [], geminiHistory);
+                }
+            }
         }
-        responseText = response.choices[0].message.content;
 
         return { data: { response: responseText } };
 
     } catch (e: any) {
-        console.error("Chat error:", e);
+        console.error("Chat Action Error:", e);
         if (isRateLimitError(e)) {
             return { error: "API_LIMIT_EXCEEDED" };
         }
-        return { error: e.message || "An error occurred with the AI model." };
+        return { error: e.message || "An error occurred with all available AI models." };
     }
 }
+
 
 export async function textToSpeechAction(
   input: TextToSpeechInput
@@ -532,3 +607,5 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
 
     
     
+
+  
