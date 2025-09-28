@@ -230,7 +230,7 @@ export function ChatContent() {
         content: h.content,
       }));
       
-      const result = await generalChatAction({ history: genkitHistory, imageDataUri: null, fileContent: currentFileContent });
+      const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
 
       setIsTyping(false);
 
@@ -697,7 +697,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-
-
-    
