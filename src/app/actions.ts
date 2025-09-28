@@ -287,15 +287,15 @@ export async function generalChatAction(
         let client: typeof nvidiaClient | typeof sambaClient;
         let modelName: string;
 
-        // Fallback Logic: Prioritize NVIDIA, then fallback to SambaNova
-        if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
-            client = nvidiaClient;
-            modelName = 'nvidia/llama3-70b';
-        } else if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
+        // Fallback Logic: Prioritize SambaNova, then fallback to NVIDIA
+        if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
             client = sambaClient;
             modelName = 'Meta-Llama-3.1-8B-Instruct';
+        } else if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
+            client = nvidiaClient;
+            modelName = 'nvidia/llama3-70b';
         } else {
-             return { error: "No chat models are configured. Please set API keys for NVIDIA or SambaNova in your environment variables." };
+             return { error: "No chat models are configured. Please set API keys for SambaNova or NVIDIA in your environment variables." };
         }
         
         const response = await client.chat.completions.create({
