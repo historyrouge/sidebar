@@ -266,39 +266,41 @@ export async function generalChatAction(
         fullPrompt = `${contextPrompt}\n\n${fullPrompt}`;
     }
 
+    const conversationHistory = history.slice(0, -1).map(h => `${h.role === 'user' ? 'User' : 'SearnAI'}: ${h.content}`).join('\n\n');
+    fullPrompt += `\n\n--- Conversation History ---\n${conversationHistory}`;
+
+    let userContent = lastUserMessage.content as string;
+
     if (fileContent) {
         const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
-        fullPrompt += fileContext;
+        userContent += fileContext;
     }
     
-    const messages: any[] = [
-        { role: 'system', content: fullPrompt },
-        ...history.slice(0, -1).map(h => ({ role: h.role, content: h.content })),
-    ];
-    
-    // Handle multipart user message (text + image)
-    const userMessageParts: any[] = [{ type: 'text', text: lastUserMessage.content }];
     if (imageDataUri) {
-         userMessageParts.push({ type: 'image_url', image_url: { url: imageDataUri } });
+        userContent += `\n\n[The user has also attached an image. Please analyze it and incorporate it into your response.]`;
     }
-    messages.push({ role: 'user', content: userMessageParts });
-    
 
+    fullPrompt += `\n\nUser: ${userContent}\n\nSearnAI:`;
+    
     try {
         let responseText: string;
-        let client = sambaClient;
-        let modelName = 'Meta-Llama-3.1-8B-Instruct';
+        let client: typeof nvidiaClient | typeof sambaClient;
+        let modelName: string;
 
-        if (model === 'nvidia' && process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
+        // Fallback Logic: Prioritize NVIDIA, then fallback to SambaNova
+        if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
             client = nvidiaClient;
             modelName = 'nvidia/llama3-70b';
-        } else if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
-            return { error: "SambaNova API key or base URL is not configured." };
+        } else if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
+            client = sambaClient;
+            modelName = 'Meta-Llama-3.1-8B-Instruct';
+        } else {
+             return { error: "No chat models are configured. Please set API keys for NVIDIA or SambaNova in your environment variables." };
         }
         
         const response = await client.chat.completions.create({
             model: modelName,
-            messages: messages,
+            messages: [{ role: 'user', content: fullPrompt }],
             stream: false,
         });
 
