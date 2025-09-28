@@ -32,8 +32,8 @@ import Tesseract from 'tesseract.js';
 
 type Message = {
   id: string;
-  role: "user" | "model";
-  content: string;
+  role: "user" | "model" | "tool";
+  content: any;
   toolResult?: {
     type: 'questionPaper',
     data: GenerateQuestionPaperOutput
@@ -226,7 +226,7 @@ export function ChatContent() {
       const modelMessageId = `${Date.now()}-model`;
       
       const genkitHistory = chatHistory.map(h => ({
-        role: h.role as 'user' | 'model',
+        role: h.role as 'user' | 'model' | 'tool',
         content: h.content,
       }));
       
@@ -514,7 +514,7 @@ export function ChatContent() {
                         </DropdownMenu>
                          <input type="file" ref={fileInputRef} className="hidden" />
                         <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('What are you thinking about?')}>Thinking</Button>
-                        <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search</Button>
+                        <Button type="button" variant="outline" className="rounded-full" onClick={() => setInput('Search for: ')}>Search</Button>
                     </div>
                     <div className="absolute right-4 bottom-4 flex items-center">
                         <Button type="submit" size="icon" className="h-9 w-9 rounded-full" disabled={isTyping || !input.trim()}>
