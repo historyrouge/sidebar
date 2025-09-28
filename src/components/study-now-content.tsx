@@ -451,7 +451,7 @@ export function StudyNowContent() {
   const analysisAsImageOutput = analysis as AnalyzeImageContentOutput;
 
   return (
-    <div className="flex h-screen flex-col bg-muted/20 dark:bg-transparent">
+    <div className="flex h-screen flex-col bg-muted/40">
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
             <DialogContent>
                 <DialogHeader><DialogTitle>Capture from Camera</DialogTitle></DialogHeader>
@@ -500,8 +500,8 @@ export function StudyNowContent() {
             <h1 className="text-xl font-semibold tracking-tight">Study Session</h1>
         </div>
       </header>
-      <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-        <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-8">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-4xl space-y-8">
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
@@ -509,8 +509,8 @@ export function StudyNowContent() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input placeholder="Enter a title for your material..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-semibold" disabled={isLoading} />
-              {isLoadingMaterial ? <Skeleton className="w-full h-full flex-1" /> : imageDataUri ? (
-                <div className="relative flex-1">
+              {isLoadingMaterial ? <Skeleton className="w-full h-full min-h-[300px] flex-1" /> : imageDataUri ? (
+                <div className="relative flex-1 min-h-[300px]">
                     <Image src={imageDataUri} alt="Uploaded content" layout="fill" objectFit="contain" className="rounded-md border" />
                     <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}><X className="h-4 w-4" /></Button>
                 </div>
@@ -540,7 +540,7 @@ export function StudyNowContent() {
             </CardFooter>
           </Card>
 
-          <Card className="flex flex-col @container">
+          <Card className="flex flex-col @container min-h-[400px]">
             <CardHeader>
               <CardTitle>AI-Powered Study Tools</CardTitle>
               <CardDescription>Tools are powered by their optimal AI models.</CardDescription>
@@ -677,3 +677,5 @@ export function StudyNowContent() {
     </div>
   );
 }
+
+    
