@@ -377,6 +377,9 @@ export async function generalChatAction(
 
         // If there's an image, we must use a multimodal model (Gemini)
         if (imageDataUri) {
+            if (!process.env.GEMINI_API_KEY) {
+                return { error: "Gemini API key is not configured for image analysis." };
+            }
             const messages: MessageData[] = history.map(h => ({
                 role: h.role,
                 content: [{ text: h.content as string }]
@@ -408,16 +411,8 @@ export async function generalChatAction(
                 try {
                     responseText = await tryChatCompletion('nvidia', nvidiaModelFallbackOrder, fullPrompt);
                 } catch (nvidiaError: any) {
-                    console.warn("NVIDIA models failed, falling back to Gemini.", nvidiaError.message);
-                    // For Gemini, we need to convert the prompt back to MessageData[]
-                     const geminiHistory: MessageData[] = history.map(h => ({
-                        role: h.role as 'user' | 'model',
-                        content: [{ text: h.content as string }],
-                    }));
-                     if (fileContent) {
-                        geminiHistory[geminiHistory.length - 1].content.push({ text: `\n\n[File Content for Context]:\n${fileContent}` });
-                    }
-                    responseText = await tryChatCompletion('gemini', [], geminiHistory);
+                    console.error("All primary and secondary models (SambaNova, NVIDIA) have failed.", nvidiaError.message);
+                    return { error: "All available AI models are currently offline or have reached their limits. Please try again later." };
                 }
             }
         }
@@ -429,7 +424,7 @@ export async function generalChatAction(
         if (isRateLimitError(e)) {
             return { error: "API_LIMIT_EXCEEDED" };
         }
-        return { error: e.message || "An error occurred with all available AI models." };
+        return { error: e.message || "An unexpected error occurred." };
     }
 }
 
