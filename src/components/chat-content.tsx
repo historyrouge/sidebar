@@ -477,7 +477,6 @@ export function ChatContent() {
                 <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Search for the latest AI trends')}>Search for the latest AI trends</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create Presentation')}>Create Presentation</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
@@ -510,7 +509,6 @@ export function ChatContent() {
                         </DropdownMenu>
                          <input type="file" ref={fileInputRef} className="hidden" />
                         <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('What are you thinking about?')}>Thinking</Button>
-                        <Button type="button" variant="outline" className="rounded-full" onClick={() => setInput('Search for: ')}>Search</Button>
                     </div>
                     <div className="absolute right-4 bottom-4 flex items-center">
                         <Button type="submit" size="icon" className="h-9 w-9 rounded-full" disabled={isTyping || !input.trim()}>
@@ -681,4 +679,5 @@ export function ChatContent() {
   );
 }
 
+    
     

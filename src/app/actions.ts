@@ -23,7 +23,6 @@ import { openai as sambaClient } from "@/lib/openai";
 import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 import { ai, visionModel, googleAI } from "@/ai/genkit";
-import { searchWeb } from "@/ai/tools/duckduckgo-search";
 import { MessageData, Part } from "genkit";
 
 
@@ -242,121 +241,76 @@ export async function helpChatAction(
 const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and expert Indian guide.
 
 Your primary goal is to provide clear, accurate, and exceptionally well-structured answers. Follow these rules:
-1.  **Web Search**: If the user asks you to "search for", "look up", or "find information on" a topic, you MUST use the \`searchWeb\` tool to get up-to-date information.
-2.  **Direct & Concise First**: For simple, factual questions, give a short, direct answer first.
-3.  **Detailed Explanations for Study Topics**: If the user asks about an academic or complex topic, provide a thorough, well-structured explanation. Use Markdown for clarity:
+1.  **Direct & Concise First**: For simple, factual questions, give a short, direct answer first.
+2.  **Detailed Explanations for Study Topics**: If the user asks about an academic or complex topic, provide a thorough, well-structured explanation. Use Markdown for clarity:
     *   Start with a summary or definition.
     *   Use headings (e.g., \`### Section Title\`) for main sections.
     *   Use tables for comparisons or data.
     *   Use bullet points for lists.
     *   **CRITICAL**: Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$). Do NOT use any other delimiters like square brackets.
-4.  **Natural Language**: Write in a helpful, educational, and professional tone. Avoid overly casual slang, but you can use the word "mate" occasionally in conversational contexts.
-5.  **No Code for Non-Code**: Do NOT wrap your general text responses in markdown code fences (\`\`\`).
-6.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do not ask the user to create the file themselves.
-7.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
-8.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
+3.  **Natural Language**: Write in a helpful, educational, and professional tone. Avoid overly casual slang, but you can use the word "mate" occasionally in conversational contexts.
+4.  **No Code for Non-Code**: Do NOT wrap your general text responses in markdown code fences (\`\`\`).
+5.  **Handle File Generation**: If the user asks for a file like a PDF or a downloadable document, generate the content for that file directly in your response, formatted in clean Markdown. Do not ask the user to create the file themselves.
+6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
+7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
 export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    let messages: MessageData[] = [];
-    
-    // System prompt is handled by the prompt definition now
-    // messages.push({ role: 'system', content: chatSystemPrompt, tools: [searchWeb] });
+    const { history, prompt: contextPrompt, model, imageDataUri, fileContent } = input;
+    const lastUserMessage = history[history.length - 1];
 
-    // Add conversation history
-    input.history.forEach((h: any) => {
-        let parts: Part[] = [];
-        if (h.role === 'user') {
-            if (typeof h.content === 'string') {
-                parts.push({text: h.content});
-            } else if (Array.isArray(h.content)) { // Handle multipart content from previous turns
-                 h.content.forEach((part: any) => {
-                    if (part.type === 'text') {
-                        parts.push({text: part.text});
-                    } else if (part.type === 'image_url') {
-                        parts.push({media: {url: part.image_url.url}});
-                    }
-                });
-            }
-             // Add the new image for the current turn, if it exists
-            if (input.history[input.history.length - 1] === h && input.imageDataUri) {
-                parts.push({media: {url: input.imageDataUri}});
-            }
-            messages.push({role: 'user', content: parts});
-        } else if (h.role === 'model') {
-            messages.push({role: 'model', content: [{text: h.content}]});
-        } else if (h.role === 'tool') {
-             // Find the tool request in the previous model message
-            const lastModelMessage = messages[messages.length - 1];
-            if (lastModelMessage && lastModelMessage.role === 'model' && lastModelMessage.content) {
-                const toolRequestPart = lastModelMessage.content.find(p => p.toolRequest);
-                if (toolRequestPart) {
-                    messages.push({role: 'tool', content: [{toolResponse: {
-                        name: toolRequestPart.toolRequest!.name,
-                        output: h.content,
-                    }}]});
-                }
-            }
-        }
-    });
+    let fullPrompt = chatSystemPrompt;
+    if (contextPrompt) {
+        fullPrompt = `${contextPrompt}\n\n${fullPrompt}`;
+    }
 
-    if (input.fileContent) {
-        const lastUserMessage = messages[messages.length - 1];
-        if (lastUserMessage.role === 'user') {
-            const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${input.fileContent}\n---`;
-            let textPart = lastUserMessage.content.find(p => p.text);
-            if (textPart && textPart.text) {
-                textPart.text += fileContext;
-            } else {
-                lastUserMessage.content.unshift({ text: fileContext });
-            }
-        }
+    if (fileContent) {
+        const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+        fullPrompt += fileContext;
     }
     
+    const messages: any[] = [
+        { role: 'system', content: fullPrompt },
+        ...history.slice(0, -1).map(h => ({ role: h.role, content: h.content })),
+    ];
+    
+    // Handle multipart user message (text + image)
+    const userMessageParts: any[] = [{ type: 'text', text: lastUserMessage.content }];
+    if (imageDataUri) {
+         userMessageParts.push({ type: 'image_url', image_url: { url: imageDataUri } });
+    }
+    messages.push({ role: 'user', content: userMessageParts });
+    
+
     try {
-        const chatPrompt = ai.definePrompt(
-          {
-            name: 'mainChatPrompt',
-            tools: [searchWeb],
-            system: chatSystemPrompt,
-          },
-          async () => {}
-        );
+        let responseText: string;
+        let client = sambaClient;
+        let modelName = 'Meta-Llama-3.1-8B-Instruct';
+
+        if (model === 'nvidia' && process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
+            client = nvidiaClient;
+            modelName = 'nvidia/llama3-70b';
+        } else if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+            return { error: "SambaNova API key or base URL is not configured." };
+        }
         
-        const response = await chatPrompt({
-            history: messages.slice(0, -1), // History without the last message
-            messages: [messages[messages.length-1]], // Last message
+        const response = await client.chat.completions.create({
+            model: modelName,
+            messages: messages,
+            stream: false,
         });
 
-        const outputText = response.text;
-        const toolRequests = response.toolRequests;
-
-        if (toolRequests.length > 0) {
-            // For now, we only handle the first tool request.
-            const toolRequest = toolRequests[0];
-            const toolResult = await ai.runTool(toolRequest);
-            
-            // Add the tool request and result to the history and call again
-            const newHistory = [
-                ...messages,
-                {role: 'model' as const, content: [{ toolRequest: toolRequest }]},
-                {role: 'tool' as const, content: [{ toolResponse: {name: toolRequest.name, output: toolResult}}]}
-            ];
-            
-            const finalResponse = await chatPrompt({
-                history: newHistory,
-            });
-
-            return { data: { response: finalResponse.text } };
-
-        } else {
-             return { data: { response: outputText } };
+        if (!response.choices?.[0]?.message?.content) {
+            throw new Error("Received an empty response from the AI.");
         }
+        responseText = response.choices[0].message.content;
+
+        return { data: { response: responseText } };
 
     } catch (e: any) {
-        console.error("Gemini chat error:", e);
+        console.error("Chat error:", e);
         if (isRateLimitError(e)) {
             return { error: "API_LIMIT_EXCEEDED" };
         }
@@ -574,4 +528,5 @@ export async function imageToTextAction(
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
 
+    
     
