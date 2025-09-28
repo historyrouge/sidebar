@@ -4,18 +4,27 @@
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Label } from "./ui/label";
-import { Check, Moon, Sun } from "lucide-react";
+import { Check, Moon, Sun, SlidersHorizontal, Database, Bell, Paintbrush, Computer, Calendar, Users, Lock, Info, Globe, ThumbsUp, ChevronRight, Pause, Edit } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import Link from "next/link";
+import { Separator } from "./ui/separator";
 
-const accentColors = [
-    { name: 'default', color: 'hsl(217 91% 60%)' },
-    { name: 'rose', color: 'hsl(347 77% 55%)' },
-    { name: 'orange', color: 'hsl(25 95% 53%)' },
-    { name: 'green', color: 'hsl(142 71% 45%)' },
-];
+const SettingsItem = ({ icon, label, href, value }: { icon: React.ReactNode; label: string; href: string; value?: string }) => (
+    <Link href={href} className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer">
+        <div className="flex items-center gap-4">
+            {icon}
+            <span className="font-medium">{label}</span>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+            {value && <span className="text-sm">{value}</span>}
+            <ChevronRight className="h-5 w-5" />
+        </div>
+    </Link>
+);
+
 
 export function SettingsContent() {
   const { theme, setTheme } = useTheme();
@@ -30,52 +39,54 @@ export function SettingsContent() {
             </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-            <div className="mx-auto max-w-2xl space-y-6">
+            <div className="mx-auto max-w-2xl space-y-8">
+
+                <div className="flex flex-col items-center text-center">
+                    <div className="relative mb-4">
+                        <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+                            <AvatarFallback className="bg-avatar-accent">
+                                <Pause className="h-10 w-10 text-white/90" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <Button variant="outline" size="icon" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full border-2 bg-background">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <h2 className="text-2xl font-bold">Harsh</h2>
+                    <p className="text-muted-foreground">Hello! I'm using Arattai</p>
+                </div>
+
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Appearance</CardTitle>
-                        <CardDescription>Customize the look and feel of the app.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <Label>Theme</Label>
-                            <div className="flex items-center gap-2 rounded-lg border p-1">
-                                <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('light')}><Sun/></Button>
-                                <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="icon" onClick={() => setTheme('dark')}><Moon /></Button>
-                            </div>
-                        </div>
-                         <div className="flex items-center justify-between">
-                            <Label>Accent Color</Label>
-                             <div className="flex items-center gap-2">
-                                {/* Accent color functionality is temporarily disabled for theme refactor */}
-                                {accentColors.map((item) => (
-                                    <Button
-                                        key={item.name}
-                                        variant="outline"
-                                        size="icon"
-                                        disabled
-                                        className={cn("h-8 w-8 rounded-full", theme === item.name && "border-2 border-foreground")}
-                                        style={{ backgroundColor: item.color }}
-                                    >
-                                        {theme === item.name && <Check className="h-4 w-4 text-white" />}
-                                        <span className="sr-only">{item.name}</span>
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
+                    <CardContent className="p-2">
+                        <SettingsItem icon={<SlidersHorizontal className="h-5 w-5 text-muted-foreground" />} label="Personalize" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Database className="h-5 w-5 text-muted-foreground" />} label="Data & storage" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Bell className="h-5 w-5 text-muted-foreground" />} label="Notifications" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Paintbrush className="h-5 w-5 text-muted-foreground" />} label="Appearance" href="/settings" />
+                         <Separator />
+                        <SettingsItem icon={<Computer className="h-5 w-5 text-muted-foreground" />} label="Devices & sessions" href="#" />
+                         <Separator />
+                        <SettingsItem icon={<Calendar className="h-5 w-5 text-muted-foreground" />} label="Calls & meetings" href="#" />
                     </CardContent>
                 </Card>
+
                  <Card>
-                    <CardHeader>
-                        <CardTitle>AI Settings</CardTitle>
-                        <CardDescription>The AI models for each feature have been preset for optimal performance and quality.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li className="flex items-center justify-between"><span>Chat & Image Generation</span><span className="font-medium text-foreground">Gemini</span></li>
-                            <li className="flex items-center justify-between"><span>Analysis, Quizzes, & eBooks</span><span className="font-medium text-foreground">Qwen</span></li>
-                             <li className="flex items-center justify-between"><span>Code Analysis & Question Papers</span><span className="font-medium text-foreground">SambaNova</span></li>
-                        </ul>
+                    <CardContent className="p-2">
+                        <SettingsItem icon={<Users className="h-5 w-5 text-muted-foreground" />} label="Accounts" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & privacy" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Info className="h-5 w-5 text-muted-foreground" />} label="About us" href="/about" />
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardContent className="p-2">
+                        <SettingsItem icon={<Globe className="h-5 w-5 text-muted-foreground" />} label="Language" value="English" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<ThumbsUp className="h-5 w-5 text-muted-foreground" />} label="Feedback" href="#" />
                     </CardContent>
                 </Card>
             </div>

@@ -51,6 +51,7 @@
     --sidebar-group-foreground: 0 0% 63%;
 
     --chat-input-background: 0 0% 10%;
+    --avatar-accent: 225 73% 57%; /* #3B82F6 */
   }
  
   .dark {
@@ -98,6 +99,7 @@
     --sidebar-group-foreground: 0 0% 63%;
 
     --chat-input-background: 0 0% 10%;
+    --avatar-accent: 225 73% 57%; /* #3B82F6 */
   }
 }
 
@@ -143,5 +145,9 @@
 
     .bg-chat-input {
       background-color: hsl(var(--chat-input-background));
+    }
+
+    .bg-avatar-accent {
+        background-color: hsl(var(--avatar-accent));
     }
 }
