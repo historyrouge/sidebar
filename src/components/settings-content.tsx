@@ -4,13 +4,13 @@
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Check, Moon, Sun, SlidersHorizontal, Database, Bell, Paintbrush, Computer, Calendar, Users, Lock, Info, Globe, ThumbsUp, ChevronRight, Pause, Edit } from "lucide-react";
+import { SlidersHorizontal, Database, Bell, Paintbrush, Computer, Calendar, Users, Lock, Info, Globe, ThumbsUp, ChevronRight, Edit } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import Link from "next/link";
 import { Separator } from "./ui/separator";
+import { useEffect, useState } from "react";
 
 const SettingsItem = ({ icon, label, href, value }: { icon: React.ReactNode; label: string; href: string; value?: string }) => (
     <Link href={href} className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer">
@@ -27,7 +27,20 @@ const SettingsItem = ({ icon, label, href, value }: { icon: React.ReactNode; lab
 
 
 export function SettingsContent() {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const [userName, setUserName] = useState("Guest");
+  const [userStatus, setUserStatus] = useState("Using SearnAI");
+
+  useEffect(() => {
+    try {
+        const storedName = localStorage.getItem("userName");
+        const storedStatus = localStorage.getItem("userStatus");
+        if (storedName) setUserName(storedName);
+        if (storedStatus) setUserStatus(storedStatus);
+    } catch (e) {
+        console.warn("Could not access localStorage for user settings.");
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-muted/40">
@@ -44,41 +57,37 @@ export function SettingsContent() {
                 <div className="flex flex-col items-center text-center">
                     <div className="relative mb-4">
                         <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-                            <AvatarFallback className="bg-avatar-accent">
-                                <Pause className="h-10 w-10 text-white/90" />
+                            <AvatarFallback className="bg-avatar-accent text-3xl font-bold text-white/90">
+                                {userName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
-                        <Button variant="outline" size="icon" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full border-2 bg-background">
-                            <Edit className="h-4 w-4" />
-                        </Button>
+                         <Link href="/settings/personalize">
+                            <Button variant="outline" size="icon" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full border-2 bg-background">
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                        </Link>
                     </div>
-                    <h2 className="text-2xl font-bold">Harsh</h2>
-                    <p className="text-muted-foreground">Hello! I'm using Arattai</p>
+                    <h2 className="text-2xl font-bold">{userName}</h2>
+                    <p className="text-muted-foreground">{userStatus}</p>
                 </div>
 
                 <Card>
                     <CardContent className="p-2">
-                        <SettingsItem icon={<SlidersHorizontal className="h-5 w-5 text-muted-foreground" />} label="Personalize" href="#" />
+                        <SettingsItem icon={<SlidersHorizontal className="h-5 w-5 text-muted-foreground" />} label="Personalize" href="/settings/personalize" />
                         <Separator />
-                        <SettingsItem icon={<Database className="h-5 w-5 text-muted-foreground" />} label="Data & storage" href="#" />
-                        <Separator />
-                        <SettingsItem icon={<Bell className="h-5 w-5 text-muted-foreground" />} label="Notifications" href="#" />
-                        <Separator />
-                        <SettingsItem icon={<Paintbrush className="h-5 w-5 text-muted-foreground" />} label="Appearance" href="/settings" />
+                        <SettingsItem icon={<Paintbrush className="h-5 w-5 text-muted-foreground" />} label="Appearance" href="/settings/appearance" />
                          <Separator />
-                        <SettingsItem icon={<Computer className="h-5 w-5 text-muted-foreground" />} label="Devices & sessions" href="#" />
-                         <Separator />
-                        <SettingsItem icon={<Calendar className="h-5 w-5 text-muted-foreground" />} label="Calls & meetings" href="#" />
+                        <SettingsItem icon={<Database className="h-5 w-5 text-muted-foreground" />} label="Data & Storage" href="/settings/data" />
                     </CardContent>
                 </Card>
 
                  <Card>
                     <CardContent className="p-2">
+                        <SettingsItem icon={<Bell className="h-5 w-5 text-muted-foreground" />} label="Notifications" href="#" />
+                        <Separator />
+                        <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & Privacy" href="#" />
+                         <Separator />
                         <SettingsItem icon={<Users className="h-5 w-5 text-muted-foreground" />} label="Accounts" href="#" />
-                        <Separator />
-                        <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & privacy" href="#" />
-                        <Separator />
-                        <SettingsItem icon={<Info className="h-5 w-5 text-muted-foreground" />} label="About us" href="/about" />
                     </CardContent>
                 </Card>
 
@@ -87,6 +96,8 @@ export function SettingsContent() {
                         <SettingsItem icon={<Globe className="h-5 w-5 text-muted-foreground" />} label="Language" value="English" href="#" />
                         <Separator />
                         <SettingsItem icon={<ThumbsUp className="h-5 w-5 text-muted-foreground" />} label="Feedback" href="#" />
+                         <Separator />
+                        <SettingsItem icon={<Info className="h-5 w-5 text-muted-foreground" />} label="About Us" href="/about" />
                     </CardContent>
                 </Card>
             </div>
