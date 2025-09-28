@@ -26,9 +26,6 @@ export const searchWeb = ai.defineTool(
   },
   async ({ query }) => {
     try {
-        if (!process.env.DUCKDUCKGO_TOKEN) {
-            console.warn("DUCKDUCKGO_TOKEN is not set. Search may be rate-limited.");
-        }
       const searchResponse = await ddg.search(query, {
         safeSearch: 'Strict',
       });
