@@ -34,10 +34,6 @@ type Message = {
   id: string;
   role: "user" | "model" | "tool";
   content: any;
-  toolResult?: {
-    type: 'questionPaper',
-    data: GenerateQuestionPaperOutput
-  }
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
@@ -572,7 +568,8 @@ export function ChatContent() {
                                     {children}
                                   </code>
                                 );
-                              }
+                              },
+                              p: ({node, ...props}) => <p className="mb-4" {...props} />,
                             }}
                           >
                             {message.content}
@@ -600,20 +597,6 @@ export function ChatContent() {
                               <RefreshCw className="h-4 w-4" />
                             </Button>
                           </div>
-                          {message.toolResult?.type === 'questionPaper' && (
-                            <Card className="bg-muted/50 mt-2">
-                              <CardHeader className="p-4">
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                  <FileText className="h-5 w-5" />
-                                  {message.toolResult.data.title}
-                                </CardTitle>
-                                <CardDescription className="text-xs">A question paper has been generated for you.</CardDescription>
-                              </CardHeader>
-                              <CardContent className="p-4 pt-0">
-                                <Button type="button" className="w-full" onClick={() => handleViewQuestionPaper(message.toolResult!.data)}>View Question Paper</Button>
-                              </CardContent>
-                            </Card>
-                          )}
                         </div>
                       </div>
                     )}
@@ -697,3 +680,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    

@@ -24,6 +24,7 @@ import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 import { ai, visionModel, googleAI } from "@/ai/genkit";
 import { searchWeb } from "@/ai/tools/duckduckgo-search";
+import { MessageData, Part } from "genkit";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -259,155 +260,107 @@ export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    let messages: any[] = [];
+    let messages: MessageData[] = [];
     
-    // Add system prompt
-    messages.push({ role: 'system', content: chatSystemPrompt, tools: [searchWeb] });
+    // System prompt is handled by the prompt definition now
+    // messages.push({ role: 'system', content: chatSystemPrompt, tools: [searchWeb] });
 
     // Add conversation history
     input.history.forEach((h: any) => {
+        let parts: Part[] = [];
         if (h.role === 'user') {
-            const userMessage: any = { role: 'user', content: [] };
-            
-            // Handle text content
             if (typeof h.content === 'string') {
-                userMessage.content.push({ type: 'text', text: h.content });
+                parts.push({text: h.content});
             } else if (Array.isArray(h.content)) { // Handle multipart content from previous turns
                  h.content.forEach((part: any) => {
                     if (part.type === 'text') {
-                        userMessage.content.push({ type: 'text', text: part.text });
+                        parts.push({text: part.text});
                     } else if (part.type === 'image_url') {
-                        userMessage.content.push({ type: 'image_url', image_url: { url: part.image_url.url } });
+                        parts.push({media: {url: part.image_url.url}});
                     }
                 });
             }
-
-            // Add the new image for the current turn, if it exists
-            if (h.role === 'user' && input.history[input.history.length - 1] === h && input.imageDataUri) {
-                userMessage.content.push({ type: 'image_url', image_url: { url: input.imageDataUri } });
+             // Add the new image for the current turn, if it exists
+            if (input.history[input.history.length - 1] === h && input.imageDataUri) {
+                parts.push({media: {url: input.imageDataUri}});
             }
-
-            messages.push(userMessage);
-
+            messages.push({role: 'user', content: parts});
         } else if (h.role === 'model') {
-            messages.push({ role: 'assistant', content: h.content });
+            messages.push({role: 'model', content: [{text: h.content}]});
         } else if (h.role === 'tool') {
-             messages.push({ role: 'tool', content: h.content });
+             // Find the tool request in the previous model message
+            const lastModelMessage = messages[messages.length - 1];
+            if (lastModelMessage && lastModelMessage.role === 'model' && lastModelMessage.content) {
+                const toolRequestPart = lastModelMessage.content.find(p => p.toolRequest);
+                if (toolRequestPart) {
+                    messages.push({role: 'tool', content: [{toolResponse: {
+                        name: toolRequestPart.toolRequest!.name,
+                        output: h.content,
+                    }}]});
+                }
+            }
         }
     });
 
     if (input.fileContent) {
         const lastUserMessage = messages[messages.length - 1];
         if (lastUserMessage.role === 'user') {
-             // Find the text part and amend it. If no text part, add one.
-            let textPart = lastUserMessage.content.find((p: any) => p.type === 'text');
             const fileContext = `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${input.fileContent}\n---`;
-            if (textPart) {
+            let textPart = lastUserMessage.content.find(p => p.text);
+            if (textPart && textPart.text) {
                 textPart.text += fileContext;
             } else {
-                lastUserMessage.content.unshift({ type: 'text', text: fileContext });
+                lastUserMessage.content.unshift({ text: fileContext });
             }
         }
     }
-
-
-    const sambaModels = [
-        'gpt-oss-120b',
-        'Llama-4-Maverick-17B-128E-Instruct',
-        'DeepSeek-R1-0528',
-        'DeepSeek-V3-0324',
-        'DeepSeek-V3.1',
-        'Meta-Llama-3.1-8B-Instruct',
-        'DeepSeek-R1-Distill-Llama-70B',
-        'Meta-Llama-3.3-70B-Instruct',
-        'Qwen3-32B',
-        'Llama-3.3-Swallow-70B-Instruct-v0.4',
-    ];
     
-    let lastError: any = null;
-
-    // 1. Try SambaNova models in order
-    if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
-        const sambaMessages = messages
-            .map(m => {
-                if (m.role === 'system') return m;
-                if (Array.isArray(m.content)) {
-                    // For now, only take the text part for SambaNova, as it doesn't support images
-                    const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
-                    return { role: m.role, content: textPart };
-                }
-                return { role: m.role, content: m.content };
-            })
-            .filter(m => m.content); // Filter out messages that became empty
-            
-        for (const model of sambaModels) {
-            try {
-                // If there's an image, we must use a vision-capable model.
-                // We'll skip non-vision models in SambaNova and fall back to NVIDIA
-                if (input.imageDataUri) {
-                     continue;
-                }
-
-                if (!model) continue; // Skip if model name is empty
-
-                const response = await sambaClient.chat.completions.create({
-                    model: model,
-                    messages: sambaMessages,
-                    temperature: 0.8,
-                });
-        
-                if (response.choices?.[0]?.message?.content) {
-                    return { data: { response: response.choices[0].message.content } };
-                }
-            } catch (sambaError: any) {
-                lastError = sambaError;
-                console.warn(`SambaNova model '${model}' failed. Trying next model.`, sambaError.message);
-                if (isRateLimitError(sambaError)) {
-                    console.warn("SambaNova rate limit reached. Proceeding to fallback.");
-                    break; 
-                }
-            }
-        }
-    } else {
-        console.warn("SambaNova API credentials not configured. Skipping SambaNova models.");
-    }
-        
-    // 2. Fallback to NVIDIA
     try {
-        const nvidiaModelName = 'nvidia/nvidia-nemotron-nano-9b-v2';
-        if (!process.env.NVIDIA_API_KEY || !process.env.NVIDIA_BASE_URL || !nvidiaModelName) {
-           throw new Error("NVIDIA API key, base URL, or model name is not configured for fallback.");
-       }
+        const chatPrompt = ai.definePrompt(
+          {
+            name: 'mainChatPrompt',
+            tools: [searchWeb],
+            system: chatSystemPrompt,
+          },
+          async () => {}
+        );
+        
+        const response = await chatPrompt({
+            history: messages.slice(0, -1), // History without the last message
+            messages: [messages[messages.length-1]], // Last message
+        });
 
-       const nvidiaMessages = messages
-           .filter(m => m.role !== 'system')
-           .map(m => {
-               if (Array.isArray(m.content)) {
-                   // NVIDIA does not support multipart messages, so extract text
-                   const textPart = m.content.find((p: any) => p.type === 'text')?.text || '';
-                   return { role: m.role === 'assistant' ? 'assistant' : 'user', content: textPart };
-               }
-               return m.role === 'assistant' ? { role: 'assistant', content: m.content} : { role: 'user', content: m.content };
-           })
-           .filter(m => m.content); // Filter out messages that became empty
-           
-       const nvidiaResponse = await nvidiaClient.chat.completions.create({
-           model: nvidiaModelName,
-           messages: nvidiaMessages,
-           temperature: 0.8,
-       });
+        const outputText = response.text;
+        const toolRequests = response.toolRequests;
 
-       if (nvidiaResponse.choices?.[0]?.message?.content) {
-           return { data: { response: nvidiaResponse.choices[0].message.content } };
-       } else {
-           throw new Error("Received an empty or invalid response from NVIDIA.");
-       }
-    } catch (fallbackError: any) {
-        console.error("All models failed.", { lastSambaError: lastError?.message, fallbackError: fallbackError.message });
-        if (isRateLimitError(lastError) || isRateLimitError(fallbackError)) {
+        if (toolRequests.length > 0) {
+            // For now, we only handle the first tool request.
+            const toolRequest = toolRequests[0];
+            const toolResult = await ai.runTool(toolRequest);
+            
+            // Add the tool request and result to the history and call again
+            const newHistory = [
+                ...messages,
+                {role: 'model' as const, content: [{ toolRequest: toolRequest }]},
+                {role: 'tool' as const, content: [{ toolResponse: {name: toolRequest.name, output: toolResult}}]}
+            ];
+            
+            const finalResponse = await chatPrompt({
+                history: newHistory,
+            });
+
+            return { data: { response: finalResponse.text } };
+
+        } else {
+             return { data: { response: outputText } };
+        }
+
+    } catch (e: any) {
+        console.error("Gemini chat error:", e);
+        if (isRateLimitError(e)) {
             return { error: "API_LIMIT_EXCEEDED" };
         }
-        return { error: fallbackError.message || "All AI models are currently unavailable. Please try again later." };
+        return { error: e.message || "An error occurred with the AI model." };
     }
 }
 
@@ -620,3 +573,5 @@ export async function imageToTextAction(
 
 
 export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQuizzesInput, GenerateFlashcardsSambaInput as GenerateFlashcardsInput, ChatWithTutorInput, HelpChatInput, TextToSpeechInput, GenerateImageInput, AnalyzeCodeInput, SummarizeContentInput, GenerateMindMapInput, GenerateQuestionPaperInput, AnalyzeImageContentInput, GenerateEbookChapterInput, GeneratePresentationInput, GenerateEditedContentInput, ImageToTextInput };
+
+    
