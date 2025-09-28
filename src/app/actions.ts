@@ -256,13 +256,21 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 
 const sambaModelFallbackOrder = [
     'Llama-4-Maverick-17B-128E-Instruct',
-    'Meta-Llama-3.1-8B-Instruct',
+    'Meta-Llama-3.3-70B-Instruct',
+    'Llama-3.3-Swallow-70B-Instruct-v0.4',
+    'gpt-oss-120b',
+    'DeepSeek-R1-Distill-Llama-70B',
     'Qwen3-32B',
+    'Meta-Llama-3.1-8B-Instruct',
     'DeepSeek-R1-0528',
+    'DeepSeek-V3-0324',
+    'DeepSeek-V3.1'
 ];
 
 const nvidiaModelFallbackOrder = [
     'nvidia/llama3-70b',
+    'nvidia/llama3-8b',
+    'mistralai/mistral-7b-instruct-v0.2',
 ];
 
 
