@@ -157,15 +157,45 @@ export async function analyzeImageContentAction(
     input: AnalyzeImageContentInput
 ): Promise<ActionResult<AnalyzeImageContentOutput>> {
     try {
-        // Image analysis is always done by Gemini as it's a multimodal model
-        const output = await analyzeImageContent(input);
+        // Step 1: Extract text from the image using OCR (imageToText flow)
+        const ocrResult = await imageToText(input);
+        if (!ocrResult.text) {
+            throw new Error("Could not extract any text from the image. Please try a clearer image.");
+        }
+        
+        // Combine extracted text with the user's optional prompt
+        let combinedContent = ocrResult.text;
+        if (input.prompt) {
+            combinedContent = `User's prompt: "${input.prompt}"\n\nExtracted text from image:\n---\n${ocrResult.text}`;
+        }
+
+        // Step 2: Analyze the extracted text using the standard text analysis action
+        const analysisResult = await analyzeContentAction(combinedContent);
+
+        if (analysisResult.error) {
+            throw new Error(analysisResult.error);
+        }
+
+        // The output of analyzeContentAction fits the structure required by AnalyzeImageContentOutput,
+        // but we'll cast it to be sure. We are losing the diagram/entity-specific fields here.
+        const output: AnalyzeImageContentOutput = {
+            summary: analysisResult.data?.summary || '',
+            keyConcepts: analysisResult.data?.keyConcepts || [],
+            codeExamples: analysisResult.data?.codeExamples || [],
+            potentialQuestions: analysisResult.data?.potentialQuestions || [],
+            relatedTopics: analysisResult.data?.relatedTopics || [],
+            entities: { people: [], places: [], dates: [] }, // This data is lost in the new flow
+            diagrams: [], // This data is lost in the new flow
+        };
+
         return { data: output };
     } catch (e: any) {
-        console.error(e);
+        console.error("Image Analysis Action Error:", e);
         if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-        return { error: e.message || "An unknown error occurred." };
+        return { error: e.message || "An unknown error occurred during image analysis." };
     }
 }
+
 
 export async function generateFlashcardsAction(
   input: GenerateFlashcardsSambaInput
@@ -316,6 +346,7 @@ async function tryChatCompletion(
                 model: modelName,
                 messages: [{ role: 'user', content: prompt as string }],
                 stream: false,
+                response_format: { type: 'text' },
             });
 
             if (response.choices?.[0]?.message?.content) {
@@ -327,7 +358,7 @@ async function tryChatCompletion(
             if (isRateLimitError(error)) {
                 continue; // Try the next model if it's a rate limit error
             }
-            throw error; // Rethrow other errors
+            // Do not rethrow other errors, just continue to the next model
         }
     }
     throw new Error(`All models for provider ${provider} failed or were rate-limited.`);
@@ -617,3 +648,6 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
     
 
   
+
+
+    
