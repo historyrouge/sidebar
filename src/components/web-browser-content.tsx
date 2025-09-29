@@ -9,8 +9,8 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter } from "next/navigation";
 
 export function WebBrowserContent() {
-    const [url, setUrl] = useState("https://duckduckgo.com");
-    const [displayUrl, setDisplayUrl] = useState("https://duckduckgo.com");
+    const [url, setUrl] = useState("https://example.com");
+    const [displayUrl, setDisplayUrl] = useState("https://example.com");
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const router = useRouter();
 
@@ -36,7 +36,7 @@ export function WebBrowserContent() {
     };
     
     const handleGoHome = () => {
-        const homeUrl = "https://duckduckgo.com";
+        const homeUrl = "https://example.com";
         setDisplayUrl(homeUrl);
         setUrl(homeUrl);
     }
@@ -68,7 +68,7 @@ export function WebBrowserContent() {
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             className="w-full pl-10"
-                            placeholder="Search with DuckDuckGo or type a URL"
+                            placeholder="Enter a URL..."
                         />
                     </div>
                 </form>
