@@ -284,47 +284,32 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 6.  **Proactive Assistance**: After answering a detailed question, proactively ask a follow-up question. Suggest a mind-map, a flowchart, more examples, or a mnemonic to help them learn.
 7.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive.`;
 
-// Optimized fallback order for speed
 const sambaModelFallbackOrder = [
+    'gpt-oss-120b',
+    'Llama-4-Maverick-17B-128E-Instruct',
+    'Meta-Llama-3.3-70B-Instruct',
+    'Llama-3.3-Swallow-70B-Instruct-v0.4',
+    'DeepSeek-R1-Distill-Llama-70B',
+    'Qwen3-32B',
     'Meta-Llama-3.1-8B-Instruct',
+    'DeepSeek-R1-0528',
+    'DeepSeek-V3-0324',
+    'DeepSeek-V3.1',
 ];
-
-const nvidiaModelFallbackOrder = [
-    'nvidia/llama3-70b',
-];
-
 
 async function tryChatCompletion(
-    provider: 'samba' | 'nvidia',
     models: string[],
     prompt: string
 ): Promise<string> {
     
-    let client: typeof sambaClient | typeof nvidiaClient | null = null;
-    let isConfigured = false;
-    
-    if (provider === 'samba') {
-        if (process.env.SAMBANOVA_API_KEY && process.env.SAMBANOVA_BASE_URL) {
-            client = sambaClient;
-            isConfigured = true;
-        }
-    } else if (provider === 'nvidia') {
-         if (process.env.NVIDIA_API_KEY && process.env.NVIDIA_BASE_URL) {
-            client = nvidiaClient;
-            isConfigured = true;
-        }
+    if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        throw new Error(`SambaNova is not configured.`);
     }
 
-    if (!isConfigured) {
-        throw new Error(`Provider ${provider} is not configured.`);
-    }
-
-
-    // For Samba and NVIDIA
     for (const modelName of models) {
         try {
-            console.log(`Trying model: ${modelName} with provider: ${provider}`);
-            const response = await (client as typeof sambaClient).chat.completions.create({
+            console.log(`Trying model: ${modelName} with provider: SambaNova`);
+            const response = await sambaClient.chat.completions.create({
                 model: modelName,
                 messages: [{ role: 'user', content: prompt }],
                 stream: false,
@@ -340,10 +325,9 @@ async function tryChatCompletion(
             if (isRateLimitError(error)) {
                 continue; // Try the next model if it's a rate limit error
             }
-            // Do not rethrow other errors, just continue to the next model
         }
     }
-    throw new Error(`All models for provider ${provider} failed or were rate-limited.`);
+    throw new Error(`All SambaNova models failed or were rate-limited.`);
 }
 
 
@@ -374,15 +358,10 @@ export async function generalChatAction(
         fullPrompt += `\n\nUser: ${userContent}\n\nSearnAI:`;
 
         try {
-            responseText = await tryChatCompletion('samba', sambaModelFallbackOrder, fullPrompt);
+            responseText = await tryChatCompletion(sambaModelFallbackOrder, fullPrompt);
         } catch (sambaError: any) {
-            console.warn("SambaNova models failed, falling back to NVIDIA.", sambaError.message);
-            try {
-                responseText = await tryChatCompletion('nvidia', nvidiaModelFallbackOrder, fullPrompt);
-            } catch (nvidiaError: any) {
-                console.error("All primary and secondary models (SambaNova, NVIDIA) have failed.", nvidiaError.message);
-                return { error: "All available AI models are currently offline or have reached their limits. Please try again later." };
-            }
+             console.error("All SambaNova models have failed.", sambaError.message);
+             return { error: "All available SambaNova AI models are currently offline or have reached their limits. Please try again later." };
         }
 
         return { data: { response: responseText } };
@@ -614,5 +593,6 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
 
 
     
+
 
 
