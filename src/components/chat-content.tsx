@@ -148,7 +148,7 @@ export function ChatContent() {
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
 
-  const [currentModel, setCurrentModel] = useState('gpt-oss-120b');
+  const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
 
   useEffect(() => {
     try {
