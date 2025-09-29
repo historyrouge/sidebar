@@ -286,20 +286,14 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 
 const sambaModelFallbackOrder = [
     'gpt-oss-120b',
-    'Llama-4-Maverick-17B-128E-Instruct',
-    'Meta-Llama-3.3-70B-Instruct',
-    'Llama-3.3-Swallow-70B-Instruct-v0.4',
-    'DeepSeek-R1-Distill-Llama-70B',
     'Qwen3-32B',
+    'Llama-4-Maverick-17B-128E-Instruct',
     'Meta-Llama-3.1-8B-Instruct',
-    'DeepSeek-R1-0528',
-    'DeepSeek-V3-0324',
-    'DeepSeek-V3.1',
 ];
 
 async function tryChatCompletion(
     models: string[],
-    messages: any[], // Accepts a structured message array now
+    messages: any[],
 ): Promise<string> {
     
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
@@ -311,7 +305,7 @@ async function tryChatCompletion(
             console.log(`Trying model: ${modelName} with provider: SambaNova`);
             const response = await sambaClient.chat.completions.create({
                 model: modelName,
-                messages: messages, // Pass the structured messages
+                messages: messages,
                 stream: false,
             });
 
@@ -322,7 +316,7 @@ async function tryChatCompletion(
         } catch (error: any) {
             console.warn(`Model ${modelName} failed:`, error.message);
             if (isRateLimitError(error)) {
-                continue; // Try the next model if it's a rate limit error
+                continue;
             }
         }
     }
@@ -338,27 +332,18 @@ export async function generalChatAction(
     try {
         let responseText: string;
 
-        // Construct the messages array
         const messages: any[] = [{ role: 'system', content: chatSystemPrompt }];
         
-        // Add conversation history
         history.forEach(h => {
             if (h.role === 'user' || h.role === 'model') {
                 messages.push({ role: h.role, content: h.content });
             }
         });
 
-        // The last message is the current user input, which might be multimodal
         const lastMessage = messages[messages.length - 1];
         if (lastMessage.role === 'user') {
             const userContent: any[] = [{ type: 'text', text: lastMessage.content }];
 
-            // Add file content as extra text context if available
-            if (fileContent) {
-                userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
-            }
-            
-            // If there's an image, add it to the content array
             if (imageDataUri) {
                 userContent.push({
                     type: "image_url",
@@ -366,7 +351,10 @@ export async function generalChatAction(
                         "url": imageDataUri
                     }
                 });
+            } else if (fileContent) {
+                 userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
             }
+            
             lastMessage.content = userContent;
         }
 
@@ -610,3 +598,6 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
 
 
 
+
+
+    
