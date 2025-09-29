@@ -33,7 +33,7 @@ import { ModelSwitcher } from "./model-switcher";
 type Message = {
   id: string;
   role: "user" | "model" | "tool";
-  content: any;
+  content: { text: string; image?: string | null };
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
@@ -225,7 +225,7 @@ export function ChatContent() {
       
       const genkitHistory = chatHistory.map(h => ({
         role: h.role as 'user' | 'model' | 'tool',
-        content: h.content,
+        content: h.content.text, // Pass only text content
       }));
       
       const result = await generalChatAction({ 
@@ -249,7 +249,7 @@ export function ChatContent() {
       }
 
        if (result.data) {
-        const modelMessage: Message = { id: modelMessageId, role: "model", content: result.data.response };
+        const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
         setHistory((prev) => [...prev, modelMessage]);
       }
       
@@ -285,7 +285,9 @@ export function ChatContent() {
 
       const historyForRegen = history.slice(0, lastUserMessageIndex + 1);
       setHistory(historyForRegen);
-      await executeChat(historyForRegen);
+      
+      const lastUserMessage = historyForRegen[lastUserMessageIndex];
+      await executeChat(historyForRegen, lastUserMessage.content.image, fileContent);
   };
 
 
@@ -463,43 +465,49 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create Presentation')}>Create Presentation</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
-                <form
-                    onSubmit={handleFormSubmit}
-                    className="relative w-full rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
-                >
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                                <Paperclip className="h-5 w-5" />
-                                <span className="sr-only">Attach file</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Message SearnAI..."
-                        disabled={isInputDisabled}
-                        className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
-                    />
-                    <input type="file" ref={fileInputRef} className="hidden" />
-                    <div className="flex items-center gap-1">
-                         <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
-                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
-                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                        </Button>
-                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
-                            <Send className="h-5 w-5" />
-                            <span className="sr-only">Send</span>
-                        </Button>
+                 <div className="w-full max-w-3xl">
+                     <div className="flex justify-start mb-2">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+                        </div>
                     </div>
-                </form>
+                    <form
+                        onSubmit={handleFormSubmit}
+                        className="relative w-full rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
+                    >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                    <Paperclip className="h-5 w-5" />
+                                    <span className="sr-only">Attach file</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Message SearnAI..."
+                            disabled={isInputDisabled}
+                            className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+                        />
+                        <input type="file" ref={fileInputRef} className="hidden" />
+                        <div className="flex items-center gap-1">
+                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+                            </Button>
+                            <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                                <Send className="h-5 w-5" />
+                                <span className="sr-only">Send</span>
+                            </Button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     )
@@ -556,7 +564,7 @@ export function ChatContent() {
                               p: ({node, ...props}) => <p className="mb-4" {...props} />,
                             }}
                           >
-                            {message.content}
+                            {message.content.text}
                           </ReactMarkdown>
                           {audioDataUri && isSynthesizing === message.id && (
                             <audio
@@ -568,13 +576,13 @@ export function ChatContent() {
                             />
                           )}
                           <div className="mt-2 flex items-center gap-1 transition-opacity">
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content.text)}>
                               <Copy className="h-4 w-4" />
                             </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content.text)}>
                               <Share2 className="h-4 w-4" />
                             </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
                               {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                             </Button>
                             <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
@@ -669,5 +677,7 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
