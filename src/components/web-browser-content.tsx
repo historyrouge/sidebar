@@ -1,12 +1,11 @@
 
 "use client";
 
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, FormEvent, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe, X } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 export function WebBrowserContent() {
@@ -37,11 +36,17 @@ export function WebBrowserContent() {
     };
     
     const handleGoHome = () => {
-        setDisplayUrl("https://www.google.com");
-        setUrl("https://www.google.com");
+        const homeUrl = "https://www.google.com";
+        setDisplayUrl(homeUrl);
+        setUrl(homeUrl);
     }
+    
+    useEffect(() => {
+        handleGoHome();
+    }, []);
 
     const isSecure = displayUrl.startsWith("https://");
+    const proxiedUrl = `/api/proxy?url=${encodeURIComponent(displayUrl)}`;
 
     return (
         <div className="flex h-full flex-col">
@@ -72,21 +77,12 @@ export function WebBrowserContent() {
             <main className="flex-1 bg-muted">
                 <iframe
                     ref={iframeRef}
-                    src={displayUrl}
+                    src={proxiedUrl}
                     className="w-full h-full border-0"
                     title="Web Browser"
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                     onLoad={() => {
-                        try {
-                           const newUrl = iframeRef.current?.contentWindow?.location.href;
-                           // Check if it's not a "blocked" or "about:blank" page
-                           if(newUrl && !newUrl.startsWith('about:')) {
-                               setUrl(newUrl);
-                           }
-                        } catch (e) {
-                            // Cross-origin error, can't access location.href. This is expected.
-                            // We can't update the URL bar, but navigation still works.
-                        }
+                        // We can no longer read the URL due to the proxy. This is expected.
                     }}
                 />
             </main>
