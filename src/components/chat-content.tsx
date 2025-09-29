@@ -480,8 +480,6 @@ export function ChatContent() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
-
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -491,6 +489,7 @@ export function ChatContent() {
                     />
                     <input type="file" ref={fileInputRef} className="hidden" />
                     <div className="flex items-center gap-1">
+                         <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -621,6 +620,9 @@ export function ChatContent() {
               </Button>
             </div>
           )}
+          <div className="flex justify-center mb-2">
+            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+          </div>
           <form
               onSubmit={handleFormSubmit}
               className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
@@ -637,8 +639,6 @@ export function ChatContent() {
                     <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-               <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
 
               <Input
                 value={input}
@@ -664,5 +664,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
