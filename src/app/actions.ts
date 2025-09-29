@@ -299,7 +299,7 @@ const sambaModelFallbackOrder = [
 
 async function tryChatCompletion(
     models: string[],
-    prompt: string
+    messages: any[], // Accepts a structured message array now
 ): Promise<string> {
     
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
@@ -311,9 +311,8 @@ async function tryChatCompletion(
             console.log(`Trying model: ${modelName} with provider: SambaNova`);
             const response = await sambaClient.chat.completions.create({
                 model: modelName,
-                messages: [{ role: 'user', content: prompt }],
+                messages: messages, // Pass the structured messages
                 stream: false,
-                response_format: { type: 'text' },
             });
 
             if (response.choices?.[0]?.message?.content) {
@@ -330,35 +329,49 @@ async function tryChatCompletion(
     throw new Error(`All SambaNova models failed or were rate-limited.`);
 }
 
-
 export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
     const { history, prompt: contextPrompt, imageDataUri, fileContent } = input;
-    const lastUserMessage = history[history.length - 1];
 
     try {
         let responseText: string;
 
-        // Construct the unified prompt string for all chats
-        let fullPrompt = chatSystemPrompt;
-        if (contextPrompt) {
-            fullPrompt = `${contextPrompt}\n\n${fullPrompt}`;
-        }
-
-        const conversationHistory = history.slice(0, -1).map(h => `${h.role === 'user' ? 'User' : 'SearnAI'}: ${h.content}`).join('\n\n');
-        fullPrompt += `\n\n--- Conversation History ---\n${conversationHistory}`;
+        // Construct the messages array
+        const messages: any[] = [{ role: 'system', content: chatSystemPrompt }];
         
-        let userContent = lastUserMessage.content as string;
-        // If fileContent (from OCR or .txt) exists, append it as context
-        if (fileContent) {
-            userContent += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+        // Add conversation history
+        history.forEach(h => {
+            if (h.role === 'user' || h.role === 'model') {
+                messages.push({ role: h.role, content: h.content });
+            }
+        });
+
+        // The last message is the current user input, which might be multimodal
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.role === 'user') {
+            const userContent: any[] = [{ type: 'text', text: lastMessage.content }];
+
+            // Add file content as extra text context if available
+            if (fileContent) {
+                userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+            }
+            
+            // If there's an image, add it to the content array
+            if (imageDataUri) {
+                userContent.push({
+                    type: "image_url",
+                    image_url: {
+                        "url": imageDataUri
+                    }
+                });
+            }
+            lastMessage.content = userContent;
         }
-        fullPrompt += `\n\nUser: ${userContent}\n\nSearnAI:`;
 
         try {
-            responseText = await tryChatCompletion(sambaModelFallbackOrder, fullPrompt);
+            responseText = await tryChatCompletion(sambaModelFallbackOrder, messages);
         } catch (sambaError: any) {
              console.error("All SambaNova models have failed.", sambaError.message);
              return { error: "All available SambaNova AI models are currently offline or have reached their limits. Please try again later." };
@@ -593,6 +606,7 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
 
 
     
+
 
 
 
