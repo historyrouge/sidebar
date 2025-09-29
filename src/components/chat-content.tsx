@@ -271,9 +271,10 @@ export function ChatContent() {
 
     await executeChat(newHistory, imageDataUri, fileContent);
     
-    setImageDataUri(null);
-    setFileContent(null);
-    setFileName(null);
+    // Do not clear image/file after sending for follow-up questions
+    // setImageDataUri(null);
+    // setFileContent(null);
+    // setFileName(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, isRecording, history, executeChat, imageDataUri, fileContent]);
@@ -663,3 +664,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
