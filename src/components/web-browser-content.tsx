@@ -80,7 +80,7 @@ export function WebBrowserContent() {
                     src={proxiedUrl}
                     className="w-full h-full border-0"
                     title="Web Browser"
-                    sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                    sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-top-navigation-by-user-activation"
                     onLoad={() => {
                         // We can no longer read the URL due to the proxy. This is expected.
                     }}
