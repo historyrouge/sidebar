@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -31,7 +32,6 @@ export function ModelSwitcher({ selectedModel, onModelChange, disabled }: ModelS
             <DropdownMenuTrigger asChild>
                 <Button 
                     type="button" 
-                    size="sm" 
                     variant="ghost" 
                     className="flex-shrink-0 h-9 gap-2 text-muted-foreground"
                     disabled={disabled}

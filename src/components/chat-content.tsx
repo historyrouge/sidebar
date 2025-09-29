@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -471,7 +472,7 @@ export function ChatContent() {
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
                         <Link href="/ai-editor">
-                            <Button variant="outline" size="sm" className="bg-muted/50 rounded-lg">
+                            <Button variant="outline" className="bg-muted/50 rounded-lg">
                                 DeepThink
                             </Button>
                         </Link>
@@ -641,7 +642,7 @@ export function ChatContent() {
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
             </div>
              <Link href="/ai-editor">
-                <Button variant="outline" size="sm" className="bg-muted/50 rounded-lg">
+                <Button variant="outline" className="bg-muted/50 rounded-lg">
                     DeepThink
                 </Button>
             </Link>
@@ -691,4 +692,5 @@ export function ChatContent() {
     
 
     
+
 
