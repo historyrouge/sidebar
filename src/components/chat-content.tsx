@@ -624,7 +624,9 @@ export function ChatContent() {
             </div>
           )}
           <div className="flex justify-start mb-2">
-            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+            <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+            </div>
           </div>
           <form
               onSubmit={handleFormSubmit}
@@ -667,3 +669,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
