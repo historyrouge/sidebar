@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -226,7 +225,7 @@ export function ChatContent() {
         content: h.content,
       }));
       
-      const result = await generalChatAction({ history: genkitHistory, imageDataUri: currentImageDataUri, fileContent: currentFileContent });
+      const result = await generalChatAction({ history: genkitHistory, fileContent: currentFileContent });
 
       setIsTyping(false);
 
@@ -482,37 +481,36 @@ export function ChatContent() {
                 </div>
                 <form
                     onSubmit={handleFormSubmit}
-                    className="relative w-full rounded-2xl bg-chat-input p-4 pr-16 shadow-lg"
+                    className="relative w-full rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
                 >
-                    <Textarea
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                <Paperclip className="h-5 w-5" />
+                                <span className="sr-only">Attach file</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="How can I help you today?"
-                        className="h-24 resize-none border-0 bg-transparent text-base shadow-none focus-visible:ring-0 placeholder:text-muted-foreground"
+                        placeholder="Message SearnAI..."
+                        disabled={isInputDisabled}
+                        className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                     />
-                    <div className="absolute right-4 top-4 flex items-center h-full">
-                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled>
-                            <Wand2 className="h-5 w-5" />
+                    <input type="file" ref={fileInputRef} className="hidden" />
+                    <div className="flex items-center gap-1">
+                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                         </Button>
-                    </div>
-                     <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button type="button" size="icon" variant="ghost" className="rounded-full h-9 w-9">
-                                    <Plus className="h-5 w-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                         <input type="file" ref={fileInputRef} className="hidden" />
-                        <Button type="button" variant="outline" className="rounded-full" onClick={() => handleSendMessage('What are you thinking about?')}>Thinking</Button>
-                    </div>
-                    <div className="absolute right-4 bottom-4 flex items-center">
-                        <Button type="submit" size="icon" className="h-9 w-9 rounded-full" disabled={isTyping || !input.trim()}>
-                            <ArrowUp className="h-5 w-5" />
+                        <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                            <Send className="h-5 w-5" />
                             <span className="sr-only">Send</span>
                         </Button>
                     </div>
@@ -678,6 +676,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-    
