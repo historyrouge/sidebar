@@ -32,7 +32,7 @@ export type ChatModel = 'samba' | 'nvidia';
 // Extend GeneralChatInput to include an optional prompt for specific scenarios
 export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
-  model?: ChatModel;
+  model?: string;
   imageDataUri?: string | null;
 };
 
@@ -292,15 +292,21 @@ const sambaModelFallbackOrder = [
 ];
 
 async function tryChatCompletion(
-    models: string[],
     messages: any[],
+    userSelectedModel?: string,
 ): Promise<string> {
     
     if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
         throw new Error(`SambaNova is not configured.`);
     }
+    
+    // Create a prioritized list of models
+    const modelPriorityList = [
+        ...(userSelectedModel ? [userSelectedModel] : []),
+        ...sambaModelFallbackOrder.filter(m => m !== userSelectedModel)
+    ];
 
-    for (const modelName of models) {
+    for (const modelName of modelPriorityList) {
         try {
             console.log(`Trying model: ${modelName} with provider: SambaNova`);
             const response = await sambaClient.chat.completions.create({
@@ -327,7 +333,7 @@ export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    const { history, prompt: contextPrompt, imageDataUri, fileContent } = input;
+    const { history, prompt: contextPrompt, imageDataUri, fileContent, model: userSelectedModel } = input;
 
     try {
         let responseText: string;
@@ -336,13 +342,15 @@ export async function generalChatAction(
         
         history.forEach(h => {
             if (h.role === 'user' || h.role === 'model') {
-                messages.push({ role: h.role, content: h.content });
+                // Ensure content is in the expected format for the API
+                const content = (typeof h.content === 'string') ? [{ type: 'text', text: h.content }] : h.content;
+                messages.push({ role: h.role, content: content });
             }
         });
 
         const lastMessage = messages[messages.length - 1];
         if (lastMessage.role === 'user') {
-            const userContent: any[] = [{ type: 'text', text: lastMessage.content }];
+            const userContent: any[] = lastMessage.content;
 
             if (imageDataUri) {
                 userContent.push({
@@ -359,7 +367,7 @@ export async function generalChatAction(
         }
 
         try {
-            responseText = await tryChatCompletion(sambaModelFallbackOrder, messages);
+            responseText = await tryChatCompletion(messages, userSelectedModel);
         } catch (sambaError: any) {
              console.error("All SambaNova models have failed.", sambaError.message);
              return { error: "All available SambaNova AI models are currently offline or have reached their limits. Please try again later." };
@@ -443,7 +451,7 @@ export async function getYoutubeTranscriptAction(
     {
     console.error(e);
     if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
-    return { error: e.message || "An unexpected error occurred while fetching the transcript." };
+    return { error: e.message || "An unknown error occurred while fetching the transcript." };
   }
 }
 

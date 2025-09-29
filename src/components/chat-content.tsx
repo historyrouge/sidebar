@@ -27,6 +27,7 @@ import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
+import { ModelSwitcher } from "./model-switcher";
 
 
 type Message = {
@@ -147,6 +148,8 @@ export function ChatContent() {
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
 
+  const [currentModel, setCurrentModel] = useState('gpt-oss-120b');
+
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
@@ -225,7 +228,12 @@ export function ChatContent() {
         content: h.content,
       }));
       
-      const result = await generalChatAction({ history: genkitHistory, fileContent: currentFileContent });
+      const result = await generalChatAction({ 
+          history: genkitHistory, 
+          fileContent: currentFileContent, 
+          imageDataUri: currentImageDataUri,
+          model: currentModel
+      });
 
       setIsTyping(false);
 
@@ -245,7 +253,7 @@ export function ChatContent() {
         setHistory((prev) => [...prev, modelMessage]);
       }
       
-  }, [toast]);
+  }, [toast, currentModel]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -400,36 +408,11 @@ export function ChatContent() {
         setImageDataUri(dataUri);
         setFileContent(null);
         setFileName(null);
-        setIsOcrProcessing(true);
-        setOcrProgress(0);
-
-        try {
-            const { data: { text } } = await Tesseract.recognize(
-                dataUri,
-                'eng',
-                { 
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            setOcrProgress(m.progress * 100);
-                        }
-                    }
-                }
-            );
-            setFileContent(text);
-            toast({
-              title: "Image Processed",
-              description: `Extracted ${text.split(' ').length} words. You can now ask questions about the image.`,
-            });
-        } catch (error) {
-            console.error("Tesseract Error:", error);
-            toast({
-              title: "OCR Failed",
-              description: "Could not extract text from the image.",
-              variant: "destructive"
-            });
-        } finally {
-            setIsOcrProcessing(false);
-        }
+        // We will pass the data URI directly to the model now, no need for OCR here.
+        toast({
+            title: "Image Attached",
+            description: `You can now ask questions about the image.`,
+        });
     };
     reader.readAsDataURL(file);
 
@@ -495,6 +478,8 @@ export function ChatContent() {
                             <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+
+                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
 
                     <Input
                         value={input}
@@ -651,6 +636,8 @@ export function ChatContent() {
                     <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+               <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
 
               <Input
                 value={input}
