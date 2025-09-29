@@ -107,7 +107,7 @@ export function AuthForm({ type }: AuthFormProps) {
     try {
       if (type === "signup") {
         await signUp(values.email, values.password);
-        // router.push("/onboarding"); // this will be handled by the protected route now
+        router.push("/");
       } else {
         await signIn(values.email, values.password);
         router.push("/");
@@ -127,13 +127,15 @@ export function AuthForm({ type }: AuthFormProps) {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
+      router.push("/");
     } catch (error: any) {
       toast({
         title: "Google Sign-In Failed",
         description: getFriendlyErrorMessage(error),
         variant: "destructive",
       });
-      setGoogleLoading(false);
+    } finally {
+        setGoogleLoading(false);
     }
   }
 
@@ -141,12 +143,14 @@ export function AuthForm({ type }: AuthFormProps) {
     setGithubLoading(true);
     try {
         await signInWithGitHub();
+        router.push("/");
     } catch (error: any) {
         toast({
             title: "GitHub Sign-In Failed",
             description: getFriendlyErrorMessage(error),
             variant: "destructive",
         });
+    } finally {
         setGithubLoading(false);
     }
   }
