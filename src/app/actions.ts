@@ -342,46 +342,39 @@ export async function generalChatAction(
 
     try {
         let responseText: string;
+        let messages: any[];
 
-        const messages: any[] = [{ role: 'system', content: chatSystemPrompt }];
-        
-        history.forEach(h => {
-            if (h.role === 'user' || h.role === 'model') {
-                // Ensure content is in the expected format for the API
-                const content = (typeof h.content === 'string') ? [{ type: 'text', text: h.content }] : h.content;
-                messages.push({ role: h.role, content: content });
+        if (imageDataUri) {
+            const userContent: any[] = [{ type: 'text', text: history[history.length - 1].content }];
+            userContent.push({
+                type: "image_url",
+                image_url: { "url": imageDataUri }
+            });
+             if(fileContent) {
+                 userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
             }
-        });
+            messages = [
+                { role: 'system', content: chatSystemPrompt },
+                { role: 'user', content: userContent }
+            ];
+        } else {
+            messages = [{ role: 'system', content: chatSystemPrompt }];
+            history.forEach(h => {
+                if (h.role === 'user' || h.role === 'model') {
+                    messages.push({ role: h.role, content: h.content });
+                }
+            });
 
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage.role === 'user') {
-            const userContent: any[] = [];
-
-            // Add text part first
-            if (lastMessage.content && Array.isArray(lastMessage.content) && lastMessage.content[0]?.type === 'text') {
-                 userContent.push({ type: 'text', text: lastMessage.content[0].text });
-            } else if (typeof lastMessage.content === 'string') {
-                 userContent.push({ type: 'text', text: lastMessage.content });
-            }
-
-            if (imageDataUri) {
-                userContent.push({
-                    type: "image_url",
-                    image_url: { "url": imageDataUri }
-                });
-            }
-            
             if(fileContent) {
-                const textPart = userContent.find(p => p.type === 'text');
-                if (textPart) {
-                    textPart.text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
-                } else {
-                     userContent.unshift({ type: 'text', text: `The user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`});
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.role === 'user') {
+                    if (typeof lastMessage.content === 'string') {
+                         lastMessage.content += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+                    }
                 }
             }
-            
-            lastMessage.content = userContent;
         }
+        
 
         try {
             responseText = await tryChatCompletion(messages, userSelectedModel);
@@ -389,10 +382,18 @@ export async function generalChatAction(
              console.error("All SambaNova models have failed, falling back to Gemini.", sambaError.message);
              try {
                 const geminiModel = ai.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-                const geminiHistory: MessageData[] = messages.map(m => ({
-                    role: m.role,
-                    parts: (typeof m.content === 'string') ? [{ text: m.content }] : m.content.map((p: any) => p.type === 'text' ? { text: p.text } : { media: { url: p.image_url.url } })
-                }));
+                
+                const geminiHistory: MessageData[] = messages
+                    .filter(m => m.role !== 'system') // Gemini uses a different system prompt mechanism
+                    .map(m => ({
+                        role: m.role,
+                        parts: (typeof m.content === 'string') 
+                            ? [{ text: m.content }] 
+                            : Array.isArray(m.content) 
+                                ? m.content.map((p: any) => p.type === 'text' ? { text: p.text } : { media: { url: p.image_url.url } })
+                                : [{ text: '' }] // Fallback for unknown content
+                    }));
+                
                 const result = await geminiModel.generate(geminiHistory);
                 responseText = result.text;
              } catch (geminiError: any) {
@@ -637,3 +638,6 @@ export type { GetYoutubeTranscriptInput, GenerateQuizzesSambaInput as GenerateQu
 
 
     
+
+
+  
