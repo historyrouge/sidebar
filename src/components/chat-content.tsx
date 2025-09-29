@@ -150,6 +150,15 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
+  const [activeButtons, setActiveButtons] = useState({
+      deepthink: false,
+      music: false,
+      search: false,
+  });
+
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search') => {
+      setActiveButtons(prev => ({ ...prev, [tool]: !prev[tool] }));
+  };
 
   useEffect(() => {
     try {
@@ -473,19 +482,16 @@ export function ChatContent() {
                         </div>
                         <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                             <Button 
-                                variant="outline" 
+                                variant={activeButtons.deepthink ? 'secondary' : 'outline'}
                                 className="bg-muted/50" 
-                                onClick={() => {
-                                    setCurrentModel('gpt-oss-120b');
-                                    toast({ title: "Model Switched!", description: "DeepThink mode (SearnAI V3.1) activated." });
-                                }}
+                                onClick={() => handleToolButtonClick('deepthink')}
                             >
                                 DeepThink
                             </Button>
-                            <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                            <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                            <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                            <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
                                 <Search className="h-5 w-5" />
                             </Button>
                         </div>
@@ -651,27 +657,24 @@ export function ChatContent() {
             </div>
           )}
           <div className="flex justify-start mb-2 items-center gap-2">
-            <div className="bg-muted/50 p-1 rounded-lg w-fit">
-                <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
-            </div>
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
-                <Button 
-                    variant="outline" 
-                    className="bg-muted/50" 
-                    onClick={() => {
-                        setCurrentModel('gpt-oss-120b');
-                        toast({ title: "Model Switched!", description: "DeepThink mode (SearnAI V3.1) activated." });
-                    }}
-                >
-                    DeepThink
-                </Button>
-                <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
-                    <Music className="h-5 w-5" />
-                </Button>
-                <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
-                    <Search className="h-5 w-5" />
-                </Button>
-            </div>
+              <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                  <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+              </div>
+              <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                  <Button 
+                      variant={activeButtons.deepthink ? 'secondary' : 'outline'} 
+                      className="bg-muted/50" 
+                      onClick={() => handleToolButtonClick('deepthink')}
+                  >
+                      DeepThink
+                  </Button>
+                  <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                      <Music className="h-5 w-5" />
+                  </Button>
+                  <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
+                      <Search className="h-5 w-5" />
+                  </Button>
+              </div>
           </div>
           <form
               onSubmit={handleFormSubmit}
@@ -718,6 +721,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
