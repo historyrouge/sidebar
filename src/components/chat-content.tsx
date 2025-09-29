@@ -466,10 +466,15 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
-                     <div className="flex justify-start mb-2">
+                     <div className="flex justify-start mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
+                        <Link href="/ai-editor">
+                            <Button variant="outline" size="sm" className="bg-muted/50 rounded-lg">
+                                DeepThink
+                            </Button>
+                        </Link>
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
@@ -631,10 +636,15 @@ export function ChatContent() {
               </Button>
             </div>
           )}
-          <div className="flex justify-start mb-2">
+          <div className="flex justify-start mb-2 items-center gap-2">
             <div className="bg-muted/50 p-1 rounded-lg w-fit">
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
             </div>
+             <Link href="/ai-editor">
+                <Button variant="outline" size="sm" className="bg-muted/50 rounded-lg">
+                    DeepThink
+                </Button>
+            </Link>
           </div>
           <form
               onSubmit={handleFormSubmit}
@@ -681,3 +691,4 @@ export function ChatContent() {
     
 
     
+
