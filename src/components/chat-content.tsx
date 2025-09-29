@@ -468,14 +468,19 @@ export function ChatContent() {
                 </div>
                  <div className="w-full max-w-3xl">
                      <div className="flex justify-start mb-2 items-center gap-2">
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
-                        </div>
-                        <Link href="/ai-editor">
-                            <Button variant="outline" className="bg-muted/50 rounded-lg">
+                            <Button 
+                                variant="outline" 
+                                className="bg-muted/50" 
+                                onClick={() => {
+                                    setCurrentModel('gpt-oss-120b');
+                                    toast({ title: "Model Switched!", description: "DeepThink mode (SearnAI V3.1) activated." });
+                                }}
+                            >
                                 DeepThink
                             </Button>
-                        </Link>
+                        </div>
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
@@ -638,14 +643,19 @@ export function ChatContent() {
             </div>
           )}
           <div className="flex justify-start mb-2 items-center gap-2">
-            <div className="bg-muted/50 p-1 rounded-lg w-fit">
+            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
-            </div>
-             <Link href="/ai-editor">
-                <Button variant="outline" className="bg-muted/50 rounded-lg">
+                <Button 
+                    variant="outline" 
+                    className="bg-muted/50" 
+                    onClick={() => {
+                        setCurrentModel('gpt-oss-120b');
+                        toast({ title: "Model Switched!", description: "DeepThink mode (SearnAI V3.1) activated." });
+                    }}
+                >
                     DeepThink
                 </Button>
-            </Link>
+            </div>
           </div>
           <form
               onSubmit={handleFormSubmit}
@@ -692,5 +702,6 @@ export function ChatContent() {
     
 
     
+
 
 
