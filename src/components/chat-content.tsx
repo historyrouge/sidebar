@@ -483,15 +483,14 @@ export function ChatContent() {
                         <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                             <Button 
                                 variant={activeButtons.deepthink ? 'secondary' : 'outline'}
-                                className="bg-muted/50" 
                                 onClick={() => handleToolButtonClick('deepthink')}
                             >
                                 DeepThink
                             </Button>
-                            <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                            <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                            <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
+                            <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
                                 <Search className="h-5 w-5" />
                             </Button>
                         </div>
@@ -662,16 +661,15 @@ export function ChatContent() {
               </div>
               <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                   <Button 
-                      variant={activeButtons.deepthink ? 'secondary' : 'outline'} 
-                      className="bg-muted/50" 
+                      variant={activeButtons.deepthink ? 'secondary' : 'outline'}
                       onClick={() => handleToolButtonClick('deepthink')}
                   >
                       DeepThink
                   </Button>
-                  <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                  <Button type="button" variant={activeButtons.music ? 'secondary' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                       <Music className="h-5 w-5" />
                   </Button>
-                  <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} className="bg-muted/50" disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
+                  <Button type="button" variant={activeButtons.search ? 'secondary' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
                       <Search className="h-5 w-5" />
                   </Button>
               </div>
@@ -721,6 +719,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
