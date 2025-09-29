@@ -4,14 +4,16 @@
 import { useState, useRef, FormEvent } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe, X } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export function WebBrowserContent() {
     const [url, setUrl] = useState("https://www.google.com");
     const [displayUrl, setDisplayUrl] = useState("https://www.google.com");
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const router = useRouter();
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -65,6 +67,7 @@ export function WebBrowserContent() {
                         />
                     </div>
                 </form>
+                <Button variant="ghost" size="icon" onClick={() => router.back()}><X className="h-5 w-5" /></Button>
             </header>
             <main className="flex-1 bg-muted">
                 <iframe
