@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -8,7 +9,9 @@ import { cn } from "@/lib/utils";
 const models = [
     { id: 'gpt-oss-120b', name: 'GPT-OSS (120B)', description: 'Most powerful, for complex reasoning.' },
     { id: 'Qwen3-32B', name: 'Qwen3 (32B)', description: 'Fast and efficient for general chat.' },
-    { id: 'Llama-4-Maverick-17B-128E-Instruct', name: 'Maverick (17B)', description: 'Balanced performance.' },
+    { id: 'Llama-4-Maverick-17B-128E-Instruct', name: 'Maverick (17B)', description: 'Balanced performance and vision.' },
+    { id: 'Meta-Llama-3.3-70B-Instruct', name: 'Llama 3.3 (70B)', description: 'Newest large-scale Llama model.' },
+    { id: 'Meta-Llama-3.1-8B-Instruct', name: 'Llama 3.1 (8B)', description: 'Fast and lightweight for quick tasks.' },
 ];
 
 interface ModelSwitcherProps {

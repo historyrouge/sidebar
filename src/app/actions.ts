@@ -288,7 +288,12 @@ const sambaModelFallbackOrder = [
     'gpt-oss-120b',
     'Qwen3-32B',
     'Llama-4-Maverick-17B-128E-Instruct',
+    'Meta-Llama-3.3-70B-Instruct',
+    'DeepSeek-R1-Distill-Llama-70B',
     'Meta-Llama-3.1-8B-Instruct',
+    'Llama-3.3-Swallow-70B-Instruct-v0.4',
+    'DeepSeek-R1-0528',
+    'DeepSeek-V3-0324',
 ];
 
 async function tryChatCompletion(
@@ -350,17 +355,29 @@ export async function generalChatAction(
 
         const lastMessage = messages[messages.length - 1];
         if (lastMessage.role === 'user') {
-            const userContent: any[] = lastMessage.content;
+            const userContent: any[] = [];
+
+            // Add text part first
+            if (lastMessage.content && Array.isArray(lastMessage.content) && lastMessage.content[0]?.type === 'text') {
+                 userContent.push({ type: 'text', text: lastMessage.content[0].text });
+            } else if (typeof lastMessage.content === 'string') {
+                 userContent.push({ type: 'text', text: lastMessage.content });
+            }
 
             if (imageDataUri) {
                 userContent.push({
                     type: "image_url",
-                    image_url: {
-                        "url": imageDataUri
-                    }
+                    image_url: { "url": imageDataUri }
                 });
-            } else if (fileContent) {
-                 userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+            }
+            
+            if(fileContent) {
+                const textPart = userContent.find(p => p.type === 'text');
+                if (textPart) {
+                    textPart.text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+                } else {
+                     userContent.unshift({ type: 'text', text: `The user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`});
+                }
             }
             
             lastMessage.content = userContent;
