@@ -369,8 +369,19 @@ export async function generalChatAction(
         try {
             responseText = await tryChatCompletion(messages, userSelectedModel);
         } catch (sambaError: any) {
-             console.error("All SambaNova models have failed.", sambaError.message);
-             return { error: "All available SambaNova AI models are currently offline or have reached their limits. Please try again later." };
+             console.error("All SambaNova models have failed, falling back to Gemini.", sambaError.message);
+             try {
+                const geminiModel = ai.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+                const geminiHistory: MessageData[] = messages.map(m => ({
+                    role: m.role,
+                    parts: (typeof m.content === 'string') ? [{ text: m.content }] : m.content.map((p: any) => p.type === 'text' ? { text: p.text } : { media: { url: p.image_url.url } })
+                }));
+                const result = await geminiModel.generate(geminiHistory);
+                responseText = result.text;
+             } catch (geminiError: any) {
+                console.error("Final fallback to Gemini also failed.", geminiError);
+                return { error: "All available AI models are currently offline or have reached their limits. Please try again later." };
+             }
         }
 
         return { data: { response: responseText } };
