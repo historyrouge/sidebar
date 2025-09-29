@@ -18,24 +18,27 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        let body = await response.text();
         const contentType = response.headers.get('Content-Type') || '';
         
-        // If it's an HTML page, inject the base tag
+        let body;
+        
         if (contentType.includes('text/html')) {
+            let html = await response.text();
             const baseTag = `<base href="${new URL(url).origin}" />`;
-            if (body.includes('<head>')) {
-                body = body.replace('<head>', `<head>${baseTag}`);
+            if (html.includes('<head>')) {
+                html = html.replace('<head>', `<head>${baseTag}`);
             } else {
-                 body = baseTag + body;
+                 html = baseTag + html;
             }
+            body = html;
+        } else {
+            // For non-HTML content, use the raw buffer
+            body = await response.arrayBuffer();
         }
         
-        // Remove security headers that prevent embedding
-        const headers = new Headers(response.headers);
-        headers.delete('x-frame-options');
-        headers.delete('content-security-policy');
-        headers.set('content-type', contentType);
+        const headers = new Headers();
+        headers.set('Content-Type', contentType);
+        headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
 
         return new NextResponse(body, {
             status: response.status,
