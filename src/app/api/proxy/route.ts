@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
             }
         }
         
-        // Remove X-Frame-Options header
+        // Remove security headers that prevent embedding
         const headers = new Headers(response.headers);
         headers.delete('x-frame-options');
         headers.delete('content-security-policy');
