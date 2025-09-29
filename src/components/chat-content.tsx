@@ -467,20 +467,26 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
-                     <div className="flex justify-start mb-2 items-center gap-2">
+                    <div className="flex justify-start mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
-                            <Button
-                                variant="outline"
-                                className="bg-muted/50"
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                            <Button 
+                                variant="outline" 
+                                className="bg-muted/50" 
                                 onClick={() => {
                                     setCurrentModel('gpt-oss-120b');
                                     toast({ title: "Model Switched!", description: "DeepThink mode (SearnAI V3.1) activated." });
                                 }}
                             >
                                 DeepThink
+                            </Button>
+                            <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                                <Music className="h-5 w-5" />
+                            </Button>
+                            <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                                <Search className="h-5 w-5" />
                             </Button>
                         </div>
                     </div>
@@ -510,14 +516,6 @@ export function ChatContent() {
                         />
                         <input type="file" ref={fileInputRef} className="hidden" />
                         <div className="flex items-center gap-1">
-                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                                <Music className="h-5 w-5" />
-                                <span className="sr-only">Music</span>
-                            </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                                <Search className="h-5 w-5" />
-                                <span className="sr-only">Search</span>
-                            </Button>
                             <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -653,7 +651,7 @@ export function ChatContent() {
             </div>
           )}
           <div className="flex justify-start mb-2 items-center gap-2">
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+            <div className="bg-muted/50 p-1 rounded-lg w-fit">
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
             </div>
             <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
@@ -666,6 +664,12 @@ export function ChatContent() {
                     }}
                 >
                     DeepThink
+                </Button>
+                <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                    <Music className="h-5 w-5" />
+                </Button>
+                <Button type="button" variant="outline" className="bg-muted/50" disabled={isInputDisabled}>
+                    <Search className="h-5 w-5" />
                 </Button>
             </div>
           </div>
@@ -695,14 +699,6 @@ export function ChatContent() {
               />
               <input type="file" ref={fileInputRef} className="hidden" />
               <div className="flex items-center gap-1">
-                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                    <Music className="h-5 w-5" />
-                    <span className="sr-only">Music</span>
-                </Button>
-                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                    <Search className="h-5 w-5" />
-                    <span className="sr-only">Search</span>
-                </Button>
                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -722,6 +718,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
