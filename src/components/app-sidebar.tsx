@@ -28,6 +28,7 @@ import {
   Volume2,
   FileEdit,
   LogOut,
+  Globe,
 } from "lucide-react";
 import {
   Sidebar,
@@ -63,6 +64,7 @@ const studyTools = [
 ];
 
 const resources = [
+    { name: "Web Browser", icon: <Globe />, href: "/web-browser" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
