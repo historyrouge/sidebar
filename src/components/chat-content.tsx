@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2 } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -468,10 +468,10 @@ export function ChatContent() {
                 </div>
                  <div className="w-full max-w-3xl">
                      <div className="flex justify-start mb-2 items-center gap-2">
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <Button
                                 variant="outline"
                                 className="bg-muted/50"
@@ -510,6 +510,14 @@ export function ChatContent() {
                         />
                         <input type="file" ref={fileInputRef} className="hidden" />
                         <div className="flex items-center gap-1">
+                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                <Music className="h-5 w-5" />
+                                <span className="sr-only">Music</span>
+                            </Button>
+                            <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                <Search className="h-5 w-5" />
+                                <span className="sr-only">Search</span>
+                            </Button>
                             <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -645,10 +653,10 @@ export function ChatContent() {
             </div>
           )}
           <div className="flex justify-start mb-2 items-center gap-2">
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex">
+            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
             </div>
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex">
+            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                 <Button 
                     variant="outline" 
                     className="bg-muted/50" 
@@ -687,6 +695,14 @@ export function ChatContent() {
               />
               <input type="file" ref={fileInputRef} className="hidden" />
               <div className="flex items-center gap-1">
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                    <Music className="h-5 w-5" />
+                    <span className="sr-only">Music</span>
+                </Button>
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                    <Search className="h-5 w-5" />
+                    <span className="sr-only">Search</span>
+                </Button>
                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -706,6 +722,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
