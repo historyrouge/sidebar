@@ -18,12 +18,24 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        const contentType = response.headers.get('Content-Type') || 'text/html';
-        const body = await response.text();
+        let body = await response.text();
+        const contentType = response.headers.get('Content-Type') || '';
+        
+        // If it's an HTML page, inject the base tag
+        if (contentType.includes('text/html')) {
+            const baseTag = `<base href="${new URL(url).origin}" />`;
+            if (body.includes('<head>')) {
+                body = body.replace('<head>', `<head>${baseTag}`);
+            } else {
+                 body = baseTag + body;
+            }
+        }
         
         // Remove X-Frame-Options header
         const headers = new Headers(response.headers);
         headers.delete('x-frame-options');
+        headers.delete('content-security-policy');
+        headers.set('content-type', contentType);
 
         return new NextResponse(body, {
             status: response.status,
