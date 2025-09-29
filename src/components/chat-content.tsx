@@ -264,7 +264,7 @@ export function ChatContent() {
       recognitionRef.current?.stop();
     }
     const messageId = `${Date.now()}`;
-    const userMessage: Message = { id: messageId, role: "user", content: messageToSend };
+    const userMessage: Message = { id: messageId, role: "user", content: { text: messageToSend, image: imageDataUri } };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
@@ -526,7 +526,10 @@ export function ChatContent() {
                     {message.role === "user" ? (
                       <div className="flex items-start gap-4 justify-end">
                         <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                          <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                          {message.content.image && (
+                            <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                          )}
+                          <p className="text-base whitespace-pre-wrap">{message.content.text}</p>
                         </div>
                         <Avatar className="h-9 w-9 border">
                           <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -620,7 +623,7 @@ export function ChatContent() {
               </Button>
             </div>
           )}
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-start mb-2">
             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
           </div>
           <form
