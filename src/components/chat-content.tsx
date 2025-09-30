@@ -30,6 +30,7 @@ import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
+import { YoutubeChatCard } from "./youtube-chat-card";
 
 
 type Message = {
@@ -294,24 +295,11 @@ export function ChatContent() {
       }
 
        if (result.data) {
-        if (activeButton === 'music') {
-          try {
-            const videoData = JSON.parse(result.data.response);
-            if(videoData.type === 'youtube' && videoData.videoId) {
-              setActiveVideoId(videoData.videoId, videoData.title);
-            }
-          } catch(e) {
-            // Not a video response, treat as normal text
-            const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
-            setHistory((prev) => [...prev, modelMessage]);
-          }
-        } else {
           const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
           setHistory((prev) => [...prev, modelMessage]);
-        }
       }
       
-  }, [toast, currentModel, activeButton, setActiveVideoId]);
+  }, [toast, currentModel, activeButton]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -517,6 +505,40 @@ export function ChatContent() {
   const showWelcome = history.length === 0 && !isTyping;
   const isInputDisabled = isTyping || isOcrProcessing;
 
+  const renderMessageContent = (message: Message) => {
+    try {
+      const data = JSON.parse(message.content.text);
+      if (data.type === 'youtube' && data.videoId) {
+        return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+      }
+    } catch (e) {
+      // Not a JSON object, so render as plain text
+    }
+    
+    return (
+        <ReactMarkdown
+          remarkPlugins={[remarkMath]}
+          rehypePlugins={[rehypeKatex]}
+          className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+          components={{
+            code({ node, inline, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || '');
+              return !inline && match ? (
+                <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+            p: ({node, ...props}) => <p className="mb-4" {...props} />,
+          }}
+        >
+          {message.content.text}
+        </ReactMarkdown>
+    );
+  };
+
   if (showWelcome) {
     return (
         <div className="flex h-full flex-col items-center justify-center p-4">
@@ -631,26 +653,7 @@ export function ChatContent() {
                       ) : (
                         <div className={cn("group w-full flex items-start gap-4")}>
                           <div className="w-full">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkMath]}
-                              rehypePlugins={[rehypeKatex]}
-                              className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-                              components={{
-                                code({ node, inline, className, children, ...props }) {
-                                  const match = /language-(\w+)/.exec(className || '');
-                                  return !inline && match ? (
-                                    <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                                  ) : (
-                                    <code className={className} {...props}>
-                                      {children}
-                                    </code>
-                                  );
-                                },
-                                p: ({node, ...props}) => <p className="mb-4" {...props} />,
-                              }}
-                            >
-                              {message.content.text}
-                            </ReactMarkdown>
+                            {renderMessageContent(message)}
                             {audioDataUri && isSynthesizing === message.id && (
                               <audio
                                 ref={audioRef}
@@ -788,6 +791,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
