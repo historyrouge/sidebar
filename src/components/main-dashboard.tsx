@@ -120,7 +120,7 @@ export function MainDashboard() {
                 <iframe
                     ref={iframeRef}
                     className="w-full max-w-sm aspect-video rounded-lg shadow-xl"
-                    src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
+                    src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1&autoplay=1`}
                     allow="autoplay; encrypted-media"
                     allowFullScreen
                     title="YouTube music player"
@@ -133,7 +133,7 @@ export function MainDashboard() {
              <iframe
                 ref={iframeRef}
                 className="hidden"
-                src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
+                src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1&autoplay=1`}
                 allow="autoplay; encrypted-media"
                 title="YouTube music player"
             ></iframe>
