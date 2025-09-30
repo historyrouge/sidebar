@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, Layers } from "lucide-react";
+import { FileEdit, Moon, Sun, Layers, Bot } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useState, useEffect, useRef } from "react";
 import { ChatContent } from "./chat-content";
@@ -36,6 +36,10 @@ export function MainDashboard() {
             <Button variant="ghost" size="icon" onClick={handleNewChat}>
                 <FileEdit className="h-5 w-5" />
                 <span className="sr-only">New Chat</span>
+            </Button>
+            <Button variant="ghost" size="icon">
+                <Bot className="h-5 w-5" />
+                <span className="sr-only">Agent</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
