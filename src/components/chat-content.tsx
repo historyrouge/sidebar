@@ -52,7 +52,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   activeVideoId: null,
   activeVideoTitle: null,
   isPlaying: false,
-  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: id ? true : false }),
+  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: !!id }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
 }));
 
@@ -784,6 +784,7 @@ export function ChatContent() {
     
 
     
+
 
 
 

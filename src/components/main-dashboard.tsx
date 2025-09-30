@@ -72,13 +72,13 @@ export function MainDashboard() {
                 <Image 
                     src={`https://i.ytimg.com/vi/${activeVideoId}/hqdefault.jpg`} 
                     alt="Video thumbnail"
-                    width={56} 
-                    height={56} 
+                    width={40} 
+                    height={40} 
                     className="rounded-md aspect-square object-cover"
                 />
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
-                    <div className="flex items-center text-muted-foreground">
+                    <div className="flex items-center text-muted-foreground -ml-2">
                         <Button variant="ghost" size="icon" className="h-7 w-7">
                             <Rewind className="h-4 w-4" />
                         </Button>
@@ -133,4 +133,3 @@ export function MainDashboard() {
     </div>
   );
 }
-
