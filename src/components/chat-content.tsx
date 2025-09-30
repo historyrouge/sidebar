@@ -506,15 +506,18 @@ export function ChatContent() {
   const isInputDisabled = isTyping || isOcrProcessing;
 
   const renderMessageContent = (message: Message) => {
-    try {
-      const data = JSON.parse(message.content.text);
-      if (data.type === 'youtube' && data.videoId) {
-        return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+    if (message.role === 'model') {
+      try {
+        const data = JSON.parse(message.content.text);
+        if (data.type === 'youtube' && data.videoId) {
+          return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+        }
+      } catch (e) {
+        // Not a JSON object, so render as plain text
       }
-    } catch (e) {
-      // Not a JSON object, so render as plain text
     }
     
+    // For user messages or non-JSON model messages
     return (
         <ReactMarkdown
           remarkPlugins={[remarkMath]}
@@ -791,6 +794,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
