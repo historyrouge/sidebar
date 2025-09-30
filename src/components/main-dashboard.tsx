@@ -91,15 +91,14 @@ export function MainDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowPlayer(!showPlayer)}>
+                        <Video className="h-4 w-4" />
+                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => setShowPlayer(!showPlayer)}>
-                                <Video className="mr-2 h-4 w-4" />
-                                {showPlayer ? "Hide Video" : "Show Video"}
-                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`)}>Copy video URL</DropdownMenuItem>
                             <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
                         </DropdownMenuContent>
@@ -127,7 +126,7 @@ export function MainDashboard() {
              <div className="fixed bottom-4 right-4 z-50 group">
                 <iframe
                     ref={iframeRef}
-                    className="w-full max-w-md aspect-video rounded-lg shadow-xl"
+                    className="w-full max-w-sm aspect-video rounded-lg shadow-xl"
                     src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
                     allow="autoplay; encrypted-media"
                     allowFullScreen
