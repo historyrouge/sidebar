@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { Pin, Share2 } from "lucide-react";
+import { Pin, Share2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type YoutubeChatCardProps = {
@@ -26,7 +26,7 @@ export function YoutubeChatCard({ videoData, onPin }: YoutubeChatCardProps) {
 
     return (
         <div className="w-full max-w-sm rounded-xl border bg-card/50 overflow-hidden">
-            <div className="relative aspect-video">
+            <div className="relative aspect-video group">
                 <a href={`https://www.youtube.com/watch?v=${videoData.videoId}`} target="_blank" rel="noopener noreferrer">
                     <Image 
                         src={videoData.thumbnail || `https://i.ytimg.com/vi/${videoData.videoId}/hqdefault.jpg`}
@@ -34,6 +34,9 @@ export function YoutubeChatCard({ videoData, onPin }: YoutubeChatCardProps) {
                         fill
                         className="object-cover"
                     />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Play className="h-12 w-12 text-white fill-white" />
+                    </div>
                 </a>
             </div>
             <div className="p-3">
