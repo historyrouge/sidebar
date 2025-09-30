@@ -2,18 +2,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, Layers, Bot, MoreVertical, X } from "lucide-react";
+import { FileEdit, Moon, Sun, Bot } from "lucide-react";
 import { useTheme } from "next-themes";
-import React, { useState, useEffect, useRef } from "react";
-import { ChatContent, useChatStore } from "./chat-content";
+import React from "react";
+import { ChatContent } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { FloatingYoutubePlayer } from "./floating-youtube-player";
+
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
-  const { activeVideoId, activeVideoTitle, setActiveVideoId } = useChatStore();
-  const { toast } = useToast();
 
   const handleNewChat = () => {
     try {
@@ -29,53 +27,15 @@ export function MainDashboard() {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  const handleCopyToClipboard = (url: string) => {
-    navigator.clipboard.writeText(url);
-    toast({ title: "Copied!", description: "Video URL copied to clipboard." });
-  };
-
 
   return (
     <div className="flex h-full flex-col">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
-            {!activeVideoId && <h1 className="text-xl font-semibold tracking-tight">Chat</h1>}
-            
-            {activeVideoId && (
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-10 relative rounded-md overflow-hidden bg-muted flex-shrink-0">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
-                      title="YouTube video player"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="w-full h-full"
-                    ></iframe>
-                </div>
-                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
-                    <p className="text-xs text-muted-foreground">YouTube</p>
-                </div>
-              </div>
-            )}
+            <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         </div>
         <div className="flex items-center gap-2">
-            {activeVideoId && (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`)}>Copy video URL</DropdownMenuItem>
-                        <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )}
-            {activeVideoId && (
-               <Button variant="ghost" size="icon" onClick={() => setActiveVideoId(null, null)}><X className="h-5 w-5" /></Button>
-            )}
             <Button variant="ghost" size="icon" onClick={handleNewChat}>
                 <FileEdit className="h-5 w-5" />
                 <span className="sr-only">New Chat</span>
@@ -90,6 +50,7 @@ export function MainDashboard() {
       <main className="flex-1 overflow-hidden relative">
          <ChatContent />
       </main>
+      <FloatingYoutubePlayer />
     </div>
   );
 }
