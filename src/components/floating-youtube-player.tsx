@@ -28,7 +28,7 @@ export function FloatingYoutubePlayer() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 100, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
-                className="fixed bottom-4 right-4 z-50 w-full max-w-sm rounded-xl bg-card shadow-2xl border overflow-hidden"
+                className="fixed bottom-4 right-4 z-50 w-full max-w-md rounded-xl bg-card shadow-2xl border overflow-hidden"
             >
                 <div className="p-3">
                     <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
@@ -64,3 +64,4 @@ export function FloatingYoutubePlayer() {
         </AnimatePresence>
     );
 }
+
