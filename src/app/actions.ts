@@ -24,6 +24,7 @@ import { openai as nvidiaClient } from "@/lib/nvidia";
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQuestionPaperOutputFlow } from "@/lib/question-paper-types";
 import { ai, visionModel, googleAI } from "@/ai/genkit";
 import { MessageData, Part } from "genkit";
+import { searchYoutube } from "@/ai/tools/youtube-search";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -34,6 +35,7 @@ export type GeneralChatInput = GeneralChatInputFlow & {
   prompt?: string;
   model?: string;
   imageDataUri?: string | null;
+  isMusicMode?: boolean;
 };
 
 
@@ -336,10 +338,22 @@ export async function generalChatAction(
     input: GeneralChatInput & { fileContent?: string | null },
 ): Promise<ActionResult<GeneralChatOutput>> {
     
-    const { history, prompt: contextPrompt, imageDataUri, fileContent, model: userSelectedModel } = input;
+    const { history, prompt: contextPrompt, imageDataUri, fileContent, model: userSelectedModel, isMusicMode } = input;
+    const lastUserMessage = history[history.length - 1].content as string;
 
     try {
         let responseText: string;
+        
+        if (isMusicMode) {
+            const result = await searchYoutube({ query: lastUserMessage });
+            if (result.videoId) {
+                 // Create a special response format for YouTube embeds
+                return { data: { response: `[YOUTUBE_EMBED]${result.videoId}[/YOUTUBE_EMBED]` } };
+            } else {
+                return { data: { response: "Sorry, I couldn't find that song on YouTube. Please try another one." } };
+            }
+        }
+        
         let messages: any[];
 
         if (imageDataUri) {

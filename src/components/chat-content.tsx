@@ -153,10 +153,19 @@ export function ChatContent() {
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | null>(null);
 
   const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search') => {
-      setActiveButton(prev => prev === tool ? null : tool);
-      if (tool === 'deepthink') {
+      const newActiveButton = activeButton === tool ? null : tool;
+      setActiveButton(newActiveButton);
+
+      if (newActiveButton === 'deepthink') {
         setCurrentModel('gpt-oss-120b');
         toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
+      } else if (newActiveButton === 'music') {
+        toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
+      } else {
+        // Revert to default model if no special mode is active
+        if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
+             setCurrentModel('Meta-Llama-3.1-8B-Instruct');
+        }
       }
   };
 
@@ -243,7 +252,8 @@ export function ChatContent() {
           history: genkitHistory, 
           fileContent: currentFileContent, 
           imageDataUri: currentImageDataUri,
-          model: currentModel
+          model: currentModel,
+          isMusicMode: activeButton === 'music',
       });
 
       setIsTyping(false);
@@ -264,7 +274,7 @@ export function ChatContent() {
         setHistory((prev) => [...prev, modelMessage]);
       }
       
-  }, [toast, currentModel]);
+  }, [toast, currentModel, activeButton]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -282,13 +292,18 @@ export function ChatContent() {
 
     await executeChat(newHistory, imageDataUri, fileContent);
     
+    // Deactivate music mode after one use
+    if (activeButton === 'music') {
+        setActiveButton(null);
+    }
+    
     // Do not clear image/file after sending for follow-up questions
     // setImageDataUri(null);
     // setFileContent(null);
     // setFileName(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isRecording, history, executeChat, imageDataUri, fileContent]);
+  }, [input, isRecording, history, executeChat, imageDataUri, fileContent, activeButton]);
 
   const handleRegenerateResponse = async () => {
       const lastUserMessageIndex = history.findLastIndex(m => m.role === 'user');
@@ -548,82 +563,97 @@ export function ChatContent() {
       />
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-              {history.map((message, index) => (
-                <React.Fragment key={`${message.id}-${index}`}>
-                  <div
-                    className={cn(
-                      "flex w-full items-start gap-4",
-                      message.role === "user" ? "justify-end" : ""
-                    )}
-                  >
-                    {message.role === "user" ? (
-                      <div className="flex items-start gap-4 justify-end">
-                        <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                          {message.content.image && (
-                            <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
-                          )}
-                          <p className="text-base whitespace-pre-wrap">{message.content.text}</p>
+              {history.map((message, index) => {
+                const youtubeEmbedMatch = message.content.text.match(/\[YOUTUBE_EMBED\](.*?)\[\/YOUTUBE_EMBED\]/);
+
+                return (
+                  <React.Fragment key={`${message.id}-${index}`}>
+                    <div
+                      className={cn(
+                        "flex w-full items-start gap-4",
+                        message.role === "user" ? "justify-end" : ""
+                      )}
+                    >
+                      {message.role === "user" ? (
+                        <div className="flex items-start gap-4 justify-end">
+                          <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                            {message.content.image && (
+                              <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                            )}
+                            <p className="text-base whitespace-pre-wrap">{message.content.text}</p>
+                          </div>
+                          <Avatar className="h-9 w-9 border">
+                            <AvatarFallback><User className="size-5" /></AvatarFallback>
+                          </Avatar>
                         </div>
-                        <Avatar className="h-9 w-9 border">
-                          <AvatarFallback><User className="size-5" /></AvatarFallback>
-                        </Avatar>
-                      </div>
-                    ) : (
-                      <div className={cn("group w-full flex items-start gap-4")}>
-                        <div className="w-full">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkMath]}
-                            rehypePlugins={[rehypeKatex]}
-                            className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-                            components={{
-                              code({ node, inline, className, children, ...props }) {
-                                const match = /language-(\w+)/.exec(className || '');
-                                return !inline && match ? (
-                                  <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                                ) : (
-                                  <code className={className} {...props}>
-                                    {children}
-                                  </code>
-                                );
-                              },
-                              p: ({node, ...props}) => <p className="mb-4" {...props} />,
-                            }}
-                          >
-                            {message.content.text}
-                          </ReactMarkdown>
-                          {audioDataUri && isSynthesizing === message.id && (
-                            <audio
-                              ref={audioRef}
-                              src={audioDataUri}
-                              autoPlay
-                              onEnded={() => setIsSynthesizing(null)}
-                              onPause={() => setIsSynthesizing(null)}
-                            />
-                          )}
-                          <div className="mt-2 flex items-center gap-1 transition-opacity">
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content.text)}>
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content.text)}>
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
-                              {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                            </Button>
-                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                              <RefreshCw className="h-4 w-4" />
-                            </Button>
+                      ) : youtubeEmbedMatch ? (
+                          <div className="w-full aspect-video rounded-xl overflow-hidden border shadow-lg">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              src={`https://www.youtube.com/embed/${youtubeEmbedMatch[1]}`}
+                              title="YouTube video player"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                      ) : (
+                        <div className={cn("group w-full flex items-start gap-4")}>
+                          <div className="w-full">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                              className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                              components={{
+                                code({ node, inline, className, children, ...props }) {
+                                  const match = /language-(\w+)/.exec(className || '');
+                                  return !inline && match ? (
+                                    <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                                  ) : (
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                  );
+                                },
+                                p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                              }}
+                            >
+                              {message.content.text}
+                            </ReactMarkdown>
+                            {audioDataUri && isSynthesizing === message.id && (
+                              <audio
+                                ref={audioRef}
+                                src={audioDataUri}
+                                autoPlay
+                                onEnded={() => setIsSynthesizing(null)}
+                                onPause={() => setIsSynthesizing(null)}
+                              />
+                            )}
+                            <div className="mt-2 flex items-center gap-1 transition-opacity">
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content.text)}>
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content.text)}>
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
+                                {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
+                    </div>
+                    {index < history.length - 1 && (
+                      <Separator className="my-8" />
                     )}
-                  </div>
-                  {index < history.length - 1 && (
-                    <Separator className="my-8" />
-                  )}
-                </React.Fragment>
-              ))
-            }
+                  </React.Fragment>
+                )
+              })}
             {isTyping && (
               <div className="mt-4">
                 <ThinkingIndicator />
@@ -720,6 +750,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
