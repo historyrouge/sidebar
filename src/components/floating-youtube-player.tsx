@@ -33,7 +33,7 @@ export function FloatingYoutubePlayer() {
                 <div className="p-3">
                     <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
                         <iframe
-                            src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+                            src={`https://www.youtube.com/embed/${activeVideoId}`}
                             title="YouTube video player"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -64,4 +64,3 @@ export function FloatingYoutubePlayer() {
         </AnimatePresence>
     );
 }
-
