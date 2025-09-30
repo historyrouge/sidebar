@@ -44,7 +44,7 @@ export function MainDashboard() {
             
             {activeVideoId && (
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 relative rounded-md overflow-hidden bg-muted flex-shrink-0">
+                <div className="w-10 h-10 relative rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <iframe
                       src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
                       title="YouTube video player"
