@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
+import { create } from 'zustand';
 
 
 type Message = {
@@ -38,6 +39,18 @@ type Message = {
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
+
+type ChatStore = {
+  activeVideoId: string | null;
+  activeVideoTitle: string | null;
+  setActiveVideoId: (id: string | null, title: string | null) => void;
+};
+
+export const useChatStore = create<ChatStore>((set) => ({
+  activeVideoId: null,
+  activeVideoTitle: null,
+  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title }),
+}));
 
 
 const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
@@ -152,8 +165,7 @@ export function ChatContent() {
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
 
-  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
-  const [activeVideoTitle, setActiveVideoTitle] = useState<string | null>(null);
+  const { setActiveVideoId } = useChatStore();
 
 
   const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {
@@ -278,8 +290,7 @@ export function ChatContent() {
           try {
             const videoData = JSON.parse(result.data.response);
             if(videoData.type === 'youtube' && videoData.videoId) {
-              setActiveVideoId(videoData.videoId);
-              setActiveVideoTitle(videoData.title);
+              setActiveVideoId(videoData.videoId, videoData.title);
             }
           } catch(e) {
             // Not a video response, treat as normal text
@@ -292,7 +303,7 @@ export function ChatContent() {
         }
       }
       
-  }, [toast, currentModel, activeButton]);
+  }, [toast, currentModel, activeButton, setActiveVideoId]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -587,36 +598,6 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-      {activeVideoId && (
-        <div className="relative p-2 border-b bg-black/50">
-            <div className="flex items-center gap-2">
-                <div className="flex-shrink-0 w-24 h-14 relative rounded-md overflow-hidden">
-                     <iframe
-                        src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        className="w-full h-full"
-                    ></iframe>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-white">{activeVideoTitle || 'Now Playing'}</p>
-                    <p className="text-xs text-muted-foreground">YouTube</p>
-                </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`, "Video URL")}>Copy video URL</DropdownMenuItem>
-                        <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="ghost" size="icon" onClick={() => setActiveVideoId(null)}><X className="h-4 w-4" /></Button>
-            </div>
-        </div>
-      )}
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
               {history.map((message, index) => (
@@ -799,6 +780,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
