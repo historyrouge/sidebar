@@ -30,19 +30,7 @@ export function FloatingYoutubePlayer() {
                 transition={{ duration: 0.3 }}
                 className="fixed bottom-4 right-4 z-50 w-full max-w-md rounded-xl bg-card shadow-2xl border overflow-hidden"
             >
-                <div className="p-3">
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                        <iframe
-                            src={`https://www.youtube.com/embed/${activeVideoId}`}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            className="w-full h-full"
-                        ></iframe>
-                    </div>
-                </div>
-                <div className="flex items-center justify-between px-4 pb-3">
+                <div className="flex items-center justify-between p-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
                         <p className="text-xs text-muted-foreground">YouTube</p>
