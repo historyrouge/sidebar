@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -43,13 +43,17 @@ const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
 type ChatStore = {
   activeVideoId: string | null;
   activeVideoTitle: string | null;
+  isPlaying: boolean;
   setActiveVideoId: (id: string | null, title: string | null) => void;
+  togglePlay: () => void;
 };
 
 export const useChatStore = create<ChatStore>((set) => ({
   activeVideoId: null,
   activeVideoTitle: null,
-  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title }),
+  isPlaying: false,
+  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: id ? true : false }),
+  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
 }));
 
 
@@ -780,6 +784,7 @@ export function ChatContent() {
     
 
     
+
 
 
 

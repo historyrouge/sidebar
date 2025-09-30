@@ -2,19 +2,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, Bot, X, MoreVertical } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward } from "lucide-react";
 import { useTheme } from "next-themes";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  const { activeVideoId, activeVideoTitle, setActiveVideoId } = useChatStore();
+  const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay } = useChatStore();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleNewChat = () => {
     try {
@@ -34,6 +36,27 @@ export function MainDashboard() {
     navigator.clipboard.writeText(url);
     toast({ title: "Copied!", description: "Video URL copied to clipboard." });
   };
+  
+  const postPlayerMessage = (command: 'playVideo' | 'pauseVideo') => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: command, args: '' }),
+      'https://www.youtube.com'
+    );
+  };
+
+  const handlePlayPause = () => {
+    togglePlay();
+  };
+  
+  useEffect(() => {
+    if (activeVideoId) {
+      if (isPlaying) {
+        postPlayerMessage('playVideo');
+      } else {
+        postPlayerMessage('pauseVideo');
+      }
+    }
+  }, [isPlaying, activeVideoId]);
 
 
   return (
@@ -45,24 +68,39 @@ export function MainDashboard() {
         </div>
 
         {activeVideoId && (
-            <div className="flex-1 mx-4 max-w-md">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-card border">
-                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
-                        <p className="text-xs text-muted-foreground">YouTube</p>
+             <div className="flex items-center gap-2 p-1.5 rounded-lg bg-card border w-full max-w-md">
+                <Image 
+                    src={`https://i.ytimg.com/vi/${activeVideoId}/hqdefault.jpg`} 
+                    alt="Video thumbnail"
+                    width={56} 
+                    height={56} 
+                    className="rounded-md aspect-square object-cover"
+                />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
+                    <div className="flex items-center text-muted-foreground">
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <Rewind className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePlayPause}>
+                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <FastForward className="h-4 w-4" />
+                        </Button>
                     </div>
-                    <div className="flex items-center flex-shrink-0">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`)}>Copy video URL</DropdownMenuItem>
-                                <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button variant="ghost" size="icon" onClick={() => setActiveVideoId(null, null)}><X className="h-5 w-5" /></Button>
-                    </div>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`)}>Copy video URL</DropdownMenuItem>
+                            <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setActiveVideoId(null, null)}><X className="h-4 w-4" /></Button>
                 </div>
             </div>
         )}
@@ -83,8 +121,9 @@ export function MainDashboard() {
          <ChatContent />
          {activeVideoId && (
             <iframe
+                ref={iframeRef}
                 className="hidden"
-                src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1&autoplay=1`}
+                src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
                 allow="autoplay; encrypted-media"
                 allowFullScreen
                 title="YouTube music player"
@@ -94,3 +133,4 @@ export function MainDashboard() {
     </div>
   );
 }
+
