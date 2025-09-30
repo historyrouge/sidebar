@@ -124,18 +124,16 @@ export function MainDashboard() {
       <main className="flex-1 overflow-hidden relative">
          <ChatContent />
          {activeVideoId && showPlayer && (
-             <div className="fixed bottom-4 right-4 z-50 w-full max-w-md bg-card border rounded-lg shadow-xl overflow-hidden">
-                <div className="aspect-video w-full">
-                    <iframe
-                        ref={iframeRef}
-                        className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
-                        allow="autoplay; encrypted-media"
-                        allowFullScreen
-                        title="YouTube music player"
-                    ></iframe>
-                </div>
-                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 bg-black/50 hover:bg-black/70" onClick={() => setShowPlayer(false)}><X className="h-4 w-4 text-white" /></Button>
+             <div className="fixed bottom-4 right-4 z-50 group">
+                <iframe
+                    ref={iframeRef}
+                    className="w-full max-w-md aspect-video rounded-lg shadow-xl"
+                    src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    title="YouTube music player"
+                ></iframe>
+                <Button variant="secondary" size="icon" className="absolute -top-3 -right-3 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setShowPlayer(false)}><X className="h-4 w-4" /></Button>
              </div>
          )}
          {activeVideoId && !showPlayer && (
