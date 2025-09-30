@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -15,7 +15,7 @@ import Image from "next/image";
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay } = useChatStore();
+  const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer } = useChatStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleNewChat = () => {
@@ -96,6 +96,10 @@ export function MainDashboard() {
                             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => setShowPlayer(!showPlayer)}>
+                                <Video className="mr-2 h-4 w-4" />
+                                {showPlayer ? "Hide Video" : "Show Video"}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`)}>Copy video URL</DropdownMenuItem>
                             <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
                         </DropdownMenuContent>
@@ -119,13 +123,28 @@ export function MainDashboard() {
       </header>
       <main className="flex-1 overflow-hidden relative">
          <ChatContent />
-         {activeVideoId && (
-            <iframe
+         {activeVideoId && showPlayer && (
+             <div className="fixed bottom-4 right-4 z-50 w-full max-w-md bg-card border rounded-lg shadow-xl overflow-hidden">
+                <div className="aspect-video w-full">
+                    <iframe
+                        ref={iframeRef}
+                        className="w-full h-full"
+                        src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                        title="YouTube music player"
+                    ></iframe>
+                </div>
+                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 bg-black/50 hover:bg-black/70" onClick={() => setShowPlayer(false)}><X className="h-4 w-4 text-white" /></Button>
+             </div>
+         )}
+         {activeVideoId && !showPlayer && (
+            // Hidden iframe to control playback even when floating player is not visible
+             <iframe
                 ref={iframeRef}
                 className="hidden"
                 src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1`}
                 allow="autoplay; encrypted-media"
-                allowFullScreen
                 title="YouTube music player"
             ></iframe>
          )}

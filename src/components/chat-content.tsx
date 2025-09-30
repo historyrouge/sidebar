@@ -44,16 +44,20 @@ type ChatStore = {
   activeVideoId: string | null;
   activeVideoTitle: string | null;
   isPlaying: boolean;
+  showPlayer: boolean;
   setActiveVideoId: (id: string | null, title: string | null) => void;
   togglePlay: () => void;
+  setShowPlayer: (show: boolean) => void;
 };
 
 export const useChatStore = create<ChatStore>((set) => ({
   activeVideoId: null,
   activeVideoTitle: null,
   isPlaying: false,
-  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: !!id }),
+  showPlayer: false,
+  setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: !!id, showPlayer: !!id }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  setShowPlayer: (show) => set({ showPlayer: show }),
 }));
 
 
@@ -784,6 +788,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
