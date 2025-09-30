@@ -346,9 +346,9 @@ export async function generalChatAction(
         
         if (isMusicMode) {
             const result = await searchYoutube({ query: lastUserMessage });
-            if (result.videoId) {
+            if (result.id) {
                  // Create a special response format for YouTube embeds
-                return { data: { response: `[YOUTUBE_EMBED]${result.videoId}[/YOUTUBE_EMBED]` } };
+                return { data: { response: JSON.stringify({type: 'youtube', videoId: result.id, title: result.title}) } };
             } else {
                 return { data: { response: "Sorry, I couldn't find that song on YouTube. Please try another one." } };
             }

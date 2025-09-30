@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -25,7 +25,7 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
@@ -152,6 +152,10 @@ export function ChatContent() {
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
 
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [activeVideoTitle, setActiveVideoTitle] = useState<string | null>(null);
+
+
   const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
@@ -270,8 +274,22 @@ export function ChatContent() {
       }
 
        if (result.data) {
-        const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
-        setHistory((prev) => [...prev, modelMessage]);
+        if (activeButton === 'music') {
+          try {
+            const videoData = JSON.parse(result.data.response);
+            if(videoData.type === 'youtube' && videoData.videoId) {
+              setActiveVideoId(videoData.videoId);
+              setActiveVideoTitle(videoData.title);
+            }
+          } catch(e) {
+            // Not a video response, treat as normal text
+            const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
+            setHistory((prev) => [...prev, modelMessage]);
+          }
+        } else {
+          const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
+          setHistory((prev) => [...prev, modelMessage]);
+        }
       }
       
   }, [toast, currentModel, activeButton]);
@@ -569,12 +587,39 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
+      {activeVideoId && (
+        <div className="relative p-2 border-b bg-black/50">
+            <div className="flex items-center gap-2">
+                <div className="flex-shrink-0 w-24 h-14 relative rounded-md overflow-hidden">
+                     <iframe
+                        src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-white">{activeVideoTitle || 'Now Playing'}</p>
+                    <p className="text-xs text-muted-foreground">YouTube</p>
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`https://www.youtube.com/watch?v=${activeVideoId}`, "Video URL")}>Copy video URL</DropdownMenuItem>
+                        <DropdownMenuItem asChild><a href={`https://www.youtube.com/watch?v=${activeVideoId}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a></DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="icon" onClick={() => setActiveVideoId(null)}><X className="h-4 w-4" /></Button>
+            </div>
+        </div>
+      )}
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-              {history.map((message, index) => {
-                const youtubeEmbedMatch = message.content.text.match(/\[YOUTUBE_EMBED\](.*?)\[\/YOUTUBE_EMBED\]/);
-
-                return (
+              {history.map((message, index) => (
                   <React.Fragment key={`${message.id}-${index}`}>
                     <div
                       className={cn(
@@ -594,18 +639,6 @@ export function ChatContent() {
                             <AvatarFallback><User className="size-5" /></AvatarFallback>
                           </Avatar>
                         </div>
-                      ) : youtubeEmbedMatch ? (
-                          <div className="w-full aspect-video rounded-xl overflow-hidden border shadow-lg">
-                            <iframe
-                              width="100%"
-                              height="100%"
-                              src={`https://www.youtube.com/embed/${youtubeEmbedMatch[1]}`}
-                              title="YouTube video player"
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                              allowFullScreen
-                            ></iframe>
-                          </div>
                       ) : (
                         <div className={cn("group w-full flex items-start gap-4")}>
                           <div className="w-full">
@@ -661,7 +694,7 @@ export function ChatContent() {
                     )}
                   </React.Fragment>
                 )
-              })}
+              )}
             {isTyping && (
               <div className="mt-4">
                 <ThinkingIndicator />
@@ -766,6 +799,7 @@ export function ChatContent() {
     
 
     
+
 
 
 

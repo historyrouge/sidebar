@@ -8,24 +8,32 @@ import Youtube from 'youtube-sr';
 export const searchYoutube = ai.defineTool(
   {
     name: 'searchYoutube',
-    description: 'Searches YouTube for a video and returns the video ID.',
+    description: 'Searches YouTube for a video and returns video details.',
     inputSchema: z.object({
       query: z.string().describe('The search query for the video.'),
     }),
     outputSchema: z.object({
-      videoId: z.string().optional().describe('The ID of the first video found.'),
+      id: z.string().optional().describe('The ID of the first video found.'),
+      title: z.string().optional().describe('The title of the video.'),
+      thumbnail: z.string().optional().describe('The URL of the video thumbnail.'),
     }),
   },
   async ({ query }) => {
     try {
       const video = await Youtube.searchOne(query, 'video', false);
-      if (video?.id) {
-        return { videoId: video.id };
+      if (video) {
+        return { 
+          id: video.id,
+          title: video.title,
+          thumbnail: video.thumbnail?.url
+        };
       }
-      return { videoId: undefined };
+      return {};
     } catch (error) {
       console.error('YouTube search error:', error);
-      return { videoId: undefined };
+      // In case of an API error, return an empty object to prevent the flow from crashing.
+      return {};
     }
   }
 );
+
