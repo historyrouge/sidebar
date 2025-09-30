@@ -69,13 +69,6 @@ export function MainDashboard() {
 
         {activeVideoId && (
              <div className="flex items-center gap-2 p-1.5 rounded-lg bg-card border w-full max-w-md">
-                <Image 
-                    src={`https://i.ytimg.com/vi/${activeVideoId}/hqdefault.jpg`} 
-                    alt="Video thumbnail"
-                    width={40} 
-                    height={40} 
-                    className="rounded-md aspect-square object-cover"
-                />
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate text-foreground">{activeVideoTitle || 'Now Playing'}</p>
                     <div className="flex items-center text-muted-foreground -ml-2">
