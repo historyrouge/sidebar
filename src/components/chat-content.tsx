@@ -150,9 +150,9 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -498,6 +498,14 @@ export function ChatContent() {
                         </div>
                         <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                             <Button 
+                                variant={activeButton === 'agent' ? 'default' : 'outline'}
+                                onClick={() => handleToolButtonClick('agent')}
+                                className="gap-2"
+                            >
+                                <Bot className="h-5 w-5" />
+                                Agent
+                            </Button>
+                            <Button 
                                 variant={activeButton === 'deepthink' ? 'default' : 'outline'}
                                 onClick={() => handleToolButtonClick('deepthink')}
                             >
@@ -692,6 +700,14 @@ export function ChatContent() {
             </div>
             <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                 <Button 
+                    variant={activeButton === 'agent' ? 'default' : 'outline'}
+                    onClick={() => handleToolButtonClick('agent')}
+                    className="gap-2"
+                >
+                    <Bot className="h-5 w-5" />
+                    Agent
+                </Button>
+                <Button 
                     variant={activeButton === 'deepthink' ? 'default' : 'outline'}
                     onClick={() => handleToolButtonClick('deepthink')}
                 >
@@ -750,6 +766,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
