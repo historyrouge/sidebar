@@ -359,6 +359,41 @@ export async function generalChatAction(
             }
         }
         
+        // 1) Open-URL intent: let users open links directly in the in-app browser
+        const openUrlCommandMatch = lastUserMessage.match(/^(?:open|go to|visit)\s+(.+)/i);
+        const urlRegex = /(https?:\/\/[^\s]+|(?:[\w-]+\.)+[\w-]+\S*)/i;
+        let directOpenUrl: string | null = null;
+        if (openUrlCommandMatch) {
+            directOpenUrl = openUrlCommandMatch[1].trim();
+        } else {
+            // Also support: "open browser <url>"
+            const openBrowserMatch = lastUserMessage.match(/open\s+browser\s+(.+)/i);
+            if (openBrowserMatch) {
+                directOpenUrl = openBrowserMatch[1].trim();
+            }
+        }
+        if (directOpenUrl) {
+            const hasProtocol = /^https?:\/\//i.test(directOpenUrl);
+            const finalUrl = hasProtocol ? directOpenUrl : `https://${directOpenUrl}`;
+            return { data: { response: JSON.stringify({ type: 'open_url', url: finalUrl }) } };
+        }
+
+        // 2) YouTube Q&A: if message contains a YouTube URL, fetch transcript and use as context
+        let youtubeTranscriptText: string | null = null;
+        try {
+            const ytUrlMatch = lastUserMessage.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+)/i);
+            if (ytUrlMatch && ytUrlMatch[0]) {
+                const ytUrl = ytUrlMatch[0];
+                const ytResult = await getYoutubeTranscript({ videoUrl: ytUrl });
+                if (ytResult?.transcript) {
+                    // Limit transcript length to avoid exceeding model context
+                    youtubeTranscriptText = ytResult.transcript.slice(0, 15000);
+                }
+            }
+        } catch (ytErr) {
+            console.warn('YouTube transcript fetch failed, proceeding without it.');
+        }
+
         let messages: any[];
 
         if (imageDataUri) {
@@ -369,6 +404,9 @@ export async function generalChatAction(
             });
              if(fileContent) {
                  userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+            }
+            if (youtubeTranscriptText) {
+                userContent[0].text += `\n\nThe user referenced a YouTube video. Here is its transcript. Use ONLY this as source for video-related facts. If the user asks about the video, answer strictly from this transcript. If they pasted only a URL, provide a concise summary first, then key points.\n\n---\n${youtubeTranscriptText}\n---`;
             }
             messages = [
                 { role: 'system', content: chatSystemPrompt },
@@ -387,6 +425,14 @@ export async function generalChatAction(
                 if (lastMessage.role === 'user') {
                     if (typeof lastMessage.content === 'string') {
                          lastMessage.content += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+                    }
+                }
+            }
+            if (youtubeTranscriptText) {
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.role === 'user') {
+                    if (typeof lastMessage.content === 'string') {
+                        lastMessage.content += `\n\nThe user referenced a YouTube video. Here is its transcript. Use ONLY this as source for video-related facts. If they pasted only a URL, provide a concise summary first, then key points.\n\n---\n${youtubeTranscriptText}\n---`;
                     }
                 }
             }
