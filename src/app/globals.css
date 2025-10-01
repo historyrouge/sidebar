@@ -5,101 +5,103 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%; /* #000000 */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    /* Light theme - ScholarSage brand colors */
+    --background: 244 244 248; /* #F4F4F8 - off-white background */
+    --foreground: 20 20 20; /* #141414 - dark text */
 
-    --card: 0 0% 8%; /* #141414 */
-    --card-foreground: 0 0% 98%;
+    --card: 255 255 255; /* #FFFFFF - white cards */
+    --card-foreground: 20 20 20; /* #141414 */
  
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 255 255 255;
+    --popover-foreground: 20 20 20;
  
-    --primary: 210 40% 96.1%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 96 126 163; /* #607EA3 - muted blue primary */
+    --primary-foreground: 255 255 255; /* white text on primary */
  
-    --secondary: 0 0% 12%; /* #1F1F1F */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 244 244 248; /* #F4F4F8 - same as background */
+    --secondary-foreground: 96 126 163; /* #607EA3 */
  
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 163 96 96; /* #A36060 - dark rose accent */
+    --accent-foreground: 255 255 255;
  
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 220 38 38; /* red-600 */
+    --destructive-foreground: 255 255 255;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%; /* #A0A0A0 */
+    --muted: 244 244 248; /* #F4F4F8 */
+    --muted-foreground: 107 114 128; /* gray-500 */
  
-    --border: 0 0% 15%; /* #262626 */
-    --input: 0 0% 12%;
-    --ring: 210 40% 96.1%;
+    --border: 229 231 235; /* gray-200 */
+    --input: 255 255 255; /* white input backgrounds */
+    --ring: 96 126 163; /* #607EA3 - primary color for focus rings */
  
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* slightly more rounded */
 
-    --chart-1: 210 40% 96.1%;
-    --chart-2: 145 63% 42%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 25 95% 53%;
-    --chart-5: 25 85% 62%;
+    --chart-1: 96 126 163; /* #607EA3 */
+    --chart-2: 163 96 96; /* #A36060 */
+    --chart-3: 34 197 94; /* green-500 */
+    --chart-4: 251 191 36; /* amber-400 */
+    --chart-5: 168 85 247; /* purple-500 */
     
-    --sidebar-background: 0 0% 4%; /* #0A0A0A */
-    --sidebar-foreground: 0 0% 90%; /* #E6E6E6 */
-    --sidebar-border: 0 0% 10%; /* #1A1A1A */
-    --sidebar-accent: 0 0% 8%; /* #141414 */
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-active: 0 0% 8%;
-    --sidebar-active-foreground: 0 0% 98%;
-    --sidebar-group-foreground: 0 0% 63%;
+    --sidebar-background: 255 255 255; /* white sidebar */
+    --sidebar-foreground: 20 20 20; /* dark text */
+    --sidebar-border: 229 231 235; /* gray-200 */
+    --sidebar-accent: 244 244 248; /* #F4F4F8 */
+    --sidebar-accent-foreground: 96 126 163; /* #607EA3 */
+    --sidebar-active: 96 126 163; /* #607EA3 */
+    --sidebar-active-foreground: 255 255 255;
+    --sidebar-group-foreground: 107 114 128; /* gray-500 */
 
-    --chat-input-background: 0 0% 10%;
-    --avatar-accent: 225 73% 57%; /* #3B82F6 */
+    --chat-input-background: 255 255 255;
+    --avatar-accent: 96 126 163; /* #607EA3 */
   }
  
   .dark {
-    --background: 0 0% 0%; /* #000000 */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    /* Dark theme - modern dark mode with better contrast */
+    --background: 15 15 20; /* #0F0F14 - very dark blue-gray */
+    --foreground: 248 250 252; /* #F8FAFC - light gray text */
  
-    --card: 0 0% 8%; /* #141414 */
-    --card-foreground: 0 0% 98%;
+    --card: 20 20 25; /* #141419 - slightly lighter than background */
+    --card-foreground: 248 250 252;
  
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 20 20 25;
+    --popover-foreground: 248 250 252;
  
-    --primary: 210 40% 96.1%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 120 150 200; /* lighter blue for dark mode */
+    --primary-foreground: 15 15 20;
  
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 30 30 35; /* #1E1E23 */
+    --secondary-foreground: 200 200 210; /* #C8C8D2 */
  
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 200 120 120; /* lighter rose for dark mode */
+    --accent-foreground: 15 15 20;
  
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 239 68 68; /* red-500 */
+    --destructive-foreground: 248 250 252;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 30 30 35; /* #1E1E23 */
+    --muted-foreground: 156 163 175; /* gray-400 */
  
-    --border: 0 0% 15%;
-    --input: 0 0% 12%;
-    --ring: 210 40% 96.1%;
+    --border: 40 40 45; /* #28282D */
+    --input: 20 20 25; /* #141419 */
+    --ring: 120 150 200; /* lighter blue for focus rings */
 
-    --chart-1: 210 40% 96.1%;
-    --chart-2: 145 63% 42%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 25 95% 53%;
-    --chart-5: 25 85% 62%;
+    --chart-1: 120 150 200; /* lighter blue */
+    --chart-2: 200 120 120; /* lighter rose */
+    --chart-3: 74 222 128; /* green-400 */
+    --chart-4: 251 191 36; /* amber-400 */
+    --chart-5: 196 181 253; /* purple-300 */
 
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 10%;
-    --sidebar-accent: 0 0% 8%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-active: 0 0% 8%;
-    --sidebar-active-foreground: 0 0% 98%;
-    --sidebar-group-foreground: 0 0% 63%;
+    --sidebar-background: 10 10 15; /* #0A0A0F - darker sidebar */
+    --sidebar-foreground: 200 200 210; /* #C8C8D2 */
+    --sidebar-border: 40 40 45; /* #28282D */
+    --sidebar-accent: 20 20 25; /* #141419 */
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-active: 120 150 200; /* lighter blue */
+    --sidebar-active-foreground: 15 15 20;
+    --sidebar-group-foreground: 156 163 175; /* gray-400 */
 
-    --chat-input-background: 0 0% 10%;
-    --avatar-accent: 225 73% 57%; /* #3B82F6 */
+    --chat-input-background: 20 20 25; /* #141419 */
+    --avatar-accent: 120 150 200; /* lighter blue */
   }
 }
 
@@ -107,47 +109,145 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
-    @apply bg-background text-foreground text-base;
-    font-family: "Inter", "Segoe UI", sans-serif;
+    @apply bg-background text-foreground text-base leading-relaxed;
+    font-family: "Inter", "Segoe UI", "system-ui", sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  .prose hr, .prose-sm hr {
-    @apply my-8 border-gray-200;
+  
+  /* Improved typography hierarchy */
+  h1, .h1 {
+    @apply text-3xl font-bold tracking-tight;
   }
-  .dark .prose hr, .dark .prose-sm hr {
-    @apply my-8 border-gray-600;
+  
+  h2, .h2 {
+    @apply text-2xl font-semibold tracking-tight;
   }
-  h1, .heading {
+  
+  h3, .h3 {
     @apply text-xl font-semibold;
+  }
+  
+  h4, .h4 {
+    @apply text-lg font-medium;
+  }
+  
+  h5, .h5 {
+    @apply text-base font-medium;
+  }
+  
+  h6, .h6 {
+    @apply text-sm font-medium;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+  
+  /* Improved prose styling */
+  .prose hr, .prose-sm hr {
+    @apply my-8 border-border;
+  }
+  
+  .dark .prose hr, .dark .prose-sm hr {
+    @apply my-8 border-border;
+  }
+  
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Improved button focus */
+  button:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Better link styles */
+  a {
+    @apply text-primary hover:text-primary/80 transition-colors;
   }
 }
 
 
 @layer components {
+    /* Enhanced code box styling */
     .code-box {
-        @apply block rounded-xl border border-border bg-card my-4;
+        @apply block rounded-xl border border-border bg-card my-4 shadow-sm hover:shadow-md transition-shadow duration-200;
     }
     .code-box-header {
-        @apply flex items-center justify-between px-4 py-2 bg-primary/10 border-b border-primary/20 rounded-t-xl;
+        @apply flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border rounded-t-xl;
     }
     .code-box-language {
-        @apply text-sm font-semibold text-primary/80;
+        @apply text-sm font-semibold text-primary;
     }
     .code-box-actions {
         @apply flex items-center gap-1;
     }
     .code-box-actions button {
-        @apply text-primary/80 hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md;
+        @apply text-muted-foreground hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md transition-colors duration-150;
     }
     .code-box pre {
-        @apply my-0 p-4 rounded-b-xl bg-card text-sm;
+        @apply my-0 p-4 rounded-b-xl bg-card text-sm overflow-x-auto;
     }
 
+    /* Chat input styling */
     .bg-chat-input {
-      background-color: hsl(var(--chat-input-background));
+        background-color: hsl(var(--chat-input-background));
     }
 
+    /* Avatar styling */
     .bg-avatar-accent {
         background-color: hsl(var(--avatar-accent));
+    }
+    
+    /* Enhanced button styles */
+    .btn-primary {
+        @apply bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150;
+    }
+    
+    .btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-all duration-150;
+    }
+    
+    /* Card enhancements */
+    .card-hover {
+        @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+    }
+    
+    /* Loading states */
+    .skeleton {
+        @apply animate-pulse bg-muted rounded;
+    }
+    
+    /* Improved focus states */
+    .focus-ring {
+        @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+    }
+    
+    /* Smooth transitions */
+    .transition-smooth {
+        @apply transition-all duration-200 ease-in-out;
+    }
+    
+    /* Glass morphism effect */
+    .glass {
+        @apply bg-background/80 backdrop-blur-md border border-border/50;
+    }
+    
+    /* Gradient backgrounds */
+    .gradient-primary {
+        background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
+    }
+    
+    .gradient-accent {
+        background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent)) 100%);
     }
 }

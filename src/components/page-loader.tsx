@@ -6,6 +6,22 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
+// Custom NProgress styles
+const customNProgressStyles = `
+  #nprogress .bar {
+    background: hsl(var(--primary)) !important;
+    height: 3px !important;
+  }
+  
+  #nprogress .peg {
+    box-shadow: 0 0 10px hsl(var(--primary)), 0 0 5px hsl(var(--primary)) !important;
+  }
+  
+  #nprogress .spinner {
+    display: none !important;
+  }
+`;
+
 function NProgressLogic() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -21,7 +37,17 @@ function NProgressLogic() {
 export function PageLoader({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
-    NProgress.configure({ showSpinner: false });
+    // Inject custom styles
+    const styleElement = document.createElement('style');
+    styleElement.textContent = customNProgressStyles;
+    document.head.appendChild(styleElement);
+
+    NProgress.configure({ 
+      showSpinner: false,
+      speed: 500,
+      minimum: 0.1,
+      trickleSpeed: 200,
+    });
 
     const handleAnchorClick = (event: MouseEvent) => {
         const targetUrl = (event.currentTarget as HTMLAnchorElement).href;
@@ -46,6 +72,7 @@ export function PageLoader({ children }: { children: React.ReactNode }) {
         mutationObserver.disconnect();
         const anchorElements = document.querySelectorAll('a');
         anchorElements.forEach(anchor => anchor.removeEventListener('click', handleAnchorClick));
+        document.head.removeChild(styleElement);
     }
   }, []);
 

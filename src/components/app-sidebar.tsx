@@ -120,10 +120,12 @@ export function AppSidebar() {
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start w-full gap-2.5 px-3"
+                className="justify-start w-full gap-2.5 px-3 focus-ring transition-smooth"
                 onClick={handleLinkClick}
+                aria-label={`Navigate to ${item.name}`}
+                aria-current={pathname === item.href ? "page" : undefined}
               >
-                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
+                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110" aria-hidden="true">
                     {item.icon}
                   </div>
                   <span className="text-sm">{item.name}</span>
@@ -134,13 +136,13 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border w-64 sm:w-72" role="navigation" aria-label="Main navigation">
       <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <Link href="/" className="flex items-center gap-2.5 focus-ring rounded-lg p-1 -m-1" aria-label="ScholarSage - Go to home">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-hidden="true">
                 <Layers className="size-5" />
             </div>
-            <h1 className="text-lg font-semibold">SearnAI</h1>
+            <h1 className="text-lg font-semibold">ScholarSage</h1>
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-grow flex flex-col">
@@ -149,9 +151,10 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                     <SidebarMenuButton
                         onClick={handleNewChat}
-                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80 focus-ring"
+                        aria-label="Start a new chat session"
                     >
-                        <FileEdit />
+                        <FileEdit aria-hidden="true" />
                         <span className="text-sm">New Chat</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -176,23 +179,37 @@ export function AppSidebar() {
             <SidebarMenu>
                  <SidebarMenuItem>
                     <Link href="/settings">
-                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname.startsWith('/settings')}>
-                            <Settings />
+                        <SidebarMenuButton 
+                            className="w-full justify-start gap-2.5 px-3 focus-ring transition-smooth" 
+                            isActive={pathname.startsWith('/settings')}
+                            aria-label="Open settings"
+                            aria-current={pathname.startsWith('/settings') ? "page" : undefined}
+                        >
+                            <Settings aria-hidden="true" />
                             <span className="text-sm">Settings</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                     <Link href="/about">
-                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname === '/about'}>
-                            <Info />
+                        <SidebarMenuButton 
+                            className="w-full justify-start gap-2.5 px-3 focus-ring transition-smooth" 
+                            isActive={pathname === '/about'}
+                            aria-label="Learn about ScholarSage"
+                            aria-current={pathname === '/about' ? "page" : undefined}
+                        >
+                            <Info aria-hidden="true" />
                              <span className="text-sm">About Us</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout} className="w-full justify-start gap-2.5 px-3 text-red-500 hover:bg-red-500/10 hover:text-red-400">
-                        <LogOut />
+                    <SidebarMenuButton 
+                        onClick={handleLogout} 
+                        className="w-full justify-start gap-2.5 px-3 text-red-500 hover:bg-red-500/10 hover:text-red-400 focus-ring transition-smooth"
+                        aria-label="Sign out of your account"
+                    >
+                        <LogOut aria-hidden="true" />
                         <span className="text-sm">Log Out</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
