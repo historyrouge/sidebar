@@ -41,11 +41,11 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "./ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Button } from "./ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";

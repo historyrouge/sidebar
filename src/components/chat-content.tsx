@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Palette, Calculator, Code2, Globe } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -30,6 +30,7 @@ import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
+import { CanvasDialog } from "./canvas-dialog";
 
 
 type Message = {
@@ -172,6 +173,7 @@ export function ChatContent() {
 
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
+  const [showCanvasDialog, setShowCanvasDialog] = useState(false);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -481,6 +483,13 @@ export function ChatContent() {
       }
   };
 
+  const handleCanvasSave = (imageDataUrl: string) => {
+    setImageDataUri(imageDataUrl);
+    setFileContent(null);
+    setFileName(null);
+    toast({ title: "Canvas attached!", description: "Your drawing is ready to be sent." });
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
@@ -536,8 +545,14 @@ export function ChatContent() {
   if (showWelcome) {
     return (
         <div className="flex h-full flex-col items-center justify-center p-4">
+             <CanvasDialog 
+                isOpen={showCanvasDialog} 
+                onOpenChange={setShowCanvasDialog}
+                onSave={handleCanvasSave}
+             />
              <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
+                <p className="text-muted-foreground text-center">Advanced AI with web browsing, YouTube analysis, canvas, code execution & more</p>
                 <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
@@ -586,8 +601,18 @@ export function ChatContent() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleOpenImageDialog}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Upload Image
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleOpenFileDialog}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Text File
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setShowCanvasDialog(true)}>
+                                    <Palette className="mr-2 h-4 w-4" />
+                                    Draw on Canvas
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -618,6 +643,11 @@ export function ChatContent() {
 
   return (
     <div className="flex h-full flex-col">
+      <CanvasDialog 
+        isOpen={showCanvasDialog} 
+        onOpenChange={setShowCanvasDialog}
+        onSave={handleCanvasSave}
+      />
       <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
       <ShareDialog
         isOpen={!!shareContent}
@@ -757,8 +787,18 @@ export function ChatContent() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleOpenImageDialog}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Upload Image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleOpenFileDialog}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Text File
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setShowCanvasDialog(true)}>
+                        <Palette className="mr-2 h-4 w-4" />
+                        Draw on Canvas
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 

@@ -36,13 +36,21 @@ export function AboutContent() {
                         Here's what makes SearnAI your ultimate study buddy:
                     </p>
                     <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Smart Flashcards</strong>: Create custom decks for any subject, with AI-powered hints to help you remember tricky concepts.</li>
-                        <li><strong>AI Study Tools</strong>: Generate quizzes, summaries, and get help from an AI tutor, all from your study material.</li>
-                        <li><strong>YouTube Transcript Extractor</strong>: Instantly get transcripts from educational videos to study from.</li>
-                        <li><strong>AI Image Generation</strong>: Create visual aids for your notes based on the study material.</li>
+                        <li><strong>Canvas Drawing</strong>: Draw diagrams and sketches that AI can analyze, just like ChatGPT!</li>
+                        <li><strong>Web Browsing & Scraping</strong>: Browse any website and let AI analyze web content in real-time.</li>
+                        <li><strong>YouTube Analysis</strong>: Get full transcripts and AI summaries of any video.</li>
+                        <li><strong>Code Execution</strong>: Run JavaScript code safely and see results instantly.</li>
+                        <li><strong>Advanced Calculator</strong>: Solve complex math with trigonometry, logarithms, and more.</li>
+                        <li><strong>Web Search</strong>: Real-time internet search integrated into AI responses.</li>
+                        <li><strong>9 AI Models</strong>: Access to multiple cutting-edge AI models with automatic fallback.</li>
+                        <li><strong>Voice Input & TTS</strong>: Talk to AI and have it read answers back to you.</li>
+                        <li><strong>Music Player</strong>: Search and play YouTube music videos right in the chat.</li>
+                        <li><strong>Smart Flashcards & Quizzes</strong>: AI-generated study materials from any content.</li>
+                        <li><strong>Mind Maps & Presentations</strong>: Create visual learning aids automatically.</li>
+                        <li><strong>PDF Analysis</strong>: Upload and chat with your PDF documents.</li>
                     </ul>
                     <p>
-                        We poured our hearts into this during late-night coding sessions (while still acing our classes 😉). Whether you're prepping for boards or just wanting to level up your grades, SearnAI is here to spark that love for learning!
+                        We poured our hearts into this during late-night coding sessions (while still acing our classes 😉). With <strong>40+ advanced features</strong> that rival and exceed ChatGPT, SearnAI is now one of the most powerful AI learning platforms available – and it's completely free! Whether you're prepping for boards or just wanting to level up your grades, SearnAI is here to spark that love for learning!
                     </p>
                     <p>
                         What do you think? Drop your feedback – we'd love to hear from you!
