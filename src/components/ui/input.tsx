@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    // The `fdprocessedid` prop is added by browser extensions like Grammarly and causes hydration errors.
+    // We remove it here to prevent the error.
+    const { fdprocessedid, ...rest } = props as any;
     return (
       <input
         type={type}
@@ -13,7 +16,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        {...props}
+        {...rest}
       />
     )
   }
