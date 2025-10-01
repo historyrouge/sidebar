@@ -171,12 +171,12 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'agent') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -566,9 +566,6 @@ export function ChatContent() {
                             <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                            <Button type="button" variant={activeButton === 'search' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
-                                <Search className="h-5 w-5" />
-                            </Button>
                             <Link href="/presentation-maker">
                                 <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                                     <Presentation className="h-5 w-5" />
@@ -740,9 +737,6 @@ export function ChatContent() {
                 <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                     <Music className="h-5 w-5" />
                 </Button>
-                <Button type="button" variant={activeButton === 'search' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
-                    <Search className="h-5 w-5" />
-                </Button>
                 <Link href="/presentation-maker">
                     <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                         <Presentation className="h-5 w-5" />
@@ -818,6 +812,8 @@ export function ChatContent() {
 
 
 
+
+    
 
     
 
