@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
+import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput, getYoutubeTranscriptAction, summarizeContentAction, summarizeUrlAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -272,9 +272,46 @@ export function ChatContent() {
         content: h.content.text, // Pass only text content
       }));
       
-      const result = await generalChatAction({ 
-          history: genkitHistory, 
-          fileContent: currentFileContent, 
+      const lastUser = chatHistory[chatHistory.length - 1]?.content?.text || "";
+
+      // 1) If user pasted a YouTube URL, auto-extract and summarize transcript
+      const ytMatch = lastUser.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
+      if (ytMatch) {
+          try {
+              const transcriptRes = await getYoutubeTranscriptAction({ videoUrl: ytMatch[0] });
+              if (transcriptRes.data?.transcript) {
+                  const sumRes = await summarizeContentAction({ content: transcriptRes.data.transcript });
+                  const summaryText = sumRes.data?.summary || 'Could not summarize the transcript.';
+                  setIsTyping(false);
+                  const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: summaryText } };
+                  setHistory((prev) => [...prev, modelMessage]);
+                  return;
+              }
+          } catch (e) {
+              // Fall through to normal chat on failure
+          }
+      }
+
+      // 2) If user pasted any other URL, auto-fetch and summarize
+      const urlMatch = lastUser.match(/https?:\/\/[\w\-._~:/?#[\]@!$&'()*+,;=%]+/i);
+      if (urlMatch) {
+          try {
+              const res = await summarizeUrlAction({ url: urlMatch[0] });
+              if (res.data?.summary) {
+                  setIsTyping(false);
+                  const titlePrefix = res.data.title ? `Summary of ${res.data.title}\n\n` : '';
+                  const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: `${titlePrefix}${res.data.summary}` } };
+                  setHistory((prev) => [...prev, modelMessage]);
+                  return;
+              }
+          } catch (e) {
+              // Fall through to normal chat on failure
+          }
+      }
+
+      const result = await generalChatAction({
+          history: genkitHistory,
+          fileContent: currentFileContent,
           imageDataUri: currentImageDataUri,
           model: currentModel,
           isMusicMode: activeButton === 'music',
