@@ -25,6 +25,10 @@ import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQues
 import { ai, visionModel, googleAI } from "@/ai/genkit";
 import { MessageData, Part } from "genkit";
 import { searchYoutube } from "@/ai/tools/youtube-search";
+import { webScraper } from "@/ai/tools/web-scraper";
+import { youtubeAnalyzer } from "@/ai/tools/youtube-analyzer";
+import { calculator } from "@/ai/tools/calculator";
+import { codeExecutor } from "@/ai/tools/code-executor";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -282,7 +286,19 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 3.  **Use LaTeX for Math**: **CRITICAL**: Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$). Do NOT use any other delimiters.
 4.  **Provide Worked Examples**: For topics involving calculation or logic, include a short, clear "Worked Example" section. Show the key steps, include units, and highlight the final answer.
 5.  **Proactive Assistance**: After answering the main question, ALWAYS ask a follow-up question. Proactively offer to create a mind-map, a flowchart, more examples, a mnemonic, or a set of practice problems to help the user learn better.
-6.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive and helpful.`;
+6.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive and helpful.
+7.  **Advanced Capabilities**: You have access to powerful tools:
+    - **Web Scraper**: Can fetch and analyze content from any URL the user provides
+    - **YouTube Analyzer**: Can extract transcripts and analyze YouTube videos in depth
+    - **Calculator**: Can perform complex mathematical calculations
+    - **Code Executor**: Can run JavaScript code safely and show results
+    - **Web Search**: Can search the internet for real-time information
+    
+    Use these tools proactively when the user's question would benefit from them. For example:
+    - If they mention a URL, offer to analyze it
+    - If they ask about a YouTube video, fetch its transcript
+    - If they need calculations, use the calculator tool
+    - If they share code, offer to execute it and show results`;
 
 const sambaModelFallbackOrder = [
     'gpt-oss-120b',
