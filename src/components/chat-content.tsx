@@ -541,12 +541,6 @@ export function ChatContent() {
                 <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Link href="/presentation-maker">
-                      <Button variant="outline" className="rounded-full gap-2">
-                        <Presentation className="h-4 w-4" />
-                        Create Presentation
-                      </Button>
-                    </Link>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
@@ -575,6 +569,11 @@ export function ChatContent() {
                             <Button type="button" variant={activeButton === 'search' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
                                 <Search className="h-5 w-5" />
                             </Button>
+                            <Link href="/presentation-maker">
+                                <Button type="button" variant="outline" disabled={isInputDisabled}>
+                                    <Presentation className="h-5 w-5" />
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                     <form
@@ -743,6 +742,11 @@ export function ChatContent() {
                 <Button type="button" variant={activeButton === 'search' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('search')}>
                     <Search className="h-5 w-5" />
                 </Button>
+                <Link href="/presentation-maker">
+                    <Button type="button" variant="outline" disabled={isInputDisabled}>
+                        <Presentation className="h-5 w-5" />
+                    </Button>
+                </Link>
             </div>
           </div>
           <form
@@ -812,5 +816,7 @@ export function ChatContent() {
 
 
 
+
+    
 
     
