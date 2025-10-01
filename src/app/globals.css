@@ -8,7 +8,7 @@
     --background: 0 0% 0%; /* #000000 */
     --foreground: 0 0% 98%; /* #FAFAFA */
 
-    --card: 0 0% 8%; /* #141414 */
+    --card: 0 0% 100%; /* Changed for glass effect */
     --card-foreground: 0 0% 98%;
  
     --popover: 0 0% 4%;
@@ -29,11 +29,11 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 63%; /* #A0A0A0 */
  
-    --border: 0 0% 15%; /* #262626 */
+    --border: 0 0% 100%; /* Changed for glass effect */
     --input: 0 0% 12%;
     --ring: 0 0% 63%;
  
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --chart-1: 210 40% 96.1%;
     --chart-2: 145 63% 42%;
@@ -58,7 +58,7 @@
     --background: 0 0% 0%; /* #000000 */
     --foreground: 0 0% 98%; /* #FAFAFA */
  
-    --card: 0 0% 8%; /* #141414 */
+    --card: 0 0% 100%;
     --card-foreground: 0 0% 98%;
  
     --popover: 0 0% 4%;
@@ -79,7 +79,7 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 63%;
  
-    --border: 0 0% 15%;
+    --border: 0 0% 100%;
     --input: 0 0% 12%;
     --ring: 0 0% 63%;
 
@@ -125,7 +125,7 @@
 
 @layer components {
     .code-box {
-        @apply block rounded-xl border border-border bg-card my-4;
+        @apply block rounded-xl border border-border my-4;
     }
     .code-box-header {
         @apply flex items-center justify-between px-4 py-2 bg-primary/10 border-b border-primary/20 rounded-t-xl;

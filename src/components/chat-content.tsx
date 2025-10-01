@@ -575,7 +575,7 @@ export function ChatContent() {
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
-                        className="relative w-full rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
+                        className="relative w-full rounded-xl border border-border/10 bg-card/5 backdrop-blur-lg p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
                     >
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -743,7 +743,7 @@ export function ChatContent() {
           </div>
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
+              className="relative flex items-center rounded-xl border border-border/10 bg-card/5 backdrop-blur-lg p-2 shadow-lg focus-within:border-primary"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -786,6 +786,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
