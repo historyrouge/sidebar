@@ -570,8 +570,9 @@ export function ChatContent() {
                                 <Search className="h-5 w-5" />
                             </Button>
                             <Link href="/presentation-maker">
-                                <Button type="button" variant="outline" disabled={isInputDisabled}>
+                                <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                                     <Presentation className="h-5 w-5" />
+                                    Create Presentation
                                 </Button>
                             </Link>
                         </div>
@@ -743,8 +744,9 @@ export function ChatContent() {
                     <Search className="h-5 w-5" />
                 </Button>
                 <Link href="/presentation-maker">
-                    <Button type="button" variant="outline" disabled={isInputDisabled}>
+                    <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                         <Presentation className="h-5 w-5" />
+                        Create Presentation
                     </Button>
                 </Link>
             </div>
