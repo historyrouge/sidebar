@@ -110,6 +110,8 @@
   body {
     @apply bg-background text-foreground text-base;
     font-family: "Inter", "Segoe UI", sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-optical-sizing: auto;
   }
   .prose hr, .prose-sm hr {
     @apply my-8 border-gray-200;
@@ -119,6 +121,21 @@
   }
   h1, .heading {
     @apply text-xl font-semibold;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Selection styles */
+  ::selection {
+    @apply bg-primary/20 text-primary-foreground;
   }
 }
 
@@ -149,5 +166,115 @@
 
     .bg-avatar-accent {
         background-color: hsl(var(--avatar-accent));
+    }
+    
+    /* Animation utilities */
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .animate-slide-up {
+        animation: slideUp 0.3s ease-out;
+    }
+    
+    .animate-slide-down {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    .animate-scale-in {
+        animation: scaleIn 0.2s ease-out;
+    }
+    
+    .animate-pulse-subtle {
+        animation: pulseSubtle 2s ease-in-out infinite;
+    }
+    
+    /* Hover effects */
+    .hover-lift {
+        @apply transition-all duration-200 ease-out;
+    }
+    
+    .hover-lift:hover {
+        @apply transform -translate-y-0.5 shadow-lg;
+    }
+    
+    /* Glass morphism effect */
+    .glass {
+        @apply bg-background/80 backdrop-blur-md border border-border/50;
+    }
+    
+    /* Gradient text */
+    .gradient-text {
+        @apply bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent;
+    }
+    
+    /* Loading skeleton */
+    .skeleton {
+        @apply animate-pulse bg-muted rounded;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes slideDown {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes scaleIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+}
+
+@keyframes pulseSubtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .mobile-padding {
+        @apply px-4;
+    }
+    
+    .mobile-text {
+        @apply text-sm;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        @apply text-black bg-white;
     }
 }

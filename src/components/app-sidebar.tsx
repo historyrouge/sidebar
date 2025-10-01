@@ -114,19 +114,19 @@ export function AppSidebar() {
 
 
   const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
-    return items.map((item) => (
-        <SidebarMenuItem key={item.name}>
+    return items.map((item, index) => (
+        <SidebarMenuItem key={item.name} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
             <Link href={item.href} passHref>
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start w-full gap-2.5 px-3"
+                className="justify-start w-full gap-2.5 px-3 hover-lift transition-all duration-200 hover:bg-sidebar-accent/80"
                 onClick={handleLinkClick}
               >
-                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
+                  <div className="transition-all duration-200 group-hover/menu-button:scale-110 group-hover/menu-button:text-primary">
                     {item.icon}
                   </div>
-                  <span className="text-sm">{item.name}</span>
+                  <span className="text-sm transition-colors duration-200">{item.name}</span>
               </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
@@ -135,12 +135,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Layers className="size-5" />
+      <SidebarHeader className="p-4 animate-slide-down">
+        <Link href="/" className="flex items-center gap-2.5 hover-lift group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-200 group-hover:scale-110 group-hover:shadow-lg">
+                <Layers className="size-5 transition-transform duration-200 group-hover:rotate-12" />
             </div>
-            <h1 className="text-lg font-semibold">SearnAI</h1>
+            <h1 className="text-lg font-semibold gradient-text">SearnAI</h1>
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-grow flex flex-col">
