@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Globe } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -502,6 +502,22 @@ export function ChatContent() {
         const data = JSON.parse(message.content.text);
         if (data.type === 'youtube' && data.videoId) {
           return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+        }
+        if (data.type === 'open_url' && data.url) {
+          const browserHref = `/web-browser?url=${encodeURIComponent(data.url)}`;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4" /> Open Link</CardTitle>
+                <CardDescription className="truncate">{data.url}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href={browserHref}>
+                  <Button className="gap-2" variant="default"><Globe className="h-4 w-4" /> Open in Browser</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          );
         }
       } catch (e) {
         // Not a JSON object, so render as plain text

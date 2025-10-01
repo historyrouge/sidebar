@@ -65,6 +65,7 @@ const studyTools = [
 const resources = [
     { name: "Web Browser", icon: <Globe />, href: "/web-browser" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
+    { name: "Canvas", icon: <Brush />, href: "/canvas" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
     { name: "Text-to-Speech", icon: <Volume2 />, href: "/text-to-speech" },

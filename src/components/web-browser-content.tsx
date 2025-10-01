@@ -6,13 +6,14 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe, X } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function WebBrowserContent() {
     const [url, setUrl] = useState("https://example.com");
     const [displayUrl, setDisplayUrl] = useState("https://example.com");
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -42,7 +43,16 @@ export function WebBrowserContent() {
     }
     
     useEffect(() => {
-        handleGoHome();
+        const paramUrl = searchParams.get('url');
+        if (paramUrl && paramUrl.trim()) {
+            const hasProtocol = paramUrl.startsWith('http://') || paramUrl.startsWith('https://');
+            const finalUrl = hasProtocol ? paramUrl : `https://${paramUrl}`;
+            setUrl(finalUrl);
+            setDisplayUrl(finalUrl);
+        } else {
+            handleGoHome();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const isSecure = displayUrl.startsWith("https://");
