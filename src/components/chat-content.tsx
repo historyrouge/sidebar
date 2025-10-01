@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward } from "lucide-react";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -31,6 +31,10 @@ import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
+import { sanitizeInput, isSpamContent, containsProfanity, validateFileSize, validateFileType } from "@/lib/security";
+import { validateTextFile, validateImageFile } from "@/lib/validation";
+import { ConversationMemoryManager } from "@/lib/conversation-memory";
+import { MultiAgentSystem } from "@/lib/multi-agent-system";
 
 
 type Message = {
@@ -62,7 +66,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 }));
 
 
-const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
+const CodeBox = memo(({ language, code: initialCode }: { language: string, code: string }) => {
     const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [code, setCode] = useState(initialCode);
@@ -139,7 +143,7 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
             )}
         </div>
     );
-};
+});
 
 
 export function ChatContent() {
@@ -175,6 +179,13 @@ export function ChatContent() {
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
+
+  // Advanced AI systems
+  const [memoryManager] = useState(() => new ConversationMemoryManager());
+  const [multiAgentSystem] = useState(() => new MultiAgentSystem());
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showAgentSuggestions, setShowAgentSuggestions] = useState(false);
+  const [agentSuggestions, setAgentSuggestions] = useState<any[]>([]);
 
 
   const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {
@@ -306,11 +317,44 @@ export function ChatContent() {
     const messageToSend = messageContent ?? input;
     if (!messageToSend.trim() && !imageDataUri && !fileContent) return;
 
+    // Security validation
+    const sanitizedMessage = sanitizeInput(messageToSend);
+    
+    // Check for spam content
+    if (isSpamContent(sanitizedMessage)) {
+      toast({ 
+        title: "Message blocked", 
+        description: "Your message appears to be spam. Please try again with different content.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    // Check for profanity
+    if (containsProfanity(sanitizedMessage)) {
+      toast({ 
+        title: "Message blocked", 
+        description: "Your message contains inappropriate content. Please revise your message.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    // Length validation
+    if (sanitizedMessage.length > 10000) {
+      toast({ 
+        title: "Message too long", 
+        description: "Please keep your message under 10,000 characters.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (isRecording) {
       recognitionRef.current?.stop();
     }
     const messageId = `${Date.now()}`;
-    const userMessage: Message = { id: messageId, role: "user", content: { text: messageToSend, image: imageDataUri } };
+    const userMessage: Message = { id: messageId, role: "user", content: { text: sanitizedMessage, image: imageDataUri } };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
@@ -432,16 +476,42 @@ export function ChatContent() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type === "text/plain") {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setFileContent(e.target?.result as string);
-            setFileName(file.name);
-            setImageDataUri(null);
-        };
-        reader.readAsText(file);
-      } else {
-        toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
+      try {
+        // Validate file using security utility
+        validateTextFile(file);
+        
+        if (file.type === "text/plain") {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+              const content = e.target?.result as string;
+              
+              // Additional content validation
+              if (content.length > 1000000) { // 1MB text limit
+                toast({ 
+                  title: "File too large", 
+                  description: "Text files must be smaller than 1MB.", 
+                  variant: "destructive" 
+                });
+                return;
+              }
+              
+              // Sanitize content
+              const sanitizedContent = sanitizeInput(content);
+              
+              setFileContent(sanitizedContent);
+              setFileName(file.name);
+              setImageDataUri(null);
+          };
+          reader.readAsText(file);
+        } else {
+          toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
+        }
+      } catch (error: any) {
+        toast({ 
+          title: "File validation failed", 
+          description: error.message || "Please select a valid text file.", 
+          variant: "destructive" 
+        });
       }
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -451,24 +521,46 @@ export function ChatContent() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-        toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
-        return;
-    }
+    try {
+      // Validate image file using security utility
+      validateImageFile(file);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-        const dataUri = reader.result as string;
-        setImageDataUri(dataUri);
-        setFileContent(null);
-        setFileName(null);
-        // We will pass the data URI directly to the model now, no need for OCR here.
-        toast({
-            title: "Image Attached",
-            description: `You can now ask questions about the image.`,
-        });
-    };
-    reader.readAsDataURL(file);
+      if (!file.type.startsWith("image/")) {
+          toast({ title: "Invalid file type", description: "Please upload an image file.", variant: "destructive" });
+          return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+          const dataUri = reader.result as string;
+          
+          // Validate data URI format
+          if (!dataUri.startsWith('data:image/')) {
+            toast({ 
+              title: "Invalid image", 
+              description: "The uploaded file is not a valid image.", 
+              variant: "destructive" 
+            });
+            return;
+          }
+          
+          setImageDataUri(dataUri);
+          setFileContent(null);
+          setFileName(null);
+          
+          toast({
+              title: "Image Attached",
+              description: `You can now ask questions about the image.`,
+          });
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast({ 
+        title: "Image validation failed", 
+        description: error.message || "Please select a valid image file.", 
+        variant: "destructive" 
+      });
+    }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -505,7 +597,15 @@ export function ChatContent() {
   const showWelcome = history.length === 0 && !isTyping;
   const isInputDisabled = isTyping || isOcrProcessing;
 
-  const renderMessageContent = (message: Message) => {
+  // Memoize welcome screen buttons
+  const welcomeButtons = useMemo(() => [
+    { text: 'Generate a summary, highlights, and key insights', action: () => handleSendMessage('Generate a summary, highlights, and key insights') },
+    { text: 'Summarize core points and important details', action: () => handleSendMessage('Summarize core points and important details') },
+    { text: 'Create Presentation', action: () => handleSendMessage('Create Presentation') },
+    { text: 'News', action: () => handleSendMessage('News') },
+  ], [handleSendMessage]);
+
+  const renderMessageContent = useCallback((message: Message) => {
     if (message.role === 'model') {
       try {
         const data = JSON.parse(message.content.text);
@@ -540,18 +640,25 @@ export function ChatContent() {
           {message.content.text}
         </ReactMarkdown>
     );
-  };
+  }, [setActiveVideoId]);
 
   if (showWelcome) {
     return (
-        <div className="flex h-full flex-col items-center justify-center p-4">
+        <div className="flex h-full flex-col items-center justify-center p-4 animate-fade-in">
              <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-8">
-                <h1 className="text-4xl font-bold">SearnAI</h1>
-                <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create Presentation')}>Create Presentation</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
+                <h1 className="text-4xl font-bold gradient-text animate-slide-up">SearnAI</h1>
+                <div className="flex flex-wrap justify-center gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
+                    {welcomeButtons.map((button, index) => (
+                        <Button 
+                            key={index}
+                            variant="outline" 
+                            className="rounded-full hover-lift transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:border-primary/50" 
+                            onClick={button.action}
+                            style={{ animationDelay: `${300 + index * 100}ms` }}
+                        >
+                            {button.text}
+                        </Button>
+                    ))}
                 </div>
                  <div className="w-full max-w-3xl">
                      <div className="flex justify-start mb-2 items-center gap-2">
@@ -637,19 +744,20 @@ export function ChatContent() {
                   <React.Fragment key={`${message.id}-${index}`}>
                     <div
                       className={cn(
-                        "flex w-full items-start gap-4",
+                        "flex w-full items-start gap-4 animate-slide-up",
                         message.role === "user" ? "justify-end" : ""
                       )}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       {message.role === "user" ? (
                         <div className="flex items-start gap-4 justify-end">
-                          <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                          <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md hover-lift transition-all duration-200">
                             {message.content.image && (
-                              <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                              <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2 animate-fade-in" />
                             )}
                             <p className="text-base whitespace-pre-wrap">{message.content.text}</p>
                           </div>
-                          <Avatar className="h-9 w-9 border">
+                          <Avatar className="h-9 w-9 border hover-lift transition-all duration-200">
                             <AvatarFallback><User className="size-5" /></AvatarFallback>
                           </Avatar>
                         </div>
@@ -666,18 +774,18 @@ export function ChatContent() {
                                 onPause={() => setIsSynthesizing(null)}
                               />
                             )}
-                            <div className="mt-2 flex items-center gap-1 transition-opacity">
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content.text)}>
+                            <div className="mt-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7 hover-lift transition-all duration-200 hover:bg-primary/10 hover:text-primary" onClick={() => handleCopyToClipboard(message.content.text)}>
                                 <Copy className="h-4 w-4" />
                               </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content.text)}>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7 hover-lift transition-all duration-200 hover:bg-primary/10 hover:text-primary" onClick={() => handleShare(message.content.text)}>
                                 <Share2 className="h-4 w-4" />
                               </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
-                                {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7 hover-lift transition-all duration-200 hover:bg-primary/10 hover:text-primary" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
+                                {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500 animate-pulse" /> : <Volume2 className="h-4 w-4" />}
                               </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                <RefreshCw className="h-4 w-4" />
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7 hover-lift transition-all duration-200 hover:bg-primary/10 hover:text-primary" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                <RefreshCw className={cn("h-4 w-4", isTyping && "animate-spin")} />
                               </Button>
                             </div>
                           </div>
@@ -751,7 +859,7 @@ export function ChatContent() {
           </div>
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border bg-card/80 backdrop-blur-sm p-2 shadow-lg focus-within:border-primary"
+              className="relative flex items-center rounded-xl border glass p-2 shadow-lg focus-within:border-primary focus-within:shadow-xl transition-all duration-200"
           >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
