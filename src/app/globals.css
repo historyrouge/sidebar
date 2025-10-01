@@ -150,4 +150,12 @@
     .bg-avatar-accent {
         background-color: hsl(var(--avatar-accent));
     }
+
+    [data-sidebar="content"]::-webkit-scrollbar {
+        display: none;
+    }
+    [data-sidebar="content"] {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
 }
