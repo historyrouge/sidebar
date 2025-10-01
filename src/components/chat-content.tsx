@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -26,7 +25,7 @@ import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Progress } from "./ui/progress";
+import { Progress } from "@/components/ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
@@ -542,7 +541,12 @@ export function ChatContent() {
                 <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Create Presentation')}>Create Presentation</Button>
+                    <Link href="/presentation-maker">
+                      <Button variant="outline" className="rounded-full gap-2">
+                        <Presentation className="h-4 w-4" />
+                        Create Presentation
+                      </Button>
+                    </Link>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
@@ -807,3 +811,6 @@ export function ChatContent() {
 
 
 
+
+
+    
