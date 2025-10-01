@@ -19,7 +19,7 @@ export const webSearch = ai.defineTool(
       success: z.boolean().describe('Whether the search was successful'),
     }),
   },
-  async ({ query }) => {
+  async ({ query }: { query: string }) => {
     try {
       const response = await fetch(
         `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`

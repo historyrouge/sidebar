@@ -16,7 +16,7 @@ export const codeExecutor = ai.defineTool(
       success: z.boolean().describe('Whether the execution was successful'),
     }),
   },
-  async ({ code }) => {
+  async ({ code }: { code: string }) => {
     try {
       // Create a safe execution environment
       const logs: string[] = [];

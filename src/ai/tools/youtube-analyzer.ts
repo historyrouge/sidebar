@@ -17,7 +17,7 @@ export const youtubeAnalyzer = ai.defineTool(
       success: z.boolean().describe('Whether the analysis was successful.'),
     }),
   },
-  async ({ videoUrl }) => {
+  async ({ videoUrl }: { videoUrl: string }) => {
     try {
       // Extract video ID from URL
       let videoId = videoUrl;
@@ -32,7 +32,7 @@ export const youtubeAnalyzer = ai.defineTool(
         return { success: false };
       }
 
-      const fullTranscript = transcriptData.map(item => item.text).join(' ');
+      const fullTranscript = transcriptData.map((item: any) => item.text).join(' ');
       
       // Create a brief summary (first 500 characters)
       const summary = fullTranscript.substring(0, 500) + '...';

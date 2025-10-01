@@ -16,10 +16,11 @@ export const webScraper = ai.defineTool(
       success: z.boolean().describe('Whether the scraping was successful.'),
     }),
   },
-  async ({ url }) => {
+  async ({ url }: { url: string }) => {
     try {
       // Use the proxy endpoint to fetch the page
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/proxy?url=${encodeURIComponent(url)}`);
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/proxy?url=${encodeURIComponent(url)}`);
       
       if (!response.ok) {
         return { content: '', success: false };

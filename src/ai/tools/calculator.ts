@@ -15,7 +15,7 @@ export const calculator = ai.defineTool(
       success: z.boolean().describe('Whether the calculation was successful'),
     }),
   },
-  async ({ expression }) => {
+  async ({ expression }: { expression: string }) => {
     try {
       // Safe evaluation using Function constructor with limited scope
       const safeEval = (expr: string) => {
