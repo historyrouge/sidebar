@@ -17,6 +17,9 @@ export default {
       },
     },
     extend: {
+      boxShadow: {
+        'glow-primary': '0 0 12px 1px hsl(var(--primary) / 0.3)',
+      },
       fontFamily: {
         body: ['"Inter"', 'sans-serif'],
         headline: ['"Inter"', 'sans-serif'],
@@ -55,7 +58,7 @@ export default {
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
+        ring: 'hsl(var(--primary))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -78,6 +81,8 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)',
+        '2xl': 'calc(var(--radius) + 8px)',
       },
       keyframes: {
         'accordion-down': {
