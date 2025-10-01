@@ -16,7 +16,7 @@ export const duckDuckGoSearch = ai.defineTool(
   },
   async ({ query }) => {
     try {
-      const searchResults = await search({ query, maxResults: 5 });
+      const searchResults = await search({ query, maxResults: 5, safeSearch: 'off' });
       return JSON.stringify(searchResults.results);
     } catch (error) {
       console.error('DuckDuckGo search error:', error);
