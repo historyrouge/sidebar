@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { MainLayout } from "@/components/main-layout";
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams } from 'next/navigation';
 
 const WebBrowserContent = dynamic(() => import('@/components/web-browser-content').then(mod => mod.WebBrowserContent), { 
     ssr: false, 
@@ -28,9 +29,11 @@ const WebBrowserContent = dynamic(() => import('@/components/web-browser-content
 
 
 export default function WebBrowserPage() {
+    const searchParams = useSearchParams();
+    const initialUrl = searchParams.get('url') || undefined;
     return (
         <MainLayout>
-           <WebBrowserContent />
+           <WebBrowserContent initialUrl={initialUrl} />
         </MainLayout>
     );
 }

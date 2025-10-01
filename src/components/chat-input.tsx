@@ -4,6 +4,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Send, Mic, MicOff, Brush, Paperclip, FileText, X } from "lucide-react";
+import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,8 @@ export function ChatInput({
     
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const DrawingCanvas = dynamic(() => import('./drawing-canvas').then(m => m.DrawingCanvas), { ssr: false });
+    const [showCanvas, setShowCanvas] = useState(false);
     
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,6 +86,14 @@ export function ChatInput({
     return (
         <div className="p-4 border-t bg-background">
             <div className="mx-auto max-w-3xl">
+                {showCanvas && (
+                    <div className="mb-2">
+                        <DrawingCanvas onChange={(data) => setImageDataUri(data)} initialImage={imageDataUri} />
+                        <div className="flex justify-end mt-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => setShowCanvas(false)}>Close Canvas</Button>
+                        </div>
+                    </div>
+                )}
                 {isOcrProcessing && (
                     <div className="mb-2">
                         <Progress value={ocrProgress} className="w-full h-1" />
@@ -120,6 +131,7 @@ export function ChatInput({
                         <DropdownMenuContent>
                             <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
                             <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setShowCanvas(true)}>Drawing Canvas</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
