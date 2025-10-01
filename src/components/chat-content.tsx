@@ -24,10 +24,12 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Input } from "./ui/input";
+import dynamic from 'next/dynamic';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
+import { Globe } from "lucide-react";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
 
@@ -166,6 +168,8 @@ export function ChatContent() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const DrawingCanvas = dynamic(() => import('./drawing-canvas').then(m => m.DrawingCanvas), { ssr: false });
+  const [showCanvas, setShowCanvas] = useState(false);
   
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -438,6 +442,18 @@ export function ChatContent() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleOpenInBrowser = useCallback(() => {
+    const urlRegex = /(https?:\/\/[^\s]+)/i;
+    const text = input || history[history.length - 1]?.content.text || '';
+    const match = text.match(urlRegex);
+    const url = match?.[0];
+    if (!url) {
+      toast({ title: "No URL found", description: "Type or paste a URL to open it in the browser.", variant: "destructive" });
+      return;
+    }
+    window.open(`/web-browser?url=${encodeURIComponent(url)}`, '_blank');
+  }, [input, history, toast]);
+
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -566,6 +582,10 @@ export function ChatContent() {
                             <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
+                            <Button type="button" variant="outline" disabled={isInputDisabled} onClick={handleOpenInBrowser} className="gap-2">
+                                <Globe className="h-5 w-5" />
+                                Open URL
+                            </Button>
                             <Link href="/presentation-maker">
                                 <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                                     <Presentation className="h-5 w-5" />
@@ -693,6 +713,14 @@ export function ChatContent() {
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
+          {showCanvas && (
+            <div className="mb-2">
+              <DrawingCanvas onChange={(data) => setImageDataUri(data)} initialImage={imageDataUri} />
+              <div className="flex justify-end mt-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowCanvas(false)}>Close Canvas</Button>
+              </div>
+            </div>
+          )}
           {imageDataUri && (
             <div className="relative mb-2 w-fit">
               <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
@@ -737,6 +765,10 @@ export function ChatContent() {
                 <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                     <Music className="h-5 w-5" />
                 </Button>
+                <Button type="button" variant="outline" disabled={isInputDisabled} onClick={handleOpenInBrowser} className="gap-2">
+                    <Globe className="h-5 w-5" />
+                    Open URL
+                </Button>
                 <Link href="/presentation-maker">
                     <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
                         <Presentation className="h-5 w-5" />
@@ -759,6 +791,7 @@ export function ChatContent() {
                 <DropdownMenuContent>
                     <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
                     <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowCanvas(true)}>Drawing Canvas</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 

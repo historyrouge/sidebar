@@ -8,9 +8,9 @@ import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe, X } from "lucide-re
 import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter } from "next/navigation";
 
-export function WebBrowserContent() {
-    const [url, setUrl] = useState("https://example.com");
-    const [displayUrl, setDisplayUrl] = useState("https://example.com");
+export function WebBrowserContent({ initialUrl }: { initialUrl?: string }) {
+    const [url, setUrl] = useState(initialUrl || "https://example.com");
+    const [displayUrl, setDisplayUrl] = useState(initialUrl || "https://example.com");
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const router = useRouter();
 
@@ -36,14 +36,14 @@ export function WebBrowserContent() {
     };
     
     const handleGoHome = () => {
-        const homeUrl = "https://example.com";
+        const homeUrl = initialUrl || "https://example.com";
         setDisplayUrl(homeUrl);
         setUrl(homeUrl);
     }
     
     useEffect(() => {
         handleGoHome();
-    }, []);
+    }, [initialUrl]);
 
     const isSecure = displayUrl.startsWith("https://");
     const proxiedUrl = `/api/proxy?url=${encodeURIComponent(displayUrl)}`;

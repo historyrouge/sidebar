@@ -318,6 +318,10 @@ async function tryChatCompletion(
                 model: modelName,
                 messages: messages,
                 stream: false,
+                temperature: 0.3,
+                top_p: 0.9,
+                presence_penalty: 0,
+                frequency_penalty: 0,
             });
 
             if (response.choices?.[0]?.message?.content) {
@@ -361,6 +365,23 @@ export async function generalChatAction(
         
         let messages: any[];
 
+        // Detect YouTube URL and augment context with transcript for better answers
+        const youtubeUrlRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[^\s&]+|youtu\.be\/[^\s&]+)/i;
+        const hasYoutubeUrl = youtubeUrlRegex.test(lastUserMessage);
+        let youtubeTranscript: string | null = null;
+        if (hasYoutubeUrl) {
+            try {
+                const urlMatch = lastUserMessage.match(youtubeUrlRegex);
+                if (urlMatch && urlMatch[0]) {
+                    const ytResult = await getYoutubeTranscript({ videoUrl: urlMatch[0] });
+                    youtubeTranscript = ytResult.transcript;
+                }
+            } catch (ytErr: any) {
+                // Non-fatal; proceed without transcript
+                console.warn('YouTube transcript fetch failed:', ytErr?.message || ytErr);
+            }
+        }
+
         if (imageDataUri) {
             const userContent: any[] = [{ type: 'text', text: history[history.length - 1].content }];
             userContent.push({
@@ -369,6 +390,9 @@ export async function generalChatAction(
             });
              if(fileContent) {
                  userContent[0].text += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+            }
+            if (youtubeTranscript) {
+                userContent[0].text += `\n\nThe user referenced a YouTube video. Here is its transcript to use as authoritative context for answering their question:\n\n---\n${youtubeTranscript}\n---`;
             }
             messages = [
                 { role: 'system', content: chatSystemPrompt },
@@ -387,6 +411,14 @@ export async function generalChatAction(
                 if (lastMessage.role === 'user') {
                     if (typeof lastMessage.content === 'string') {
                          lastMessage.content += `\n\nThe user has attached a file with the following content, please use it as context for your response:\n\n---\n${fileContent}\n---`;
+                    }
+                }
+            }
+            if (youtubeTranscript) {
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.role === 'user') {
+                    if (typeof lastMessage.content === 'string') {
+                        lastMessage.content += `\n\nThe user referenced a YouTube video. Here is its transcript to use as authoritative context for answering their question:\n\n---\n${youtubeTranscript}\n---`;
                     }
                 }
             }
