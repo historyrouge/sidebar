@@ -14,6 +14,7 @@ import '@/ai/flows/generate-edited-content.ts';
 import '@/ai/flows/image-to-text.ts';
 import '@/ai/training-data.ts';
 import '@/ai/tools/youtube-search.ts';
+import '@/ai/tools/duckduckgo-search.ts';
 
 
 
@@ -25,3 +26,4 @@ import '@/ai/tools/youtube-search.ts';
 
 
     
+
