@@ -30,6 +30,7 @@ import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
+import { WebsiteChatCard } from "./website-chat-card";
 
 
 type Message = {
@@ -272,7 +273,7 @@ export function ChatContent() {
         content: String(h.content.text),
       }));
       
-      const result = await generalChatAction({ 
+      const result = await streamingChat({ 
           history: genkitHistory, 
           fileContent: currentFileContent, 
           imageDataUri: currentImageDataUri,
@@ -294,7 +295,7 @@ export function ChatContent() {
       }
 
        if (result.data) {
-          const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
+          const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.output } };
           setHistory((prev) => [...prev, modelMessage]);
       }
       
@@ -498,14 +499,17 @@ export function ChatContent() {
 
   const renderMessageContent = (message: Message) => {
     if (message.role === 'model') {
-      try {
-        const data = JSON.parse(message.content.text);
-        if (data.type === 'youtube' && data.videoId) {
-          return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+        try {
+            const data = JSON.parse(message.content.text);
+            if (data.type === 'youtube' && data.videoId) {
+                return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+            }
+            if (data.type === 'website' && data.url) {
+                return <WebsiteChatCard websiteData={data} />;
+            }
+        } catch (e) {
+            // Not a JSON object, so render as plain text
         }
-      } catch (e) {
-        // Not a JSON object, so render as plain text
-      }
     }
     
     // For user messages or non-JSON model messages
