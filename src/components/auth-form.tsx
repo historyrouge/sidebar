@@ -1,237 +1,189 @@
-
 "use client";
 
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+  Bell,
+  BookOpen,
+  HelpCircle,
+  Home,
+  Info,
+  Plus,
+  Search,
+  Settings,
+  Code,
+  FileQuestion,
+  Youtube,
+  Rss,
+  User,
+  MoreHorizontal,
+  GraduationCap,
+  BrainCircuit,
+  FileText,
+  Layers,
+  MessageSquare,
+  Cpu,
+  Presentation,
+  File,
+  Brush,
+  Volume2,
+  FileEdit,
+  LogOut,
+  Globe,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarSeparator,
+  SidebarGroup,
+  SidebarGroupLabel,
+} from "@/components/ui/sidebar";
+import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { FirebaseError } from "firebase/app";
+import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
+const studyTools = [
+    { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
+    { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
+    { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
+    { name: "Flashcards", icon: <Layers />, href: "/create-flashcards" },
+    { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
+    { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
+    { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
+    { name: "Presentation Maker", icon: <Presentation />, href: "/presentation-maker" },
+];
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters." }),
-});
+const resources = [
+    { name: "Web Browser", icon: <Globe />, href: "/web-browser" },
+    { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
+    { name: "News", icon: <Rss />, href: "/news" },
+    { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
+    { name: "Text-to-Speech", icon: <Volume2 />, href: "/text-to-speech" },
+    { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
+];
 
-type AuthFormProps = {
-  type: "login" | "signup";
-};
+const mainNav = [
+    { name: "Home", icon: <Home />, href: "/" },
+]
 
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg
-      role="img"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <path
-        d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.9 2.25-5.45 2.25-4.42 0-8.03-3.67-8.03-8.15s3.61-8.15 8.03-8.15c2.45 0 4.05.92 4.9 1.82l2.75-2.75C19.05 1.82 16.25 0 12.48 0 5.88 0 0 5.88 0 12.48s5.88 12.48 12.48 12.48c6.92 0 11.7-4.7 11.7-12.05 0-.76-.08-1.48-.2-2.18z"
-        fill="currentColor"
-      />
-    </svg>
-);
-
-const GitHubIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg
-        role="img"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-        {...props}
-    >
-        <path
-            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-            fill="currentColor"
-        />
-    </svg>
-);
-
-
-export function AuthForm({ type }: AuthFormProps) {
-  const { signUp, signIn, signInWithGoogle, signInWithGitHub } = useAuth();
+export function AppSidebar() {
+  const { setOpenMobile } = useSidebar();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [githubLoading, setGithubLoading] = useState(false);
-  const { toast } = useToast();
+  const currentPathname = usePathname();
+  const [pathname, setPathname] = useState("");
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  useEffect(() => {
+    setPathname(currentPathname);
+  }, [currentPathname]);
 
-  const getFriendlyErrorMessage = (error: FirebaseError) => {
-    switch (error.code) {
-      case 'auth/user-not-found':
-        return 'No user found with this email. Please sign up instead.';
-      case 'auth/wrong-password':
-      case 'auth/invalid-credential':
-        return 'Incorrect email or password. Please try again.';
-      case 'auth/email-already-in-use':
-        return 'This email is already in use. Please sign in or use a different email.';
-      case 'auth/weak-password':
-        return 'The password is too weak. Please use a stronger password.';
-      case 'auth/invalid-email':
-        return 'The email address is not valid. Please enter a valid email.';
-      case 'auth/popup-closed-by-user':
-      case 'auth/cancelled-popup-request':
-        return 'Sign-In was cancelled. Please try again.';
-      case 'auth/unauthorized-domain':
-        return 'This domain is not authorized for authentication. Please add it to the authorized domains list in your Firebase project settings.';
-      default:
-        return error.message;
-    }
-  }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
+
+  const handleNewChat = () => {
+    handleLinkClick();
     try {
-      if (type === "signup") {
-        await signUp(values.email, values.password);
-        router.push("/");
-      } else {
-        await signIn(values.email, values.password);
-        router.push("/");
-      }
-    } catch (error: any) {
-        toast({
-            title: "Authentication Failed",
-            description: getFriendlyErrorMessage(error),
-            variant: "destructive",
-        });
-    } finally {
-        setLoading(false);
+        if (pathname === '/') {
+            localStorage.removeItem('chatHistory');
+            sessionStorage.removeItem('chatScrollPosition');
+            window.location.reload();
+        } else {
+            router.push('/');
+        }
+    } catch (e) {
+        console.error("Could not clear storage", e);
     }
-  }
+  };
 
-  async function handleGoogleSignIn() {
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      router.push("/");
-    } catch (error: any) {
-      toast({
-        title: "Google Sign-In Failed",
-        description: getFriendlyErrorMessage(error),
-        variant: "destructive",
-      });
-    } finally {
-        setGoogleLoading(false);
-    }
+  const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
+    return items.map((item) => (
+        <SidebarMenuItem key={item.name}>
+            <Link href={item.href} passHref>
+              <SidebarMenuButton
+                tooltip={item.name}
+                isActive={pathname === item.href}
+                className="justify-start w-full gap-2.5 px-3"
+                onClick={handleLinkClick}
+              >
+                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
+                    {item.icon}
+                  </div>
+                  <span className="text-sm">{item.name}</span>
+              </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
+    ));
   }
-
-  async function handleGitHubSignIn() {
-    setGithubLoading(true);
-    try {
-        await signInWithGitHub();
-        router.push("/");
-    } catch (error: any) {
-        toast({
-            title: "GitHub Sign-In Failed",
-            description: getFriendlyErrorMessage(error),
-            variant: "destructive",
-        });
-    } finally {
-        setGithubLoading(false);
-    }
-  }
-
-  const anyLoading = loading || googleLoading || githubLoading;
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="name@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full" disabled={anyLoading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {type === "login" ? "Sign In" : "Sign Up"}
-        </Button>
+    <Sidebar className="bg-card/5 border-r border-border/10 text-sidebar-foreground backdrop-blur-lg">
+      <SidebarHeader className="p-4">
+        <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Layers className="size-5" />
+            </div>
+            <h1 className="text-lg font-semibold">SearnAI</h1>
+        </Link>
+      </SidebarHeader>
+      <SidebarContent className="p-2 flex-grow flex flex-col">
+        <div className="flex-grow">
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        onClick={handleNewChat}
+                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+                    >
+                        <FileEdit />
+                        <span className="text-sm">New Chat</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 {renderMenuItems(mainNav)}
+            </SidebarMenu>
+            
+            <SidebarSeparator className="my-4" />
+            
+            <SidebarMenu>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Study Tools</SidebarGroupLabel>
+                 {renderMenuItems(studyTools)}
+            </SidebarMenu>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
+            <SidebarSeparator className="my-4" />
+
+            <SidebarMenu>
+                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Resources</SidebarGroupLabel>
+                 {renderMenuItems(resources)}
+            </SidebarMenu>
         </div>
-
-        <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={anyLoading}>
-                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
-                Google
-            </Button>
-             <Button variant="outline" type="button" onClick={handleGitHubSignIn} disabled={anyLoading}>
-                {githubLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GitHubIcon className="mr-2 h-4 w-4" />}
-                GitHub
-            </Button>
-        </div>
-
-
-        <div className="mt-4 text-center text-sm">
-          {type === "login" ? (
-            <>
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="underline">
-                Sign up
-              </Link>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <Link href="/login" className="underline">
-                Sign in
-              </Link>
-            </>
-          )}
-        </div>
-      </form>
-    </Form>
+        <SidebarFooter className="p-2 border-t border-sidebar-border">
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <Link href="/settings">
+                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname.startsWith('/settings')}>
+                            <Settings />
+                            <span className="text-sm">Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/about">
+                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname === '/about'}>
+                            <Info />
+                             <span className="text-sm">About Us</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
+      </SidebarContent>
+    </Sidebar>
   );
 }

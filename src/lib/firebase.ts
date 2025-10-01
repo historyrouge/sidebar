@@ -1,6 +1,5 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -17,7 +16,6 @@ const firebaseConfig = {
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // Authentication is no longer used, but we keep the firestore instance for other potential features.
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-export { app, auth, db };
+export { app, db };
