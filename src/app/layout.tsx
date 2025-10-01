@@ -8,8 +8,24 @@ import { PageLoader } from '@/components/page-loader';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'SearnAI',
-  description: 'AI-powered study tool to help you learn smarter.',
+  title: 'ScholarSage - AI-Powered Study Companion',
+  description: 'Transform your learning with AI-powered flashcards, quizzes, and study tools. Upload documents, generate study materials, and master any subject with intelligent content analysis.',
+  keywords: 'AI study tool, flashcards, quiz generator, study companion, learning assistant, education technology',
+  authors: [{ name: 'ScholarSage Team' }],
+  creator: 'ScholarSage',
+  publisher: 'ScholarSage',
+  robots: 'index, follow',
+  openGraph: {
+    title: 'ScholarSage - AI-Powered Study Companion',
+    description: 'Transform your learning with AI-powered flashcards, quizzes, and study tools.',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ScholarSage - AI-Powered Study Companion',
+    description: 'Transform your learning with AI-powered flashcards, quizzes, and study tools.',
+  },
 };
 
 export default function RootLayout({

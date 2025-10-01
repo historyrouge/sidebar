@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     allowedDevOrigins: ["https://*.cloudworkstations.dev"],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   images: {
     remotePatterns: [
@@ -26,7 +27,14 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  poweredByHeader: false,
+  compress: true,
   async headers() {
     return [
       {
