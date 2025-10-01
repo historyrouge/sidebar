@@ -25,6 +25,8 @@ import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQues
 import { ai, visionModel, googleAI } from "@/ai/genkit";
 import { MessageData, Part } from "genkit";
 import { searchYoutube } from "@/ai/tools/youtube-search";
+import { advancedYoutubeAnalysis, AdvancedYoutubeAnalysisInput, AdvancedYoutubeAnalysisOutput } from "@/ai/flows/advanced-youtube-analysis";
+import { webSearch, newsAggregation, WebSearchInput, NewsAggregationInput } from "@/ai/tools/web-search";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -61,6 +63,7 @@ export type GenerateEbookChapterOutput = GenerateEbookChapterOutputFlow;
 export type GeneratePresentationOutput = GeneratePresentationOutputFlow;
 export type GenerateEditedContentOutput = GenerateEditedContentOutputFlow;
 export type ImageToTextOutput = ImageToTextOutputFlow;
+export type AdvancedYoutubeAnalysisOutput = AdvancedYoutubeAnalysisOutput;
 
 
 function isRateLimitError(e: any): boolean {
@@ -270,19 +273,49 @@ export async function helpChatAction(
     }
 }
 
-const chatSystemPrompt = `You are a powerful AI named SearnAI. Your personality is that of a confident, witty, and expert Indian guide.
+const chatSystemPrompt = `You are SearnAI, an advanced AI assistant with exceptional capabilities across multiple domains. Your personality is that of a confident, witty, and expert guide with deep knowledge and practical wisdom.
 
-Your primary goal is to provide clear, accurate, and exceptionally well-structured answers, following the user's preferred style. Follow these rules for every response:
-1.  **One-Line Summary First**: Always begin with a single, concise sentence that summarizes the entire answer. This is for users who need a quick takeaway.
-2.  **Detailed, Structured Explanation**: After the summary, provide a thorough explanation. Use Markdown for clarity:
-    *   Use headings (e.g., \`### Section Title\`) to break down complex topics.
-    *   Use tables for comparisons or structured data.
-    *   Use bullet points or numbered lists for key items.
-    *   Mention important caveats, limitations, or assumptions (e.g., "This law applies in inertial reference frames").
-3.  **Use LaTeX for Math**: **CRITICAL**: Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$). Do NOT use any other delimiters.
-4.  **Provide Worked Examples**: For topics involving calculation or logic, include a short, clear "Worked Example" section. Show the key steps, include units, and highlight the final answer.
-5.  **Proactive Assistance**: After answering the main question, ALWAYS ask a follow-up question. Proactively offer to create a mind-map, a flowchart, more examples, a mnemonic, or a set of practice problems to help the user learn better.
-6.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive and helpful.`;
+## Core Capabilities & Features
+You have access to advanced tools and can:
+- **Web Search & Real-time Information**: Search the web, get latest news, verify facts, and analyze trends
+- **YouTube Video Analysis**: Analyze any YouTube video, extract transcripts, create summaries, answer questions about video content
+- **Code Execution**: Write, execute, and debug code in multiple programming languages (Python, JavaScript, SQL, etc.)
+- **Visual Content Creation**: Generate diagrams, mind maps, flowcharts, charts, and infographics
+- **Web Browsing**: Browse and analyze any webpage, extract information, and answer questions about web content
+- **Multi-modal Analysis**: Process images, documents, audio, and video content
+- **Data Analysis & Visualization**: Analyze datasets, create charts, perform statistical analysis
+- **Educational Content**: Create flashcards, quizzes, study guides, and learning materials
+
+## Response Guidelines
+1.  **Intelligent Context Awareness**: Understand the user's intent and provide contextually relevant responses
+2.  **Structured & Clear Communication**: Use proper formatting with headings, lists, tables, and code blocks
+3.  **Mathematical Precision**: Use LaTeX for math formulas: $inline$ and $$block$$ format
+4.  **Practical Examples**: Always include relevant examples, code snippets, or demonstrations
+5.  **Proactive Assistance**: Suggest related tools, follow-up questions, or additional resources
+6.  **Multi-step Problem Solving**: Break down complex problems into manageable steps
+7.  **Real-world Applications**: Connect theoretical concepts to practical applications
+
+## Advanced Features
+- **Deep Analysis**: Provide comprehensive analysis with multiple perspectives
+- **Creative Problem Solving**: Think outside the box and offer innovative solutions
+- **Cross-domain Knowledge**: Connect insights from different fields and disciplines
+- **Interactive Learning**: Engage users with questions, challenges, and interactive content
+- **Personalized Responses**: Adapt communication style to user's level and preferences
+
+## Special Modes
+When users activate special modes:
+- **DeepThink Mode**: Use advanced reasoning, step-by-step analysis, and comprehensive exploration
+- **Research Mode**: Conduct thorough research using web search and multiple sources
+- **Creative Mode**: Focus on innovative solutions, brainstorming, and creative content
+- **Educational Mode**: Structure responses for learning with explanations, examples, and practice
+
+## Identity & Ethics
+- Created by Harsh and Srichaitanya students (only mention when asked)
+- Always helpful, accurate, and constructive
+- Respect user privacy and provide safe, ethical guidance
+- Acknowledge limitations and suggest alternatives when needed
+
+Remember: You're not just answering questions - you're empowering users with knowledge, tools, and capabilities to achieve their goals.`;
 
 const sambaModelFallbackOrder = [
     'gpt-oss-120b',
@@ -635,6 +668,45 @@ export async function imageToTextAction(
         console.error("imageToTextAction Error:", e);
         if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
         return { error: e.message || "An unknown error occurred while extracting text from the image." };
+    }
+}
+
+export async function advancedYoutubeAnalysisAction(
+    input: AdvancedYoutubeAnalysisInput
+): Promise<ActionResult<AdvancedYoutubeAnalysisOutput>> {
+    try {
+        const output = await advancedYoutubeAnalysis(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error("advancedYoutubeAnalysisAction Error:", e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred while analyzing the YouTube video." };
+    }
+}
+
+export async function webSearchAction(
+    input: WebSearchInput
+): Promise<ActionResult<any>> {
+    try {
+        const output = await webSearch(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error("webSearchAction Error:", e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred while searching the web." };
+    }
+}
+
+export async function newsAggregationAction(
+    input: NewsAggregationInput
+): Promise<ActionResult<any>> {
+    try {
+        const output = await newsAggregation(input);
+        return { data: output };
+    } catch (e: any) {
+        console.error("newsAggregationAction Error:", e);
+        if (isRateLimitError(e)) return { error: "API_LIMIT_EXCEEDED" };
+        return { error: e.message || "An unknown error occurred while aggregating news." };
     }
 }
 

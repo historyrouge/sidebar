@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Globe, Palette, Code2, Zap, Brain, Calculator, Database, BarChart3, Image as ImageIcon, Video, FileImage, Microscope, Cpu, Network, Workflow, TrendingUp, Map, Lightbulb, Target, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -30,6 +30,9 @@ import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
+import { EmbeddedBrowser } from "./embedded-browser";
+import { AICanvas } from "./ai-canvas";
+import { CodeExecutor } from "./code-executor";
 
 
 type Message = {
@@ -171,12 +174,13 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | 'browser' | 'canvas' | 'code' | null>(null);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
 
   const { setActiveVideoId } = useChatStore();
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'agent') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'agent' | 'browser' | 'canvas' | 'code') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -185,6 +189,12 @@ export function ChatContent() {
         toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
+      } else if (newActiveButton === 'browser') {
+        toast({ title: 'Browser Mode Activated', description: 'You can now browse any website and ask questions about it.' });
+      } else if (newActiveButton === 'canvas') {
+        toast({ title: 'Canvas Mode Activated', description: 'Create diagrams, mind maps, and visual content with AI assistance.' });
+      } else if (newActiveButton === 'code') {
+        toast({ title: 'Code Mode Activated', description: 'Execute code in multiple languages with AI assistance.' });
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
@@ -548,31 +558,125 @@ export function ChatContent() {
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2 flex-wrap">
                             <Button 
                                 variant={activeButton === 'agent' ? 'default' : 'outline'}
                                 onClick={() => handleToolButtonClick('agent')}
                                 className="gap-2"
+                                size="sm"
                             >
-                                <Bot className="h-5 w-5" />
+                                <Bot className="h-4 w-4" />
                                 Agent
                             </Button>
                             <Button 
                                 variant={activeButton === 'deepthink' ? 'default' : 'outline'}
                                 onClick={() => handleToolButtonClick('deepthink')}
+                                size="sm"
                             >
+                                <Brain className="h-4 w-4 mr-1" />
                                 DeepThink
                             </Button>
-                            <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
-                                <Music className="h-5 w-5" />
+                            <Button 
+                                variant={activeButton === 'music' ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => handleToolButtonClick('music')}
+                                size="sm"
+                            >
+                                <Music className="h-4 w-4 mr-1" />
+                                Music
                             </Button>
-                            <Link href="/presentation-maker">
-                                <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
-                                    <Presentation className="h-5 w-5" />
-                                    Create Presentation
-                                </Button>
-                            </Link>
+                            <Button 
+                                variant={activeButton === 'browser' ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => handleToolButtonClick('browser')}
+                                size="sm"
+                            >
+                                <Globe className="h-4 w-4 mr-1" />
+                                Browser
+                            </Button>
+                            <Button 
+                                variant={activeButton === 'canvas' ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => handleToolButtonClick('canvas')}
+                                size="sm"
+                            >
+                                <Palette className="h-4 w-4 mr-1" />
+                                Canvas
+                            </Button>
+                            <Button 
+                                variant={activeButton === 'code' ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => handleToolButtonClick('code')}
+                                size="sm"
+                            >
+                                <Code2 className="h-4 w-4 mr-1" />
+                                Code
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowAdvancedTools(!showAdvancedTools)}
+                            >
+                                <Zap className="h-4 w-4 mr-1" />
+                                More
+                                {showAdvancedTools ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
+                            </Button>
                         </div>
+                        
+                        {showAdvancedTools && (
+                            <div className="bg-muted/30 p-2 rounded-lg grid grid-cols-4 gap-2 mt-2">
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Calculator className="h-3 w-3" />
+                                    Math
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Database className="h-3 w-3" />
+                                    Data
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <BarChart3 className="h-3 w-3" />
+                                    Charts
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <ImageIcon className="h-3 w-3" />
+                                    Vision
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Video className="h-3 w-3" />
+                                    Video
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Microscope className="h-3 w-3" />
+                                    Research
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Network className="h-3 w-3" />
+                                    Network
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Workflow className="h-3 w-3" />
+                                    Flow
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <TrendingUp className="h-3 w-3" />
+                                    Trends
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Map className="h-3 w-3" />
+                                    Maps
+                                </Button>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                    <Target className="h-3 w-3" />
+                                    Goals
+                                </Button>
+                                <Link href="/presentation-maker">
+                                    <Button variant="outline" size="sm" className="gap-1 w-full">
+                                        <Presentation className="h-3 w-3" />
+                                        Slides
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
@@ -719,30 +823,60 @@ export function ChatContent() {
             <div className="bg-muted/50 p-1 rounded-lg w-fit">
                 <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
             </div>
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2 flex-wrap">
                 <Button 
                     variant={activeButton === 'agent' ? 'default' : 'outline'}
                     onClick={() => handleToolButtonClick('agent')}
                     className="gap-2"
+                    size="sm"
                 >
-                    <Bot className="h-5 w-5" />
+                    <Bot className="h-4 w-4" />
                     Agent
                 </Button>
                 <Button 
                     variant={activeButton === 'deepthink' ? 'default' : 'outline'}
                     onClick={() => handleToolButtonClick('deepthink')}
+                    size="sm"
                 >
+                    <Brain className="h-4 w-4 mr-1" />
                     DeepThink
                 </Button>
-                <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
-                    <Music className="h-5 w-5" />
+                <Button 
+                    variant={activeButton === 'music' ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => handleToolButtonClick('music')}
+                    size="sm"
+                >
+                    <Music className="h-4 w-4 mr-1" />
+                    Music
                 </Button>
-                <Link href="/presentation-maker">
-                    <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
-                        <Presentation className="h-5 w-5" />
-                        Create Presentation
-                    </Button>
-                </Link>
+                <Button 
+                    variant={activeButton === 'browser' ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => handleToolButtonClick('browser')}
+                    size="sm"
+                >
+                    <Globe className="h-4 w-4 mr-1" />
+                    Browser
+                </Button>
+                <Button 
+                    variant={activeButton === 'canvas' ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => handleToolButtonClick('canvas')}
+                    size="sm"
+                >
+                    <Palette className="h-4 w-4 mr-1" />
+                    Canvas
+                </Button>
+                <Button 
+                    variant={activeButton === 'code' ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => handleToolButtonClick('code')}
+                    size="sm"
+                >
+                    <Code2 className="h-4 w-4 mr-1" />
+                    Code
+                </Button>
             </div>
           </div>
           <form
@@ -783,6 +917,95 @@ export function ChatContent() {
           </form>
         </div>
       </div>
+      
+      {/* Advanced Tool Interfaces */}
+      {activeButton === 'browser' && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Web Browser
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setActiveButton(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1">
+              <EmbeddedBrowser 
+                onPageAnalysis={(content, url) => {
+                  handleSendMessage(`Analyze this webpage: ${url}\n\nContent: ${content.substring(0, 1000)}...`);
+                  setActiveButton(null);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {activeButton === 'canvas' && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                AI Canvas
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setActiveButton(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1">
+              <AICanvas 
+                onAIGenerate={async (prompt, type) => {
+                  // Mock AI generation for canvas
+                  return {
+                    type,
+                    content: `Generated ${type} for: ${prompt}`,
+                    elements: []
+                  };
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {activeButton === 'code' && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Code2 className="h-5 w-5" />
+                Code Executor
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setActiveButton(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1">
+              <CodeExecutor 
+                onExecutionComplete={(result) => {
+                  const message = `Code execution ${result.success ? 'completed successfully' : 'failed'}:\n\nOutput:\n${result.output}\n${result.error ? `\nError: ${result.error}` : ''}`;
+                  handleSendMessage(`Here are the results of my code execution:\n\n${message}`);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
