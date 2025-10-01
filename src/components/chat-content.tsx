@@ -566,12 +566,6 @@ export function ChatContent() {
                             <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                            <Link href="/presentation-maker">
-                                <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
-                                    <Presentation className="h-5 w-5" />
-                                    Create Presentation
-                                </Button>
-                            </Link>
                         </div>
                     </div>
                     <form
@@ -737,12 +731,6 @@ export function ChatContent() {
                 <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                     <Music className="h-5 w-5" />
                 </Button>
-                <Link href="/presentation-maker">
-                    <Button type="button" variant="outline" disabled={isInputDisabled} className="gap-2">
-                        <Presentation className="h-5 w-5" />
-                        Create Presentation
-                    </Button>
-                </Link>
             </div>
           </div>
           <form
