@@ -25,6 +25,8 @@ import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput as GenerateQues
 import { ai, visionModel, googleAI } from "@/ai/genkit";
 import { MessageData, Part } from "genkit";
 import { searchYoutube } from "@/ai/tools/youtube-search";
+import { duckDuckGoSearch } from "@/ai/tools/duckduckgo-search";
+import { browseWebsite } from "@/ai/tools/browse-website";
 
 
 export type ModelKey = 'gemini' | 'qwen';
@@ -282,7 +284,8 @@ Your primary goal is to provide clear, accurate, and exceptionally well-structur
 3.  **Use LaTeX for Math**: **CRITICAL**: Use standard LaTeX for all mathematical formulas. Use single dollar signs for inline math (e.g., $a^2 + b^2 = c^2$) and double dollar signs for block math (e.g., $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$). Do NOT use any other delimiters.
 4.  **Provide Worked Examples**: For topics involving calculation or logic, include a short, clear "Worked Example" section. Show the key steps, include units, and highlight the final answer.
 5.  **Proactive Assistance**: After answering the main question, ALWAYS ask a follow-up question. Proactively offer to create a mind-map, a flowchart, more examples, a mnemonic, or a set of practice problems to help the user learn better.
-6.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive and helpful.`;
+6.  **Identity**: Only if asked about your creator, say you were built by Harsh and some Srichaitanya students. Never apologize. Always be constructive and helpful.
+7.  **Search Functionality**: If the user's message starts with "Search:", you MUST use the provided tools to answer the question. First, use the \`duckDuckGoSearch\` tool with the user's query. Then, take the URL from the FIRST search result and use the \`browseWebsite\` tool to get its content. Finally, answer the user's original query based on the content of that website.`;
 
 const sambaModelFallbackOrder = [
     'gpt-oss-120b',
@@ -394,7 +397,13 @@ export async function generalChatAction(
         
 
         try {
-            responseText = await tryChatCompletion(messages, userSelectedModel);
+            if (lastUserMessage.startsWith("Search:")) {
+                 const geminiModel = ai.getGenerativeModel({ model: 'gemini-1.5-flash-latest', tools: [duckDuckGoSearch, browseWebsite], systemInstruction: chatSystemPrompt });
+                 const result = await geminiModel.generate(messages.filter(m => m.role !== 'system').map(m => ({role: m.role, parts: [{text: m.content as string}]})));
+                 responseText = result.text;
+            } else {
+                responseText = await tryChatCompletion(messages, userSelectedModel);
+            }
         } catch (sambaError: any) {
              console.error("All SambaNova models have failed, falling back to Gemini.", sambaError.message);
              try {
