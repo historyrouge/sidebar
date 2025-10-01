@@ -560,6 +560,71 @@ export async function summarizeContentAction(
   }
 }
 
+export async function summarizeUrlAction(
+  input: { url: string }
+): Promise<ActionResult<{ title?: string; summary: string }>> {
+  try {
+    const targetUrl = input.url;
+    if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
+      return { error: 'Please provide a valid http(s) URL.' };
+    }
+
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return { error: `Failed to fetch URL: ${response.status} ${response.statusText}` };
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    let rawText = '';
+    let title: string | undefined = undefined;
+
+    if (contentType.includes('text/html')) {
+      const html = await response.text();
+      const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+      if (titleMatch && titleMatch[1]) {
+        title = titleMatch[1].trim();
+      }
+      const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+      const withoutStyles = withoutScripts.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+      const withoutTags = withoutStyles.replace(/<[^>]+>/g, ' ');
+      rawText = withoutTags.replace(/\s+/g, ' ').trim();
+    } else if (contentType.startsWith('text/')) {
+      rawText = (await response.text()).slice(0, 20000);
+    } else {
+      return { error: 'The provided URL does not return readable text or HTML.' };
+    }
+
+    if (!rawText) {
+      return { error: 'No readable content found at the provided URL.' };
+    }
+
+    // Limit the content length to keep token usage reasonable
+    const MAX_LEN = 15000;
+    const truncated = rawText.length > MAX_LEN ? rawText.slice(0, MAX_LEN) : rawText;
+
+    const summaryResult = await summarizeContentAction({ content: truncated });
+    if (summaryResult.error || !summaryResult.data) {
+      return { error: summaryResult.error || 'Failed to summarize the page content.' };
+    }
+
+    return { data: { title, summary: summaryResult.data.summary } };
+  } catch (e: any) {
+    console.error('summarizeUrlAction Error:', e);
+    if (isRateLimitError(e)) return { error: 'API_LIMIT_EXCEEDED' };
+    return { error: e.message || 'An unknown error occurred while summarizing the URL.' };
+  }
+}
+
 export async function generateMindMapAction(
     input: GenerateMindMapInput
 ): Promise<ActionResult<GenerateMindMapOutput>> {
