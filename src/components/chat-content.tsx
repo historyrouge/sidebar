@@ -366,18 +366,17 @@ export function ChatContent() {
         setIsRecording(false);
       };
 
-      let finalTranscript = '';
       recognition.onresult = (event: any) => {
         if (audioSendTimeoutRef.current) {
           clearTimeout(audioSendTimeoutRef.current);
         }
         
         let interimTranscript = '';
-        finalTranscript = '';
+        let finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+            finalTranscript = event.results[i][0].transcript;
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
@@ -387,20 +386,13 @@ export function ChatContent() {
 
         if (finalTranscript.trim()) {
            setInput(finalTranscript);
-            // Debounce sending the message
            audioSendTimeoutRef.current = setTimeout(() => {
                 handleSendMessage(finalTranscript);
            }, 1000);
         }
       };
-    } else {
-      toast({
-        title: "Browser Not Supported",
-        description: "Your browser does not support voice-to-text.",
-        variant: "destructive",
-      });
     }
-
+    
     return () => {
       recognitionRef.current?.abort();
       if (audioSendTimeoutRef.current) {
@@ -794,6 +786,7 @@ export function ChatContent() {
     
 
     
+
 
 
 
