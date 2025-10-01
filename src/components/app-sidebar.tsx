@@ -74,6 +74,7 @@ const resources = [
 
 const mainNav = [
     { name: "Home", icon: <Home />, href: "/" },
+    { name: "Features", icon: <Layers />, href: "/features" },
 ]
 
 export function AppSidebar() {

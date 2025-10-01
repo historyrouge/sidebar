@@ -33,6 +33,8 @@ import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
 import { sanitizeInput, isSpamContent, containsProfanity, validateFileSize, validateFileType } from "@/lib/security";
 import { validateTextFile, validateImageFile } from "@/lib/validation";
+import { ConversationMemoryManager } from "@/lib/conversation-memory";
+import { MultiAgentSystem } from "@/lib/multi-agent-system";
 
 
 type Message = {
@@ -177,6 +179,13 @@ export function ChatContent() {
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'search' | 'agent' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
+
+  // Advanced AI systems
+  const [memoryManager] = useState(() => new ConversationMemoryManager());
+  const [multiAgentSystem] = useState(() => new MultiAgentSystem());
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showAgentSuggestions, setShowAgentSuggestions] = useState(false);
+  const [agentSuggestions, setAgentSuggestions] = useState<any[]>([]);
 
 
   const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'search' | 'agent') => {

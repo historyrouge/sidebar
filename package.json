@@ -14,7 +14,15 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false"
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "analyze": "cross-env ANALYZE=true npm run build",
+    "lighthouse": "lhci autorun",
+    "security-audit": "npm audit --audit-level=high",
+    "accessibility-test": "axe-core --dir ./src --ext .tsx,.ts",
+    "performance-test": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json",
+    "deploy:vercel": "./scripts/deploy.sh vercel",
+    "deploy:firebase": "./scripts/deploy.sh firebase",
+    "deploy:docker": "./scripts/deploy.sh production"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.20.0",
