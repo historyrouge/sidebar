@@ -269,7 +269,7 @@ export function ChatContent() {
       
       const genkitHistory = chatHistory.map(h => ({
         role: h.role as 'user' | 'model' | 'tool',
-        content: h.content.text, // Pass only text content
+        content: String(h.content.text),
       }));
       
       const result = await generalChatAction({ 
@@ -528,7 +528,7 @@ export function ChatContent() {
             p: ({node, ...props}) => <p className="mb-4" {...props} />,
           }}
         >
-          {message.content.text}
+          {String(message.content.text)}
         </ReactMarkdown>
     );
   };
@@ -590,6 +590,11 @@ export function ChatContent() {
                                 <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
+                            <Search className="h-5 w-5" />
+                            <span className="sr-only">Search</span>
+                        </Button>
 
                         <Input
                             value={input}
@@ -762,6 +767,11 @@ export function ChatContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Search</span>
+              </Button>
+
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -786,35 +796,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-    
