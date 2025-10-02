@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -174,7 +174,7 @@ export function ChatContent() {
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
 
-  const [currentModel, setCurrentModel] = useState('Meta-Llama-3.1-8B-Instruct');
+  const [currentModel, setCurrentModel] = useState('Llama-4-Maverick-17B-128E-Instruct');
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
@@ -192,7 +192,7 @@ export function ChatContent() {
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
-             setCurrentModel('Meta-Llama-3.1-8B-Instruct');
+             setCurrentModel('Llama-4-Maverick-17B-128E-Instruct');
         }
       }
   };
@@ -266,14 +266,14 @@ export function ChatContent() {
           isMusicMode: activeButton === 'music',
       });
 
+      setIsTyping(false);
+
       if (result.error) {
           toast({ title: "Chat Error", description: result.error, variant: 'destructive' });
       } else if (result.data) {
           const modelMessageId = `${Date.now()}-model`;
           setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response }]);
       }
-      
-      setIsTyping(false);
       
   }, [currentModel, activeButton, toast]);
 
@@ -293,16 +293,10 @@ export function ChatContent() {
 
     await executeChat(newHistory, imageDataUri, fileContent);
     
-    // Deactivate music mode after one use
     if (activeButton === 'music') {
         setActiveButton(null);
     }
     
-    // Do not clear image/file after sending for follow-up questions
-    // setImageDataUri(null);
-    // setFileContent(null);
-    // setFileName(null);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, isRecording, history, executeChat, imageDataUri, fileContent, activeButton]);
 
@@ -421,7 +415,6 @@ export function ChatContent() {
         setImageDataUri(dataUri);
         setFileContent(null);
         setFileName(null);
-        // We will pass the data URI directly to the model now, no need for OCR here.
         toast({
             title: "Image Attached",
             description: `You can now ask questions about the image.`,
@@ -479,7 +472,6 @@ export function ChatContent() {
         }
     }
     
-    // For user messages or non-JSON model messages
     return (
         <ReactMarkdown
           remarkPlugins={[remarkMath]}
@@ -755,3 +747,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
