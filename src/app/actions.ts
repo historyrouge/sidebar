@@ -241,7 +241,7 @@ export async function chatAction(input: {
     }
 
     let systemPrompt = "You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. Provide your response in Markdown format.";
-    let messages = [...input.history];
+    let messages: CoreMessage[] = input.history;
 
     if (input.fileContent) {
         systemPrompt += `\n\nThe user has provided the following file content. Use it as the primary context for your answer.\n\nFile Content:\n---\n${input.fileContent}\n---`;
@@ -249,19 +249,21 @@ export async function chatAction(input: {
 
     if (input.imageDataUri) {
         const lastMessage = messages[messages.length - 1];
-        const newMessage = {
+        const newMessageContent: (string | { type: 'image', image: URL })[] = [
+            lastMessage.content as string,
+            { type: 'image', image: new URL(input.imageDataUri) }
+        ];
+
+        const newMessage: CoreMessage = {
             ...lastMessage,
-            content: [
-                { type: 'text', text: lastMessage.content.toString() },
-                { type: 'image', image: new URL(input.imageDataUri) }
-            ]
+            content: newMessageContent as any, // Cast to any to satisfy CoreMessage which expects string
         };
         messages = [...messages.slice(0, -1), newMessage];
     }
     
     try {
         const result = await ai.generate({
-            model: ai.getModel(input.model || 'Meta-Llama-3.1-8B-Instruct'),
+            model: input.model || 'Meta-Llama-3.1-8B-Instruct',
             messages: messages,
             system: systemPrompt,
         });
