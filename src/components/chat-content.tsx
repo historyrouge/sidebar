@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, textToSpeechAction, GeneralChatInput, GenerateQuestionPaperOutput } from "@/app/actions";
+import { chatAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -30,12 +30,16 @@ import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
 import { YoutubeChatCard } from "./youtube-chat-card";
+import { WebsiteChatCard } from "./website-chat-card";
+import { textToSpeechAction } from "@/app/actions";
+import { CoreMessage } from "ai";
 
 
 type Message = {
   id: string;
   role: "user" | "model" | "tool";
-  content: { text: string; image?: string | null };
+  content: string;
+  image?: string | null;
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
@@ -231,28 +235,11 @@ export function ChatContent() {
       setAudioDataUri(null);
 
       try {
-          const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-          });
-
-          if (!response.ok || !response.body) {
-              throw new Error('Failed to get audio stream.');
+          const result = await textToSpeechAction({ text });
+          if(result.error) throw new Error(result.error);
+          if(result.data?.audioDataUri) {
+            setAudioDataUri(result.data.audioDataUri);
           }
-          
-          const reader = response.body.getReader();
-          const audioChunks: BlobPart[] = [];
-          
-          while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              audioChunks.push(value);
-          }
-          
-          const audioBlob = new Blob(audioChunks, { type: 'audio/pcm' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioDataUri(audioUrl);
       } catch (e: any) {
           toast({ title: 'Audio Generation Failed', description: e.message, variant: 'destructive' });
           setIsSynthesizing(null);
@@ -260,19 +247,18 @@ export function ChatContent() {
   }, [isSynthesizing, toast]);
 
   const executeChat = useCallback(async (
-    chatHistory: Message[],
+    currentHistory: Message[],
     currentImageDataUri?: string | null,
     currentFileContent?: string | null
   ): Promise<void> => {
       setIsTyping(true);
-      const modelMessageId = `${Date.now()}-model`;
       
-      const genkitHistory = chatHistory.map(h => ({
-        role: h.role as 'user' | 'model' | 'tool',
-        content: h.content.text, // Pass only text content
+      const genkitHistory: CoreMessage[] = currentHistory.map(h => ({
+        role: h.role,
+        content: String(h.content),
       }));
-      
-      const result = await generalChatAction({ 
+
+      const result = await chatAction({ 
           history: genkitHistory, 
           fileContent: currentFileContent, 
           imageDataUri: currentImageDataUri,
@@ -280,25 +266,16 @@ export function ChatContent() {
           isMusicMode: activeButton === 'music',
       });
 
-      setIsTyping(false);
-
       if (result.error) {
-          if (result.error.includes("API_LIMIT_EXCEEDED")) {
-              setHistory(prev => prev.slice(0, -1));
-              setShowLimitDialog(true);
-          } else {
-              toast({ title: "Chat Error", description: result.error, variant: "destructive" });
-              setHistory(prev => prev.slice(0, -1));
-          }
-          return;
-      }
-
-       if (result.data) {
-          const modelMessage: Message = { id: modelMessageId, role: "model", content: { text: result.data.response } };
-          setHistory((prev) => [...prev, modelMessage]);
+          toast({ title: "Chat Error", description: result.error, variant: 'destructive' });
+      } else if (result.data) {
+          const modelMessageId = `${Date.now()}-model`;
+          setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response }]);
       }
       
-  }, [toast, currentModel, activeButton]);
+      setIsTyping(false);
+      
+  }, [currentModel, activeButton, toast]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -309,7 +286,7 @@ export function ChatContent() {
       recognitionRef.current?.stop();
     }
     const messageId = `${Date.now()}`;
-    const userMessage: Message = { id: messageId, role: "user", content: { text: messageToSend, image: imageDataUri } };
+    const userMessage: Message = { id: messageId, role: "user", content: messageToSend, image: imageDataUri };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
@@ -337,7 +314,7 @@ export function ChatContent() {
       setHistory(historyForRegen);
       
       const lastUserMessage = historyForRegen[lastUserMessageIndex];
-      await executeChat(historyForRegen, lastUserMessage.content.image, fileContent);
+      await executeChat(historyForRegen, lastUserMessage.image, fileContent);
   };
 
 
@@ -408,15 +385,6 @@ export function ChatContent() {
     } else {
       setInput("");
       recognitionRef.current.start();
-    }
-  };
-  
-  const handleViewQuestionPaper = (paper: GenerateQuestionPaperOutput) => {
-    try {
-        localStorage.setItem('questionPaper', JSON.stringify(paper));
-        router.push('/question-paper/view');
-    } catch (e) {
-        toast({ title: "Storage Error", description: "Could not store the generated paper.", variant: "destructive" });
     }
   };
   
@@ -498,14 +466,17 @@ export function ChatContent() {
 
   const renderMessageContent = (message: Message) => {
     if (message.role === 'model') {
-      try {
-        const data = JSON.parse(message.content.text);
-        if (data.type === 'youtube' && data.videoId) {
-          return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+        try {
+            const data = JSON.parse(message.content);
+            if (data.type === 'youtube' && data.videoId) {
+                return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
+            }
+            if (data.type === 'website' && data.url) {
+                return <WebsiteChatCard websiteData={data} />;
+            }
+        } catch (e) {
+            // Not a JSON object, so render as plain text
         }
-      } catch (e) {
-        // Not a JSON object, so render as plain text
-      }
     }
     
     // For user messages or non-JSON model messages
@@ -528,7 +499,7 @@ export function ChatContent() {
             p: ({node, ...props}) => <p className="mb-4" {...props} />,
           }}
         >
-          {message.content.text}
+          {message.content}
         </ReactMarkdown>
     );
   };
@@ -585,6 +556,11 @@ export function ChatContent() {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
+                            <Search className="h-5 w-5" />
+                            <span className="sr-only">Search</span>
+                        </Button>
+
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -631,10 +607,10 @@ export function ChatContent() {
                       {message.role === "user" ? (
                         <div className="flex items-start gap-4 justify-end">
                           <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                            {message.content.image && (
-                              <Image src={message.content.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                            {message.image && (
+                              <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
                             )}
-                            <p className="text-base whitespace-pre-wrap">{message.content.text}</p>
+                            <p className="text-base whitespace-pre-wrap">{message.content}</p>
                           </div>
                           <Avatar className="h-9 w-9 border">
                             <AvatarFallback><User className="size-5" /></AvatarFallback>
@@ -654,13 +630,13 @@ export function ChatContent() {
                               />
                             )}
                             <div className="mt-2 flex items-center gap-1 transition-opacity">
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content.text)}>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                 <Copy className="h-4 w-4" />
                               </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content.text)}>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
                                 <Share2 className="h-4 w-4" />
                               </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content.text, message.id)}>
+                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
                                 {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
                               </Button>
                               <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
@@ -750,6 +726,11 @@ export function ChatContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Search</span>
+              </Button>
+
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -774,35 +755,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-    

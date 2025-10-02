@@ -1,189 +1,131 @@
+
 "use client";
 
-import {
-  Bell,
-  BookOpen,
-  HelpCircle,
-  Home,
-  Info,
-  Plus,
-  Search,
-  Settings,
-  Code,
-  FileQuestion,
-  Youtube,
-  Rss,
-  User,
-  MoreHorizontal,
-  GraduationCap,
-  BrainCircuit,
-  FileText,
-  Layers,
-  MessageSquare,
-  Cpu,
-  Presentation,
-  File,
-  Brush,
-  Volume2,
-  FileEdit,
-  LogOut,
-  Globe,
-} from "lucide-react";
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarSeparator,
-  SidebarGroup,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar";
-import { useSidebar } from "./ui/sidebar";
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const studyTools = [
-    { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
-    { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
-    { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
-    { name: "Flashcards", icon: <Layers />, href: "/create-flashcards" },
-    { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
-    { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
-    { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
-    { name: "Presentation Maker", icon: <Presentation />, href: "/presentation-maker" },
-];
-
-const resources = [
-    { name: "Web Browser", icon: <Globe />, href: "/web-browser" },
-    { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
-    { name: "News", icon: <Rss />, href: "/news" },
-    { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
-    { name: "Text-to-Speech", icon: <Volume2 />, href: "/text-to-speech" },
-    { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
-];
-
-const mainNav = [
-    { name: "Home", icon: <Home />, href: "/" },
-]
-
-export function AppSidebar() {
-  const { setOpenMobile } = useSidebar();
+export function AuthForm({ type }: { type: "login" | "signup" }) {
+  const { user, loading: authLoading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const router = useRouter();
-  const currentPathname = usePathname();
-  const [pathname, setPathname] = useState("");
 
-  useEffect(() => {
-    setPathname(currentPathname);
-  }, [currentPathname]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-
-  const handleLinkClick = () => {
-    setOpenMobile(false);
+    // This is a placeholder for actual auth logic.
+    // Since accounts are disabled, we'll just simulate a login/signup
+    // and redirect to the main page.
+    setTimeout(() => {
+        toast({
+            title: type === 'login' ? 'Login Successful' : 'Signup Successful',
+            description: "Welcome to SearnAI!",
+        });
+        router.push("/");
+        setLoading(false);
+    }, 1000);
+  };
+  
+  const handleGoogleSignIn = () => {
+    setLoading(true);
+    // This is a placeholder for actual auth logic.
+    setTimeout(() => {
+        toast({
+            title: "Sign-in Successful",
+            description: "Welcome to SearnAI!",
+        });
+        router.push("/");
+        setLoading(false);
+    }, 1000);
   };
 
-  const handleNewChat = () => {
-    handleLinkClick();
-    try {
-        if (pathname === '/') {
-            localStorage.removeItem('chatHistory');
-            sessionStorage.removeItem('chatScrollPosition');
-            window.location.reload();
-        } else {
-            router.push('/');
-        }
-    } catch (e) {
-        console.error("Could not clear storage", e);
-    }
-  };
-
-  const renderMenuItems = (items: {name: string, icon: React.ReactNode, href: string}[]) => {
-    return items.map((item) => (
-        <SidebarMenuItem key={item.name}>
-            <Link href={item.href} passHref>
-              <SidebarMenuButton
-                tooltip={item.name}
-                isActive={pathname === item.href}
-                className="justify-start w-full gap-2.5 px-3"
-                onClick={handleLinkClick}
-              >
-                  <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
-                    {item.icon}
-                  </div>
-                  <span className="text-sm">{item.name}</span>
-              </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
-    ));
-  }
+  const isLoading = loading || authLoading;
 
   return (
-    <Sidebar className="bg-card/5 border-r border-border/10 text-sidebar-foreground backdrop-blur-lg">
-      <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Layers className="size-5" />
+    <div className="grid gap-6">
+       <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                />
             </div>
-            <h1 className="text-lg font-semibold">SearnAI</h1>
-        </Link>
-      </SidebarHeader>
-      <SidebarContent className="p-2 flex-grow flex flex-col">
-        <div className="flex-grow">
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        onClick={handleNewChat}
-                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
-                    >
-                        <FileEdit />
-                        <span className="text-sm">New Chat</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 {renderMenuItems(mainNav)}
-            </SidebarMenu>
-            
-            <SidebarSeparator className="my-4" />
-            
-            <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Study Tools</SidebarGroupLabel>
-                 {renderMenuItems(studyTools)}
-            </SidebarMenu>
-
-            <SidebarSeparator className="my-4" />
-
-            <SidebarMenu>
-                 <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Resources</SidebarGroupLabel>
-                 {renderMenuItems(resources)}
-            </SidebarMenu>
+            <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                    id="password" 
+                    type="password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                />
+            </div>
+            <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {type === 'login' ? 'Login' : 'Create an account'}
+            </Button>
+      </form>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
         </div>
-        <SidebarFooter className="p-2 border-t border-sidebar-border">
-            <SidebarMenu>
-                 <SidebarMenuItem>
-                    <Link href="/settings">
-                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname.startsWith('/settings')}>
-                            <Settings />
-                            <span className="text-sm">Settings</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/about">
-                        <SidebarMenuButton className="w-full justify-start gap-2.5 px-3" isActive={pathname === '/about'}>
-                            <Info />
-                             <span className="text-sm">About Us</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarFooter>
-      </SidebarContent>
-    </Sidebar>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      <Button variant="outline" type="button" disabled={isLoading} onClick={handleGoogleSignIn}>
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+           <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,34.556,44,29.801,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            </svg>
+        )}
+        Google
+      </Button>
+      
+      {type === 'login' ? (
+        <p className="px-8 text-center text-sm text-muted-foreground">
+            By clicking continue, you agree to our{" "}
+            <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+                Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+                Privacy Policy
+            </Link>
+            .
+        </p>
+      ) : (
+         <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/login" className="underline hover:text-primary">
+                Log in
+            </Link>
+        </p>
+      )}
+    </div>
   );
 }
