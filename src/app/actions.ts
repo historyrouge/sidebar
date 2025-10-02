@@ -296,7 +296,12 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
             throw new Error("Received an empty response from the AI model.");
         }
 
-        return { data: { response: responseText } };
+        const result = { data: { response: responseText } };
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        return { data: { response: result.data.response }};
     } catch (e: any) {
         console.error("SambaNova chat error:", e);
         return { error: e.message || "An unknown error occurred with the AI model." };

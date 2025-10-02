@@ -17,4 +17,4 @@ export const AVAILABLE_MODELS = [
     },
 ];
 
-export const DEFAULT_MODEL_ID = 'Llama-4-Maverick-17B-128E-Instruct';
+export const DEFAULT_MODEL_ID = 'gpt-oss-120b';
