@@ -263,7 +263,7 @@ export async function chatAction(input: {
     
     try {
         const result = await ai.generate({
-            model: input.model || 'Llama-4-Maverick-17B-128E-Instruct',
+            model: input.model || 'gpt-oss-120b',
             messages: messages,
             system: systemPrompt,
         });
