@@ -241,23 +241,28 @@ export async function chatAction(input: {
     }
 
     let systemPrompt = "You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. Provide your response in Markdown format.";
+    let messages = [...input.history];
 
     if (input.fileContent) {
         systemPrompt += `\n\nThe user has provided the following file content. Use it as the primary context for your answer.\n\nFile Content:\n---\n${input.fileContent}\n---`;
     }
 
     if (input.imageDataUri) {
-        const lastMessage = input.history[input.history.length - 1];
-        lastMessage.content = [
-            { type: 'text', text: lastMessage.content.toString() },
-            { type: 'image', image: new URL(input.imageDataUri) }
-        ];
+        const lastMessage = messages[messages.length - 1];
+        const newMessage = {
+            ...lastMessage,
+            content: [
+                { type: 'text', text: lastMessage.content.toString() },
+                { type: 'image', image: new URL(input.imageDataUri) }
+            ]
+        };
+        messages = [...messages.slice(0, -1), newMessage];
     }
     
     try {
         const result = await ai.generate({
             model: ai.getModel(input.model || 'Meta-Llama-3.1-8B-Instruct'),
-            messages: input.history,
+            messages: messages,
             system: systemPrompt,
         });
 
