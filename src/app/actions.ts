@@ -24,6 +24,7 @@ import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flo
 import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
+import { DEFAULT_MODEL_ID } from '@/lib/models';
 
 export type ActionResult<T> = {
     data?: T;
@@ -263,7 +264,7 @@ export async function chatAction(input: {
     
     try {
         const result = await ai.generate({
-            model: input.model || 'Llama-4-Maverick-17B-128E-Instruct',
+            model: input.model || DEFAULT_MODEL_ID,
             messages: messages,
             system: systemPrompt,
         });

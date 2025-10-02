@@ -6,14 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenu
 import { Button } from "./ui/button";
 import { BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const models = [
-    { id: 'Llama-4-Maverick-17B-128E-Instruct', name: 'SearnAI V2.0', description: 'Balanced performance and vision.' },
-    { id: 'gpt-oss-120b', name: 'SearnAI V3.1', description: 'Most powerful, for complex reasoning.' },
-    { id: 'Qwen3-32B', name: 'SearnAI V2.5', description: 'Fast and efficient for general chat.' },
-    { id: 'Meta-Llama-3.3-70B-Instruct', name: 'SearnAI V1.5', description: 'Newest large-scale Llama model.' },
-    { id: 'Meta-Llama-3.1-8B-Instruct', name: 'SearnAI V3.0', description: 'Fast and lightweight for quick tasks.' },
-];
+import { AVAILABLE_MODELS } from "@/lib/models";
 
 interface ModelSwitcherProps {
     selectedModel: string;
@@ -24,7 +17,7 @@ interface ModelSwitcherProps {
 export function ModelSwitcher({ selectedModel, onModelChange, disabled }: ModelSwitcherProps) {
 
     const getModelName = (id: string) => {
-        return models.find(m => m.id === id)?.name || id;
+        return AVAILABLE_MODELS.find(m => m.id === id)?.name || id;
     }
 
     return (
@@ -42,7 +35,7 @@ export function ModelSwitcher({ selectedModel, onModelChange, disabled }: ModelS
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuRadioGroup value={selectedModel} onValueChange={onModelChange}>
-                    {models.map(model => (
+                    {AVAILABLE_MODELS.map(model => (
                         <DropdownMenuRadioItem key={model.id} value={model.id}>
                            <div>
                                 <p className="font-medium">{model.name}</p>
