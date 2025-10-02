@@ -8,9 +8,9 @@ import { BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const models = [
+    { id: 'Llama-4-Maverick-17B-128E-Instruct', name: 'SearnAI V2.0', description: 'Balanced performance and vision.' },
     { id: 'gpt-oss-120b', name: 'SearnAI V3.1', description: 'Most powerful, for complex reasoning.' },
     { id: 'Qwen3-32B', name: 'SearnAI V2.5', description: 'Fast and efficient for general chat.' },
-    { id: 'Llama-4-Maverick-17B-128E-Instruct', name: 'SearnAI V2.0', description: 'Balanced performance and vision.' },
     { id: 'Meta-Llama-3.3-70B-Instruct', name: 'SearnAI V1.5', description: 'Newest large-scale Llama model.' },
     { id: 'Meta-Llama-3.1-8B-Instruct', name: 'SearnAI V3.0', description: 'Fast and lightweight for quick tasks.' },
 ];
