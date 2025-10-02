@@ -242,24 +242,22 @@ export async function chatAction(input: {
     }
 
     let systemPrompt = "You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. Provide your response in Markdown format.";
-    let messages: CoreMessage[] = input.history;
+    
+    let messages: CoreMessage[] = [...input.history];
 
     if (input.fileContent) {
         systemPrompt += `\n\nThe user has provided the following file content. Use it as the primary context for your answer.\n\nFile Content:\n---\n${input.fileContent}\n---`;
     }
 
     if (input.imageDataUri) {
-        const lastMessage = messages[messages.length - 1];
-        const newMessageContent: (string | { type: 'image', image: URL })[] = [
-            lastMessage.content as string,
-            { type: 'image', image: new URL(input.imageDataUri) }
-        ];
-
-        const newMessage: CoreMessage = {
-            ...lastMessage,
-            content: newMessageContent as any, // Cast to any to satisfy CoreMessage which expects string
-        };
-        messages = [...messages.slice(0, -1), newMessage];
+        const lastUserMessage = messages.pop();
+        if (lastUserMessage) {
+            const newMessageContent: (string | { type: 'image', image: URL })[] = [
+                lastUserMessage.content as string,
+                { type: 'image', image: new URL(input.imageDataUri) }
+            ];
+            messages.push({ ...lastUserMessage, content: newMessageContent as any });
+        }
     }
     
     try {

@@ -11,14 +11,9 @@ export const AVAILABLE_MODELS = [
         description: 'Most powerful, for complex reasoning.' 
     },
     { 
-        id: 'Qwen3-32B', 
+        id: 'Meta-Llama-3.1-8B-Instruct', 
         name: 'SearnAI V2.5', 
         description: 'Fast and efficient for general chat.' 
-    },
-    { 
-        id: 'Meta-Llama-3.1-70B-Instruct', 
-        name: 'SearnAI V1.5', 
-        description: 'Newest large-scale Llama model.' 
     },
 ];
 
