@@ -2,7 +2,7 @@
 "use server";
 
 import { CoreMessage } from 'ai';
-import { ai } from '@/ai/genkit';
+import { openai } from '@/lib/openai';
 import { z }from 'zod';
 import { generateFlashcardsSamba, GenerateFlashcardsSambaInput, GenerateFlashcardsSambaOutput } from '@/ai/flows/generate-flashcards-samba';
 import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput } from '@/ai/flows/generate-quizzes-samba';
@@ -25,6 +25,7 @@ import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
+import { ai } from '@/ai/genkit'; // Keep for other actions
 
 export type ActionResult<T> = {
     data?: T;
@@ -185,8 +186,8 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
 }
 
 // Main non-streaming chat action
-export async function chatAction(input: { 
-    history: CoreMessage[], 
+export async function chatAction(input: {
+    history: CoreMessage[],
     fileContent?: string | null,
     imageDataUri?: string | null,
     model?: string,
@@ -241,34 +242,39 @@ export async function chatAction(input: {
          }
     }
 
-    let systemPrompt = "You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. Provide your response in Markdown format.";
-    
-    let messages: CoreMessage[] = [...input.history];
+    const systemPrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students. Provide your response in Markdown format. ${input.fileContent ? `\n\nThe user has provided the following file content. Use it as the primary context for your answer.\n\nFile Content:\n---\n${input.fileContent}\n---` : ''}`;
 
-    if (input.fileContent) {
-        systemPrompt += `\n\nThe user has provided the following file content. Use it as the primary context for your answer.\n\nFile Content:\n---\n${input.fileContent}\n---`;
-    }
+    const messages: any[] = [{ role: 'system', content: systemPrompt }];
 
-    if (input.imageDataUri) {
-        const lastUserMessage = messages.pop();
-        if (lastUserMessage) {
-            const newMessageContent: (string | { type: 'image', image: URL })[] = [
-                lastUserMessage.content as string,
-                { type: 'image', image: new URL(input.imageDataUri) }
-            ];
-            messages.push({ ...lastUserMessage, content: newMessageContent as any });
+    input.history.forEach(msg => {
+        if (msg.role === 'user' && input.imageDataUri) {
+            messages.push({
+                role: 'user',
+                content: [
+                    { type: 'text', text: msg.content as string },
+                    { type: 'image_url', image_url: { url: input.imageDataUri } }
+                ]
+            });
+        } else {
+            messages.push({ role: msg.role, content: msg.content });
         }
-    }
-    
+    });
+
     try {
-        const result = await ai.generate({
+        const response = await openai.chat.completions.create({
             model: input.model || DEFAULT_MODEL_ID,
             messages: messages,
-            system: systemPrompt,
+            stream: false,
         });
 
-        return { data: { response: result.text } };
+        const responseText = response.choices[0]?.message?.content;
+        if (!responseText) {
+            throw new Error("Received an empty response from the AI model.");
+        }
+
+        return { data: { response: responseText } };
     } catch (e: any) {
-        return { error: e.message };
+        console.error("SambaNova chat error:", e);
+        return { error: e.message || "An unknown error occurred with the AI model." };
     }
 }
