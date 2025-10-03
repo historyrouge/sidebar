@@ -56,5 +56,3 @@ export function GeneratedImageCard({ imageDataUri, prompt }: GeneratedImageCardP
         </div>
     )
 }
-
-    
