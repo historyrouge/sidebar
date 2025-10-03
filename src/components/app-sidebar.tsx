@@ -30,6 +30,7 @@ import {
   LogOut,
   Globe,
   Calendar,
+  Image,
 } from "lucide-react";
 import {
   Sidebar,
@@ -69,6 +70,7 @@ const resources = [
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
     { name: "Text-to-Speech", icon: <Volume2 />, href: "/text-to-speech" },
+    { name: "Image Generation", icon: <Image />, href: "/image-generation" },
     { name: "AI Training", icon: <Cpu />, href: "/ai-training" },
 ];
 
