@@ -46,20 +46,15 @@ export const AVAILABLE_MODELS = [
         description: 'A large instruction-tuned model from Meta.'
     },
     {
+        id: 'Llama-3.3-Swallow-70B-Instruct-v0.4',
+        name: 'Llama 3.3 Swallow',
+        description: 'A specialized instruction-tuned Llama model.'
+    },
+     {
         id: 'Qwen3-32B',
         name: 'Qwen3 32B',
         description: 'A 32-billion parameter model.'
     },
-    {
-        id: 'Whisper-Large-v3',
-        name: 'Whisper V3',
-        description: 'Speech recognition model.'
-    },
-    {
-        id: 'Llama-3.3-Swallow-70B-Instruct-v0.4',
-        name: 'Llama 3.3 Swallow',
-        description: 'A specialized instruction-tuned Llama model.'
-    }
 ];
 
 export const DEFAULT_MODEL_ID = 'gpt-oss-120b';
