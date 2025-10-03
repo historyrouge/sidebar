@@ -60,7 +60,7 @@ export function ImageGenerationContent() {
         if (!generatedImage) return;
         const link = document.createElement("a");
         link.href = generatedImage;
-        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.png`;
+        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.svg`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -88,7 +88,7 @@ export function ImageGenerationContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Describe Your Image</CardTitle>
-                            <CardDescription>Enter a detailed prompt to generate an image using Google's Gemini model.</CardDescription>
+                            <CardDescription>Enter a detailed prompt to generate an SVG image using an AI model.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
@@ -135,7 +135,7 @@ export function ImageGenerationContent() {
                         </CardContent>
                         {generatedImage && !isGenerating && (
                             <CardFooter className="flex gap-2">
-                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download PNG</Button>
+                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download SVG</Button>
                                 <Button className="w-full" variant="outline" onClick={handleShare}><Share2 className="mr-2 h-4 w-4"/>Share</Button>
                             </CardFooter>
                         )}
