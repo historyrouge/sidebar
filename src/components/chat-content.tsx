@@ -35,6 +35,7 @@ import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
+import { InlineImageGenerator } from "./inline-image-generator";
 
 
 type Message = {
@@ -180,6 +181,10 @@ export function ChatContent() {
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
+
+  const addMessageToHistory = (message: Message) => {
+    setHistory(prev => [...prev, message]);
+  }
 
 
   const handleToolButtonClick = (tool: 'deepthink' | 'music') => {
@@ -533,6 +538,7 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
+                    <InlineImageGenerator onImageGenerated={addMessageToHistory}/>
                      <div className="flex justify-start mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
