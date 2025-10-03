@@ -8,7 +8,7 @@ export const AVAILABLE_MODELS = [
     { 
         id: 'gpt-oss-120b', 
         name: 'SearnAI V3.1 (DeepThink)', 
-        description: 'Most powerful, for complex reasoning.' 
+        description: 'For difficult problems & complex reasoning.' 
     },
     { 
         id: 'Meta-Llama-3.1-8B-Instruct', 
