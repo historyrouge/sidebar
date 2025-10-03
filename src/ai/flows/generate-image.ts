@@ -9,7 +9,7 @@
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAI } from '@/ai/genkit';
 import { z } from 'zod';
 
 const GenerateImageInputSchema = z.object({
@@ -29,8 +29,8 @@ export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
   try {
     const { media } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
-      prompt: `Generate an image based on this prompt: ${input.prompt}`,
+      model: googleAI('gemini-2.5-flash-image-preview'),
+      prompt: input.prompt,
       config: {
         responseModalities: ['IMAGE'],
       },
