@@ -2,14 +2,14 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt using a Google model.
+ * @fileOverview Generates an image from a text prompt using an NVIDIA model.
  *
  * - generateImage - A function that takes a text prompt and returns an image data URI.
  * - GenerateImageInput - The input type for the generateImage function.
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import { ai, googleAI } from '@/ai/genkit';
+import { nvidia } from '@/lib/nvidia';
 import { z } from 'zod';
 
 const GenerateImageInputSchema = z.object({
@@ -28,23 +28,29 @@ export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
   try {
-    const { media } = await ai.generate({
-      model: googleAI('gemini-2.5-flash-image-preview'),
+    const response = await nvidia.images.generate({
+      model: 'sdxl-turbo',
       prompt: input.prompt,
-      config: {
-        responseModalities: ['IMAGE'],
-      },
+      n: 1,
+      size: '1024x1024',
+      response_format: 'b64_json',
     });
 
-    if (!media?.url) {
+    const b64_json = response.data[0]?.b64_json;
+
+    if (!b64_json) {
       throw new Error('No image data received from the model.');
     }
 
     return {
-      imageDataUri: media.url,
+      imageDataUri: `data:image/png;base64,${b64_json}`,
     };
   } catch (error: any) {
-    console.error("Google image generation error:", error);
+    console.error("NVIDIA image generation error:", error);
+    // Provide a more user-friendly error message
+    if (error.response?.data?.error?.message) {
+        throw new Error(error.response.data.error.message);
+    }
     throw new Error(error.message || "An unknown error occurred while generating the image.");
   }
 }
