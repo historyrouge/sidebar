@@ -88,7 +88,7 @@ export function ImageGenerationContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Describe Your Image</CardTitle>
-                            <CardDescription>Enter a detailed prompt to generate an image using the NVIDIA sdxl-turbo model.</CardDescription>
+                            <CardDescription>Enter a detailed prompt to generate an image using Google's Gemini model.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
