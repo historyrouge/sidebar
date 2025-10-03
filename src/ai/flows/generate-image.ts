@@ -2,16 +2,16 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt using a free Google model.
+ * @fileOverview Generates an image from a text prompt using an NVIDIA model.
  *
  * - generateImage - A function that generates an image.
  * - GenerateImageInput - The input type for the generateImage function.
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
+import { nvidia } from '@/lib/nvidia';
+import { z } from 'zod';
+import { ai } from '@/ai/genkit';
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A text description of the image to generate.'),
@@ -38,18 +38,35 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async ({prompt}) => {
-    // Use a free model capable of image generation
-    const { media } = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash-latest'),
-        prompt: `Generate an image of: ${prompt}. Do not output any text, only the image.`,
-    });
     
-    if (!media.url) {
-        throw new Error("The model did not return an image.");
+    if (!process.env.NVIDIA_API_KEY) {
+        throw new Error("NVIDIA API key is not configured.");
     }
-    
-    return {
-        imageDataUri: media.url,
-    };
+
+    try {
+        const response = await nvidia.images.generate({
+            model: 'sdxl-turbo',
+            prompt: prompt,
+            n: 1,
+            response_format: 'b64_json',
+            size: '1024x1024',
+        });
+        
+        const b64_json = response.data[0]?.b64_json;
+
+        if (!b64_json) {
+            throw new Error('No image data returned from NVIDIA API.');
+        }
+
+        const imageDataUri = `data:image/png;base64,${b64_json}`;
+
+        return {
+            imageDataUri: imageDataUri,
+        };
+
+    } catch (error: any) {
+        console.error("NVIDIA image generation error:", error);
+        throw new Error(error.response?.data?.error?.message || error.message || "An unknown error occurred with the NVIDIA API.");
+    }
   }
 );

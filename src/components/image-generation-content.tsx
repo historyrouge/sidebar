@@ -73,7 +73,7 @@ export function ImageGenerationContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Describe Your Image</CardTitle>
-                            <CardDescription>Enter a detailed prompt to generate an image using Google's Imagen model.</CardDescription>
+                            <CardDescription>Enter a detailed prompt to generate an image using an NVIDIA model.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
