@@ -39,10 +39,8 @@ const generateImageFlow = ai.defineFlow(
   },
   async ({prompt}) => {
     const {media} = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-image-preview',
-      prompt: [
-        {text: `Generate an image of: ${prompt}`},
-      ],
+      model: googleAI.model('gemini-2.5-flash-image-preview'),
+      prompt: `Generate an image of: ${prompt}`,
       config: {
         responseModalities: ['IMAGE'],
       },
