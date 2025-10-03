@@ -4,13 +4,13 @@ export const AVAILABLE_MODELS = [
         id: 'gpt-oss-120b',
         name: 'GPT-5 High',
         description: 'For difficult problems & complex reasoning.',
-        logo: '✨'
+        logo: '🌀'
     },
     {
         id: 'DeepSeek-V3.1',
         name: 'DeepSeek',
         description: 'An advanced model for general tasks.',
-        logo: '🌊'
+        logo: '〰️'
     },
     {
         id: 'Meta-Llama-3.3-70B-Instruct',
