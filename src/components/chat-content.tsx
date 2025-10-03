@@ -1,7 +1,7 @@
 
 "use client";
 
-import { chatAction } from "@/app/actions";
+import { chatAction, generateImageAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -293,7 +293,28 @@ export function ChatContent() {
     setHistory(newHistory);
     setInput("");
 
-    await executeChat(newHistory, imageDataUri, fileContent);
+    const imageGenKeywords = ['generate image', 'create an image', 'draw a picture'];
+    const isImageGenRequest = imageGenKeywords.some(keyword => messageToSend.toLowerCase().includes(keyword));
+
+    if (isImageGenRequest) {
+        setIsTyping(true);
+        const prompt = messageToSend.replace(/generate image|create an image|draw a picture/i, "").trim();
+        const result = await generateImageAction({ prompt });
+        setIsTyping(false);
+        if (result.error) {
+            toast({ title: "Image Generation Error", description: result.error, variant: 'destructive' });
+        } else if (result.data) {
+            const imagePayload = {
+                type: 'image',
+                imageDataUri: result.data.imageDataUri,
+                prompt: prompt
+            };
+            const modelMessageId = `${Date.now()}-model`;
+            setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: JSON.stringify(imagePayload) }]);
+        }
+    } else {
+        await executeChat(newHistory, imageDataUri, fileContent);
+    }
     
     if (activeButton === 'music') {
         setActiveButton(null);

@@ -24,6 +24,7 @@ import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
+import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
 
 export type ActionResult<T> = {
@@ -139,6 +140,15 @@ export async function imageToTextAction(input: ImageToTextInput): Promise<Action
     }
 }
 
+export async function generateImageAction(input: GenerateImageInput): Promise<ActionResult<GenerateImageOutput>> {
+    try {
+        const data = await generateImage(input);
+        return { data };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
 export async function analyzeContentAction(content: string): Promise<ActionResult<AnalyzeContentOutput>> {
     try {
         const data = await analyzeContent({ content });
@@ -208,7 +218,7 @@ export async function chatAction(input: {
                 return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
             }
         } catch (error: any) {
-            return { error: `Sorry, an error occurred during the search: ${error.message}` };
+            return { error: `Sorry, an error occurred during the search: ${'error.message'}` };
         }
     }
 
@@ -228,7 +238,7 @@ export async function chatAction(input: {
                  return { data: { response: "Sorry, I couldn't find a matching song on YouTube." } };
             }
          } catch (error: any) {
-             return { error: `Sorry, an error occurred while searching YouTube: ${error.message}` };
+             return { error: `Sorry, an error occurred while searching YouTube: ${'error.message'}` };
          }
     }
 

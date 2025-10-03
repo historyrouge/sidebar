@@ -30,6 +30,7 @@ import {
   LogOut,
   Globe,
   Calendar,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,7 @@ const studyTools = [
     { name: "Mind Map", icon: <BrainCircuit />, href: "/mind-map" },
     { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
     { name: "Presentation Maker", icon: <Presentation />, href: "/presentation-maker" },
+    { name: "Image Generation", icon: <ImageIcon />, href: "/image-generation" },
 ];
 
 const resources = [
