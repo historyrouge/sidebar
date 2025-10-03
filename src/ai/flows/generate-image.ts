@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt using Imagen.
+ * @fileOverview Generates an image from a text prompt using a free Google model.
  *
  * - generateImage - A function that generates an image.
  * - GenerateImageInput - The input type for the generateImage function.
@@ -38,9 +38,10 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async ({prompt}) => {
+    // Use a free model capable of image generation
     const { media } = await ai.generate({
-        model: googleAI.model('imagen-4.0-fast-generate-001'),
-        prompt,
+        model: googleAI.model('gemini-1.5-flash-latest'),
+        prompt: `Generate an image of: ${prompt}. Do not output any text, only the image.`,
     });
     
     if (!media.url) {
