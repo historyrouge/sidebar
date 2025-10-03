@@ -35,7 +35,6 @@ import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
-import { InlineImageGenerator } from "./inline-image-generator";
 
 
 type Message = {
@@ -178,7 +177,7 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -187,7 +186,7 @@ export function ChatContent() {
   }
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -196,6 +195,8 @@ export function ChatContent() {
         toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
+      } else if (newActiveButton === 'image') {
+        toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
@@ -298,12 +299,11 @@ export function ChatContent() {
     setHistory(newHistory);
     setInput("");
 
-    const imageGenKeywords = ['generate image', 'create an image', 'draw a picture'];
-    const isImageGenRequest = imageGenKeywords.some(keyword => messageToSend.toLowerCase().includes(keyword));
+    const isImageGenRequest = activeButton === 'image';
 
     if (isImageGenRequest) {
         setIsTyping(true);
-        const prompt = messageToSend.replace(/generate image|create an image|draw a picture/i, "").trim();
+        const prompt = messageToSend.trim();
         const result = await generateImageAction({ prompt });
         setIsTyping(false);
         if (result.error) {
@@ -321,7 +321,7 @@ export function ChatContent() {
         await executeChat(newHistory, imageDataUri, fileContent);
     }
     
-    if (activeButton === 'music') {
+    if (activeButton) {
         setActiveButton(null);
     }
     
@@ -538,7 +538,6 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
-                    <InlineImageGenerator onImageGenerated={addMessageToHistory}/>
                      <div className="flex justify-start mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
@@ -552,6 +551,9 @@ export function ChatContent() {
                             </Button>
                             <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
+                            </Button>
+                             <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                                <ImageIcon className="h-5 w-5" />
                             </Button>
                         </div>
                     </div>
@@ -715,6 +717,9 @@ export function ChatContent() {
                 <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                     <Music className="h-5 w-5" />
                 </Button>
+                 <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                    <ImageIcon className="h-5 w-5" />
+                </Button>
             </div>
           </div>
           <form
@@ -742,7 +747,7 @@ export function ChatContent() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={isOcrProcessing ? "Processing image..." : "Message SearnAI..."}
+                placeholder="Message SearnAI..."
                 disabled={isInputDisabled}
                 className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
               />
@@ -763,3 +768,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
