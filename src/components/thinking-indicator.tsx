@@ -6,54 +6,64 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const thinkingLines = [
-    "Hmm… the first thing that pops into my mind feels too simple, maybe I should look deeper.",
-    "Wait, what if I flip the question instead of answering it directly?",
-    "Sometimes the answer hides in the negative space, not the obvious details.",
-    "Okay, let me step back—what’s the core principle hiding under all this noise?",
-    "If I zoom out, the pattern feels clearer, but zooming in reveals tiny contradictions.",
-    "Maybe the real trick isn’t solving it, but reframing it in a better way.",
-    "Hold on… does this remind me of something completely unrelated that secretly connects?",
-    "What looks random often has a rhythm—just not the rhythm we expect.",
-    "The simplest path is tempting, but the elegant path usually hides a twist.",
-    "What if instead of answering what, I answer why first?",
-    "Sometimes I feel like I’m not solving the problem, the problem is solving me.",
-    "Pause… if this were upside-down, would it still make sense?",
-    "Alright, I think the truth is somewhere in between the obvious and the absurd.",
+    "Okay, the user mentioned \"electro chemestry,\" which I think is a typo for \"electrochemistry.\"",
+    "Let me start by confirming that. Electrochemistry is a branch of chemistry dealing with the interconversion of electrical and chemical energy.",
+    "I should provide a clear, concise answer first.",
+    "The user might be a student looking for an overview or key concepts. I need to structure the response with a direct answer followed by an in-depth explanation.",
+    "Use bullet points for key concepts like redox reactions, galvanic cells, electrolytic cells, Nernst equation, and applications.",
+    "Also, mention common applications like batteries and corrosion.",
+    "I should check if there are any common mistakes or areas where students usually struggle. For example, understanding the difference between galvanic and electrolytic cells.",
+    "Including a table comparing them could help. Also, the Nernst equation is crucial for calculating cell potential under non-standard conditions.",
+    "After the explanation, I should ask a follow-up question to engage the user further. Maybe ask if they want examples or a quiz.",
+    "Need to keep the tone friendly and encouraging. Make sure to use proper formatting with headings and bold text for clarity.",
+    "Avoid jargon where possible, but since it's a technical topic, some terms are necessary. Double-check the spelling of \"electrochemistry\" to avoid confusion.",
+    "Alright, time to put it all together."
 ];
 
 export function ThinkingIndicator() {
-    const [visibleLine, setVisibleLine] = useState(0);
+    const [visibleLines, setVisibleLines] = useState<string[]>([]);
 
     useEffect(() => {
-        setVisibleLine(0); 
+        setVisibleLines([]);
+        let index = 0;
         const interval = setInterval(() => {
-            setVisibleLine(prev => {
-                if (prev < thinkingLines.length - 1) {
-                    return prev + 1;
-                }
-                // Loop back to the start
-                return 0;
-            });
-        }, 1200);
+            if (index < thinkingLines.length) {
+                setVisibleLines(prev => [...prev, thinkingLines[index]]);
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 800); // Adjust delay as needed
 
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin shrink-0" />
-            <div className="relative h-5 w-56">
+        <div className="flex items-start gap-3 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin shrink-0 mt-1" />
+            <div className="flex flex-col">
                 <AnimatePresence>
-                    <motion.p
-                        key={visibleLine}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0"
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="font-mono text-xs"
                     >
-                        {thinkingLines[visibleLine]}
-                    </motion.p>
+                       <p className="text-gray-500">&lt;think&gt;</p>
+                       <div className="pl-4">
+                            {visibleLines.map((line, i) => (
+                                <motion.p
+                                    key={i}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: i * 0.1 }}
+                                >
+                                    {line}
+                                </motion.p>
+                            ))}
+                        </div>
+                        <p className="text-gray-500">&lt;/think&gt;</p>
+                    </motion.div>
                 </AnimatePresence>
             </div>
         </div>
