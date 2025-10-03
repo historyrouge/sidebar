@@ -11,7 +11,6 @@ import '@/ai/flows/generate-question-paper.ts';
 import '@/ai/flows/generate-presentation.ts';
 import '@/ai/flows/image-to-text.ts';
 import '@/ai/flows/generate-edited-content.ts';
-import '@/ai/flows/image-to-text.ts';
 import '@/ai/training-data.ts';
 import '@/ai/tools/youtube-search.ts';
 import '@/ai/tools/duckduckgo-search.ts';
@@ -27,6 +26,7 @@ import '@/ai/tools/browse-website.ts';
 
 
     
+
 
 
 
