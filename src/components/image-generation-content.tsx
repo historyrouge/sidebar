@@ -13,6 +13,21 @@ import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Skeleton } from "./ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { z } from "zod";
+
+export const GenerateImageInputSchema = z.object({
+  prompt: z.string().describe('A text description of the image to generate.'),
+});
+export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
+
+export const GenerateImageOutputSchema = z.object({
+  imageDataUri: z
+    .string()
+    .describe(
+      "The generated image as a data URI."
+    ),
+});
+export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export function ImageGenerationContent() {
     const [prompt, setPrompt] = useState("");
@@ -45,7 +60,7 @@ export function ImageGenerationContent() {
         if (!generatedImage) return;
         const link = document.createElement("a");
         link.href = generatedImage;
-        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.svg`;
+        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -73,7 +88,7 @@ export function ImageGenerationContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Describe Your Image</CardTitle>
-                            <CardDescription>Enter a detailed prompt to generate an SVG image using the Gemini 1.5 Flash model.</CardDescription>
+                            <CardDescription>Enter a detailed prompt to generate an image using the NVIDIA sdxl-turbo model.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
@@ -120,7 +135,7 @@ export function ImageGenerationContent() {
                         </CardContent>
                         {generatedImage && !isGenerating && (
                             <CardFooter className="flex gap-2">
-                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download SVG</Button>
+                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download PNG</Button>
                                 <Button className="w-full" variant="outline" onClick={handleShare}><Share2 className="mr-2 h-4 w-4"/>Share</Button>
                             </CardFooter>
                         )}

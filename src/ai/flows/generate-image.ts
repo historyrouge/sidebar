@@ -2,57 +2,41 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt.
+ * @fileOverview Generates an image from a text prompt using NVIDIA's sdxl-turbo model.
  *
  * - generateImage - A function that generates an image.
- * - GenerateImageInput - The input type for the generateImage function.
- * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import { ai } from '@/ai/genkit';
+import { nvidia } from '@/lib/nvidia';
 import { z } from 'zod';
+import { GenerateImageInput, GenerateImageOutput, GenerateImageOutputSchema } from '@/components/image-generation-content';
 
-const GenerateImageInputSchema = z.object({
-  prompt: z.string().describe('A text description of the image to generate.'),
-});
-export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
-
-const GenerateImageOutputSchema = z.object({
-  imageDataUri: z
-    .string()
-    .describe(
-      "The generated image as a data URI."
-    ),
-});
-export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
-  return generateImageFlow(input);
-}
-
-const generateImageFlow = ai.defineFlow(
-  {
-    name: 'generateImageFlow',
-    inputSchema: GenerateImageInputSchema,
-    outputSchema: GenerateImageOutputSchema,
-  },
-  async ({prompt}) => {
-    
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.0-pro',
-        prompt: `Generate an SVG for the following prompt: "${prompt}". Return ONLY the SVG code as a string, wrapped in <svg> tags. Do not include any other text or markdown formatting. The SVG should be a complete, valid SVG file.`,
-    });
-
-    if (!output) {
-      throw new Error("The AI model did not return an image.");
+    if (!process.env.NVIDIA_API_KEY) {
+        throw new Error("NVIDIA API key is not configured.");
     }
-    
-    // The output is a string of SVG, we need to convert it to a data URI
-    const svgString = output as unknown as string;
-    const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgString).toString('base64')}`;
 
-    return {
-        imageDataUri: dataUri,
-    };
-  }
-);
+    try {
+        const response = await nvidia.images.generate({
+            model: 'sdxl-turbo',
+            prompt: input.prompt,
+            n: 1,
+            size: '1024x1024',
+            response_format: 'b64_json',
+        });
+        
+        const b64_json = response.data[0]?.b64_json;
+        if (!b64_json) {
+            throw new Error("The AI model did not return an image.");
+        }
+
+        const imageDataUri = `data:image/png;base64,${b64_json}`;
+
+        return { imageDataUri };
+
+    } catch (error: any) {
+        console.error("NVIDIA image generation error:", error);
+        throw new Error(error.message || "An unknown error occurred while generating the image.");
+    }
+}
