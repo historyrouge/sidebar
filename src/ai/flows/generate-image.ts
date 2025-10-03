@@ -2,16 +2,15 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt.
+ * @fileOverview Generates an image from a text prompt using an NVIDIA model.
  *
  * - generateImage - A function that takes a text prompt and returns an image data URI.
  * - GenerateImageInput - The input type for the generateImage function.
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
+import { openai as nvidia } from '@/lib/nvidia';
+import { z } from 'zod';
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A text prompt to generate an image from.'),
@@ -28,27 +27,29 @@ const GenerateImageOutputSchema = z.object({
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
-  return generateImageFlow(input);
-}
+  if (!process.env.NVIDIA_API_KEY) {
+    throw new Error("NVIDIA API key is not configured.");
+  }
 
-const generateImageFlow = ai.defineFlow(
-  {
-    name: 'generateImageFlow',
-    inputSchema: GenerateImageInputSchema,
-    outputSchema: GenerateImageOutputSchema,
-  },
-  async ({prompt}) => {
-    const {media} = await ai.generate({
-      model: googleAI.model('imagen-2'),
-      prompt: `Generate an image of: ${prompt}`,
+  try {
+    const response = await nvidia.images.generate({
+      model: 'sdxl-turbo',
+      prompt: input.prompt,
+      n: 1,
+      response_format: 'b64_json',
+      size: '1024x1024',
     });
 
-    if (!media) {
-      throw new Error('No image was generated.');
+    const b64Json = response.data[0]?.b64_json;
+    if (!b64Json) {
+      throw new Error('No image data received from NVIDIA.');
     }
 
     return {
-      imageDataUri: media.url,
+      imageDataUri: `data:image/png;base64,${b64Json}`,
     };
+  } catch (error: any) {
+    console.error("NVIDIA image generation error:", error);
+    throw new Error(error.message || "An unknown error occurred while generating the image with NVIDIA.");
   }
-);
+}
