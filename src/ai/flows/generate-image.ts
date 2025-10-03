@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt by creating an SVG.
+ * @fileOverview Generates an image from a text prompt.
  *
  * - generateImage - A function that generates an image.
  * - GenerateImageInput - The input type for the generateImage function.
@@ -13,7 +13,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const GenerateImageInputSchema = z.object({
-  prompt: z.string().describe('A text description of the image to generate as an SVG.'),
+  prompt: z.string().describe('A text description of the image to generate.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
@@ -21,7 +21,7 @@ const GenerateImageOutputSchema = z.object({
   imageDataUri: z
     .string()
     .describe(
-      "The generated image as an SVG data URI."
+      "The generated image as a data URI."
     ),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
@@ -38,21 +38,17 @@ const generateImageFlow = ai.defineFlow(
   },
   async ({prompt}) => {
     
-    const { text } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: `You are an expert SVG generator. Create a simple, clean, and visually appealing SVG graphic based on the following prompt. The SVG should be a single, self-contained block of code. Do not include any explanations, just the SVG code itself. Ensure the SVG has a viewBox and is well-formed.
-
-Prompt: "${prompt}"`,
-        config: {
-            temperature: 0.3,
-        }
+    const { media } = await ai.generate({
+        model: 'googleai/imagen-2.0-fast-generate-001',
+        prompt: prompt,
     });
 
-    const svgContent = text.replace(/```svg\n?|```/g, "").trim();
-    const imageDataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+    if (!media) {
+        throw new Error("The AI model did not return an image.");
+    }
 
     return {
-        imageDataUri: imageDataUri,
+        imageDataUri: media.url,
     };
   }
 );
