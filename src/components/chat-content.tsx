@@ -33,6 +33,7 @@ import { YoutubeChatCard } from "./youtube-chat-card";
 import { WebsiteChatCard } from "./website-chat-card";
 import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
+import { DEFAULT_MODEL_ID } from "@/lib/models";
 
 
 type Message = {
@@ -174,7 +175,7 @@ export function ChatContent() {
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
 
-  const [currentModel, setCurrentModel] = useState('Llama-4-Maverick-17B-128E-Instruct');
+  const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
@@ -747,5 +748,7 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
