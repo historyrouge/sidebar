@@ -16,9 +16,7 @@ interface ModelSwitcherProps {
 
 export function ModelSwitcher({ selectedModel, onModelChange, disabled }: ModelSwitcherProps) {
 
-    const getModelName = (id: string) => {
-        return AVAILABLE_MODELS.find(m => m.id === id)?.name || id;
-    }
+    const currentModelDetails = AVAILABLE_MODELS.find(m => m.id === selectedModel);
 
     return (
         <DropdownMenu>
@@ -29,17 +27,20 @@ export function ModelSwitcher({ selectedModel, onModelChange, disabled }: ModelS
                     className="flex-shrink-0 h-9 gap-2 text-muted-foreground"
                     disabled={disabled}
                 >
-                    <BrainCircuit className="h-4 w-4" />
-                    <span className="hidden sm:inline">{getModelName(selectedModel)}</span>
+                    {currentModelDetails?.logo ? <span className="text-lg">{currentModelDetails.logo}</span> : <BrainCircuit className="h-4 w-4" />}
+                    <span className="hidden sm:inline">{currentModelDetails?.name || selectedModel}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuRadioGroup value={selectedModel} onValueChange={onModelChange}>
                     {AVAILABLE_MODELS.map(model => (
                         <DropdownMenuRadioItem key={model.id} value={model.id}>
-                           <div>
-                                <p className="font-medium">{model.name}</p>
-                                <p className="text-xs text-muted-foreground">{model.description}</p>
+                           <div className="flex items-center gap-2">
+                               {model.logo && <span className="text-lg">{model.logo}</span>}
+                               <div>
+                                    <p className="font-medium">{model.name}</p>
+                                    <p className="text-xs text-muted-foreground">{model.description}</p>
+                               </div>
                            </div>
                         </DropdownMenuRadioItem>
                     ))}

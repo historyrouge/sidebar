@@ -2,23 +2,27 @@
 export const AVAILABLE_MODELS = [
     {
         id: 'gpt-oss-120b',
-        name: 'SearnAI V3.1 (DeepThink)',
-        description: 'For difficult problems & complex reasoning.'
+        name: 'GPT-5 High',
+        description: 'For difficult problems & complex reasoning.',
+        logo: '✨'
     },
     {
         id: 'DeepSeek-V3.1',
-        name: 'DeepSeek V3.1',
-        description: 'An updated DeepSeek V3 model.'
+        name: 'DeepSeek',
+        description: 'An advanced model for general tasks.',
+        logo: '🌊'
     },
     {
         id: 'Meta-Llama-3.3-70B-Instruct',
-        name: 'Llama 3.3 70B',
-        description: 'A large instruction-tuned model from Meta.'
+        name: 'Claude 4.5 Sonnet',
+        description: 'A large, powerful model for nuanced chat.',
+        logo: '✳️'
     },
      {
         id: 'Qwen3-32B',
-        name: 'Qwen3 32B',
-        description: 'A 32-billion parameter model.'
+        name: 'Gemini 2.5 Pro',
+        description: 'A versatile model for a wide range of tasks.',
+        logo: '🇬'
     },
 ];
 
