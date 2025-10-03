@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput, GenerateImageOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, generateImageAction, chatWithTutorAction, imageToTextAction, AnalyzeImageContentInput } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, chatWithTutorAction, imageToTextAction, AnalyzeImageContentInput } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,20 +28,11 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 declare const puter: any;
 
-const imageGenerationSteps = [
-    "Warming up the AI...",
-    "Analyzing concepts...",
-    "Generating initial draft...",
-    "Painting the pixels...",
-    "Adding final touches...",
-];
-
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
-  const [generatedImage, setGeneratedImage] = useState<GenerateImageOutput | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
@@ -52,9 +43,6 @@ export function StudyNowContent() {
   const [isLoadingMaterial, startLoadingMaterial] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
-  const [isGeneratingImage, startGeneratingImage] = useTransition();
-  const [imageGenerationProgress, setImageGenerationProgress] = useState(0);
-  const [imageGenerationStep, setImageGenerationStep] = useState(0);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,7 +126,6 @@ export function StudyNowContent() {
         } else if (result.data) {
             setAnalysis(result.data ?? null);
             setFlashcards(null);
-            setGeneratedImage(null);
             setActiveTab("analysis");
         }
     });
@@ -153,7 +140,6 @@ export function StudyNowContent() {
         } else {
             setAnalysis(result.data as AnalyzeImageContentOutput);
             setFlashcards(null);
-            setGeneratedImage(null);
             setActiveTab("analysis");
         }
     });
@@ -187,58 +173,6 @@ export function StudyNowContent() {
         });
     }
 };
-
-  const handleGenerateImage = useCallback(async () => {
-    if (!analysis) return;
-    
-    setImageGenerationProgress(0);
-    setImageGenerationStep(0);
-    
-    startGeneratingImage(async () => {
-        const prompt = `Based on the following concepts: ${analysis.keyConcepts.map(c => c.concept).join(", ")}.`;
-        const result = await generateImageAction({ prompt });
-        
-        setImageGenerationProgress(100);
-
-        if (result.error) {
-            toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
-        } else {
-            setGeneratedImage(result.data ?? null);
-            setActiveTab("image");
-        }
-    });
-  }, [analysis, toast]);
-
-  useEffect(() => {
-    let progressInterval: NodeJS.Timeout | undefined;
-    let stepInterval: NodeJS.Timeout | undefined;
-
-    if (isGeneratingImage) {
-        const totalDuration = 15000;
-        const stepDuration = totalDuration / imageGenerationSteps.length;
-
-        progressInterval = setInterval(() => {
-            setImageGenerationProgress(prev => {
-                if (prev >= 95) {
-                    clearInterval(progressInterval);
-                    return prev;
-                }
-                return prev + 1;
-            });
-        }, totalDuration / 100);
-
-        setImageGenerationStep(0);
-        stepInterval = setInterval(() => {
-            setImageGenerationStep(prev => (prev + 1) % imageGenerationSteps.length);
-        }, stepDuration);
-
-    }
-
-    return () => {
-        clearInterval(progressInterval);
-        clearInterval(stepInterval);
-    };
-  }, [isGeneratingImage]);
 
   const handleFileUploadClick = () => fileInputRef.current?.click();
   const handleImageUploadClick = () => imageInputRef.current?.click();
@@ -279,7 +213,7 @@ export function StudyNowContent() {
           const text = e.target?.result as string;
           setContent(text);
           setTitle(file.name.replace('.txt', ''));
-          setAnalysis(null); setFlashcards(null); setGeneratedImage(null); setImageDataUri(null);
+          setAnalysis(null); setFlashcards(null); setImageDataUri(null);
           toast({ title: "File loaded", description: "The file content has been loaded. Click Analyze to begin." });
         };
         reader.readAsText(file);
@@ -307,7 +241,6 @@ export function StudyNowContent() {
                     setTitle(file.name);
                     setAnalysis(null); 
                     setFlashcards(null); 
-                    setGeneratedImage(null);
                     
                     toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
                 } catch (error: any) {
@@ -322,7 +255,7 @@ export function StudyNowContent() {
   };
 
   const clearImage = () => {
-    setImageDataUri(null); setTitle(""); setContent(""); setAnalysis(null); setFlashcards(null); setGeneratedImage(null);
+    setImageDataUri(null); setTitle(""); setContent(""); setAnalysis(null); setFlashcards(null);
     if(imageInputRef.current) imageInputRef.current.value = "";
   }
 
@@ -427,7 +360,6 @@ export function StudyNowContent() {
                 setTitle("Camera Capture");
                 setAnalysis(null);
                 setFlashcards(null);
-                setGeneratedImage(null);
 
                 toast({ title: "Image Captured & Text Extracted!", description: "The captured image is ready for analysis." });
             } catch (error: any) {
@@ -438,14 +370,13 @@ export function StudyNowContent() {
         });
     };
 
-  const isLoading = isAnalyzing || isLoadingMaterial || isGeneratingFlashcards || isGeneratingQuiz || isGeneratingImage;
+  const isLoading = isAnalyzing || isLoadingMaterial || isGeneratingFlashcards || isGeneratingQuiz;
   
   const TABS = [
     { value: "analysis", label: "Analysis", disabled: !analysis },
     { value: "flashcards", label: "Flashcards", disabled: !analysis },
     { value: "quiz", label: "Quiz", disabled: !analysis },
-    { value: "tutor", label: "Tutor", disabled: !analysis },
-    { value: "image", label: "Image", disabled: !analysis }
+    { value: "tutor", label: "Tutor", disabled: !analysis }
   ];
 
   const analysisAsImageOutput = analysis as AnalyzeImageContentOutput;
@@ -560,7 +491,7 @@ export function StudyNowContent() {
                 </div>
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
-                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
                     {TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} disabled={tab.disabled}>{tab.label}</TabsTrigger>)}
                   </TabsList>
                   <ScrollArea className="mt-4 flex-1">
@@ -648,24 +579,6 @@ export function StudyNowContent() {
                     </TabsContent>
                     <TabsContent value="tutor" className="h-full">
                       <TutorChat content={analysis ? (imageDataUri ? `Image name: ${title}. Key Concepts from Image: ${analysis.keyConcepts.map(c => c.concept).join(', ')}. Potential Questions from Image: ${analysis.potentialQuestions?.join(' ')}` : content) : content} onSendMessage={handleTutorChat}/>
-                    </TabsContent>
-                    <TabsContent value="image" className="h-full">
-                       {isGeneratingImage ? (
-                         <div className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground">
-                            <p className="text-sm font-medium">{imageGenerationSteps[imageGenerationStep]}</p>
-                            <Progress value={imageGenerationProgress} className="w-3/4" />
-                            <p className="text-xs text-muted-foreground">This can take up to 30 seconds...</p>
-                         </div>
-                       ) : generatedImage ? (
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <Image src={generatedImage.imageDataUri} alt="Generated visual aid" width={400} height={400} className="rounded-lg border shadow-md" />
-                          <p className="text-sm text-muted-foreground mt-4">A visual aid for your study material.</p>
-                        </div>
-                      ) : (
-                        <div className="flex h-full items-center justify-center">
-                           <Button onClick={handleGenerateImage} disabled={isGeneratingImage}><Camera className="mr-2 h-4 w-4" />Generate Image</Button>
-                        </div>
-                      )}
                     </TabsContent>
                   </ScrollArea>
                 </Tabs>

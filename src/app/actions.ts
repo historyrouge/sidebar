@@ -14,7 +14,6 @@ import { generatePresentation, GeneratePresentationInput, GeneratePresentationOu
 import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
-import { generateImage, GenerateImageInput, GenerateImageOutput } from '@/ai/flows/generate-image';
 import { imageToText, ImageToTextInput, ImageToTextOutput } from '@/ai/flows/image-to-text';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
@@ -71,15 +70,6 @@ export async function textToSpeechAction(input: TextToSpeechInput): Promise<Acti
 export async function getYoutubeTranscriptAction(input: GetYoutubeTranscriptInput): Promise<ActionResult<GetYoutubeTranscriptOutput>> {
     try {
         const data = await getYoutubeTranscript(input);
-        return { data };
-    } catch (e: any) {
-        return { error: e.message };
-    }
-}
-
-export async function generateImageAction(input: GenerateImageInput): Promise<ActionResult<GenerateImageOutput>> {
-    try {
-        const data = await generateImage(input);
         return { data };
     } catch (e: any) {
         return { error: e.message };
@@ -192,11 +182,9 @@ export async function chatAction(input: {
     imageDataUri?: string | null,
     model?: string,
     isMusicMode?: boolean,
-    isImageGenerationMode?: boolean,
 }): Promise<ActionResult<{ response: string }>> {
     const isSearch = input.history[input.history.length - 1]?.content.toString().startsWith("Search:");
     const isMusic = input.isMusicMode;
-    const isImageGen = input.isImageGenerationMode;
 
     if (isSearch) {
         const query = input.history[input.history.length - 1].content.toString().replace(/^Search:\s*/i, '');
@@ -243,26 +231,6 @@ export async function chatAction(input: {
              return { error: `Sorry, an error occurred while searching YouTube: ${error.message}` };
          }
     }
-
-    if (isImageGen) {
-        const prompt = input.history[input.history.length - 1].content.toString();
-        try {
-            const imageResult = await generateImage({ prompt });
-            if (imageResult.imageDataUri) {
-                const responsePayload = {
-                    type: 'image',
-                    imageDataUri: imageResult.imageDataUri,
-                    prompt: prompt,
-                };
-                return { data: { response: JSON.stringify(responsePayload) } };
-            } else {
-                throw new Error("Image generation failed to return an image.");
-            }
-        } catch (error: any) {
-            return { error: `Sorry, an error occurred during image generation: ${error.message}` };
-        }
-    }
-
 
     const systemPrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers must be excellent, well-structured, and easy to understand.
 
@@ -329,5 +297,3 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
         return { error: e.message || "An unknown error occurred with the AI model." };
     }
 }
-
-    
