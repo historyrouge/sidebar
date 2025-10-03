@@ -24,7 +24,7 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
 import { create } from 'zustand';
@@ -154,7 +154,7 @@ const ThinkingBlock = ({ text }: { text: string }) => {
     const handleAnimationComplete = () => {
         setIsAnimating(false);
     };
-
+    
     const previewLines = text.split('\n').slice(0, 3).join('\n');
 
     return (
@@ -834,5 +834,7 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
