@@ -39,7 +39,7 @@ const generateImageFlow = ai.defineFlow(
   async ({prompt}) => {
     const {media} = await ai.generate({
       model: generationModel,
-      prompt: `Generate a high-quality, visually appealing image that illustrates the following concept: ${prompt}`,
+      prompt: prompt,
     });
 
     if (!media) {

@@ -8,6 +8,6 @@ export const ai = genkit({
 });
 
 export const visionModel = googleAI('gemini-pro-vision');
-export const generationModel = googleAI('imagen-2');
+export const generationModel = googleAI('imagen-4.0-fast-generate-001');
 
 export { googleAI };
