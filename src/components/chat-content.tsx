@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -34,6 +34,7 @@ import { WebsiteChatCard } from "./website-chat-card";
 import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
+import { GeneratedImageCard } from "./generated-image-card";
 
 
 type Message = {
@@ -176,12 +177,12 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'agent' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'agent') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -190,6 +191,8 @@ export function ChatContent() {
         toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
+      } else if (newActiveButton === 'image') {
+        toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
@@ -265,6 +268,7 @@ export function ChatContent() {
           imageDataUri: currentImageDataUri,
           model: currentModel,
           isMusicMode: activeButton === 'music',
+          isImageGenerationMode: activeButton === 'image',
       });
 
       setIsTyping(false);
@@ -294,7 +298,7 @@ export function ChatContent() {
 
     await executeChat(newHistory, imageDataUri, fileContent);
     
-    if (activeButton === 'music') {
+    if (activeButton === 'music' || activeButton === 'image') {
         setActiveButton(null);
     }
     
@@ -468,6 +472,9 @@ export function ChatContent() {
             if (data.type === 'website' && data.url) {
                 return <WebsiteChatCard websiteData={data} />;
             }
+             if (data.type === 'image' && data.imageDataUri) {
+                return <GeneratedImageCard imageDataUri={data.imageDataUri} prompt={data.prompt} />;
+            }
         } catch (e) {
             // Not a JSON object, so render as plain text
         }
@@ -514,12 +521,11 @@ export function ChatContent() {
                         </div>
                         <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                             <Button 
-                                variant={activeButton === 'agent' ? 'default' : 'outline'}
-                                onClick={() => handleToolButtonClick('agent')}
+                                variant={activeButton === 'image' ? 'default' : 'outline'}
+                                onClick={() => handleToolButtonClick('image')}
                                 className="gap-2"
                             >
-                                <Bot className="h-5 w-5" />
-                                Agent
+                                <ImageIcon className="h-5 w-5" />
                             </Button>
                             <Button 
                                 variant={activeButton === 'deepthink' ? 'default' : 'outline'}
@@ -684,12 +690,11 @@ export function ChatContent() {
             </div>
             <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
                 <Button 
-                    variant={activeButton === 'agent' ? 'default' : 'outline'}
-                    onClick={() => handleToolButtonClick('agent')}
+                    variant={activeButton === 'image' ? 'default' : 'outline'}
+                    onClick={() => handleToolButtonClick('image')}
                     className="gap-2"
                 >
-                    <Bot className="h-5 w-5" />
-                    Agent
+                    <ImageIcon className="h-5 w-5" />
                 </Button>
                 <Button 
                     variant={activeButton === 'deepthink' ? 'default' : 'outline'}
@@ -748,6 +753,8 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
 
