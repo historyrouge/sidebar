@@ -29,6 +29,7 @@ import {
   FileEdit,
   LogOut,
   Globe,
+  Calendar,
 } from "lucide-react";
 import {
   Sidebar,
@@ -73,6 +74,7 @@ const resources = [
 
 const mainNav = [
     { name: "Home", icon: <Home />, href: "/" },
+    { name: "Planner", icon: <Calendar />, href: "/planner" },
 ]
 
 export function AppSidebar() {
@@ -188,3 +190,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+    
