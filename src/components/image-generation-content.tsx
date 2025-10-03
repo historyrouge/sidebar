@@ -45,7 +45,7 @@ export function ImageGenerationContent() {
         if (!generatedImage) return;
         const link = document.createElement("a");
         link.href = generatedImage;
-        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.png`;
+        link.download = `${prompt.substring(0, 30).replace(/\s/g, "_")}.svg`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -73,11 +73,11 @@ export function ImageGenerationContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Describe Your Image</CardTitle>
-                            <CardDescription>Enter a detailed prompt to generate an image using an NVIDIA model.</CardDescription>
+                            <CardDescription>Enter a detailed prompt to generate an SVG image using the Gemini 1.5 Flash model.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
-                                placeholder="e.g., A photorealistic image of an astronaut riding a horse on Mars"
+                                placeholder="e.g., A simple logo for a coffee shop"
                                 className="h-40"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
@@ -96,7 +96,7 @@ export function ImageGenerationContent() {
                             <CardTitle>Generated Image</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="aspect-square w-full rounded-lg border-2 border-dashed border-muted bg-muted/50 flex items-center justify-center">
+                            <div className="aspect-square w-full rounded-lg border-2 border-dashed border-muted bg-muted/50 flex items-center justify-center p-4">
                                {isGenerating ? (
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                         <Loader2 className="h-8 w-8 animate-spin"/>
@@ -120,7 +120,7 @@ export function ImageGenerationContent() {
                         </CardContent>
                         {generatedImage && !isGenerating && (
                             <CardFooter className="flex gap-2">
-                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download</Button>
+                                <Button className="w-full" onClick={handleDownload}><Download className="mr-2 h-4 w-4"/>Download SVG</Button>
                                 <Button className="w-full" variant="outline" onClick={handleShare}><Share2 className="mr-2 h-4 w-4"/>Share</Button>
                             </CardFooter>
                         )}
