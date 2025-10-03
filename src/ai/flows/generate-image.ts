@@ -38,17 +38,21 @@ const generateImageFlow = ai.defineFlow(
   },
   async ({prompt}) => {
     
-    const { media } = await ai.generate({
-        model: 'googleai/imagen-2.0-fast-generate-001',
-        prompt: prompt,
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-1.0-pro',
+        prompt: `Generate an SVG for the following prompt: "${prompt}". Return ONLY the SVG code as a string, wrapped in <svg> tags. Do not include any other text or markdown formatting. The SVG should be a complete, valid SVG file.`,
     });
 
-    if (!media) {
-        throw new Error("The AI model did not return an image.");
+    if (!output) {
+      throw new Error("The AI model did not return an image.");
     }
+    
+    // The output is a string of SVG, we need to convert it to a data URI
+    const svgString = output as unknown as string;
+    const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgString).toString('base64')}`;
 
     return {
-        imageDataUri: media.url,
+        imageDataUri: dataUri,
     };
   }
 );
