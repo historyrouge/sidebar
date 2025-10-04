@@ -216,8 +216,8 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         return `I couldn't find specific information about "${query}". Please try rephrasing your question or providing specific URLs to scrape.`;
     }
     
-    // Create a comprehensive answer with better structure
-    let answer = `# ${query}\n\n`;
+    // Create a comprehensive answer in pure text format
+    let answer = `${query.toUpperCase()}\n\n`;
     
     // Add introduction
     answer += `Based on information gathered from ${scrapedData.length} reliable source${scrapedData.length > 1 ? 's' : ''}, here's what I found:\n\n`;
@@ -258,11 +258,11 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         topicGroups[bestTopic].push(sentence.trim());
     });
     
-    // Create organized sections
+    // Create organized sections in pure text
     Object.entries(topicGroups).forEach(([topic, sentences]) => {
         if (sentences.length > 0) {
-            const sectionTitle = topic === 'general' ? 'Key Information' : `About ${topic.charAt(0).toUpperCase() + topic.slice(1)}`;
-            answer += `## ${sectionTitle}\n\n`;
+            const sectionTitle = topic === 'general' ? 'KEY INFORMATION' : `${topic.toUpperCase()}`;
+            answer += `${sectionTitle}:\n`;
             
             // Take top 3-4 sentences for each topic
             const topSentences = sentences.slice(0, 4);
@@ -271,7 +271,7 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
     });
     
     // Add summary section
-    answer += `## Summary\n\n`;
+    answer += `SUMMARY:\n`;
     const summarySentences = sentences.slice(0, 3);
     answer += summarySentences.join('. ') + '.\n\n';
     
@@ -528,14 +528,14 @@ export async function chatAction(input: {
             // Generate a comprehensive answer
             const answer = generateAnswer(scrapedData, query);
             
-            // Format the response with better source organization
+            // Format the response with better source organization in pure text
             const sourcesText = scrapedData.map((source, index) => {
                 const hostname = new URL(source.url).hostname;
                 const domain = hostname.replace('www.', '');
-                return `### ${index + 1}. ${source.title}\n- **Source:** ${domain}\n- **URL:** [${source.url}](${source.url})\n- **Summary:** ${source.summary}`;
+                return `${index + 1}. ${source.title}\n   Source: ${domain}\n   URL: ${source.url}\n   Summary: ${source.summary}`;
             }).join('\n\n');
 
-            const formattedResponse = `${answer}\n\n---\n\n## 📚 Sources Used\n\n${sourcesText}\n\n---\n\n💡 **Tip:** Click on the source links to read the full articles for more detailed information.`;
+            const formattedResponse = `${answer}SOURCES USED:\n\n${sourcesText}\n\nTip: Visit the source URLs to read the full articles for more detailed information.`;
             
             return { data: { response: formattedResponse } };
         } catch (error: any) {
