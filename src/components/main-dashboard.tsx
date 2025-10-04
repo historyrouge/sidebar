@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -10,6 +10,7 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 
 export function MainDashboard() {
@@ -17,6 +18,7 @@ export function MainDashboard() {
   const { toast } = useToast();
   const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer } = useChatStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [activeView, setActiveView] = useState('searnai');
 
   const handleNewChat = () => {
     try {
@@ -102,10 +104,6 @@ export function MainDashboard() {
         )}
 
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-                <Newspaper className="mr-2 h-4 w-4" />
-                Stories
-            </Button>
             <Button variant="ghost" size="icon" onClick={handleNewChat}>
                 <FileEdit className="h-5 w-5" />
                 <span className="sr-only">New Chat</span>
@@ -117,6 +115,26 @@ export function MainDashboard() {
             </Button>
         </div>
       </header>
+       <div className="flex justify-center p-2 border-b">
+            <div className="bg-muted p-1 rounded-lg flex gap-1">
+                 <Button 
+                    variant={activeView === 'stories' ? 'outline' : 'ghost'} 
+                    className={cn("gap-2", activeView === 'stories' && 'bg-background')}
+                    onClick={() => setActiveView('stories')}
+                >
+                    <Newspaper className="h-4 w-4" />
+                    Stories
+                </Button>
+                 <Button 
+                    variant={activeView === 'searnai' ? 'outline' : 'ghost'} 
+                    className={cn("gap-2", activeView === 'searnai' && 'bg-background')}
+                    onClick={() => setActiveView('searnai')}
+                >
+                    <MessageSquare className="h-4 w-4" />
+                    Searn AI
+                </Button>
+            </div>
+        </div>
       <main className="flex-1 overflow-hidden relative">
          <ChatContent />
          {activeVideoId && showPlayer && (
