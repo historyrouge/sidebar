@@ -79,6 +79,29 @@ const mainNav = [
     { name: "Planner", icon: <Calendar />, href: "/planner" },
 ]
 
+const AppLogo = () => (
+  <svg
+    className="size-5"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M50 2.88675L93.3013 26.4434V73.5566L50 97.1132L6.69873 73.5566V26.4434L50 2.88675Z"
+      fill="currentColor"
+      className="text-primary-foreground"
+    />
+    <path
+      d="M63 40.5C63 36.3579 59.6421 33 55.5 33H44.5C40.3579 33 37 36.3579 37 40.5V43.5C37 47.6421 40.3579 51 44.5 51H55.5C59.6421 51 63 54.3579 63 58.5V61.5C63 65.6421 59.6421 69 55.5 69H44.5C40.3579 69 37 65.6421 37 61.5"
+      stroke="hsl(var(--primary))"
+      strokeWidth="8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
   const router = useRouter();
@@ -134,7 +157,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Layers className="size-5" />
+                <AppLogo />
             </div>
             <h1 className="text-lg font-semibold">SearnAI</h1>
         </Link>
