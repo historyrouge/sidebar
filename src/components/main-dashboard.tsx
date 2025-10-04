@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -102,6 +102,10 @@ export function MainDashboard() {
         )}
 
         <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+                <Newspaper className="mr-2 h-4 w-4" />
+                Stories
+            </Button>
             <Button variant="ghost" size="icon" onClick={handleNewChat}>
                 <FileEdit className="h-5 w-5" />
                 <span className="sr-only">New Chat</span>
