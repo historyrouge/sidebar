@@ -116,10 +116,10 @@ export function MainDashboard() {
         </div>
       </header>
        <div className="flex justify-center p-2 border-b">
-            <div className="bg-muted p-1 rounded-lg flex gap-1">
+            <div className="bg-muted p-1 rounded-lg flex gap-1 w-full max-w-sm">
                  <Button 
                     variant={activeView === 'stories' ? 'outline' : 'ghost'} 
-                    className={cn("gap-2", activeView === 'stories' && 'bg-background')}
+                    className={cn("gap-2 flex-1", activeView === 'stories' && 'bg-background')}
                     onClick={() => setActiveView('stories')}
                 >
                     <Newspaper className="h-4 w-4" />
@@ -127,7 +127,7 @@ export function MainDashboard() {
                 </Button>
                  <Button 
                     variant={activeView === 'searnai' ? 'outline' : 'ghost'} 
-                    className={cn("gap-2", activeView === 'searnai' && 'bg-background')}
+                    className={cn("gap-2 flex-1", activeView === 'searnai' && 'bg-background')}
                     onClick={() => setActiveView('searnai')}
                 >
                     <MessageSquare className="h-4 w-4" />
