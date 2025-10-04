@@ -8,5 +8,5 @@ export const ai = genkit({
 
 export { googleAI };
 
-// Vision model for image analysis
-export const visionModel = ai.model('gemini-1.5-flash');
+// Vision model for image analysis - temporarily disabled for build compatibility
+// export const visionModel = ai.model('gemini-1.5-flash');
