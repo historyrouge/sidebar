@@ -1,0 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_MODEL_ID = exports.AVAILABLE_MODELS = void 0;
+exports.AVAILABLE_MODELS = [
+    {
+        id: 'gpt-oss-120b',
+        name: 'GPT-5 High',
+        description: 'For difficult problems & complex reasoning.',
+        logo: '🌀'
+    },
+    {
+        id: 'DeepSeek-V3.1',
+        name: 'DeepSeek',
+        description: 'An advanced model for general tasks.',
+        logo: '〰️'
+    },
+    {
+        id: 'Meta-Llama-3.3-70B-Instruct',
+        name: 'Claude 4.5 Sonnet',
+        description: 'A large, powerful model for nuanced chat.',
+        logo: '✳️'
+    },
+    {
+        id: 'Qwen3-32B',
+        name: 'Gemini 2.5 Pro',
+        description: 'A versatile model for a wide range of tasks.',
+        logo: '🇬'
+    },
+];
+exports.DEFAULT_MODEL_ID = 'gpt-oss-120b';
