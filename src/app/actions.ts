@@ -150,8 +150,10 @@ async function scrapeWebsite(url: string): Promise<ScrapedData | null> {
             }
         });
         
-        // Create summary (first 300 characters)
-        const summary = content.substring(0, 300) + (content.length > 300 ? '...' : '');
+        // Create a better summary by extracting key sentences
+        const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        const keySentences = sentences.slice(0, 2); // Take first 2 sentences
+        const summary = keySentences.join('. ') + (keySentences.length > 0 ? '.' : '') + (content.length > 200 ? '...' : '');
         
         return {
             title,
@@ -169,15 +171,33 @@ async function scrapeWebsite(url: string): Promise<ScrapedData | null> {
 
 // Function to extract relevant information based on query
 function extractRelevantInfo(content: string, query: string): string {
-    const queryWords = query.toLowerCase().split(' ');
-    const sentences = content.split(/[.!?]+/);
+    const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
     
-    // Score sentences based on query word matches
+    // Score sentences based on query word matches and context
     const scoredSentences = sentences.map(sentence => {
         const lowerSentence = sentence.toLowerCase();
-        const score = queryWords.reduce((acc, word) => {
-            return acc + (lowerSentence.includes(word) ? 1 : 0);
-        }, 0);
+        let score = 0;
+        
+        // Basic word matching
+        queryWords.forEach(word => {
+            if (lowerSentence.includes(word)) {
+                score += 1;
+            }
+        });
+        
+        // Boost score for sentences that start with important words
+        const importantStarters = ['the', 'this', 'it', 'he', 'she', 'they', 'we', 'you'];
+        const firstWord = sentence.trim().split(' ')[0]?.toLowerCase();
+        if (importantStarters.includes(firstWord)) {
+            score += 0.5;
+        }
+        
+        // Boost score for longer, more informative sentences
+        if (sentence.length > 100) {
+            score += 0.3;
+        }
+        
         return { sentence: sentence.trim(), score };
     });
     
@@ -185,7 +205,7 @@ function extractRelevantInfo(content: string, query: string): string {
     const relevantSentences = scoredSentences
         .filter(item => item.score > 0)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 5)
+        .slice(0, 6)
         .map(item => item.sentence);
     
     return relevantSentences.join('. ') + '.';
@@ -196,21 +216,64 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         return `I couldn't find specific information about "${query}". Please try rephrasing your question or providing specific URLs to scrape.`;
     }
     
-    // Combine relevant information from all sources
+    // Create a comprehensive answer with better structure
+    let answer = `# ${query}\n\n`;
+    
+    // Add introduction
+    answer += `Based on information gathered from ${scrapedData.length} reliable source${scrapedData.length > 1 ? 's' : ''}, here's what I found:\n\n`;
+    
+    // Combine and organize information by topic
     const combinedInfo = scrapedData
         .map(source => source.content)
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim();
     
-    // Create a comprehensive answer
-    let answer = `Based on information from ${scrapedData.length} source${scrapedData.length > 1 ? 's' : ''}:\n\n`;
-    
-    // Extract key information
+    // Extract key information and organize it
     const sentences = combinedInfo.split(/[.!?]+/).filter(s => s.trim().length > 20);
-    const relevantSentences = sentences.slice(0, 8); // Take first 8 relevant sentences
     
-    answer += relevantSentences.join('. ') + '.';
+    // Group sentences by topic/keywords
+    const topicGroups: { [key: string]: string[] } = {};
+    const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
+    
+    sentences.forEach(sentence => {
+        const lowerSentence = sentence.toLowerCase();
+        let bestTopic = 'general';
+        let maxScore = 0;
+        
+        // Find the most relevant topic for this sentence
+        queryWords.forEach(word => {
+            if (lowerSentence.includes(word)) {
+                const score = (lowerSentence.match(new RegExp(word, 'g')) || []).length;
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestTopic = word;
+                }
+            }
+        });
+        
+        if (!topicGroups[bestTopic]) {
+            topicGroups[bestTopic] = [];
+        }
+        topicGroups[bestTopic].push(sentence.trim());
+    });
+    
+    // Create organized sections
+    Object.entries(topicGroups).forEach(([topic, sentences]) => {
+        if (sentences.length > 0) {
+            const sectionTitle = topic === 'general' ? 'Key Information' : `About ${topic.charAt(0).toUpperCase() + topic.slice(1)}`;
+            answer += `## ${sectionTitle}\n\n`;
+            
+            // Take top 3-4 sentences for each topic
+            const topSentences = sentences.slice(0, 4);
+            answer += topSentences.join('. ') + '.\n\n';
+        }
+    });
+    
+    // Add summary section
+    answer += `## Summary\n\n`;
+    const summarySentences = sentences.slice(0, 3);
+    answer += summarySentences.join('. ') + '.\n\n';
     
     return answer;
 }
@@ -418,13 +481,28 @@ export async function chatAction(input: {
                 websitesToScrape = searchResults.map(result => result.url).filter(url => url);
             }
             
-            // Add some default reliable sources
-            const defaultSources = [
-                'https://en.wikipedia.org/wiki/' + encodeURIComponent(query),
-                'https://www.britannica.com/search?query=' + encodeURIComponent(query)
-            ];
+            // Add some default reliable sources based on query type
+            const defaultSources = [];
             
-            websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 5);
+            // Add Wikipedia for general topics
+            defaultSources.push('https://en.wikipedia.org/wiki/' + encodeURIComponent(query));
+            
+            // Add Britannica for educational content
+            defaultSources.push('https://www.britannica.com/search?query=' + encodeURIComponent(query));
+            
+            // Add specific sources based on query keywords
+            const lowerQuery = query.toLowerCase();
+            if (lowerQuery.includes('science') || lowerQuery.includes('physics') || lowerQuery.includes('chemistry')) {
+                defaultSources.push('https://www.scientificamerican.com/search/?q=' + encodeURIComponent(query));
+            }
+            if (lowerQuery.includes('history') || lowerQuery.includes('war') || lowerQuery.includes('ancient')) {
+                defaultSources.push('https://www.history.com/search?q=' + encodeURIComponent(query));
+            }
+            if (lowerQuery.includes('technology') || lowerQuery.includes('computer') || lowerQuery.includes('ai')) {
+                defaultSources.push('https://www.techcrunch.com/search/' + encodeURIComponent(query));
+            }
+            
+            websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 6);
             
             // Scrape all websites
             const scrapedData: ScrapedData[] = [];
@@ -450,12 +528,14 @@ export async function chatAction(input: {
             // Generate a comprehensive answer
             const answer = generateAnswer(scrapedData, query);
             
-            // Format the response with sources
-            const sourcesText = scrapedData.map((source, index) => 
-                `${index + 1}. **${source.title}** (${new URL(source.url).hostname})\n   ${source.summary}`
-            ).join('\n\n');
+            // Format the response with better source organization
+            const sourcesText = scrapedData.map((source, index) => {
+                const hostname = new URL(source.url).hostname;
+                const domain = hostname.replace('www.', '');
+                return `### ${index + 1}. ${source.title}\n- **Source:** ${domain}\n- **URL:** [${source.url}](${source.url})\n- **Summary:** ${source.summary}`;
+            }).join('\n\n');
 
-            const formattedResponse = `${answer}\n\n---\n\n**Sources:**\n${sourcesText}`;
+            const formattedResponse = `${answer}\n\n---\n\n## 📚 Sources Used\n\n${sourcesText}\n\n---\n\n💡 **Tip:** Click on the source links to read the full articles for more detailed information.`;
             
             return { data: { response: formattedResponse } };
         } catch (error: any) {
