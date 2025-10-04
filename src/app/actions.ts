@@ -216,66 +216,147 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         return `I couldn't find specific information about "${query}". Please try rephrasing your question or providing specific URLs to scrape.`;
     }
     
-    // Create a comprehensive answer in pure text format
-    let answer = `${query.toUpperCase()}\n\n`;
-    
-    // Add introduction
-    answer += `Based on information gathered from ${scrapedData.length} reliable source${scrapedData.length > 1 ? 's' : ''}, here's what I found:\n\n`;
-    
-    // Combine and organize information by topic
+    // Combine and clean information from all sources
     const combinedInfo = scrapedData
         .map(source => source.content)
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim();
     
-    // Extract key information and organize it
-    const sentences = combinedInfo.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    // Extract clean sentences (remove HTML/CSS noise)
+    const sentences = combinedInfo
+        .split(/[.!?]+/)
+        .filter(s => s.trim().length > 20)
+        .map(s => s.trim())
+        .filter(s => !s.includes('css') && !s.includes('stylesheet') && !s.includes('html'));
     
-    // Group sentences by topic/keywords
-    const topicGroups: { [key: string]: string[] } = {};
-    const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
+    // Create category-based organization
+    const categories = categorizeContent(sentences, query);
+    
+    // Generate TL;DR summary
+    const tldr = generateTLDR(categories, query);
+    
+    // Build the organized answer
+    let answer = `${query.toUpperCase()} – Multiple Meanings\n\n`;
+    answer += `👉 ${tldr}\n\n`;
+    
+    // Add categorized sections
+    Object.entries(categories).forEach(([category, facts]) => {
+        if (facts.length > 0) {
+            const emoji = getCategoryEmoji(category);
+            answer += `${emoji} ${category}:\n`;
+            facts.forEach(fact => {
+                answer += `${fact}\n`;
+            });
+            answer += '\n';
+        }
+    });
+    
+    return answer;
+}
+
+function categorizeContent(sentences: string[], query: string): { [key: string]: string[] } {
+    const categories: { [key: string]: string[] } = {};
+    const queryLower = query.toLowerCase();
+    
+    // Define category keywords
+    const categoryKeywords = {
+        'Biology': ['species', 'genus', 'family', 'animal', 'snake', 'reptile', 'wildlife', 'habitat', 'evolution'],
+        'Computing': ['programming', 'language', 'software', 'computer', 'code', 'algorithm', 'development', 'coding'],
+        'Mythology': ['myth', 'legend', 'greek', 'roman', 'ancient', 'god', 'goddess', 'serpent', 'dragon'],
+        'People': ['person', 'individual', 'human', 'born', 'died', 'lived', 'philosopher', 'artist', 'scientist'],
+        'Technology': ['technology', 'tech', 'innovation', 'device', 'system', 'digital', 'electronic'],
+        'History': ['historical', 'history', 'war', 'battle', 'ancient', 'medieval', 'century', 'era'],
+        'Culture': ['culture', 'cultural', 'art', 'music', 'film', 'entertainment', 'comedy', 'group'],
+        'Science': ['science', 'scientific', 'research', 'study', 'experiment', 'theory', 'discovery'],
+        'Geography': ['country', 'city', 'location', 'place', 'region', 'continent', 'nation'],
+        'Other Uses': ['other', 'also', 'additionally', 'furthermore', 'moreover', 'besides']
+    };
     
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase();
-        let bestTopic = 'general';
+        let bestCategory = 'Other Uses';
         let maxScore = 0;
         
-        // Find the most relevant topic for this sentence
-        queryWords.forEach(word => {
-            if (lowerSentence.includes(word)) {
-                const score = (lowerSentence.match(new RegExp(word, 'g')) || []).length;
-                if (score > maxScore) {
-                    maxScore = score;
-                    bestTopic = word;
+        // Find the best category for this sentence
+        Object.entries(categoryKeywords).forEach(([category, keywords]) => {
+            let score = 0;
+            keywords.forEach(keyword => {
+                if (lowerSentence.includes(keyword)) {
+                    score += 1;
                 }
+            });
+            if (score > maxScore) {
+                maxScore = score;
+                bestCategory = category;
             }
         });
         
-        if (!topicGroups[bestTopic]) {
-            topicGroups[bestTopic] = [];
+        // Special handling for query-specific categories
+        if (queryLower.includes('python')) {
+            if (lowerSentence.includes('snake') || lowerSentence.includes('reptile')) {
+                bestCategory = 'Biology';
+            } else if (lowerSentence.includes('programming') || lowerSentence.includes('code')) {
+                bestCategory = 'Computing';
+            } else if (lowerSentence.includes('myth') || lowerSentence.includes('apollo')) {
+                bestCategory = 'Mythology';
+            }
         }
-        topicGroups[bestTopic].push(sentence.trim());
+        
+        if (!categories[bestCategory]) {
+            categories[bestCategory] = [];
+        }
+        
+        // Clean and add the fact
+        const cleanFact = cleanSentence(sentence);
+        if (cleanFact && !categories[bestCategory].includes(cleanFact)) {
+            categories[bestCategory].push(cleanFact);
+        }
     });
     
-    // Create organized sections in pure text
-    Object.entries(topicGroups).forEach(([topic, sentences]) => {
-        if (sentences.length > 0) {
-            const sectionTitle = topic === 'general' ? 'KEY INFORMATION' : `${topic.toUpperCase()}`;
-            answer += `${sectionTitle}:\n`;
-            
-            // Take top 3-4 sentences for each topic
-            const topSentences = sentences.slice(0, 4);
-            answer += topSentences.join('. ') + '.\n\n';
-        }
+    // Limit facts per category
+    Object.keys(categories).forEach(category => {
+        categories[category] = categories[category].slice(0, 4);
     });
     
-    // Add summary section
-    answer += `SUMMARY:\n`;
-    const summarySentences = sentences.slice(0, 3);
-    answer += summarySentences.join('. ') + '.\n\n';
+    return categories;
+}
+
+function cleanSentence(sentence: string): string {
+    return sentence
+        .replace(/[^\w\s.,:;!?-]/g, '') // Remove special characters except basic punctuation
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+}
+
+function generateTLDR(categories: { [key: string]: string[] }, query: string): string {
+    const categoryNames = Object.keys(categories).filter(cat => categories[cat].length > 0);
     
-    return answer;
+    if (categoryNames.length === 1) {
+        return `"${query}" primarily refers to ${categoryNames[0].toLowerCase()}.`;
+    } else if (categoryNames.length === 2) {
+        return `"${query}" can mean ${categoryNames[0].toLowerCase()} or ${categoryNames[1].toLowerCase()}.`;
+    } else {
+        const lastCategory = categoryNames.pop();
+        const otherCategories = categoryNames.join(', ').toLowerCase();
+        return `"${query}" has several meanings across ${otherCategories}, and ${lastCategory?.toLowerCase()}.`;
+    }
+}
+
+function getCategoryEmoji(category: string): string {
+    const emojis: { [key: string]: string } = {
+        'Biology': '🐍',
+        'Computing': '💻',
+        'Mythology': '🏛️',
+        'People': '👤',
+        'Technology': '🔧',
+        'History': '📜',
+        'Culture': '🎭',
+        'Science': '🔬',
+        'Geography': '🌍',
+        'Other Uses': '🎢'
+    };
+    return emojis[category] || '📋';
 }
 
 export async function generateFlashcardsAction(input: GenerateFlashcardsSambaInput): Promise<ActionResult<GenerateFlashcardsSambaOutput>> {
@@ -528,14 +609,14 @@ export async function chatAction(input: {
             // Generate a comprehensive answer
             const answer = generateAnswer(scrapedData, query);
             
-            // Format the response with better source organization in pure text
+            // Format the response with clean source organization
             const sourcesText = scrapedData.map((source, index) => {
                 const hostname = new URL(source.url).hostname;
                 const domain = hostname.replace('www.', '');
-                return `${index + 1}. ${source.title}\n   Source: ${domain}\n   URL: ${source.url}\n   Summary: ${source.summary}`;
-            }).join('\n\n');
+                return `${domain} – ${source.title}`;
+            }).join('\n');
 
-            const formattedResponse = `${answer}SOURCES USED:\n\n${sourcesText}\n\nTip: Visit the source URLs to read the full articles for more detailed information.`;
+            const formattedResponse = `${answer}📚 Sources\n\n${sourcesText}`;
             
             return { data: { response: formattedResponse } };
         } catch (error: any) {
