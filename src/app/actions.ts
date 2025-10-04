@@ -23,6 +23,8 @@ import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flo
 import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
@@ -31,6 +33,187 @@ export type ActionResult<T> = {
     data?: T;
     error?: string;
 };
+
+interface ScrapedData {
+    title: string;
+    content: string;
+    url: string;
+    summary: string;
+    images?: string[];
+}
+
+interface SearchResult {
+    title: string;
+    url: string;
+    snippet: string;
+}
+
+// Function to search for relevant websites using DuckDuckGo
+async function searchWebsites(query: string): Promise<SearchResult[]> {
+    try {
+        const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+        const response = await axios.get(searchUrl);
+        
+        const results: SearchResult[] = [];
+        
+        // Add instant answer if available
+        if (response.data.AbstractText) {
+            results.push({
+                title: response.data.Heading || query,
+                url: response.data.AbstractURL || '',
+                snippet: response.data.AbstractText
+            });
+        }
+        
+        // Add related topics
+        if (response.data.RelatedTopics) {
+            response.data.RelatedTopics.slice(0, 5).forEach((topic: any) => {
+                if (topic.Text && topic.FirstURL) {
+                    results.push({
+                        title: topic.Text.split(' - ')[0],
+                        url: topic.FirstURL,
+                        snippet: topic.Text
+                    });
+                }
+            });
+        }
+        
+        return results;
+    } catch (error) {
+        console.error('Search error:', error);
+        return [];
+    }
+}
+
+// Function to scrape content from a URL
+async function scrapeWebsite(url: string): Promise<ScrapedData | null> {
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            timeout: 10000
+        });
+
+        const $ = cheerio.load(response.data);
+        
+        // Remove script and style elements
+        $('script, style, nav, header, footer, aside').remove();
+        
+        // Extract title
+        const title = $('title').text().trim() || 
+                      $('h1').first().text().trim() || 
+                      'Untitled';
+        
+        // Extract main content
+        let content = '';
+        
+        // Try to find main content area
+        const mainSelectors = [
+            'main',
+            'article',
+            '.content',
+            '.main-content',
+            '.post-content',
+            '.entry-content',
+            '#content',
+            '.container',
+            'body'
+        ];
+        
+        for (const selector of mainSelectors) {
+            const element = $(selector);
+            if (element.length && element.text().trim().length > 100) {
+                content = element.text().trim();
+                break;
+            }
+        }
+        
+        // If no main content found, get all text
+        if (!content) {
+            content = $('body').text().trim();
+        }
+        
+        // Clean up content
+        content = content
+            .replace(/\s+/g, ' ')
+            .replace(/\n\s*\n/g, '\n')
+            .trim();
+        
+        // Extract images
+        const images: string[] = [];
+        $('img').each((_, img) => {
+            const src = $(img).attr('src');
+            if (src && !src.startsWith('data:')) {
+                const fullUrl = src.startsWith('http') ? src : new URL(src, url).href;
+                images.push(fullUrl);
+            }
+        });
+        
+        // Create summary (first 300 characters)
+        const summary = content.substring(0, 300) + (content.length > 300 ? '...' : '');
+        
+        return {
+            title,
+            content,
+            url,
+            summary,
+            images: images.slice(0, 5) // Limit to 5 images
+        };
+        
+    } catch (error) {
+        console.error(`Error scraping ${url}:`, error);
+        return null;
+    }
+}
+
+// Function to extract relevant information based on query
+function extractRelevantInfo(content: string, query: string): string {
+    const queryWords = query.toLowerCase().split(' ');
+    const sentences = content.split(/[.!?]+/);
+    
+    // Score sentences based on query word matches
+    const scoredSentences = sentences.map(sentence => {
+        const lowerSentence = sentence.toLowerCase();
+        const score = queryWords.reduce((acc, word) => {
+            return acc + (lowerSentence.includes(word) ? 1 : 0);
+        }, 0);
+        return { sentence: sentence.trim(), score };
+    });
+    
+    // Sort by score and take top sentences
+    const relevantSentences = scoredSentences
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(item => item.sentence);
+    
+    return relevantSentences.join('. ') + '.';
+}
+
+function generateAnswer(scrapedData: ScrapedData[], query: string): string {
+    if (scrapedData.length === 0) {
+        return `I couldn't find specific information about "${query}". Please try rephrasing your question or providing specific URLs to scrape.`;
+    }
+    
+    // Combine relevant information from all sources
+    const combinedInfo = scrapedData
+        .map(source => source.content)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    
+    // Create a comprehensive answer
+    let answer = `Based on information from ${scrapedData.length} source${scrapedData.length > 1 ? 's' : ''}:\n\n`;
+    
+    // Extract key information
+    const sentences = combinedInfo.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    const relevantSentences = sentences.slice(0, 8); // Take first 8 relevant sentences
+    
+    answer += relevantSentences.join('. ') + '.';
+    
+    return answer;
+}
 
 export async function generateFlashcardsAction(input: GenerateFlashcardsSambaInput): Promise<ActionResult<GenerateFlashcardsSambaOutput>> {
     try {
@@ -227,27 +410,52 @@ export async function chatAction(input: {
     if (isWebScraping) {
         const query = input.history[input.history.length - 1].content.toString();
         try {
-            // Call our web scraping API
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/scrape`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query }),
-            });
-
-            const data = await response.json();
+            // Search for relevant websites
+            const searchResults = await searchWebsites(query);
+            let websitesToScrape: string[] = [];
             
-            if (data.error) {
-                return { error: data.error };
+            if (searchResults.length > 0) {
+                websitesToScrape = searchResults.map(result => result.url).filter(url => url);
             }
-
+            
+            // Add some default reliable sources
+            const defaultSources = [
+                'https://en.wikipedia.org/wiki/' + encodeURIComponent(query),
+                'https://www.britannica.com/search?query=' + encodeURIComponent(query)
+            ];
+            
+            websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 5);
+            
+            // Scrape all websites
+            const scrapedData: ScrapedData[] = [];
+            
+            for (const url of websitesToScrape) {
+                try {
+                    const data = await scrapeWebsite(url);
+                    if (data && data.content.length > 100) {
+                        // Extract relevant information based on query
+                        const relevantInfo = extractRelevantInfo(data.content, query);
+                        if (relevantInfo.length > 50) {
+                            scrapedData.push({
+                                ...data,
+                                content: relevantInfo
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Failed to scrape ${url}:`, error);
+                }
+            }
+            
+            // Generate a comprehensive answer
+            const answer = generateAnswer(scrapedData, query);
+            
             // Format the response with sources
-            const sourcesText = data.sources.map((source: any, index: number) => 
+            const sourcesText = scrapedData.map((source, index) => 
                 `${index + 1}. **${source.title}** (${new URL(source.url).hostname})\n   ${source.summary}`
             ).join('\n\n');
 
-            const formattedResponse = `${data.answer}\n\n---\n\n**Sources:**\n${sourcesText}`;
+            const formattedResponse = `${answer}\n\n---\n\n**Sources:**\n${sourcesText}`;
             
             return { data: { response: formattedResponse } };
         } catch (error: any) {
