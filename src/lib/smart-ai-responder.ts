@@ -22,13 +22,20 @@ interface SmartResponse {
 
 export class SmartAIResponder {
   private categoryRules: { [key: string]: string[] } = {
+    // PM/India specific
     politics: ["prime minister", "pm", "head of government", "lok sabha", "cabinet", "ministry", "government", "parliament"],
     people: ["narendra", "modi", "narendra modi", "jawaharlal", "nehru", "indira", "gandhi", "current", "serving"],
     history: ["1947", "independence", "1971", "indira", "shastri", "nehru", "former", "previous", "historical"],
     computing: ["website", "pmindia", "multilingual", "digital", "online", "portal"],
     science: ["isro", "atomic", "pokhran", "nuclear", "space", "research", "technology"],
     culture: ["icon", "symbol", "leadership", "public", "identity", "cultural"],
-    geography: ["india", "delhi", "new delhi", "location", "country", "nation"]
+    geography: ["india", "delhi", "new delhi", "location", "country", "nation"],
+    
+    // General terms
+    information: ["detail", "details", "information", "info", "explain", "tell me about", "what is", "how", "why"],
+    technology: ["python", "programming", "code", "software", "computer", "ai", "artificial intelligence", "machine learning"],
+    science: ["physics", "chemistry", "biology", "newton", "laws", "motion", "force", "energy", "matter"],
+    general: ["help", "assist", "support", "guide", "tutorial", "learn", "study"]
   };
 
   private cardTemplates: { [key: string]: any } = {
@@ -80,6 +87,34 @@ export class SmartAIResponder {
       short: "Location and national context",
       long: "India is the world's largest democracy, with the PM leading from New Delhi, the capital city.",
       context: "Why it matters: India's size and diversity make the PM's role uniquely challenging and influential."
+    },
+    information: {
+      emoji: "📋",
+      title: "Information",
+      short: "You're asking for more details or information",
+      long: "I can provide detailed information on various topics. Please specify what you'd like to know more about - politics, science, technology, history, or any other subject.",
+      context: "Why it matters: Detailed information helps you understand complex topics better and make informed decisions."
+    },
+    technology: {
+      emoji: "💻",
+      title: "Technology",
+      short: "Programming, software, and digital technology",
+      long: "Technology encompasses programming languages, software development, artificial intelligence, and digital innovations that shape our modern world.",
+      context: "Why it matters: Technology drives innovation and solves real-world problems across industries."
+    },
+    science: {
+      emoji: "🔬",
+      title: "Science",
+      short: "Scientific principles, laws, and discoveries",
+      long: "Science covers physics, chemistry, biology, and other fields that explain how the natural world works through observation, experimentation, and theory.",
+      context: "Why it matters: Scientific understanding helps us solve problems and advance human knowledge."
+    },
+    general: {
+      emoji: "🤝",
+      title: "General Help",
+      short: "General assistance and support",
+      long: "I'm here to help with various topics including education, problem-solving, and providing information on a wide range of subjects.",
+      context: "Why it matters: Having a helpful assistant makes learning and problem-solving more efficient."
     }
   };
 
@@ -103,22 +138,42 @@ export class SmartAIResponder {
   }
 
   private detectCategories(query: string): string[] {
-    const q = query.toLowerCase();
+    const q = query.toLowerCase().trim();
     const found = new Set<string>();
 
-    // Check each category
+    // Special handling for very short queries
+    if (q.length <= 3) {
+      if (q === "pm" || q === "ai" || q === "it") {
+        return ["information"];
+      }
+    }
+
+    // Check each category with improved matching
     for (const [category, keywords] of Object.entries(this.categoryRules)) {
       for (const keyword of keywords) {
-        if (q.includes(keyword)) {
+        // Exact word match for better accuracy
+        const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+        if (regex.test(q)) {
           found.add(category);
           break;
         }
       }
     }
 
-    // If no categories matched, default to most likely
+    // If no categories matched, try to infer from context
     if (found.size === 0) {
-      found.add("politics");
+      // Check for question words
+      if (q.includes('what') || q.includes('how') || q.includes('why') || q.includes('when') || q.includes('where')) {
+        found.add("information");
+      }
+      // Check for help requests
+      else if (q.includes('help') || q.includes('assist') || q.includes('support')) {
+        found.add("general");
+      }
+      // Default fallback
+      else {
+        found.add("information");
+      }
     }
 
     return Array.from(found);
@@ -165,7 +220,8 @@ export class SmartAIResponder {
   }
 
   private formatSmartResponse(tldr: string, cards: SmartCard[]): string {
-    let response = `# ${cards[0]?.category.toUpperCase() || "QUERY"} – Multiple Meanings\n\n`;
+    const primaryCategory = cards[0]?.category || "query";
+    let response = `# ${primaryCategory.toUpperCase()} – Multiple Meanings\n\n`;
     response += `${tldr}\n\n`;
 
     // Add each category as a clean section
@@ -175,13 +231,47 @@ export class SmartAIResponder {
       response += `${card.long}\n\n`;
     });
 
-    // Add sources section
+    // Add dynamic sources based on category
     response += `## 📚 Sources\n\n`;
-    response += `👉 [Wikipedia – Prime Minister of India](https://en.wikipedia.org/wiki/Prime_Minister_of_India)\n`;
-    response += `👉 [Official PM India Website](https://pmindia.gov.in)\n`;
-    response += `👉 [Parliament of India](https://parliamentofindia.nic.in)\n\n`;
+    const sources = this.generateDynamicSources(primaryCategory);
+    sources.forEach(source => {
+      response += `👉 ${source}\n`;
+    });
+    response += `\n`;
 
     return response;
+  }
+
+  private generateDynamicSources(category: string): string[] {
+    const sourceMap: { [key: string]: string[] } = {
+      politics: [
+        "[Wikipedia – Prime Minister of India](https://en.wikipedia.org/wiki/Prime_Minister_of_India)",
+        "[Official PM India Website](https://pmindia.gov.in)",
+        "[Parliament of India](https://parliamentofindia.nic.in)"
+      ],
+      information: [
+        "[Wikipedia](https://wikipedia.org)",
+        "[Britannica](https://britannica.com)",
+        "[Educational Resources](https://khanacademy.org)"
+      ],
+      technology: [
+        "[Wikipedia – Computer Science](https://en.wikipedia.org/wiki/Computer_science)",
+        "[Stack Overflow](https://stackoverflow.com)",
+        "[GitHub](https://github.com)"
+      ],
+      science: [
+        "[Wikipedia – Science](https://en.wikipedia.org/wiki/Science)",
+        "[Scientific American](https://scientificamerican.com)",
+        "[Nature](https://nature.com)"
+      ],
+      general: [
+        "[Wikipedia](https://wikipedia.org)",
+        "[Help Resources](https://help.com)",
+        "[Educational Platforms](https://coursera.org)"
+      ]
+    };
+
+    return sourceMap[category] || sourceMap["information"];
   }
 
   private generateSmartSources(): string[] {
