@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Globe } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
-import Link from "next/link";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -134,15 +133,6 @@ export function MainDashboard() {
                     <MessageSquare className="h-4 w-4" />
                     Searn AI
                 </Button>
-                <Link href="/web-scraper" className="flex-1">
-                    <Button 
-                        variant="ghost" 
-                        className="gap-2 w-full"
-                    >
-                        <Globe className="h-4 w-4" />
-                        Web Scraper
-                    </Button>
-                </Link>
             </div>
         </div>
       <main className="flex-1 overflow-hidden relative">

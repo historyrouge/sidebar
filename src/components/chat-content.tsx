@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -175,7 +175,7 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | 'webscrape' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -184,7 +184,7 @@ export function ChatContent() {
   }
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image' | 'webscrape') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -195,6 +195,8 @@ export function ChatContent() {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
+      } else if (newActiveButton === 'webscrape') {
+        toast({ title: 'Web Scraping Mode Activated', description: 'I\'ll search multiple websites and provide comprehensive answers with sources.' });
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
@@ -270,6 +272,7 @@ export function ChatContent() {
           imageDataUri: currentImageDataUri,
           model: currentModel,
           isMusicMode: activeButton === 'music',
+          isWebScrapingMode: activeButton === 'webscrape',
       });
 
       setIsTyping(false);
@@ -539,6 +542,14 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                        setActiveButton('webscrape');
+                        handleSendMessage('Who is the PM of India?');
+                    }}>Who is the PM of India?</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                        setActiveButton('webscrape');
+                        handleSendMessage('Tell me about Newton\'s laws of motion');
+                    }}>Newton\'s Laws</Button>
                 </div>
                  <div className="w-full max-w-3xl">
                      <div className="flex justify-start mb-2 items-center gap-2">
@@ -557,6 +568,9 @@ export function ChatContent() {
                             </Button>
                              <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
+                            </Button>
+                            <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
+                                <Globe className="h-5 w-5" />
                             </Button>
                         </div>
                     </div>
@@ -718,6 +732,9 @@ export function ChatContent() {
                 </Button>
                  <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                     <ImageIcon className="h-5 w-5" />
+                </Button>
+                <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
+                    <Globe className="h-5 w-5" />
                 </Button>
             </div>
           </div>

@@ -192,9 +192,11 @@ export async function chatAction(input: {
     imageDataUri?: string | null,
     model?: string,
     isMusicMode?: boolean,
+    isWebScrapingMode?: boolean,
 }): Promise<ActionResult<{ response: string }>> {
     const isSearch = input.history[input.history.length - 1]?.content.toString().startsWith("Search:");
     const isMusic = input.isMusicMode;
+    const isWebScraping = input.isWebScrapingMode;
 
     if (isSearch) {
         const query = input.history[input.history.length - 1].content.toString().replace(/^Search:\s*/i, '');
@@ -219,6 +221,37 @@ export async function chatAction(input: {
             }
         } catch (error: any) {
             return { error: `Sorry, an error occurred during the search: ${'error.message'}` };
+        }
+    }
+
+    if (isWebScraping) {
+        const query = input.history[input.history.length - 1].content.toString();
+        try {
+            // Call our web scraping API
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/scrape`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query }),
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                return { error: data.error };
+            }
+
+            // Format the response with sources
+            const sourcesText = data.sources.map((source: any, index: number) => 
+                `${index + 1}. **${source.title}** (${new URL(source.url).hostname})\n   ${source.summary}`
+            ).join('\n\n');
+
+            const formattedResponse = `${data.answer}\n\n---\n\n**Sources:**\n${sourcesText}`;
+            
+            return { data: { response: formattedResponse } };
+        } catch (error: any) {
+            return { error: `Sorry, an error occurred while scraping websites: ${error.message}` };
         }
     }
 
