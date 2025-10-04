@@ -1,9 +1,8 @@
 
 "use client";
 
-import { Bot, ChevronDown, Loader2 } from "lucide-react";
+import { Bot, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { TypewriterText } from "./typewriter-text";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Button } from "./ui/button";
@@ -38,5 +37,5 @@ export function ThinkingIndicator({ text }: { text: string }) {
                 </Collapsible>
             )}
         </div>
-    )
+    );
 }
