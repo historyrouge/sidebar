@@ -14,26 +14,28 @@ type Article = {
 };
 
 
-const parser = new RssParser({
-    customFields: {
-        item: [['media:content', 'mediaContent']],
-    }
-});
+const parser = new RssParser();
 
-const fallbackRssFeed = "http://rss.cnn.com/rss/cnn_topstories.rss";
+const fallbackRssFeed = "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms";
 
 async function fetchFromRss(feedUrl: string): Promise<Article[]> {
     const feed = await parser.parseURL(feedUrl);
-    return feed.items.map((item: any) => ({
-        title: item.title || "No title",
-        description: item.contentSnippet || item.content || "No description",
-        url: item.link || "",
-        urlToImage: item.mediaContent?.$?.url || item.enclosure?.url || "",
-        source: {
-            name: feed.title || "RSS Feed"
-        },
-        publishedAt: item.isoDate || new Date().toISOString(),
-    })).slice(0, 40); // Limit to 40 articles
+    return feed.items.map((item: any) => {
+        // Clean up description by removing the img tag
+        const description = item.contentSnippet || item.content || "No description";
+        const cleanedDescription = description.replace(/<img[^>]*>/g, "").trim();
+
+        return {
+            title: item.title || "No title",
+            description: cleanedDescription,
+            url: item.link || "",
+            urlToImage: item.enclosure?.url || "", // Prioritize enclosure for better image quality
+            source: {
+                name: feed.title || "RSS Feed"
+            },
+            publishedAt: item.isoDate || new Date().toISOString(),
+        }
+    }).slice(0, 40); // Limit to 40 articles
 }
 
 
