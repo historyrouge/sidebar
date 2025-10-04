@@ -190,8 +190,8 @@ export function NewsContent() {
         )}
 
         {loading ? (
-             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
+             <div className="grid gap-8 md:grid-cols-3">
+                {Array.from({ length: 9 }).map((_, i) => (
                      <Card key={i}>
                         <CardHeader className="p-0">
                             <Skeleton className="h-48 w-full" />
@@ -210,7 +210,7 @@ export function NewsContent() {
             </div>
         ) : (
             <>
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-8 md:grid-cols-3">
                     {articles.map((article, i) => (
                          <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
@@ -256,5 +256,3 @@ export function NewsContent() {
     </>
   );
 }
-
-    
