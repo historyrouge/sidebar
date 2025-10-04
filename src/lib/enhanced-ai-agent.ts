@@ -1,9 +1,16 @@
 /**
  * Enhanced AI Agent - 1-Hour Sprint Implementation
  * Multi-format answer generation with confidence scoring and cross-source verification
+ * Now with comprehensive training data, advanced NLP, knowledge graphs, and real-time verification
  */
 
 import fetch from 'node-fetch';
+import TrainingDataManager from './training-data';
+import AdvancedNLPProcessor from './advanced-nlp';
+import KnowledgeGraphManager from './knowledge-graph';
+import MultiSourceAPIManager from './multi-source-apis';
+import ConfidenceScoringEngine from './confidence-scoring';
+import RealTimeVerificationEngine from './real-time-verification';
 
 interface Source {
   url: string;
@@ -64,92 +71,369 @@ export class EnhancedAIAgent {
   private readonly BRITANNICA_API = 'https://www.britannica.com/api/search';
   
   /**
-   * Main sprint method - runs the full 1-hour enhancement pipeline
+   * Main sprint method - runs the full 1-hour enhancement pipeline with advanced components
    */
   async runSprint(query: string): Promise<EnhancedResponse> {
-    console.log(`🚀 Starting 1-hour sprint for: "${query}"`);
+    console.log(`🚀 Starting enhanced 1-hour sprint for: "${query}"`);
     
-    // 0-10 minutes: Source consolidation
-    const sources = await this.fetchAndConsolidateSources(query);
+    // 0-5 minutes: Query Analysis & Disambiguation
+    const domain = await this.analyzeQueryAndDisambiguate(query);
+    console.log(`📊 Detected domain: ${domain}`);
     
-    // 10-20 minutes: Generate TL;DR + 3-card variants
-    const variants = await this.generateAnswerVariants(sources);
+    // 5-10 minutes: Retrieve Relevant Sources (Enhanced)
+    const sources = await this.fetchAndConsolidateSources(query, domain);
+    console.log(`📚 Retrieved ${sources.length} sources`);
     
-    // 20-30 minutes: Entity & fact extraction
-    const facts = await this.extractStructuredFacts(sources);
+    // 10-20 minutes: Advanced NLP Processing
+    const nlpAnalysis = await this.performAdvancedNLPAnalysis(sources, query);
+    console.log(`🧠 NLP Analysis: ${nlpAnalysis.entities.length} entities, ${nlpAnalysis.relationships.length} relationships`);
     
-    // 30-40 minutes: Cross-source verification & confidence scoring
-    const verifiedFacts = await this.crossVerifyFacts(facts, sources);
+    // 20-30 minutes: Knowledge Graph Construction
+    const knowledgeGraph = await this.buildKnowledgeGraph(sources, domain, nlpAnalysis);
+    console.log(`🕸️ Knowledge Graph: ${knowledgeGraph.nodes.length} nodes, ${knowledgeGraph.edges.length} edges`);
     
-    // 40-48 minutes: Disambiguation & intent detection
-    const disambiguation = await this.detectDisambiguation(query, sources);
+    // 30-40 minutes: Real-time Fact Verification
+    const verificationResults = await this.performRealTimeVerification(query, domain, nlpAnalysis.facts);
+    console.log(`✅ Verification: ${verificationResults.length} facts verified`);
     
-    // 48-55 minutes: FAQ + micro-translation + source block
-    const faq = await this.generateFAQ(query, sources);
-    const translations = await this.generateTranslations(variants.short);
+    // 40-50 minutes: Advanced Confidence Scoring
+    const confidenceScore = await this.calculateAdvancedConfidenceScore(
+      sources, nlpAnalysis, knowledgeGraph, verificationResults, domain
+    );
+    console.log(`🎯 Confidence Score: ${Math.round(confidenceScore.overall * 100)}%`);
     
-    // 55-60 minutes: QA checks & packaging
-    const finalResponse = await this.packageFinalResponse(
-      query, variants, verifiedFacts, disambiguation, faq, translations, sources
+    // 50-55 minutes: Generate Enhanced Answer Variants
+    const variants = await this.generateEnhancedAnswerVariants(sources, nlpAnalysis, confidenceScore);
+    
+    // 55-60 minutes: Final Assembly & Quality Assurance
+    const finalResponse = await this.assembleFinalResponse(
+      query, domain, variants, nlpAnalysis, knowledgeGraph, verificationResults, confidenceScore, sources
     );
     
-    console.log(`✅ Sprint completed for: "${query}"`);
+    console.log(`✅ Enhanced sprint completed for: "${query}"`);
     return finalResponse;
   }
 
   /**
-   * 0-10 minutes: Source consolidation
+   * 0-5 minutes: Query Analysis & Disambiguation
    */
-  private async fetchAndConsolidateSources(query: string): Promise<Source[]> {
-    console.log('📚 Fetching and consolidating sources...');
+  private async analyzeQueryAndDisambiguate(query: string): Promise<string> {
+    console.log('🔍 Analyzing query and detecting domain...');
     
-    const sources: Source[] = [];
+    const semanticAnalysis = AdvancedNLPProcessor.analyzeSemantics(query);
+    const domains = TrainingDataManager.getAllDomains();
     
-    try {
-      // Fetch Wikipedia summary
-      const wikiData = await this.fetchWikipediaSummary(query);
-      if (wikiData) {
-        sources.push({
-          url: wikiData.content_urls?.desktop?.page || '',
-          label: 'Wikipedia',
-          snippet: wikiData.extract || '',
-          last_updated: wikiData.timestamp || new Date().toISOString(),
-          authority_score: 0.9
-        });
+    // Find best matching domain
+    let bestDomain = 'general';
+    let bestScore = 0;
+    
+    for (const domain of domains) {
+      const domainKnowledge = TrainingDataManager.getDomainKnowledge(domain);
+      if (domainKnowledge) {
+        const domainKeywords = domainKnowledge.keywords;
+        const matches = domainKeywords.filter(keyword => 
+          query.toLowerCase().includes(keyword.toLowerCase())
+        ).length;
+        
+        const score = matches / domainKeywords.length;
+        if (score > bestScore) {
+          bestScore = score;
+          bestDomain = domain;
+        }
       }
-      
-      // Fetch Britannica (simulated - would need actual API)
-      const britannicaData = await this.fetchBritannicaSummary(query);
-      if (britannicaData) {
-        sources.push({
-          url: britannicaData.url || '',
-          label: 'Britannica',
-          snippet: britannicaData.extract || '',
-          last_updated: britannicaData.last_updated || new Date().toISOString(),
-          authority_score: 0.8
-        });
-      }
-      
-      // Add official government source for PM queries
-      if (query.toLowerCase().includes('pm') || query.toLowerCase().includes('prime minister')) {
-        sources.push({
-          url: 'https://pmindia.gov.in',
-          label: 'Official PM India Website',
-          snippet: 'Official website of the Prime Minister of India with latest updates and information.',
-          last_updated: new Date().toISOString(),
-          authority_score: 0.95
-        });
-      }
-      
-    } catch (error) {
-      console.error('Error fetching sources:', error);
     }
     
-    return sources.slice(0, 3); // Top 3 sources
+    return bestDomain;
   }
 
   /**
-   * 10-20 minutes: Generate TL;DR + 3-card variants
+   * 5-10 minutes: Enhanced Source Consolidation
+   */
+  private async fetchAndConsolidateSources(query: string, domain: string): Promise<Source[]> {
+    console.log('📚 Fetching and consolidating sources...');
+    
+    try {
+      // Use MultiSourceAPIManager for enhanced source fetching
+      const sourceResponses = await MultiSourceAPIManager.fetchFromMultipleSources(query, domain, 5);
+      
+      const sources: Source[] = sourceResponses.map(response => ({
+        url: response.metadata.url || '',
+        label: response.source,
+        snippet: response.content,
+        last_updated: response.metadata.last_updated || new Date().toISOString(),
+        authority_score: response.metadata.confidence
+      }));
+      
+      return sources;
+      
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 10-20 minutes: Advanced NLP Processing
+   */
+  private async performAdvancedNLPAnalysis(sources: Source[], query: string): Promise<{
+    entities: any[];
+    relationships: any[];
+    sentiment: any;
+    semantic: any;
+    facts: { [key: string]: string };
+  }> {
+    console.log('🧠 Performing advanced NLP analysis...');
+    
+    const combinedContent = sources.map(s => s.snippet).join(' ');
+    
+    // Extract entities
+    const entities = AdvancedNLPProcessor.extractEntities(combinedContent);
+    
+    // Analyze sentiment
+    const sentiment = AdvancedNLPProcessor.analyzeSentiment(combinedContent);
+    
+    // Perform semantic analysis
+    const semantic = AdvancedNLPProcessor.analyzeSemantics(combinedContent);
+    
+    // Extract relationships
+    const relationships = semantic.relationships;
+    
+    // Extract facts using training data
+    const domain = await this.analyzeQueryAndDisambiguate(query);
+    const facts = TrainingDataManager.extractFacts(combinedContent, domain);
+    
+    return {
+      entities,
+      relationships,
+      sentiment,
+      semantic,
+      facts
+    };
+  }
+
+  /**
+   * 20-30 minutes: Knowledge Graph Construction
+   */
+  private async buildKnowledgeGraph(sources: Source[], domain: string, nlpAnalysis: any): Promise<any> {
+    console.log('🕸️ Building knowledge graph...');
+    
+    const combinedContent = sources.map(s => s.snippet).join(' ');
+    
+    try {
+      const knowledgeGraph = await KnowledgeGraphManager.buildKnowledgeGraph(combinedContent, domain);
+      return knowledgeGraph;
+    } catch (error) {
+      console.error('Error building knowledge graph:', error);
+      return { nodes: [], edges: [], metadata: { total_nodes: 0, total_edges: 0, domains: [domain], last_updated: new Date().toISOString() } };
+    }
+  }
+
+  /**
+   * 30-40 minutes: Real-time Fact Verification
+   */
+  private async performRealTimeVerification(query: string, domain: string, facts: { [key: string]: string }): Promise<any[]> {
+    console.log('✅ Performing real-time fact verification...');
+    
+    try {
+      const verificationSession = await RealTimeVerificationEngine.startVerificationSession(query, domain, facts);
+      return verificationSession.results;
+    } catch (error) {
+      console.error('Error in real-time verification:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 40-50 minutes: Advanced Confidence Scoring
+   */
+  private async calculateAdvancedConfidenceScore(
+    sources: Source[],
+    nlpAnalysis: any,
+    knowledgeGraph: any,
+    verificationResults: any[],
+    domain: string
+  ): Promise<any> {
+    console.log('🎯 Calculating advanced confidence score...');
+    
+    try {
+      const confidenceScore = await ConfidenceScoringEngine.calculateConfidenceScore(
+        sources.map(s => s.snippet).join(' '),
+        sources,
+        domain,
+        nlpAnalysis.entities,
+        nlpAnalysis.relationships
+      );
+      
+      return confidenceScore;
+    } catch (error) {
+      console.error('Error calculating confidence score:', error);
+      return {
+        overall: 0.5,
+        factors: {},
+        explanation: 'Confidence calculation failed',
+        recommendations: ['Manual review required'],
+        risk_level: 'medium'
+      };
+    }
+  }
+
+  /**
+   * 50-55 minutes: Generate Enhanced Answer Variants
+   */
+  private async generateEnhancedAnswerVariants(sources: Source[], nlpAnalysis: any, confidenceScore: any): Promise<AnswerVariants> {
+    console.log('📝 Generating enhanced answer variants...');
+    
+    const combinedText = sources.map(s => s.snippet).join(' ');
+    
+    // Enhanced variants with NLP insights
+    const shortAnswer = this.generateShortAnswer(combinedText);
+    const mediumAnswer = this.generateMediumAnswer(combinedText, nlpAnalysis);
+    const longAnswer = this.generateLongAnswer(combinedText, nlpAnalysis, confidenceScore);
+    
+    return {
+      short: shortAnswer,
+      medium: mediumAnswer,
+      long: longAnswer
+    };
+  }
+
+  /**
+   * 55-60 minutes: Final Assembly & Quality Assurance
+   */
+  private async assembleFinalResponse(
+    query: string,
+    domain: string,
+    variants: AnswerVariants,
+    nlpAnalysis: any,
+    knowledgeGraph: any,
+    verificationResults: any[],
+    confidenceScore: any,
+    sources: Source[]
+  ): Promise<EnhancedResponse> {
+    console.log('📦 Assembling final enhanced response...');
+    
+    // Generate disambiguation
+    const disambiguation = await this.detectDisambiguation(query, sources);
+    
+    // Generate FAQ
+    const faq = await this.generateFAQ(query, sources);
+    
+    // Generate translations
+    const translations = await this.generateTranslations(variants.short);
+    
+    // Create enhanced cards
+    const cards = await this.createEnhancedCards(domain, variants, nlpAnalysis, knowledgeGraph, confidenceScore);
+    
+    // Calculate final metrics
+    const conflictsFound = verificationResults.filter(r => r.conflicts.length > 0).length;
+    const freshnessDays = this.calculateFreshness(sources);
+    const coveragePercentage = this.calculateCoverage(nlpAnalysis.facts);
+    
+    return {
+      query,
+      tldr: variants.short,
+      variants,
+      cards,
+      disambiguation,
+      faq,
+      translations,
+      meta: {
+        generated_at: new Date().toISOString(),
+        confidence: confidenceScore.overall,
+        conflicts_found: conflictsFound,
+        freshness_days: freshnessDays,
+        coverage_percentage: coveragePercentage
+      }
+    };
+  }
+
+  /**
+   * Create enhanced cards with NLP insights
+   */
+  private async createEnhancedCards(
+    domain: string,
+    variants: AnswerVariants,
+    nlpAnalysis: any,
+    knowledgeGraph: any,
+    confidenceScore: any
+  ): Promise<Card[]> {
+    const cards: Card[] = [];
+    
+    // Create domain-specific cards
+    const domainKnowledge = TrainingDataManager.getDomainKnowledge(domain);
+    if (domainKnowledge) {
+      cards.push({
+        id: domain,
+        title: `${domain.charAt(0).toUpperCase() + domain.slice(1)} ${this.getCategoryEmoji(domain)}`,
+        short: variants.short,
+        long: variants.medium,
+        facts: nlpAnalysis.facts,
+        confidence: confidenceScore.overall,
+        sources: []
+      });
+    }
+    
+    // Create entity-based cards
+    const entityCards = nlpAnalysis.entities.slice(0, 3).map((entity: any) => ({
+      id: entity.label.toLowerCase().replace(/\s+/g, '_'),
+      title: `${entity.text} ${this.getCategoryEmoji(entity.label)}`,
+      short: `${entity.text} is a ${entity.label.toLowerCase()}.`,
+      long: `${entity.text} is a ${entity.label.toLowerCase()} with ${entity.confidence * 100}% confidence. ${entity.description || ''}`,
+      facts: { type: entity.label, confidence: entity.confidence },
+      confidence: entity.confidence,
+      sources: []
+    }));
+    
+    cards.push(...entityCards);
+    
+    return cards;
+  }
+
+  /**
+   * Generate enhanced medium answer with NLP insights
+   */
+  private generateMediumAnswer(text: string, nlpAnalysis?: any): string {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    let answer = sentences.slice(0, 2).join('. ').trim() + '.';
+    
+    // Add entity information if available
+    if (nlpAnalysis && nlpAnalysis.entities && nlpAnalysis.entities.length > 0) {
+      const topEntity = nlpAnalysis.entities[0];
+      answer += ` Key entity: ${topEntity.text} (${topEntity.label}).`;
+    }
+    
+    return answer;
+  }
+
+  /**
+   * Generate enhanced long answer with comprehensive insights
+   */
+  private generateLongAnswer(text: string, nlpAnalysis?: any, confidenceScore?: any): string {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    let answer = sentences.slice(0, 4).join('. ').trim() + '.';
+    
+    // Add confidence information
+    if (confidenceScore && confidenceScore.overall) {
+      answer += ` Confidence level: ${Math.round(confidenceScore.overall * 100)}%.`;
+    }
+    
+    // Add entity information
+    if (nlpAnalysis && nlpAnalysis.entities && nlpAnalysis.entities.length > 0) {
+      const entities = nlpAnalysis.entities.slice(0, 3).map((e: any) => e.text).join(', ');
+      answer += ` Key entities: ${entities}.`;
+    }
+    
+    // Add relationship information
+    if (nlpAnalysis && nlpAnalysis.relationships && nlpAnalysis.relationships.length > 0) {
+      const relationship = nlpAnalysis.relationships[0];
+      answer += ` Relationship: ${relationship.subject} ${relationship.predicate} ${relationship.object}.`;
+    }
+    
+    return answer;
+  }
+
+  /**
+   * 10-20 minutes: Generate TL;DR + 3-card variants (Legacy method for compatibility)
    */
   private async generateAnswerVariants(sources: Source[]): Promise<AnswerVariants> {
     console.log('📝 Generating answer variants...');
@@ -164,7 +448,140 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * 20-30 minutes: Entity & fact extraction
+   * Generate short answer
+   */
+  private generateShortAnswer(text: string): string {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    return sentences[0]?.trim() + '.' || 'Information not available.';
+  }
+
+  /**
+   * Detect disambiguation
+   */
+  private async detectDisambiguation(query: string, sources: Source[]): Promise<string[]> {
+    console.log('🎯 Detecting disambiguation...');
+    
+    const queryLower = query.toLowerCase();
+    const categories = [];
+    
+    // Simple keyword-based disambiguation
+    if (queryLower.includes('pm') || queryLower.includes('prime minister')) {
+      categories.push('Politics', 'People', 'History');
+    }
+    if (queryLower.includes('python')) {
+      categories.push('Biology', 'Computing', 'Mythology');
+    }
+    if (queryLower.includes('newton')) {
+      categories.push('Physics', 'People', 'History');
+    }
+    if (queryLower.includes('openai')) {
+      categories.push('Technology', 'People', 'Business');
+    }
+    
+    return categories.length > 0 ? categories : ['General'];
+  }
+
+  /**
+   * Generate FAQ
+   */
+  private async generateFAQ(query: string, sources: Source[]): Promise<FAQ[]> {
+    console.log('❓ Generating FAQ...');
+    
+    const faq: FAQ[] = [];
+    const combinedText = sources.map(s => s.snippet).join(' ');
+    
+    // Generate common questions based on query type
+    if (query.toLowerCase().includes('pm') || query.toLowerCase().includes('prime minister')) {
+      faq.push({
+        q: 'Who is the current Prime Minister of India?',
+        a: this.extractAnswer(combinedText, 'current'),
+        confidence: 0.9
+      });
+      faq.push({
+        q: 'What is the role of the Prime Minister?',
+        a: this.extractAnswer(combinedText, 'role'),
+        confidence: 0.8
+      });
+      faq.push({
+        q: 'Where does the Prime Minister live?',
+        a: this.extractAnswer(combinedText, 'residence'),
+        confidence: 0.7
+      });
+    }
+    
+    return faq.slice(0, 3); // Top 3 FAQs
+  }
+
+  /**
+   * Generate translations
+   */
+  private async generateTranslations(text: string): Promise<{ [key: string]: string }> {
+    console.log('🌐 Generating translations...');
+    
+    // Simple translation simulation (would use actual translation API)
+    return {
+      hi: `हिंदी अनुवाद: ${text}`,
+      ta: `தமிழ் மொழிபெயர்ப்பு: ${text}`
+    };
+  }
+
+  /**
+   * Extract answer from text
+   */
+  private extractAnswer(text: string, keyword: string): string {
+    const sentences = text.split(/[.!?]+/).filter(s => s.toLowerCase().includes(keyword));
+    return sentences[0]?.trim() + '.' || 'Information not available.';
+  }
+
+  /**
+   * Calculate freshness
+   */
+  private calculateFreshness(sources: Source[]): number {
+    const now = new Date();
+    const oldestSource = sources.reduce((oldest, source) => {
+      const sourceDate = new Date(source.last_updated);
+      return sourceDate < oldest ? sourceDate : oldest;
+    }, now);
+    return Math.floor((now.getTime() - oldestSource.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  /**
+   * Calculate coverage
+   */
+  private calculateCoverage(facts: { [key: string]: string }): number {
+    const expectedFacts = ['office', 'residence', 'formation_date', 'current_holder'];
+    const foundFacts = Object.keys(facts).filter(fact => expectedFacts.includes(fact)).length;
+    return Math.round((foundFacts / expectedFacts.length) * 100);
+  }
+
+  /**
+   * Get category emoji
+   */
+  private getCategoryEmoji(category: string): string {
+    const emojis: { [key: string]: string } = {
+      'Politics': '🏛️',
+      'People': '👤',
+      'History': '📜',
+      'Biology': '🐍',
+      'Computing': '💻',
+      'Mythology': '🏛️',
+      'Physics': '⚡',
+      'Technology': '🔧',
+      'Business': '💼',
+      'General': '📋',
+      'PERSON': '👤',
+      'ORGANIZATION': '🏢',
+      'LOCATION': '📍',
+      'DATE': '📅',
+      'NUMBER': '🔢',
+      'TECHNOLOGY': '💻',
+      'SCIENCE': '🔬'
+    };
+    return emojis[category] || '📋';
+  }
+
+  /**
+   * 20-30 minutes: Entity & fact extraction (Legacy method for compatibility)
    */
   private async extractStructuredFacts(sources: Source[]): Promise<Fact[]> {
     console.log('🔍 Extracting structured facts...');
@@ -197,7 +614,7 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * 30-40 minutes: Cross-source verification & confidence scoring
+   * 30-40 minutes: Cross-source verification & confidence scoring (Legacy method for compatibility)
    */
   private async crossVerifyFacts(facts: Fact[], sources: Source[]): Promise<Fact[]> {
     console.log('✅ Cross-verifying facts...');
@@ -219,74 +636,7 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * 40-48 minutes: Disambiguation & intent detection
-   */
-  private async detectDisambiguation(query: string, sources: Source[]): Promise<string[]> {
-    console.log('🎯 Detecting disambiguation...');
-    
-    const queryLower = query.toLowerCase();
-    const categories = [];
-    
-    // Simple keyword-based disambiguation
-    if (queryLower.includes('pm') || queryLower.includes('prime minister')) {
-      categories.push('Politics', 'People', 'History');
-    }
-    if (queryLower.includes('python')) {
-      categories.push('Biology', 'Computing', 'Mythology');
-    }
-    if (queryLower.includes('newton')) {
-      categories.push('Physics', 'People', 'History');
-    }
-    if (queryLower.includes('openai')) {
-      categories.push('Technology', 'People', 'Business');
-    }
-    
-    return categories.length > 0 ? categories : ['General'];
-  }
-
-  /**
-   * 48-55 minutes: FAQ + micro-translation + source block
-   */
-  private async generateFAQ(query: string, sources: Source[]): Promise<FAQ[]> {
-    console.log('❓ Generating FAQ...');
-    
-    const faq: FAQ[] = [];
-    const combinedText = sources.map(s => s.snippet).join(' ');
-    
-    // Generate common questions based on query type
-    if (query.toLowerCase().includes('pm') || query.toLowerCase().includes('prime minister')) {
-      faq.push({
-        q: 'Who is the current Prime Minister of India?',
-        a: this.extractAnswer(combinedText, 'current'),
-        confidence: 0.9
-      });
-      faq.push({
-        q: 'What is the role of the Prime Minister?',
-        a: this.extractAnswer(combinedText, 'role'),
-        confidence: 0.8
-      });
-      faq.push({
-        q: 'Where does the Prime Minister live?',
-        a: this.extractAnswer(combinedText, 'residence'),
-        confidence: 0.7
-      });
-    }
-    
-    return faq.slice(0, 3); // Top 3 FAQs
-  }
-
-  private async generateTranslations(text: string): Promise<{ [key: string]: string }> {
-    console.log('🌐 Generating translations...');
-    
-    // Simple translation simulation (would use actual translation API)
-    return {
-      hi: `हिंदी अनुवाद: ${text}`,
-      ta: `தமிழ் மொழிபெயர்ப்பு: ${text}`
-    };
-  }
-
-  /**
-   * 55-60 minutes: QA checks & packaging
+   * 55-60 minutes: QA checks & packaging (Legacy method for compatibility)
    */
   private async packageFinalResponse(
     query: string,
@@ -303,7 +653,7 @@ export class EnhancedAIAgent {
     const conflictsFound = facts.filter(f => f.confidence < 0.7).length;
     const avgConfidence = facts.reduce((sum, f) => sum + f.confidence, 0) / facts.length;
     const freshnessDays = this.calculateFreshness(sources);
-    const coveragePercentage = this.calculateCoverage(facts);
+    const coveragePercentage = this.calculateCoverage(facts.reduce((acc, fact) => ({ ...acc, [fact.fact]: fact.value }), {}));
     
     // Create cards
     const cards: Card[] = disambiguation.map(category => ({
@@ -334,85 +684,15 @@ export class EnhancedAIAgent {
     };
   }
 
-  // Helper methods
-  private async fetchWikipediaSummary(title: string): Promise<any> {
-    try {
-      const url = `${this.WIKIPEDIA_API}${encodeURIComponent(title)}`;
-      const response = await fetch(url);
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error('Wikipedia fetch error:', error);
-      return null;
-    }
-  }
-
-  private async fetchBritannicaSummary(query: string): Promise<any> {
-    // Simulated Britannica response (would need actual API)
-    return {
-      url: `https://www.britannica.com/search?query=${encodeURIComponent(query)}`,
-      extract: 'Britannica provides authoritative information on various topics.',
-      last_updated: new Date().toISOString()
-    };
-  }
-
-  private generateShortAnswer(text: string): string {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    return sentences[0]?.trim() + '.' || 'Information not available.';
-  }
-
-  private generateMediumAnswer(text: string): string {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    return sentences.slice(0, 2).join('. ').trim() + '.' || 'Information not available.';
-  }
-
-  private generateLongAnswer(text: string): string {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    return sentences.slice(0, 4).join('. ').trim() + '.' || 'Information not available.';
-  }
-
-  private extractAnswer(text: string, keyword: string): string {
-    const sentences = text.split(/[.!?]+/).filter(s => s.toLowerCase().includes(keyword));
-    return sentences[0]?.trim() + '.' || 'Information not available.';
-  }
-
-  private calculateFreshness(sources: Source[]): number {
-    const now = new Date();
-    const oldestSource = sources.reduce((oldest, source) => {
-      const sourceDate = new Date(source.last_updated);
-      return sourceDate < oldest ? sourceDate : oldest;
-    }, now);
-    return Math.floor((now.getTime() - oldestSource.getTime()) / (1000 * 60 * 60 * 24));
-  }
-
-  private calculateCoverage(facts: Fact[]): number {
-    const expectedFacts = ['office', 'residence', 'formation_date', 'current_holder'];
-    const foundFacts = facts.filter(f => expectedFacts.includes(f.fact)).length;
-    return Math.round((foundFacts / expectedFacts.length) * 100);
-  }
-
+  /**
+   * Extract facts for category
+   */
   private extractFactsForCategory(facts: Fact[], category: string): { [key: string]: string } {
     const categoryFacts: { [key: string]: string } = {};
     facts.forEach(fact => {
       categoryFacts[fact.fact] = fact.value;
     });
     return categoryFacts;
-  }
-
-  private getCategoryEmoji(category: string): string {
-    const emojis: { [key: string]: string } = {
-      'Politics': '🏛️',
-      'People': '👤',
-      'History': '📜',
-      'Biology': '🐍',
-      'Computing': '💻',
-      'Mythology': '🏛️',
-      'Physics': '⚡',
-      'Technology': '🔧',
-      'Business': '💼',
-      'General': '📋'
-    };
-    return emojis[category] || '📋';
   }
 }
 
