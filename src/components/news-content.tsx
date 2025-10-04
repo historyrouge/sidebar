@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Rss, RefreshCw, Loader2 } from "lucide-react";
@@ -216,11 +215,11 @@ export function NewsContent() {
                             <CardHeader className="p-0">
                                 {article.urlToImage ? (
                                     <div className="relative w-full h-48">
-                                        <Image
-                                            src={article.urlToImage}
+                                        <img
+                                            src={`/api/proxy?url=${encodeURIComponent(article.urlToImage)}`}
                                             alt={article.title}
-                                            fill
-                                            className="object-cover"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => (e.currentTarget.style.display = 'none')}
                                         />
                                     </div>
                                 ) : (
