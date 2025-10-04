@@ -25,6 +25,7 @@ import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import CustomAIAgent from '@/lib/custom-ai-agent';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
@@ -845,6 +846,9 @@ export async function chatAction(input: {
     if (isWebScraping) {
         const query = input.history[input.history.length - 1].content.toString();
         try {
+            // Initialize our custom AI agent
+            const aiAgent = new CustomAIAgent();
+            
             // Search for relevant websites
             const searchResults = await searchWebsites(query);
             let websitesToScrape: string[] = [];
@@ -877,39 +881,28 @@ export async function chatAction(input: {
             websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 6);
             
             // Scrape all websites
-            const scrapedData: ScrapedData[] = [];
+            const sources = [];
             
             for (const url of websitesToScrape) {
                 try {
                     const data = await scrapeWebsite(url);
                     if (data && data.content.length > 100) {
-                        // Extract relevant information based on query
-                        const relevantInfo = extractRelevantInfo(data.content, query);
-                        if (relevantInfo.length > 50) {
-                            scrapedData.push({
-                                ...data,
-                                content: relevantInfo
-                            });
-                        }
+                        sources.push({
+                            url: data.url,
+                            title: data.title,
+                            content: data.content,
+                            domain: new URL(data.url).hostname.replace('www.', '')
+                        });
                     }
                 } catch (error) {
                     console.error(`Failed to scrape ${url}:`, error);
                 }
             }
             
-            // Generate a comprehensive answer
-            const answer = generateAnswer(scrapedData, query);
+            // Use our custom AI agent to process the content
+            const response = await aiAgent.processQuery(query, sources);
             
-            // Format the response with clean source organization
-            const sourcesText = scrapedData.map((source, index) => {
-                const hostname = new URL(source.url).hostname;
-                const domain = hostname.replace('www.', '');
-                return `${domain} – ${source.title}`;
-            }).join('\n');
-
-            const formattedResponse = `${answer}📚 Sources\n\n${sourcesText}`;
-            
-            return { data: { response: formattedResponse } };
+            return { data: { response } };
         } catch (error: any) {
             return { error: `Sorry, an error occurred while scraping websites: ${error.message}` };
         }
