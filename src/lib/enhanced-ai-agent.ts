@@ -70,91 +70,161 @@ export class EnhancedAIAgent {
   private readonly WIKIPEDIA_API = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
   private readonly BRITANNICA_API = 'https://www.britannica.com/api/search';
   
+  // Performance optimization: In-memory cache
+  private static readonly CACHE = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  
+  // Performance optimization: Timeout controls
+  private static readonly TIMEOUTS = {
+    source_fetch: 3000,    // 3 seconds
+    nlp_analysis: 2000,    // 2 seconds
+    verification: 4000,    // 4 seconds
+    knowledge_graph: 3000, // 3 seconds
+    confidence: 2000       // 2 seconds
+  };
+  
   /**
-   * Main sprint method - runs the full 1-hour enhancement pipeline with advanced components
+   * Optimized sprint method - runs parallel processing for maximum speed
    */
   async runSprint(query: string): Promise<EnhancedResponse> {
-    console.log(`🚀 Starting enhanced 1-hour sprint for: "${query}"`);
+    console.log(`🚀 Starting optimized sprint for: "${query}"`);
+    const startTime = Date.now();
     
-    // 0-5 minutes: Query Analysis & Disambiguation
-    const domain = await this.analyzeQueryAndDisambiguate(query);
-    console.log(`📊 Detected domain: ${domain}`);
-    
-    // 5-10 minutes: Retrieve Relevant Sources (Enhanced)
-    const sources = await this.fetchAndConsolidateSources(query, domain);
-    console.log(`📚 Retrieved ${sources.length} sources`);
-    
-    // 10-20 minutes: Advanced NLP Processing
-    const nlpAnalysis = await this.performAdvancedNLPAnalysis(sources, query);
-    console.log(`🧠 NLP Analysis: ${nlpAnalysis.entities.length} entities, ${nlpAnalysis.relationships.length} relationships`);
-    
-    // 20-30 minutes: Knowledge Graph Construction
-    const knowledgeGraph = await this.buildKnowledgeGraph(sources, domain, nlpAnalysis);
-    console.log(`🕸️ Knowledge Graph: ${knowledgeGraph.nodes.length} nodes, ${knowledgeGraph.edges.length} edges`);
-    
-    // 30-40 minutes: Real-time Fact Verification
-    const verificationResults = await this.performRealTimeVerification(query, domain, nlpAnalysis.facts);
-    console.log(`✅ Verification: ${verificationResults.length} facts verified`);
-    
-    // 40-50 minutes: Advanced Confidence Scoring
-    const confidenceScore = await this.calculateAdvancedConfidenceScore(
-      sources, nlpAnalysis, knowledgeGraph, verificationResults, domain
-    );
-    console.log(`🎯 Confidence Score: ${Math.round(confidenceScore.overall * 100)}%`);
-    
-    // 50-55 minutes: Generate Enhanced Answer Variants
-    const variants = await this.generateEnhancedAnswerVariants(sources, nlpAnalysis, confidenceScore);
-    
-    // 55-60 minutes: Final Assembly & Quality Assurance
-    const finalResponse = await this.assembleFinalResponse(
-      query, domain, variants, nlpAnalysis, knowledgeGraph, verificationResults, confidenceScore, sources
-    );
-    
-    console.log(`✅ Enhanced sprint completed for: "${query}"`);
-    return finalResponse;
+    try {
+      // Parallel execution of independent operations (0-5 seconds)
+      const [domain, sources] = await Promise.all([
+        this.analyzeQueryAndDisambiguate(query),
+        this.fetchAndConsolidateSources(query, 'general') // Start with general, update later
+      ]);
+      
+      console.log(`📊 Domain: ${domain} | Sources: ${sources.length}`);
+      
+      // Update sources with domain-specific ones in parallel with NLP
+      const [updatedSources, nlpAnalysis] = await Promise.all([
+        this.fetchAndConsolidateSources(query, domain),
+        this.performOptimizedNLPAnalysis(sources, query)
+      ]);
+      
+      console.log(`🧠 NLP: ${nlpAnalysis.entities.length} entities`);
+      
+      // Parallel execution of heavy operations (5-10 seconds)
+      const [knowledgeGraph, verificationResults, confidenceScore] = await Promise.all([
+        this.buildOptimizedKnowledgeGraph(updatedSources, domain, nlpAnalysis),
+        this.performOptimizedVerification(query, domain, nlpAnalysis.facts),
+        this.calculateOptimizedConfidenceScore(updatedSources, nlpAnalysis, domain)
+      ]);
+      
+      console.log(`🎯 Confidence: ${Math.round(confidenceScore.overall * 100)}%`);
+      
+      // Generate response variants (1-2 seconds)
+      const variants = await this.generateOptimizedAnswerVariants(updatedSources, nlpAnalysis, confidenceScore);
+      
+      // Final assembly (1 second)
+      const finalResponse = await this.assembleOptimizedResponse(
+        query, domain, variants, nlpAnalysis, knowledgeGraph, verificationResults, confidenceScore, updatedSources
+      );
+      
+      const endTime = Date.now();
+      console.log(`✅ Optimized sprint completed in ${endTime - startTime}ms`);
+      return finalResponse;
+      
+    } catch (error) {
+      console.error('Sprint error:', error);
+      // Fallback to simple response
+      return this.generateFallbackResponse(query);
+    }
   }
 
   /**
-   * 0-5 minutes: Query Analysis & Disambiguation
+   * Cache management methods
+   */
+  private getCached(key: string): any | null {
+    const cached = EnhancedAIAgent.CACHE.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return cached.data;
+    }
+    EnhancedAIAgent.CACHE.delete(key);
+    return null;
+  }
+
+  private setCache(key: string, data: any, ttl: number = EnhancedAIAgent.CACHE_TTL): void {
+    EnhancedAIAgent.CACHE.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  /**
+   * Timeout wrapper for operations
+   */
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<T>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), timeoutMs)
+        )
+      ]);
+    } catch (error) {
+      console.warn(`Operation timed out after ${timeoutMs}ms, using fallback`);
+      return fallback;
+    }
+  }
+
+  /**
+   * Optimized query analysis with caching
    */
   private async analyzeQueryAndDisambiguate(query: string): Promise<string> {
+    const cacheKey = `domain:${query.toLowerCase()}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
     console.log('🔍 Analyzing query and detecting domain...');
     
-    const semanticAnalysis = AdvancedNLPProcessor.analyzeSemantics(query);
-    const domains = TrainingDataManager.getAllDomains();
+    // Fast domain detection using simple keyword matching
+    const queryLower = query.toLowerCase();
+    const domainMap: { [key: string]: string[] } = {
+      'politics': ['pm', 'prime minister', 'president', 'government', 'minister', 'parliament', 'election', 'vote', 'party', 'political'],
+      'science': ['physics', 'chemistry', 'biology', 'mathematics', 'scientific', 'research', 'experiment', 'theory', 'law', 'formula'],
+      'technology': ['ai', 'artificial intelligence', 'computer', 'software', 'programming', 'tech', 'startup', 'company', 'founder', 'ceo'],
+      'geography': ['country', 'city', 'capital', 'population', 'area', 'continent', 'border', 'climate', 'language', 'currency'],
+      'history': ['war', 'battle', 'ancient', 'medieval', 'revolution', 'independence', 'empire', 'dynasty', 'century', 'year']
+    };
     
-    // Find best matching domain
     let bestDomain = 'general';
     let bestScore = 0;
     
-    for (const domain of domains) {
-      const domainKnowledge = TrainingDataManager.getDomainKnowledge(domain);
-      if (domainKnowledge) {
-        const domainKeywords = domainKnowledge.keywords;
-        const matches = domainKeywords.filter(keyword => 
-          query.toLowerCase().includes(keyword.toLowerCase())
-        ).length;
-        
-        const score = matches / domainKeywords.length;
-        if (score > bestScore) {
-          bestScore = score;
-          bestDomain = domain;
-        }
+    for (const [domain, keywords] of Object.entries(domainMap)) {
+      const matches = keywords.filter(keyword => queryLower.includes(keyword)).length;
+      const score = matches / keywords.length;
+      if (score > bestScore) {
+        bestScore = score;
+        bestDomain = domain;
       }
     }
     
+    this.setCache(cacheKey, bestDomain, 10 * 60 * 1000); // Cache for 10 minutes
     return bestDomain;
   }
 
   /**
-   * 5-10 minutes: Enhanced Source Consolidation
+   * Optimized source consolidation with caching and timeout
    */
   private async fetchAndConsolidateSources(query: string, domain: string): Promise<Source[]> {
+    const cacheKey = `sources:${query.toLowerCase()}:${domain}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
     console.log('📚 Fetching and consolidating sources...');
     
     try {
-      // Use MultiSourceAPIManager for enhanced source fetching
-      const sourceResponses = await MultiSourceAPIManager.fetchFromMultipleSources(query, domain, 5);
+      // Use timeout to prevent slow API calls
+      const sourceResponses = await this.withTimeout(
+        MultiSourceAPIManager.fetchFromMultipleSources(query, domain, 3), // Reduced from 5 to 3
+        EnhancedAIAgent.TIMEOUTS.source_fetch,
+        []
+      );
       
       const sources: Source[] = sourceResponses.map(response => ({
         url: response.metadata.url || '',
@@ -164,6 +234,7 @@ export class EnhancedAIAgent {
         authority_score: response.metadata.confidence
       }));
       
+      this.setCache(cacheKey, sources, 5 * 60 * 1000); // Cache for 5 minutes
       return sources;
       
     } catch (error) {
@@ -173,7 +244,271 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * 10-20 minutes: Advanced NLP Processing
+   * Optimized NLP processing with timeout
+   */
+  private async performOptimizedNLPAnalysis(sources: Source[], query: string): Promise<{
+    entities: any[];
+    relationships: any[];
+    sentiment: any;
+    semantic: any;
+    facts: { [key: string]: string };
+  }> {
+    const cacheKey = `nlp:${query.toLowerCase()}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
+    console.log('🧠 Performing optimized NLP analysis...');
+    
+    try {
+      const combinedContent = sources.map(s => s.snippet).join(' ');
+      
+      // Use timeout for NLP operations
+      const [entities, sentiment, semantic] = await Promise.all([
+        this.withTimeout(
+          Promise.resolve(AdvancedNLPProcessor.extractEntities(combinedContent)),
+          EnhancedAIAgent.TIMEOUTS.nlp_analysis,
+          []
+        ),
+        this.withTimeout(
+          Promise.resolve(AdvancedNLPProcessor.analyzeSentiment(combinedContent)),
+          EnhancedAIAgent.TIMEOUTS.nlp_analysis,
+          { sentiment: 'neutral', confidence: 0.5, emotions: {} }
+        ),
+        this.withTimeout(
+          Promise.resolve(AdvancedNLPProcessor.analyzeSemantics(combinedContent)),
+          EnhancedAIAgent.TIMEOUTS.nlp_analysis,
+          { topics: [], keywords: [], concepts: [], relationships: [] }
+        )
+      ]);
+      
+      const relationships = semantic.relationships || [];
+      const domain = await this.analyzeQueryAndDisambiguate(query);
+      const facts = TrainingDataManager.extractFacts(combinedContent, domain);
+      
+      const result = {
+        entities,
+        relationships,
+        sentiment,
+        semantic,
+        facts
+      };
+      
+      this.setCache(cacheKey, result, 3 * 60 * 1000); // Cache for 3 minutes
+      return result;
+      
+    } catch (error) {
+      console.error('NLP analysis error:', error);
+      return {
+        entities: [],
+        relationships: [],
+        sentiment: { sentiment: 'neutral', confidence: 0.5, emotions: {} },
+        semantic: { topics: [], keywords: [], concepts: [], relationships: [] },
+        facts: {}
+      };
+    }
+  }
+
+  /**
+   * Optimized knowledge graph construction
+   */
+  private async buildOptimizedKnowledgeGraph(sources: Source[], domain: string, nlpAnalysis: any): Promise<any> {
+    const cacheKey = `kg:${domain}:${sources.length}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
+    console.log('🕸️ Building optimized knowledge graph...');
+    
+    try {
+      const combinedContent = sources.map(s => s.snippet).join(' ');
+      
+      const knowledgeGraph = await this.withTimeout(
+        KnowledgeGraphManager.buildKnowledgeGraph(combinedContent, domain),
+        EnhancedAIAgent.TIMEOUTS.knowledge_graph,
+        { nodes: [], edges: [], metadata: { total_nodes: 0, total_edges: 0, domains: [domain], last_updated: new Date().toISOString() } }
+      );
+      
+      this.setCache(cacheKey, knowledgeGraph, 5 * 60 * 1000);
+      return knowledgeGraph;
+      
+    } catch (error) {
+      console.error('Knowledge graph error:', error);
+      return { nodes: [], edges: [], metadata: { total_nodes: 0, total_edges: 0, domains: [domain], last_updated: new Date().toISOString() } };
+    }
+  }
+
+  /**
+   * Optimized verification with timeout
+   */
+  private async performOptimizedVerification(query: string, domain: string, facts: { [key: string]: string }): Promise<any[]> {
+    const cacheKey = `verify:${query.toLowerCase()}:${domain}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
+    console.log('✅ Performing optimized verification...');
+    
+    try {
+      const verificationResults = await this.withTimeout(
+        RealTimeVerificationEngine.startVerificationSession(query, domain, facts),
+        EnhancedAIAgent.TIMEOUTS.verification,
+        { results: [] }
+      );
+      
+      const results = verificationResults.results || [];
+      this.setCache(cacheKey, results, 3 * 60 * 1000);
+      return results;
+      
+    } catch (error) {
+      console.error('Verification error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Optimized confidence scoring
+   */
+  private async calculateOptimizedConfidenceScore(sources: Source[], nlpAnalysis: any, domain: string): Promise<any> {
+    const cacheKey = `confidence:${domain}:${sources.length}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+    
+    console.log('🎯 Calculating optimized confidence score...');
+    
+    try {
+      const confidenceScore = await this.withTimeout(
+        ConfidenceScoringEngine.calculateConfidenceScore(
+          sources.map(s => s.snippet).join(' '),
+          sources,
+          domain,
+          nlpAnalysis.entities,
+          nlpAnalysis.relationships
+        ),
+        EnhancedAIAgent.TIMEOUTS.confidence,
+        {
+          overall: 0.7,
+          factors: {},
+          explanation: 'Confidence calculation timed out',
+          recommendations: ['Manual review recommended'],
+          risk_level: 'medium'
+        }
+      );
+      
+      this.setCache(cacheKey, confidenceScore, 5 * 60 * 1000);
+      return confidenceScore;
+      
+    } catch (error) {
+      console.error('Confidence calculation error:', error);
+      return {
+        overall: 0.7,
+        factors: {},
+        explanation: 'Confidence calculation failed',
+        recommendations: ['Manual review recommended'],
+        risk_level: 'medium'
+      };
+    }
+  }
+
+  /**
+   * Optimized answer variant generation
+   */
+  private async generateOptimizedAnswerVariants(sources: Source[], nlpAnalysis: any, confidenceScore: any): Promise<AnswerVariants> {
+    console.log('📝 Generating optimized answer variants...');
+    
+    const combinedText = sources.map(s => s.snippet).join(' ');
+    
+    // Fast variant generation
+    const shortAnswer = this.generateShortAnswer(combinedText);
+    const mediumAnswer = this.generateMediumAnswer(combinedText, nlpAnalysis);
+    const longAnswer = this.generateLongAnswer(combinedText, nlpAnalysis, confidenceScore);
+    
+    return {
+      short: shortAnswer,
+      medium: mediumAnswer,
+      long: longAnswer
+    };
+  }
+
+  /**
+   * Optimized final response assembly
+   */
+  private async assembleOptimizedResponse(
+    query: string,
+    domain: string,
+    variants: AnswerVariants,
+    nlpAnalysis: any,
+    knowledgeGraph: any,
+    verificationResults: any[],
+    confidenceScore: any,
+    sources: Source[]
+  ): Promise<EnhancedResponse> {
+    console.log('📦 Assembling optimized response...');
+    
+    // Fast assembly with parallel operations
+    const [disambiguation, faq, translations] = await Promise.all([
+      this.detectDisambiguation(query, sources),
+      this.generateFAQ(query, sources),
+      this.generateTranslations(variants.short)
+    ]);
+    
+    const cards = await this.createEnhancedCards(domain, variants, nlpAnalysis, knowledgeGraph, confidenceScore);
+    
+    const conflictsFound = verificationResults.filter(r => r.conflicts && r.conflicts.length > 0).length;
+    const freshnessDays = this.calculateFreshness(sources);
+    const coveragePercentage = this.calculateCoverage(nlpAnalysis.facts);
+    
+    return {
+      query,
+      tldr: variants.short,
+      variants,
+      cards,
+      disambiguation,
+      faq,
+      translations,
+      meta: {
+        generated_at: new Date().toISOString(),
+        confidence: confidenceScore.overall,
+        conflicts_found: conflictsFound,
+        freshness_days: freshnessDays,
+        coverage_percentage: coveragePercentage
+      }
+    };
+  }
+
+  /**
+   * Fallback response for errors
+   */
+  private generateFallbackResponse(query: string): EnhancedResponse {
+    return {
+      query,
+      tldr: `Here's what I found about "${query}".`,
+      variants: {
+        short: `Quick answer about ${query}.`,
+        medium: `Here's a comprehensive overview of ${query}.`,
+        long: `Let me provide you with detailed information about ${query}.`
+      },
+      cards: [{
+        id: 'general',
+        title: 'General Information 📋',
+        short: `Information about ${query}`,
+        long: `Comprehensive details about ${query}`,
+        facts: {},
+        confidence: 0.5,
+        sources: []
+      }],
+      disambiguation: ['General'],
+      faq: [],
+      translations: {},
+      meta: {
+        generated_at: new Date().toISOString(),
+        confidence: 0.5,
+        conflicts_found: 0,
+        freshness_days: 0,
+        coverage_percentage: 50
+      }
+    };
+  }
+
+  /**
+   * Legacy method for compatibility
    */
   private async performAdvancedNLPAnalysis(sources: Source[], query: string): Promise<{
     entities: any[];
@@ -711,44 +1046,96 @@ export class CelestialReminderHooks {
     console.log(`📚 Saving to reading list for user ${userId}: ${response.query}`);
     // Would integrate with actual Celestial reading list API
   }
-}
 
-/**
- * Demo function to test the sprint
- */
-export async function runSprintDemo() {
-  const agent = new EnhancedAIAgent();
-  
-  const queries = [
-    'pm of india',
-    'python',
-    'newton laws',
-    'openai founder'
-  ];
+  /**
+   * Performance monitoring and cache statistics
+   */
+  static getPerformanceStats(): {
+    cache_size: number;
+    cache_hit_rate: number;
+    average_response_time: number;
+    total_requests: number;
+  } {
+    const cacheSize = EnhancedAIAgent.CACHE.size;
+    const cacheEntries = Array.from(EnhancedAIAgent.CACHE.values());
+    const now = Date.now();
+    
+    // Calculate cache hit rate (simplified)
+    const validEntries = cacheEntries.filter(entry => now - entry.timestamp < entry.ttl);
+    const cacheHitRate = cacheSize > 0 ? validEntries.length / cacheSize : 0;
+    
+    return {
+      cache_size: cacheSize,
+      cache_hit_rate: Math.round(cacheHitRate * 100) / 100,
+      average_response_time: 0, // Would need to track this
+      total_requests: cacheSize
+    };
+  }
 
-  for (const query of queries) {
-    console.log(`\n${'='.repeat(50)}`);
-    console.log(`🚀 Running sprint for: "${query}"`);
-    console.log(`${'='.repeat(50)}`);
+  /**
+   * Clear cache for memory management
+   */
+  static clearCache(): void {
+    EnhancedAIAgent.CACHE.clear();
+    console.log('🗑️ Enhanced AI Agent cache cleared');
+  }
+
+  /**
+   * Demo function to test the optimized sprint
+   */
+  static async runSprintDemo() {
+    const agent = new EnhancedAIAgent();
     
-    const startTime = Date.now();
-    const response = await agent.runSprint(query);
-    const endTime = Date.now();
-    
-    console.log(`\n📊 Sprint Results:`);
-    console.log(`⏱️  Time taken: ${endTime - startTime}ms`);
-    console.log(`🎯 Confidence: ${response.meta.confidence}`);
-    console.log(`⚠️  Conflicts: ${response.meta.conflicts_found}`);
-    console.log(`📈 Coverage: ${response.meta.coverage_percentage}%`);
-    console.log(`🕒 Freshness: ${response.meta.freshness_days} days`);
-    
-    console.log(`\n📝 TL;DR: ${response.tldr}`);
-    console.log(`\n🎯 Disambiguation: ${response.disambiguation.join(', ')}`);
-    console.log(`\n❓ FAQ Count: ${response.faq.length}`);
-    console.log(`\n🌐 Translations: ${Object.keys(response.translations).join(', ')}`);
-    
-    // Set reminder for user to read this later
-    await CelestialReminderHooks.setReminder('demo-user', `Read about: ${query}`, 30);
+    const queries = [
+      'pm of india',
+      'python',
+      'newton laws',
+      'openai founder'
+    ];
+
+    console.log('🚀 Testing Optimized Enhanced AI Agent Performance\n');
+
+    for (const query of queries) {
+      console.log(`\n${'='.repeat(50)}`);
+      console.log(`🚀 Running optimized sprint for: "${query}"`);
+      console.log(`${'='.repeat(50)}`);
+      
+      const startTime = Date.now();
+      const response = await agent.runSprint(query);
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+      
+      console.log(`\n📊 Optimized Sprint Results:`);
+      console.log(`⚡ Response time: ${responseTime}ms`);
+      console.log(`🎯 Confidence: ${Math.round(response.meta.confidence * 100)}%`);
+      console.log(`⚠️  Conflicts: ${response.meta.conflicts_found}`);
+      console.log(`📈 Coverage: ${response.meta.coverage_percentage}%`);
+      console.log(`🕒 Freshness: ${response.meta.freshness_days} days`);
+      
+      console.log(`\n📝 TL;DR: ${response.tldr}`);
+      console.log(`\n🎯 Disambiguation: ${response.disambiguation.join(', ')}`);
+      console.log(`\n❓ FAQ Count: ${response.faq.length}`);
+      console.log(`\n🌐 Translations: ${Object.keys(response.translations).join(', ')}`);
+      
+      // Performance feedback
+      if (responseTime < 5000) {
+        console.log(`✅ Excellent performance: ${responseTime}ms`);
+      } else if (responseTime < 10000) {
+        console.log(`⚡ Good performance: ${responseTime}ms`);
+      } else {
+        console.log(`⚠️  Slow response: ${responseTime}ms`);
+      }
+      
+      // Set reminder for user to read this later
+      await CelestialReminderHooks.setReminder('demo-user', `Read about: ${query}`, 30);
+    }
+
+    // Show final performance stats
+    const stats = EnhancedAIAgent.getPerformanceStats();
+    console.log(`\n📊 Final Performance Stats:`);
+    console.log(`🗄️  Cache size: ${stats.cache_size}`);
+    console.log(`🎯 Cache hit rate: ${Math.round(stats.cache_hit_rate * 100)}%`);
+    console.log(`📈 Total requests: ${stats.total_requests}`);
   }
 }
 

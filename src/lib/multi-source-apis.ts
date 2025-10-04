@@ -123,21 +123,26 @@ export class MultiSourceAPIManager {
   private static readonly CACHE = new Map<string, { data: any; timestamp: number }>();
 
   /**
-   * Fetch data from multiple sources in parallel
+   * Optimized fetch from multiple sources with timeout and reduced calls
    */
   static async fetchFromMultipleSources(
     query: string, 
     domain: string, 
-    maxSources: number = 5
+    maxSources: number = 3 // Reduced from 5 to 3 for speed
   ): Promise<SourceResponse[]> {
-    console.log(`🌐 Fetching from multiple sources for: ${query}`);
+    console.log(`🌐 Fetching from ${maxSources} sources for: ${query}`);
     
     const relevantSources = this.selectRelevantSources(domain, maxSources);
     const responses: SourceResponse[] = [];
     
-    // Fetch from sources in parallel with rate limiting
+    // Use Promise.allSettled with timeout for faster failure handling
     const promises = relevantSources.map(source => 
-      this.fetchFromSource(source, query)
+      Promise.race([
+        this.fetchFromSource(source, query),
+        new Promise<SourceResponse>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 2000) // 2 second timeout
+        )
+      ])
     );
     
     try {
@@ -147,7 +152,7 @@ export class MultiSourceAPIManager {
         if (result.status === 'fulfilled') {
           responses.push(result.value);
         } else {
-          console.error('Source fetch failed:', result.reason);
+          console.warn('Source fetch failed:', result.reason);
         }
       }
       
@@ -155,10 +160,11 @@ export class MultiSourceAPIManager {
       console.error('Error fetching from multiple sources:', error);
     }
     
-    // Sort by confidence and reliability
+    // Return top results sorted by confidence
     return responses
-      .filter(response => response.content.length > 50)
-      .sort((a, b) => b.metadata.confidence - a.metadata.confidence);
+      .filter(response => response.content.length > 30) // Reduced minimum length
+      .sort((a, b) => b.metadata.confidence - a.metadata.confidence)
+      .slice(0, maxSources); // Ensure we don't exceed maxSources
   }
 
   /**
