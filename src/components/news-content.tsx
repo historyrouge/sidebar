@@ -4,11 +4,12 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rss, RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 
 type Article = {
   title: string;
@@ -42,25 +43,27 @@ export function NewsContent() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("top");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
 
   useEffect(() => {
     let stepInterval: NodeJS.Timeout | undefined;
-    if (loading) {
+    if (loading && page === 1) {
         setLoadingStep(0);
         stepInterval = setInterval(() => {
             setLoadingStep(prev => (prev + 1) % loadingSteps.length);
         }, 2000); // Change message every 2 seconds
     }
     return () => clearInterval(stepInterval);
-  }, [loading]);
+  }, [loading, page]);
 
-  const fetchNews = useCallback(async (category: string) => {
+  const fetchNews = useCallback(async (category: string, pageNum: number) => {
     setLoading(true);
     setError(null);
     try {
-      let url = `/api/news?`;
+      let url = `/api/news?page=${pageNum}&`;
       const searchCategory = category === 'top' ? 'general' : category;
       url += category === 'ai' ? `q=artificial%20intelligence` : `category=${searchCategory}`;
       
@@ -71,9 +74,10 @@ export function NewsContent() {
       }
       const data = await res.json();
       
-      const filteredArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]" && article.urlToImage);
+      const newArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]");
       
-      setArticles(filteredArticles);
+      setArticles(prev => pageNum === 1 ? newArticles : [...prev, ...newArticles]);
+      setHasMore(newArticles.length > 0 && newArticles.length === 40);
 
     } catch (err: any) {
       setError(err.message);
@@ -84,9 +88,16 @@ export function NewsContent() {
 
   useEffect(() => {
     setArticles([]);
-    fetchNews(activeCategory);
+    setPage(1);
+    setHasMore(true);
+    fetchNews(activeCategory, 1);
   }, [activeCategory, fetchNews]);
 
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchNews(activeCategory, nextPage);
+  }
 
   const handleReadMore = (article: Article) => {
     try {
@@ -100,7 +111,9 @@ export function NewsContent() {
 
   const handleRefresh = () => {
     setArticles([]);
-    fetchNews(activeCategory);
+    setPage(1);
+    setHasMore(true);
+    fetchNews(activeCategory, 1);
   };
 
   return (
@@ -110,13 +123,13 @@ export function NewsContent() {
             <div className="mt-2 text-lg text-muted-foreground h-7">
                 <AnimatePresence mode="wait">
                     <motion.p
-                        key={loading ? loadingStep : 'default'}
+                        key={loading && page === 1 ? loadingStep : 'default'}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         transition={{ duration: 0.3 }}
                     >
-                       {loading ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
+                       {loading && page === 1 ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
                     </motion.p>
                 </AnimatePresence>
             </div>
@@ -148,7 +161,7 @@ export function NewsContent() {
             </div>
         )}
 
-        {loading ? (
+        {loading && page === 1 ? (
              <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 9 }).map((_, i) => (
                      <Card key={i}>
@@ -174,21 +187,16 @@ export function NewsContent() {
                          <Card key={`${article.url}-${i}`} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
                                 <div className="relative w-full h-48 bg-muted">
-                                    <img
-                                        src={article.urlToImage || ''}
-                                        alt={article.title}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
-                                            const parent = (e.target as HTMLImageElement).parentElement;
-                                            if (parent) {
-                                                const fallback = document.createElement('div');
-                                                fallback.className = 'h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center';
-                                                fallback.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 text-primary/50"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>`;
-                                                parent.appendChild(fallback);
-                                            }
-                                        }}
-                                    />
+                                    {article.urlToImage ? (
+                                        <Image
+                                            src={article.urlToImage}
+                                            alt={article.title}
+                                            fill
+                                            className="object-cover"
+                                            unoptimized // Using this because many news sources don't allow image optimization
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                        />
+                                    ) : null}
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 flex-grow flex flex-col">
@@ -202,14 +210,17 @@ export function NewsContent() {
                         </Card>
                     ))}
                 </div>
-                <div className="text-center text-muted-foreground py-8">
-                    <p>You've reached the end of the news.</p>
-                </div>
+                {hasMore && !loading && (
+                    <div className="text-center mt-8">
+                        <Button onClick={handleLoadMore} disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Load More
+                        </Button>
+                    </div>
+                )}
             </>
         )}
     </div>
     </>
   );
 }
-
-    

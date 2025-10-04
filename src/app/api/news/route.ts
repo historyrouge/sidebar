@@ -14,7 +14,11 @@ type Article = {
 };
 
 
-const parser = new RssParser();
+const parser = new RssParser({
+    customFields: {
+        item: [['media:content', 'mediaContent', {keepArray: false}]],
+    }
+});
 
 const fallbackRssFeed = "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms";
 
@@ -25,11 +29,14 @@ async function fetchFromRss(feedUrl: string): Promise<Article[]> {
         const description = item.contentSnippet || item.content || "No description";
         const cleanedDescription = description.replace(/<img[^>]*>/g, "").trim();
 
+        // The TOI feed has the best image in the media:content enclosure
+        const imageUrl = item.enclosure?.url || (item.mediaContent && item.mediaContent.$ && item.mediaContent.$.url) || "";
+
         return {
             title: item.title || "No title",
             description: cleanedDescription,
             url: item.link || "",
-            urlToImage: item.enclosure?.url || "", // Prioritize enclosure for better image quality
+            urlToImage: imageUrl,
             source: {
                 name: feed.title || "RSS Feed"
             },
