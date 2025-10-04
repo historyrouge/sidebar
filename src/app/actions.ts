@@ -270,7 +270,9 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
                 if (group.length === 1) {
                     answer += `${group[0]}\n\n`;
                 } else {
-                    answer += `${group[0]}:\n`;
+                    // Create a better header for the group
+                    const header = createGroupHeader(group[0], category);
+                    answer += `${header}:\n`;
                     group.slice(1).forEach(fact => {
                         answer += `• ${fact}\n`;
                     });
@@ -290,18 +292,19 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
     const categories: { [key: string]: string[] } = {};
     const queryLower = query.toLowerCase();
     
-    // Define category keywords
+    // Define category keywords with better physics/science coverage
     const categoryKeywords = {
-        'Biology': ['species', 'genus', 'family', 'animal', 'snake', 'reptile', 'wildlife', 'habitat', 'evolution'],
-        'Computing': ['programming', 'language', 'software', 'computer', 'code', 'algorithm', 'development', 'coding'],
-        'Mythology': ['myth', 'legend', 'greek', 'roman', 'ancient', 'god', 'goddess', 'serpent', 'dragon'],
-        'People': ['person', 'individual', 'human', 'born', 'died', 'lived', 'philosopher', 'artist', 'scientist'],
-        'Technology': ['technology', 'tech', 'innovation', 'device', 'system', 'digital', 'electronic'],
-        'History': ['historical', 'history', 'war', 'battle', 'ancient', 'medieval', 'century', 'era'],
-        'Culture': ['culture', 'cultural', 'art', 'music', 'film', 'entertainment', 'comedy', 'group'],
-        'Science': ['science', 'scientific', 'research', 'study', 'experiment', 'theory', 'discovery'],
-        'Geography': ['country', 'city', 'location', 'place', 'region', 'continent', 'nation'],
-        'Other Uses': ['other', 'also', 'additionally', 'furthermore', 'moreover', 'besides']
+        'Physics': ['physics', 'physical', 'force', 'motion', 'acceleration', 'velocity', 'momentum', 'mass', 'energy', 'law', 'principle', 'newton', 'mechanics', 'dynamics', 'kinematics'],
+        'Biology': ['species', 'genus', 'family', 'animal', 'snake', 'reptile', 'wildlife', 'habitat', 'evolution', 'organism', 'living'],
+        'Computing': ['programming', 'language', 'software', 'computer', 'code', 'algorithm', 'development', 'coding', 'programming'],
+        'Mythology': ['myth', 'legend', 'greek', 'roman', 'ancient', 'god', 'goddess', 'serpent', 'dragon', 'mythology'],
+        'People': ['person', 'individual', 'human', 'born', 'died', 'lived', 'philosopher', 'artist', 'scientist', 'mathematician', 'physicist'],
+        'Technology': ['technology', 'tech', 'innovation', 'device', 'system', 'digital', 'electronic', 'engineering'],
+        'History': ['historical', 'history', 'war', 'battle', 'ancient', 'medieval', 'century', 'era', 'published', 'formulated'],
+        'Culture': ['culture', 'cultural', 'art', 'music', 'film', 'entertainment', 'comedy', 'group', 'entertainment'],
+        'Science': ['science', 'scientific', 'research', 'study', 'experiment', 'theory', 'discovery', 'mathematics', 'chemistry'],
+        'Geography': ['country', 'city', 'location', 'place', 'region', 'continent', 'nation', 'geography'],
+        'Other Uses': ['other', 'also', 'additionally', 'furthermore', 'moreover', 'besides', 'application', 'use']
     };
     
     sentences.forEach(sentence => {
@@ -331,6 +334,14 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
                 bestCategory = 'Computing';
             } else if (lowerSentence.includes('myth') || lowerSentence.includes('apollo')) {
                 bestCategory = 'Mythology';
+            }
+        } else if (queryLower.includes('newton') || queryLower.includes('law') || queryLower.includes('motion')) {
+            if (lowerSentence.includes('force') || lowerSentence.includes('acceleration') || lowerSentence.includes('momentum')) {
+                bestCategory = 'Physics';
+            } else if (lowerSentence.includes('isaac') || lowerSentence.includes('newton')) {
+                bestCategory = 'People';
+            } else if (lowerSentence.includes('published') || lowerSentence.includes('1687') || lowerSentence.includes('principia')) {
+                bestCategory = 'History';
             }
         }
         
@@ -369,12 +380,29 @@ function formatFact(fact: string, query: string): string {
     formatted = formatted.replace(/\s+is\s+an\s+/gi, ' is an ');
     formatted = formatted.replace(/\s+is\s+the\s+/gi, ' is the ');
     
+    // Fix incomplete sentences
+    formatted = formatted.replace(/\.\.\.$/, '.');
+    formatted = formatted.replace(/and\.$/, '.');
+    formatted = formatted.replace(/of\.$/, '.');
+    formatted = formatted.replace(/the\.$/, '.');
+    
     // Remove trailing periods if there are multiple
     formatted = formatted.replace(/\.+$/, '.');
     
     // Ensure it ends with a period
     if (!formatted.endsWith('.') && !formatted.endsWith('!') && !formatted.endsWith('?')) {
         formatted += '.';
+    }
+    
+    // Make sure it's a complete sentence (has a verb)
+    if (!formatted.includes(' is ') && !formatted.includes(' are ') && !formatted.includes(' was ') && 
+        !formatted.includes(' were ') && !formatted.includes(' has ') && !formatted.includes(' have ') &&
+        !formatted.includes(' can ') && !formatted.includes(' will ') && !formatted.includes(' do ') &&
+        !formatted.includes(' does ') && !formatted.includes(' did ')) {
+        // Try to make it a complete sentence
+        if (formatted.includes(':')) {
+            formatted = formatted.replace(':', ' is');
+        }
     }
     
     return formatted.trim();
@@ -510,8 +538,39 @@ function areRelatedFacts(fact1: string, fact2: string): boolean {
     return commonWords.length >= 1;
 }
 
+function createGroupHeader(firstFact: string, category: string): string {
+    // Extract key terms from the first fact to create a meaningful header
+    const words = firstFact.toLowerCase().split(/\s+/);
+    const keyWords = words.filter(word => 
+        word.length > 3 && 
+        !['that', 'this', 'with', 'from', 'they', 'them', 'their', 'there', 'where', 'when', 'what', 'which', 'who'].includes(word)
+    );
+    
+    if (keyWords.length > 0) {
+        const header = keyWords.slice(0, 2).map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        return header;
+    }
+    
+    // Fallback to category-based headers
+    const categoryHeaders: { [key: string]: string } = {
+        'Physics': 'Key Concepts',
+        'Biology': 'Species Information',
+        'Computing': 'Programming Details',
+        'People': 'Historical Figures',
+        'History': 'Historical Context',
+        'Culture': 'Cultural Aspects',
+        'Science': 'Scientific Facts',
+        'Other Uses': 'Additional Applications'
+    };
+    
+    return categoryHeaders[category] || 'Key Information';
+}
+
 function getCategoryEmoji(category: string): string {
     const emojis: { [key: string]: string } = {
+        'Physics': '⚡',
         'Biology': '🐍',
         'Computing': '💻',
         'Mythology': '🏛️',
