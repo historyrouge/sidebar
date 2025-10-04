@@ -16,25 +16,27 @@ type Article = {
 
 const parser = new RssParser({
     customFields: {
-        item: [['media:content', 'mediaContent', {keepArray: false}]],
+        item: [['media:group', 'media:group', {keepArray: false}]],
     }
 });
 
-const fallbackRssFeed = "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms";
+const fallbackRssFeed = "http://rss.cnn.com/rss/edition.rss";
 
 async function fetchFromRss(feedUrl: string): Promise<Article[]> {
     const feed = await parser.parseURL(feedUrl);
     return feed.items.map((item: any) => {
-        // Clean up description by removing the img tag
-        const description = item.contentSnippet || item.content || "No description";
-        const cleanedDescription = description.replace(/<img[^>]*>/g, "").trim();
-
-        // The TOI feed has the best image in the media:content enclosure
-        const imageUrl = item.enclosure?.url || (item.mediaContent && item.mediaContent.$ && item.mediaContent.$.url) || "";
+        const description = item.contentSnippet || item.content || "No description available.";
+        
+        // CNN specific image parsing from media:group
+        let imageUrl = "";
+        if (item['media:group'] && item['media:group']['media:content'] && item['media:group']['media:content'].length > 0) {
+            const largestImage = item['media:group']['media:content'].find((i:any) => i.$.medium === 'image' && i.$.width > 1000);
+            imageUrl = largestImage ? largestImage.$.url : item['media:group']['media:content'][0].$.url;
+        }
 
         return {
             title: item.title || "No title",
-            description: cleanedDescription,
+            description: description,
             url: item.link || "",
             urlToImage: imageUrl,
             source: {

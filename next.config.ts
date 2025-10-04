@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'static.toiimg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.cnn.com',
       }
     ],
   },
