@@ -116,7 +116,7 @@ export function MainDashboard() {
         </div>
       </header>
        <div className="flex justify-center p-2 border-b">
-            <div className="bg-muted p-1 rounded-lg flex gap-1 w-full max-w-sm">
+            <div className="bg-muted p-1 rounded-lg flex gap-1 w-full">
                  <Button 
                     variant={activeView === 'stories' ? 'outline' : 'ghost'} 
                     className={cn("gap-2 flex-1", activeView === 'stories' && 'bg-background')}
