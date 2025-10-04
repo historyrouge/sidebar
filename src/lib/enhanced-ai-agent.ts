@@ -209,30 +209,22 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * Optimized source consolidation with caching and timeout
+   * Real web scraping with DuckDuckGo search and website scraping
    */
   private async fetchAndConsolidateSources(query: string, domain: string): Promise<Source[]> {
     const cacheKey = `sources:${query.toLowerCase()}:${domain}`;
     const cached = this.getCached(cacheKey);
     if (cached) return cached;
     
-    console.log('📚 Fetching and consolidating sources...');
+    console.log('📚 Fetching real web sources...');
     
     try {
-      // Use timeout to prevent slow API calls
-      const sourceResponses = await this.withTimeout(
-        MultiSourceAPIManager.fetchFromMultipleSources(query, domain, 3), // Reduced from 5 to 3
+      // Use real web scraping instead of simulated APIs
+      const sources = await this.withTimeout(
+        this.performRealWebScraping(query),
         EnhancedAIAgent.TIMEOUTS.source_fetch,
         []
       );
-      
-      const sources: Source[] = sourceResponses.map(response => ({
-        url: response.metadata.url || '',
-        label: response.source,
-        snippet: response.content,
-        last_updated: response.metadata.last_updated || new Date().toISOString(),
-        authority_score: response.metadata.confidence
-      }));
       
       this.setCache(cacheKey, sources, 5 * 60 * 1000); // Cache for 5 minutes
       return sources;
@@ -241,6 +233,132 @@ export class EnhancedAIAgent {
       console.error('Error fetching sources:', error);
       return [];
     }
+  }
+
+  /**
+   * Real web scraping implementation
+   */
+  private async performRealWebScraping(query: string): Promise<Source[]> {
+    const sources: Source[] = [];
+    
+    try {
+      // 1. Try Wikipedia first
+      const wikiSource = await this.fetchWikipediaData(query);
+      if (wikiSource) sources.push(wikiSource);
+      
+      // 2. Use DuckDuckGo search for additional sources
+      const webSources = await this.fetchDuckDuckGoResults(query);
+      sources.push(...webSources);
+      
+      // 3. Scrape content from top results
+      const scrapedSources = await this.scrapeWebsiteContent(sources.slice(0, 3));
+      
+      return scrapedSources;
+      
+    } catch (error) {
+      console.error('Real web scraping error:', error);
+      return sources;
+    }
+  }
+
+  /**
+   * Fetch Wikipedia data
+   */
+  private async fetchWikipediaData(query: string): Promise<Source | null> {
+    try {
+      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+      const response = await fetch(url, { timeout: 5000 });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          url: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(query)}`,
+          label: 'Wikipedia',
+          snippet: data.extract || `Wikipedia information about ${query}`,
+          last_updated: data.timestamp || new Date().toISOString(),
+          authority_score: 0.9
+        };
+      }
+    } catch (error) {
+      console.error('Wikipedia fetch error:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Fetch DuckDuckGo search results
+   */
+  private async fetchDuckDuckGoResults(query: string): Promise<Source[]> {
+    try {
+      const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        const $ = require('cheerio').load(html);
+        const sources: Source[] = [];
+        
+        $('.result').each((i: number, element: any) => {
+          if (i >= 3) return false; // Limit to 3 results
+          
+          const title = $(element).find('.result__title a').text().trim();
+          const url = $(element).find('.result__title a').attr('href');
+          const snippet = $(element).find('.result__snippet').text().trim();
+          
+          if (title && url && snippet) {
+            sources.push({
+              url: url.startsWith('//') ? 'https:' + url : url,
+              label: 'Web Search',
+              snippet: snippet,
+              last_updated: new Date().toISOString(),
+              authority_score: 0.7
+            });
+          }
+        });
+        
+        return sources;
+      }
+    } catch (error) {
+      console.error('DuckDuckGo fetch error:', error);
+    }
+    return [];
+  }
+
+  /**
+   * Scrape content from websites
+   */
+  private async scrapeWebsiteContent(sources: Source[]): Promise<Source[]> {
+    const scrapedSources: Source[] = [];
+    
+    for (const source of sources) {
+      try {
+        const response = await fetch(source.url, { timeout: 5000 });
+        if (response.ok) {
+          const html = await response.text();
+          const $ = require('cheerio').load(html);
+          
+          // Extract main content
+          const content = $('p').map((i: number, el: any) => $(el).text()).get().join(' ').substring(0, 500);
+          
+          if (content.length > 50) {
+            scrapedSources.push({
+              ...source,
+              snippet: content + '...',
+              authority_score: source.authority_score + 0.1
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Error scraping ${source.url}:`, error);
+        scrapedSources.push(source); // Keep original if scraping fails
+      }
+    }
+    
+    return scrapedSources;
   }
 
   /**
