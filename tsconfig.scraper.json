@@ -19,6 +19,6 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/server.ts", "src/scraper.ts"],
   "exclude": ["node_modules", "dist"]
 }

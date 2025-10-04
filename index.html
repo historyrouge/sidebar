@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraper Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1 class="app-title">Web Scraper Chat</h1>
+                    <p class="app-subtitle">Extract data from any website</p>
+                </div>
+                
+                <div class="sidebar-content">
+                    <div class="input-section">
+                        <div class="input-group">
+                            <label for="url-input">Website URL</label>
+                            <input 
+                                type="url" 
+                                id="url-input" 
+                                placeholder="https://example.com"
+                                class="url-input"
+                            >
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="query-input">Search Query</label>
+                            <input 
+                                type="text" 
+                                id="query-input" 
+                                placeholder="Ask about anything..."
+                                class="query-input"
+                            >
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="scrape-btn" class="btn btn-primary">
+                                <span class="btn-icon">🔍</span>
+                                Scrape Website
+                            </button>
+                            <button id="search-btn" class="btn btn-secondary">
+                                <span class="btn-icon">📚</span>
+                                Search Wikipedia
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="history-section">
+                        <h3>Recent Searches</h3>
+                        <div id="history-list" class="history-list">
+                            <!-- History items will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Main Chat Area -->
+            <main class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat Interface</h2>
+                    <div class="chat-controls">
+                        <button id="clear-chat" class="btn btn-ghost">Clear Chat</button>
+                    </div>
+                </div>
+                
+                <div id="chat-messages" class="chat-messages">
+                    <div class="welcome-message">
+                        <div class="welcome-icon">🤖</div>
+                        <h3>Welcome to Web Scraper Chat!</h3>
+                        <p>Enter a website URL or search query to get started. I'll extract and present the information in a chat-like format.</p>
+                        <div class="example-queries">
+                            <h4>Try these examples:</h4>
+                            <ul>
+                                <li>"Who is the PM of India?"</li>
+                                <li>"Tell me about Newton's Laws of Motion"</li>
+                                <li>"What is electrochemistry?"</li>
+                                <li>Or paste any website URL</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="chat-input" 
+                            placeholder="Ask me anything or paste a URL..."
+                            class="chat-input"
+                        >
+                        <button id="send-btn" class="send-btn">
+                            <span class="send-icon">➤</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

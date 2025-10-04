@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+require("@/ai/flows/generate-flashcards.ts");
+require("@/ai/flows/generate-flashcards-samba.ts");
+require("@/ai/flows/analyze-content.ts");
+require("@/ai/flows/generate-quizzes.ts");
+require("@/ai/flows/generate-quizzes-samba.ts");
+require("@/ai/flows/analyze-code.ts");
+require("@/ai/flows/generate-mindmap.ts");
+require("@/ai/flows/generate-question-paper.ts");
+require("@/ai/flows/generate-presentation.ts");
+require("@/ai/flows/image-to-text.ts");
+require("@/ai/flows/generate-edited-content.ts");
+require("@/ai/flows/generate-image.ts");
+require("@/ai/training-data.ts");
+require("@/ai/tools/youtube-search.ts");
+require("@/ai/tools/duckduckgo-search.ts");
+require("@/ai/tools/browse-website.ts");
