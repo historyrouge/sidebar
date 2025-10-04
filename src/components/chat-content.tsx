@@ -36,6 +36,7 @@ import { DEFAULT_MODEL_ID } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
 import { TypewriterText } from "./typewriter-text";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 
 type Message = {
@@ -734,14 +735,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && (
-                <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <Bot className="size-4 shrink-0 mt-1" />
-                    <div className="flex flex-col">
-                        <p className="font-semibold">SearnAI is typing...</p>
-                    </div>
-                </div>
-            )}
+            {isTyping && <ThinkingIndicator />}
           </div>
         </ScrollArea>
 
