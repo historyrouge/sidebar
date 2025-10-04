@@ -248,12 +248,20 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         .filter(s => !s.includes('In Brief') && !s.includes('Court filings') && !s.includes('TechCrunch Disrupt'))
         .filter(s => !s.includes('Government Policy') && !s.includes('AI CoreWeave') && !s.includes('Meta names'))
         .filter(s => !s.includes('Acquisition Reflects') && !s.includes('Perplexity AI'))
+        .filter(s => !s.includes('Qpresident_of_indiahere') && !s.includes('QVice_President_of_Indiahere'))
+        .filter(s => !s.includes('Doesnt') && !s.includes('if it doesnt happen automatically'))
+        .filter(s => !s.includes('first, and to date, the only, woman to hold the post'))
+        .filter(s => !s.includes('nationalisation of banks') && !s.includes('end of allowances'))
+        .filter(s => !s.includes('erstwhile princely states') && !s.includes('British Indian Empire'))
+        .filter(s => !s.includes('Government of India (Allocation of Business) Rules, 1961'))
+        .filter(s => !s.includes('Indian Administrative Service (IAS)') && !s.includes('Indian Foreign Service (IFS)'))
         .filter(s => !s.match(/^[0-9\s]+$/)) // Remove pure numbers
         .filter(s => !s.match(/^[a-zA-Z\s]{1,3}$/)) // Remove very short words
         .filter(s => !s.match(/^[A-Z\s]+$/)) // Remove pure uppercase (likely headers)
-        .filter(s => s.split(' ').length >= 4) // Must have at least 4 words
+        .filter(s => s.split(' ').length >= 5) // Must have at least 5 words
         .filter(s => !s.endsWith(':')) // Remove incomplete sentences ending with colon
-        .filter(s => !s.endsWith('and') && !s.endsWith('or') && !s.endsWith('the')); // Remove incomplete sentences
+        .filter(s => !s.endsWith('and') && !s.endsWith('or') && !s.endsWith('the')) // Remove incomplete sentences
+        .filter(s => !s.includes('office is headed by') && !s.includes('principal secretary')); // Remove administrative details
     
     // Create category-based organization
     const categories = categorizeContent(sentences, query);
@@ -306,9 +314,10 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
         'Biology': ['species', 'genus', 'family', 'animal', 'snake', 'reptile', 'wildlife', 'habitat', 'evolution', 'organism', 'living'],
         'Computing': ['programming', 'language', 'software', 'computer', 'code', 'algorithm', 'development', 'coding', 'programming'],
         'Mythology': ['myth', 'legend', 'greek', 'roman', 'ancient', 'god', 'goddess', 'serpent', 'dragon', 'mythology'],
-        'People': ['person', 'individual', 'human', 'born', 'died', 'lived', 'philosopher', 'artist', 'scientist', 'mathematician', 'physicist'],
+        'People': ['person', 'individual', 'human', 'born', 'died', 'lived', 'philosopher', 'artist', 'scientist', 'mathematician', 'physicist', 'narendra', 'modi', 'current', 'serving'],
+        'Politics': ['government', 'ministry', 'parliament', 'constitution', 'law', 'powers', 'political', 'democracy', 'election', 'cabinet', 'ministers'],
         'Technology': ['technology', 'tech', 'innovation', 'device', 'system', 'digital', 'electronic', 'engineering'],
-        'History': ['historical', 'history', 'war', 'battle', 'ancient', 'medieval', 'century', 'era', 'published', 'formulated'],
+        'History': ['historical', 'history', 'war', 'battle', 'ancient', 'medieval', 'century', 'era', 'published', 'formulated', 'former', 'previous'],
         'Culture': ['culture', 'cultural', 'art', 'music', 'film', 'entertainment', 'comedy', 'group', 'entertainment'],
         'Science': ['science', 'scientific', 'research', 'study', 'experiment', 'theory', 'discovery', 'mathematics', 'chemistry'],
         'Geography': ['country', 'city', 'location', 'place', 'region', 'continent', 'nation', 'geography'],
@@ -358,6 +367,16 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
                 bestCategory = 'Technology';
             } else if (lowerSentence.includes('company') || lowerSentence.includes('startup') || lowerSentence.includes('business')) {
                 bestCategory = 'Technology';
+            }
+        } else if (queryLower.includes('pm') || queryLower.includes('prime minister') || queryLower.includes('india')) {
+            if (lowerSentence.includes('narendra modi') || lowerSentence.includes('current') || lowerSentence.includes('serving')) {
+                bestCategory = 'People';
+            } else if (lowerSentence.includes('government') || lowerSentence.includes('ministry') || lowerSentence.includes('parliament')) {
+                bestCategory = 'Politics';
+            } else if (lowerSentence.includes('history') || lowerSentence.includes('former') || lowerSentence.includes('previous')) {
+                bestCategory = 'History';
+            } else if (lowerSentence.includes('constitution') || lowerSentence.includes('law') || lowerSentence.includes('powers')) {
+                bestCategory = 'Politics';
             }
         }
         
@@ -427,6 +446,12 @@ function formatFact(fact: string, query: string): string {
             formatted = formatted.replace('founder of', 'is founder of');
         } else if (formatted.includes('American entrepreneur')) {
             formatted = formatted.replace('American entrepreneur', 'is an American entrepreneur');
+        } else if (formatted.includes('Prime Minister of India')) {
+            formatted = formatted.replace('Prime Minister of India', 'is the Prime Minister of India');
+        } else if (formatted.includes('current Prime Minister')) {
+            formatted = formatted.replace('current Prime Minister', 'is the current Prime Minister');
+        } else if (formatted.includes('serving as')) {
+            formatted = formatted.replace('serving as', 'is serving as');
         }
     }
     
@@ -614,6 +639,7 @@ function getCategoryEmoji(category: string): string {
         'Computing': '💻',
         'Mythology': '🏛️',
         'People': '👤',
+        'Politics': '🏛️',
         'Technology': '🔧',
         'History': '📜',
         'Culture': '🎭',
