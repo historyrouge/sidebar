@@ -3,7 +3,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { search } from 'node-duckduckgo';
+import { duckIt } from 'node-duckduckgo';
 
 export const duckDuckGoSearch = ai.defineTool(
   {
@@ -16,7 +16,7 @@ export const duckDuckGoSearch = ai.defineTool(
   },
   async ({ query }) => {
     try {
-      const searchResults = await search({ query, maxResults: 5, safeSearch: 'off' });
+      const searchResults = await duckIt(query, { maxResults: 5, safeSearch: 'off' });
       return JSON.stringify(searchResults.results);
     } catch (error) {
       console.error('DuckDuckGo search error:', error);

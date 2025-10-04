@@ -37,6 +37,19 @@ export type ActionResult<T> = {
     error?: string;
 };
 
+export type GeneralChatInput = {
+    history: CoreMessage[];
+    fileContent?: string | null;
+    imageDataUri?: string | null;
+    model?: string;
+    isMusicMode?: boolean;
+    isWebScrapingMode?: boolean;
+};
+
+export type GeneralChatOutput = {
+    response: string;
+};
+
 interface ScrapedData {
     title: string;
     content: string;
@@ -746,6 +759,20 @@ export async function textToSpeechAction(input: TextToSpeechInput): Promise<Acti
     }
 }
 
+export async function streamTextToSpeech(text: string): Promise<ReadableStream> {
+    try {
+        const result = await textToSpeech({ text });
+        return new ReadableStream({
+            start(controller) {
+                controller.enqueue(new TextEncoder().encode(result.audioUrl));
+                controller.close();
+            }
+        });
+    } catch (error: any) {
+        throw new Error(`TTS streaming error: ${error.message}`);
+    }
+}
+
 export async function getYoutubeTranscriptAction(input: GetYoutubeTranscriptInput): Promise<ActionResult<GetYoutubeTranscriptOutput>> {
     try {
         const data = await getYoutubeTranscript(input);
@@ -864,6 +891,19 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
 }
 
 // Main non-streaming chat action
+export async function generalChatAction(input: GeneralChatInput): Promise<ActionResult<GeneralChatOutput>> {
+    try {
+        // Use the same logic as chatAction but with Qwen model
+        const result = await chatAction({
+            ...input,
+            modelId: 'qwen-2.5-7b-instruct' // Use Qwen for general chat
+        });
+        return result;
+    } catch (error: any) {
+        return { error: `General chat error: ${error.message}` };
+    }
+}
+
 export async function chatAction(input: {
     history: CoreMessage[],
     fileContent?: string | null,
@@ -912,7 +952,7 @@ export async function chatAction(input: {
             const enhancedResponse = await enhancedAgent.runSprint(query);
             
             // Format the response for the chat interface
-            const formattedResponse = this.formatEnhancedResponse(enhancedResponse);
+            const formattedResponse = formatEnhancedResponse(enhancedResponse);
             
             return { data: { response: formattedResponse } };
         } catch (error: any) {
