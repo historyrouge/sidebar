@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-
+import { NewsContent } from "./news-content";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -136,7 +136,11 @@ export function MainDashboard() {
             </div>
         </div>
       <main className="flex-1 overflow-hidden relative">
-         <ChatContent />
+         {activeView === 'searnai' ? (
+            <ChatContent />
+         ) : (
+            <NewsContent />
+         )}
          {activeVideoId && showPlayer && (
              <div className="fixed bottom-4 right-4 z-50 group">
                 <iframe
