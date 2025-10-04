@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Multi-Website Scraper Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .test-section {
+            background-color: #1e293b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .test-button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #2563eb;
+        }
+        .result {
+            background-color: #0f172a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .success {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Multi-Website Scraper Chat - Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Application Status</h2>
+        <p>Development server: <span id="serverStatus">Checking...</span></p>
+        <p>Main application: <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Core Functionality Tests</h2>
+        <button class="test-button" onclick="testWikipediaAPI()">Test Wikipedia API</button>
+        <button class="test-button" onclick="testWebScraping()">Test Web Scraping</button>
+        <button class="test-button" onclick="testChatInterface()">Test Chat Interface</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Example Questions to Try</h2>
+        <ul>
+            <li>"Who is the Prime Minister of India?"</li>
+            <li>"Tell me about Newton's Laws of Motion"</li>
+            <li>"What is electrochemistry?"</li>
+            <li>"Who is the founder of SpaceX?"</li>
+            <li>"Explain quantum computing"</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Features Implemented</h2>
+        <ul>
+            <li>✅ Wikipedia API integration</li>
+            <li>✅ General web scraping</li>
+            <li>✅ ChatGPT-like interface</li>
+            <li>✅ Source attribution</li>
+            <li>✅ Conversation history</li>
+            <li>✅ Responsive design</li>
+            <li>✅ Dark theme</li>
+            <li>✅ TypeScript implementation</li>
+        </ul>
+    </div>
+
+    <script>
+        // Check server status
+        fetch('http://localhost:3001')
+            .then(response => {
+                document.getElementById('serverStatus').innerHTML = '<span class="success">✅ Running</span>';
+            })
+            .catch(error => {
+                document.getElementById('serverStatus').innerHTML = '<span class="error">❌ Not running</span>';
+            });
+
+        function addTestResult(test, result, isError = false) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = `<strong>${test}:</strong>\n${result}`;
+            if (isError) {
+                resultDiv.classList.add('error');
+            } else {
+                resultDiv.classList.add('success');
+            }
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testWikipediaAPI() {
+            try {
+                const response = await fetch('https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=India&srlimit=1&origin=*');
+                const data = await response.json();
+                
+                if (data.query && data.query.search) {
+                    addTestResult('Wikipedia API', `✅ Successfully fetched ${data.query.search.length} results for "India"`);
+                } else {
+                    addTestResult('Wikipedia API', '❌ No search results found', true);
+                }
+            } catch (error) {
+                addTestResult('Wikipedia API', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testWebScraping() {
+            try {
+                // Test a simple website
+                const response = await fetch('https://httpbin.org/html');
+                const html = await response.text();
+                
+                if (html.includes('<html>')) {
+                    addTestResult('Web Scraping', '✅ Successfully fetched HTML content');
+                } else {
+                    addTestResult('Web Scraping', '❌ Invalid HTML content', true);
+                }
+            } catch (error) {
+                addTestResult('Web Scraping', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        function testChatInterface() {
+            try {
+                // Test if the main application loads
+                const iframe = document.createElement('iframe');
+                iframe.src = 'http://localhost:3001';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                iframe.onload = () => {
+                    addTestResult('Chat Interface', '✅ Application loads successfully');
+                    document.body.removeChild(iframe);
+                };
+                
+                iframe.onerror = () => {
+                    addTestResult('Chat Interface', '❌ Application failed to load', true);
+                };
+            } catch (error) {
+                addTestResult('Chat Interface', `❌ Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
