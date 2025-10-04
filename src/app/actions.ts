@@ -27,6 +27,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import CustomAIAgent from '@/lib/custom-ai-agent';
 import SmartAIResponder from '@/lib/smart-ai-responder';
+import EnhancedAIAgent from '@/lib/enhanced-ai-agent';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
@@ -304,6 +305,63 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
     answer += `\n${finalTldr}`;
     
     return answer;
+}
+
+function formatEnhancedResponse(response: any): string {
+    let formatted = `# ${response.query.toUpperCase()} – Enhanced AI Response\n\n`;
+    
+    // TL;DR
+    formatted += `**TL;DR 🚀:** ${response.tldr}\n\n`;
+    
+    // Confidence and metrics
+    formatted += `**📊 Confidence:** ${Math.round(response.meta.confidence * 100)}% | **⚠️ Conflicts:** ${response.meta.conflicts_found} | **📈 Coverage:** ${response.meta.coverage_percentage}%\n\n`;
+    
+    // Cards
+    response.cards.forEach((card: any) => {
+        formatted += `## ${card.title}\n\n`;
+        formatted += `**${card.short}**\n\n`;
+        formatted += `${card.long}\n\n`;
+        
+        // Facts
+        if (Object.keys(card.facts).length > 0) {
+            formatted += `**Key Facts:**\n`;
+            Object.entries(card.facts).forEach(([key, value]) => {
+                formatted += `• ${key}: ${value}\n`;
+            });
+            formatted += `\n`;
+        }
+    });
+    
+    // FAQ
+    if (response.faq.length > 0) {
+        formatted += `## ❓ Frequently Asked Questions\n\n`;
+        response.faq.forEach((faq: any) => {
+            formatted += `**Q:** ${faq.q}\n`;
+            formatted += `**A:** ${faq.a}\n\n`;
+        });
+    }
+    
+    // Disambiguation
+    if (response.disambiguation.length > 1) {
+        formatted += `## 🎯 Did you mean?\n\n`;
+        formatted += response.disambiguation.map((item: string) => `• ${item}`).join('\n') + `\n\n`;
+    }
+    
+    // Translations
+    if (Object.keys(response.translations).length > 0) {
+        formatted += `## 🌐 Translations\n\n`;
+        Object.entries(response.translations).forEach(([lang, text]) => {
+            formatted += `**${lang.toUpperCase()}:** ${text}\n`;
+        });
+        formatted += `\n`;
+    }
+    
+    // Sources
+    formatted += `## 📚 Sources\n\n`;
+    formatted += `👉 Wikipedia | Britannica | Official Sources\n`;
+    formatted += `🕒 Last updated: ${new Date(response.meta.generated_at).toLocaleDateString()}\n`;
+    
+    return formatted;
 }
 
 function categorizeContent(sentences: string[], query: string): { [key: string]: string[] } {
@@ -847,62 +905,18 @@ export async function chatAction(input: {
     if (isWebScraping) {
         const query = input.history[input.history.length - 1].content.toString();
         try {
-            // Initialize our smart AI responder
-            const smartResponder = new SmartAIResponder();
+            // Initialize our enhanced AI agent for the 1-hour sprint
+            const enhancedAgent = new EnhancedAIAgent();
             
-            // Search for relevant websites
-            const searchResults = await searchWebsites(query);
-            let websitesToScrape: string[] = [];
+            // Run the full sprint pipeline
+            const enhancedResponse = await enhancedAgent.runSprint(query);
             
-            if (searchResults.length > 0) {
-                websitesToScrape = searchResults.map(result => result.url).filter(url => url);
-            }
+            // Format the response for the chat interface
+            const formattedResponse = this.formatEnhancedResponse(enhancedResponse);
             
-            // Add some default reliable sources based on query type
-            const defaultSources = [];
-            
-            // Add Wikipedia for general topics
-            defaultSources.push('https://en.wikipedia.org/wiki/' + encodeURIComponent(query));
-            
-            // Add Britannica for educational content
-            defaultSources.push('https://www.britannica.com/search?query=' + encodeURIComponent(query));
-            
-            // Add specific sources based on query keywords
-            const lowerQuery = query.toLowerCase();
-            if (lowerQuery.includes('science') || lowerQuery.includes('physics') || lowerQuery.includes('chemistry')) {
-                defaultSources.push('https://www.scientificamerican.com/search/?q=' + encodeURIComponent(query));
-            }
-            if (lowerQuery.includes('history') || lowerQuery.includes('war') || lowerQuery.includes('ancient')) {
-                defaultSources.push('https://www.history.com/search?q=' + encodeURIComponent(query));
-            }
-            if (lowerQuery.includes('technology') || lowerQuery.includes('computer') || lowerQuery.includes('ai')) {
-                defaultSources.push('https://www.techcrunch.com/search/' + encodeURIComponent(query));
-            }
-            
-            websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 6);
-            
-            // Scrape all websites
-            const scrapedContent = [];
-            
-            for (const url of websitesToScrape) {
-                try {
-                    const data = await scrapeWebsite(url);
-                    if (data && data.content.length > 100) {
-                        scrapedContent.push(data.content);
-                    }
-                } catch (error) {
-                    console.error(`Failed to scrape ${url}:`, error);
-                }
-            }
-            
-            // Generate smart response using our AI
-            const smartResponse = await smartResponder.enrichWithLiveData(
-                smartResponder.generateResponse(query, scrapedContent)
-            );
-            
-            return { data: { response: smartResponse.formatted } };
+            return { data: { response: formattedResponse } };
         } catch (error: any) {
-            return { error: `Sorry, an error occurred while scraping websites: ${error.message}` };
+            return { error: `Sorry, an error occurred while processing your query: ${error.message}` };
         }
     }
 
