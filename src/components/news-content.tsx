@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 
 type Article = {
   title: string;
