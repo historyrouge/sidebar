@@ -5,18 +5,16 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Rss, RefreshCw, Loader2 } from "lucide-react";
-import { BackButton } from "./back-button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 
 type Article = {
   title: string;
   description: string;
   url: string;
-  urlToImage: string;
+  urlToImage: string | null;
   source: {
     name: string;
   };
@@ -92,7 +90,7 @@ export function NewsContent() {
       }
       const data = await res.json();
       
-      const filteredArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]");
+      const filteredArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]" && article.urlToImage);
       
       if (pageNum === 1) {
         setArticles(filteredArticles);
@@ -189,7 +187,7 @@ export function NewsContent() {
         )}
 
         {loading ? (
-             <div className="grid gap-8 md:grid-cols-3">
+             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 9 }).map((_, i) => (
                      <Card key={i}>
                         <CardHeader className="p-0">
@@ -209,24 +207,27 @@ export function NewsContent() {
             </div>
         ) : (
             <>
-                <div className="grid gap-8 md:grid-cols-3">
+                <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {articles.map((article, i) => (
                          <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
-                                {article.urlToImage ? (
-                                    <div className="relative w-full h-48 bg-muted">
-                                        <img
-                                            src={article.urlToImage}
-                                            alt={article.title}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => (e.currentTarget.style.display = 'none')}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                                        <Rss className="w-10 h-10 text-primary/50" />
-                                    </div>
-                                )}
+                                <div className="relative w-full h-48 bg-muted">
+                                    <img
+                                        src={article.urlToImage || ''}
+                                        alt={article.title}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            const parent = (e.target as HTMLImageElement).parentElement;
+                                            if (parent) {
+                                                const fallback = document.createElement('div');
+                                                fallback.className = 'h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center';
+                                                fallback.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 text-primary/50"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>`;
+                                                parent.appendChild(fallback);
+                                            }
+                                        }}
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent className="p-4 flex-grow flex flex-col">
                                 <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
