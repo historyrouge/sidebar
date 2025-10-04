@@ -26,6 +26,7 @@ import { browseWebsite } from '@/ai/tools/browse-website';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import CustomAIAgent from '@/lib/custom-ai-agent';
+import SmartAIResponder from '@/lib/smart-ai-responder';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
@@ -846,8 +847,8 @@ export async function chatAction(input: {
     if (isWebScraping) {
         const query = input.history[input.history.length - 1].content.toString();
         try {
-            // Initialize our custom AI agent
-            const aiAgent = new CustomAIAgent();
+            // Initialize our smart AI responder
+            const smartResponder = new SmartAIResponder();
             
             // Search for relevant websites
             const searchResults = await searchWebsites(query);
@@ -881,28 +882,25 @@ export async function chatAction(input: {
             websitesToScrape = [...websitesToScrape, ...defaultSources].slice(0, 6);
             
             // Scrape all websites
-            const sources = [];
+            const scrapedContent = [];
             
             for (const url of websitesToScrape) {
                 try {
                     const data = await scrapeWebsite(url);
                     if (data && data.content.length > 100) {
-                        sources.push({
-                            url: data.url,
-                            title: data.title,
-                            content: data.content,
-                            domain: new URL(data.url).hostname.replace('www.', '')
-                        });
+                        scrapedContent.push(data.content);
                     }
                 } catch (error) {
                     console.error(`Failed to scrape ${url}:`, error);
                 }
             }
             
-            // Use our custom AI agent to process the content
-            const response = await aiAgent.processQuery(query, sources);
+            // Generate smart response using our AI
+            const smartResponse = await smartResponder.enrichWithLiveData(
+                smartResponder.generateResponse(query, scrapedContent)
+            );
             
-            return { data: { response } };
+            return { data: { response: smartResponse.formatted } };
         } catch (error: any) {
             return { error: `Sorry, an error occurred while scraping websites: ${error.message}` };
         }
