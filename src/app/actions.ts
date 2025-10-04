@@ -227,30 +227,48 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
     const sentences = combinedInfo
         .split(/[.!?]+/)
         .filter(s => s.trim().length > 20)
-        .map(s => s.trim())
-        .filter(s => !s.includes('css') && !s.includes('stylesheet') && !s.includes('html'));
+        .map(s => cleanSentence(s))
+        .filter(s => s.length > 20)
+        .filter(s => !s.includes('css') && !s.includes('stylesheet') && !s.includes('html'))
+        .filter(s => !s.includes('style') && !s.includes('border') && !s.includes('position'))
+        .filter(s => !s.match(/^[0-9\s]+$/)) // Remove pure numbers
+        .filter(s => !s.match(/^[a-zA-Z\s]{1,3}$/)); // Remove very short words
     
     // Create category-based organization
     const categories = categorizeContent(sentences, query);
     
     // Generate TL;DR summary
     const tldr = generateTLDR(categories, query);
+    const finalTldr = generateFinalTLDR(categories, query);
     
     // Build the organized answer
     let answer = `${query.toUpperCase()} – Multiple Meanings\n\n`;
     answer += `👉 ${tldr}\n\n`;
     
-    // Add categorized sections
+    // Add categorized sections with bullets
     Object.entries(categories).forEach(([category, facts]) => {
         if (facts.length > 0) {
             const emoji = getCategoryEmoji(category);
-            answer += `${emoji} ${category}:\n`;
-            facts.forEach(fact => {
-                answer += `${fact}\n`;
+            answer += `${emoji} ${category}\n\n`;
+            
+            // Group related facts and add bullets
+            const groupedFacts = groupRelatedFacts(facts);
+            groupedFacts.forEach(group => {
+                if (group.length === 1) {
+                    answer += `${group[0]}\n\n`;
+                } else {
+                    answer += `${group[0]}:\n`;
+                    group.slice(1).forEach(fact => {
+                        answer += `• ${fact}\n`;
+                    });
+                    answer += '\n';
+                }
             });
-            answer += '\n';
         }
     });
+    
+    // Add final TL;DR at the end
+    answer += `\n${finalTldr}`;
     
     return answer;
 }
@@ -324,8 +342,25 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
 
 function cleanSentence(sentence: string): string {
     return sentence
-        .replace(/[^\w\s.,:;!?-]/g, '') // Remove special characters except basic punctuation
-        .replace(/\s+/g, ' ') // Normalize whitespace
+        // Remove HTML/CSS fragments
+        .replace(/style[^>]*>/gi, '')
+        .replace(/border:\s*[^;]+;/gi, '')
+        .replace(/position:\s*[^;]+;/gi, '')
+        .replace(/Retrieved from https?:\/\/[^\s]+/gi, '')
+        .replace(/https?:\/\/[^\s]+/gi, '')
+        .replace(/www\.[^\s]+/gi, '')
+        .replace(/\.com[^\s]*/gi, '')
+        .replace(/\.org[^\s]*/gi, '')
+        .replace(/\.edu[^\s]*/gi, '')
+        // Remove HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Remove CSS properties
+        .replace(/[a-zA-Z-]+:\s*[^;]+;/g, '')
+        // Remove special characters but keep basic punctuation
+        .replace(/[^\w\s.,:;!?()-]/g, '')
+        // Clean up whitespace
+        .replace(/\s+/g, ' ')
+        .replace(/^\s+|\s+$/g, '')
         .trim();
 }
 
@@ -341,6 +376,69 @@ function generateTLDR(categories: { [key: string]: string[] }, query: string): s
         const otherCategories = categoryNames.join(', ').toLowerCase();
         return `"${query}" has several meanings across ${otherCategories}, and ${lastCategory?.toLowerCase()}.`;
     }
+}
+
+function generateFinalTLDR(categories: { [key: string]: string[] }, query: string): string {
+    const categoryEmojis: { [key: string]: string } = {
+        'Biology': '🐍',
+        'Computing': '💻',
+        'Mythology': '🏛️',
+        'People': '👤',
+        'Technology': '🔧',
+        'History': '📜',
+        'Culture': '🎭',
+        'Science': '🔬',
+        'Geography': '🌍',
+        'Other Uses': '🎢'
+    };
+    
+    const activeCategories = Object.keys(categories).filter(cat => categories[cat].length > 0);
+    const emojiText = activeCategories.map(cat => {
+        const emoji = categoryEmojis[cat] || '📋';
+        const shortName = cat.toLowerCase();
+        return `${shortName} ${emoji}`;
+    }).join(', ');
+    
+    return `✨ TL;DR: "${query}" can mean ${emojiText}`;
+}
+
+function groupRelatedFacts(facts: string[]): string[][] {
+    const groups: string[][] = [];
+    const processed = new Set<string>();
+    
+    facts.forEach(fact => {
+        if (processed.has(fact)) return;
+        
+        const group = [fact];
+        processed.add(fact);
+        
+        // Find related facts
+        facts.forEach(otherFact => {
+            if (processed.has(otherFact)) return;
+            
+            // Check if facts are related (share keywords or are about same topic)
+            if (areRelatedFacts(fact, otherFact)) {
+                group.push(otherFact);
+                processed.add(otherFact);
+            }
+        });
+        
+        groups.push(group);
+    });
+    
+    return groups;
+}
+
+function areRelatedFacts(fact1: string, fact2: string): boolean {
+    const words1 = fact1.toLowerCase().split(/\s+/);
+    const words2 = fact2.toLowerCase().split(/\s+/);
+    
+    // Check for common meaningful words (longer than 3 characters)
+    const commonWords = words1.filter(word => 
+        word.length > 3 && words2.includes(word)
+    );
+    
+    return commonWords.length >= 1;
 }
 
 function getCategoryEmoji(category: string): string {
