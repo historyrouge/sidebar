@@ -14,7 +14,6 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { ShareDialog } from "./share-dialog";
-import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -34,8 +33,6 @@ import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
-import { TypewriterText } from "./typewriter-text";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { ThinkingIndicator } from "./thinking-indicator";
 
 
@@ -147,39 +144,6 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
         </div>
     );
 };
-
-const ThinkingBlock = ({ text }: { text: string }) => {
-    const [isAnimating, setIsAnimating] = useState(true);
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const handleAnimationComplete = () => {
-        setIsAnimating(false);
-    };
-    
-    const previewLines = text.split('\n').slice(0, 3).join('\n');
-
-    return (
-        <div className="p-3 rounded-lg bg-muted/50 mb-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5"><Bot className="h-3 w-3"/> DeepThink</p>
-            {isAnimating ? (
-                <TypewriterText text={text} onComplete={handleAnimationComplete} />
-            ) : (
-                <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-                    <div className="font-mono text-xs whitespace-pre-wrap">
-                        {isExpanded ? text : previewLines}
-                    </div>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="link" className="p-0 h-auto text-xs mt-2">
-                           {isExpanded ? 'Show less' : 'Show more'}
-                           <ChevronDown className={cn("h-3 w-3 ml-1 transition-transform", isExpanded && "rotate-180")}/>
-                        </Button>
-                    </CollapsibleTrigger>
-                </Collapsible>
-            )}
-        </div>
-    )
-}
-
 
 export function ChatContent() {
   const { toast } = useToast();
@@ -520,74 +484,49 @@ export function ChatContent() {
   const isInputDisabled = isTyping || isOcrProcessing;
 
   const renderMessageContent = (message: Message) => {
-    if (message.role === 'model') {
-        const thinkMatch = message.content.match(/<think>([\s\S]*?)<\/think>/);
-        const thinkingText = thinkMatch ? thinkMatch[1].trim() : null;
-        const mainContent = thinkMatch ? message.content.replace(/<think>[\s\S]*?<\/think>/, '').trim() : message.content;
-        
-        try {
-            const data = JSON.parse(mainContent);
-            if (data.type === 'youtube' && data.videoId) {
-                return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
-            }
-            if (data.type === 'website' && data.url) {
-                return <WebsiteChatCard websiteData={data} />;
-            }
-            if (data.type === 'image' && data.imageDataUri) {
-                return <GeneratedImageCard imageDataUri={data.imageDataUri} prompt={data.prompt} />;
-            }
-        } catch (e) {
-            // Not a JSON object, so render as plain text
+    const thinkMatch = message.content.match(/<think>([\s\S]*?)<\/think>/);
+    const thinkingText = thinkMatch ? thinkMatch[1].trim() : null;
+    const mainContent = thinkMatch ? message.content.replace(/<think>[\s\S]*?<\/think>/, '').trim() : message.content;
+    
+    try {
+        const data = JSON.parse(mainContent);
+        if (data.type === 'youtube' && data.videoId) {
+            return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
         }
-        
-        return (
-            <>
-                {thinkingText && <ThinkingBlock text={thinkingText} />}
-                <ReactMarkdown
-                    remarkPlugins={[remarkMath]}
-                    rehypePlugins={[rehypeKatex]}
-                    className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-                    components={{
-                        code({ node, inline, className, children, ...props }) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match ? (
-                                <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-                            ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
-                            );
-                        },
-                        p: ({node, ...props}) => <p className="mb-4" {...props} />,
-                    }}
-                >
-                    {mainContent}
-                </ReactMarkdown>
-            </>
-        );
+        if (data.type === 'website' && data.url) {
+            return <WebsiteChatCard websiteData={data} />;
+        }
+        if (data.type === 'image' && data.imageDataUri) {
+            return <GeneratedImageCard imageDataUri={data.imageDataUri} prompt={data.prompt} />;
+        }
+    } catch (e) {
+        // Not a JSON object, so render as plain text
     }
     
     return (
-        <ReactMarkdown
-          remarkPlugins={[remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-          className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
-          components={{
-            code({ node, inline, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || '');
-              return !inline && match ? (
-                <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-            p: ({node, ...props}) => <p className="mb-4" {...props} />,
-          }}
-        >
-          {message.content}
-        </ReactMarkdown>
+        <>
+            {thinkingText && <ThinkingIndicator text={thinkingText} />}
+            <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                components={{
+                    code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                            <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                        ) : (
+                            <code className={className} {...props}>
+                                {children}
+                            </code>
+                        );
+                    },
+                    p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                }}
+            >
+                {mainContent}
+            </ReactMarkdown>
+        </>
     );
   };
 
@@ -735,7 +674,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && <ThinkingIndicator />}
+            {isTyping && <ThinkingIndicator text={"Thinking..."} />}
           </div>
         </ScrollArea>
 
@@ -828,7 +767,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-
-    
