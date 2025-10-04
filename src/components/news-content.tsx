@@ -213,9 +213,9 @@ export function NewsContent() {
                          <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
                                 {article.urlToImage ? (
-                                    <div className="relative w-full h-48">
+                                    <div className="relative w-full h-48 bg-muted">
                                         <img
-                                            src={`/api/proxy?url=${encodeURIComponent(article.urlToImage)}`}
+                                            src={article.urlToImage}
                                             alt={article.title}
                                             className="w-full h-full object-cover"
                                             onError={(e) => (e.currentTarget.style.display = 'none')}
