@@ -242,10 +242,18 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         .filter(s => !s.includes('titlePythonoldid') && !s.includes('Short description'))
         .filter(s => !s.includes('Hidden categories') && !s.includes('Human name'))
         .filter(s => !s.includes('Animal common name') && !s.includes('given-name-holder'))
+        .filter(s => !s.includes('Found 3,166 results') && !s.includes('Search Sessions'))
+        .filter(s => !s.includes('Maxwell Zeff') && !s.includes('Anthony Ha') && !s.includes('Kyle Wiggers'))
+        .filter(s => !s.includes('Brian Heater') && !s.includes('Feb 10, 2025') && !s.includes('Jun 11, 2025'))
+        .filter(s => !s.includes('In Brief') && !s.includes('Court filings') && !s.includes('TechCrunch Disrupt'))
+        .filter(s => !s.includes('Government Policy') && !s.includes('AI CoreWeave') && !s.includes('Meta names'))
+        .filter(s => !s.includes('Acquisition Reflects') && !s.includes('Perplexity AI'))
         .filter(s => !s.match(/^[0-9\s]+$/)) // Remove pure numbers
         .filter(s => !s.match(/^[a-zA-Z\s]{1,3}$/)) // Remove very short words
         .filter(s => !s.match(/^[A-Z\s]+$/)) // Remove pure uppercase (likely headers)
-        .filter(s => s.split(' ').length >= 3); // Must have at least 3 words
+        .filter(s => s.split(' ').length >= 4) // Must have at least 4 words
+        .filter(s => !s.endsWith(':')) // Remove incomplete sentences ending with colon
+        .filter(s => !s.endsWith('and') && !s.endsWith('or') && !s.endsWith('the')); // Remove incomplete sentences
     
     // Create category-based organization
     const categories = categorizeContent(sentences, query);
@@ -343,6 +351,14 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
             } else if (lowerSentence.includes('published') || lowerSentence.includes('1687') || lowerSentence.includes('principia')) {
                 bestCategory = 'History';
             }
+        } else if (queryLower.includes('openai') || queryLower.includes('founder') || queryLower.includes('ceo')) {
+            if (lowerSentence.includes('sam altman') || lowerSentence.includes('elon musk') || lowerSentence.includes('founder') || lowerSentence.includes('ceo')) {
+                bestCategory = 'People';
+            } else if (lowerSentence.includes('artificial intelligence') || lowerSentence.includes('ai') || lowerSentence.includes('chatgpt')) {
+                bestCategory = 'Technology';
+            } else if (lowerSentence.includes('company') || lowerSentence.includes('startup') || lowerSentence.includes('business')) {
+                bestCategory = 'Technology';
+            }
         }
         
         if (!categories[bestCategory]) {
@@ -385,6 +401,8 @@ function formatFact(fact: string, query: string): string {
     formatted = formatted.replace(/and\.$/, '.');
     formatted = formatted.replace(/of\.$/, '.');
     formatted = formatted.replace(/the\.$/, '.');
+    formatted = formatted.replace(/ai\.$/, 'AI.');
+    formatted = formatted.replace(/ceo\.$/, 'CEO.');
     
     // Remove trailing periods if there are multiple
     formatted = formatted.replace(/\.+$/, '.');
@@ -398,12 +416,23 @@ function formatFact(fact: string, query: string): string {
     if (!formatted.includes(' is ') && !formatted.includes(' are ') && !formatted.includes(' was ') && 
         !formatted.includes(' were ') && !formatted.includes(' has ') && !formatted.includes(' have ') &&
         !formatted.includes(' can ') && !formatted.includes(' will ') && !formatted.includes(' do ') &&
-        !formatted.includes(' does ') && !formatted.includes(' did ')) {
+        !formatted.includes(' does ') && !formatted.includes(' did ') && !formatted.includes(' founded ') &&
+        !formatted.includes(' developed ') && !formatted.includes(' created ')) {
         // Try to make it a complete sentence
         if (formatted.includes(':')) {
             formatted = formatted.replace(':', ' is');
+        } else if (formatted.includes('CEO of')) {
+            formatted = formatted.replace('CEO of', 'is CEO of');
+        } else if (formatted.includes('founder of')) {
+            formatted = formatted.replace('founder of', 'is founder of');
+        } else if (formatted.includes('American entrepreneur')) {
+            formatted = formatted.replace('American entrepreneur', 'is an American entrepreneur');
         }
     }
+    
+    // Clean up common patterns
+    formatted = formatted.replace(/\s+/g, ' ');
+    formatted = formatted.replace(/^\s+|\s+$/g, '');
     
     return formatted.trim();
 }
@@ -453,6 +482,16 @@ function cleanSentence(sentence: string): string {
         .replace(/Animal common name disambiguation pages/gi, '')
         .replace(/Human name disambiguation pages/gi, '')
         .replace(/Disambiguation pages with given-name-holder lists/gi, '')
+        // Remove news article metadata
+        .replace(/Maxwell Zeff\s+\w+\s+\d+,\s+\d+/gi, '')
+        .replace(/Anthony Ha\s+\w+\s+\d+,\s+\d+/gi, '')
+        .replace(/Kyle Wiggers\s+\w+\s+\d+,\s+\d+/gi, '')
+        .replace(/Brian Heater\s+\w+\s+\d+,\s+\d+/gi, '')
+        .replace(/Feb\s+\d+,\s+\d+/gi, '')
+        .replace(/Jun\s+\d+,\s+\d+/gi, '')
+        .replace(/Apr\s+\d+,\s+\d+/gi, '')
+        .replace(/Jul\s+\d+,\s+\d+/gi, '')
+        .replace(/May\s+\d+,\s+\d+/gi, '')
         // Remove special characters but keep basic punctuation
         .replace(/[^\w\s.,:;!?()-]/g, '')
         // Clean up whitespace
