@@ -148,7 +148,6 @@ export function NewsContent() {
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <header className="mb-8 text-center relative">
             <BackButton className="absolute left-0 top-1/2 -translate-y-1/2" />
-            <Rss className="mx-auto h-12 w-12 text-primary" />
             <h1 className="mt-4 text-4xl font-bold tracking-tight">Latest News</h1>
             <div className="mt-2 text-lg text-muted-foreground h-7">
                 <AnimatePresence mode="wait">
@@ -258,3 +257,5 @@ export function NewsContent() {
     </>
   );
 }
+
+    
