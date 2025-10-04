@@ -231,8 +231,21 @@ function generateAnswer(scrapedData: ScrapedData[], query: string): string {
         .filter(s => s.length > 20)
         .filter(s => !s.includes('css') && !s.includes('stylesheet') && !s.includes('html'))
         .filter(s => !s.includes('style') && !s.includes('border') && !s.includes('position'))
+        .filter(s => !s.includes('width') && !s.includes('height') && !s.includes('alt'))
+        .filter(s => !s.includes('type1x1') && !s.includes('amp;usesul'))
+        .filter(s => !s.includes('Wikipedia') && !s.includes('free encyclopedia'))
+        .filter(s => !s.includes('Redirected from') && !s.includes('Look up'))
+        .filter(s => !s.includes('Categories:') && !s.includes('Disambiguation'))
+        .filter(s => !s.includes('You searched for') && !s.includes('Click here'))
+        .filter(s => !s.includes('See also') && !s.includes('All pages'))
+        .filter(s => !s.includes('Topics referred') && !s.includes('disambiguation page'))
+        .filter(s => !s.includes('titlePythonoldid') && !s.includes('Short description'))
+        .filter(s => !s.includes('Hidden categories') && !s.includes('Human name'))
+        .filter(s => !s.includes('Animal common name') && !s.includes('given-name-holder'))
         .filter(s => !s.match(/^[0-9\s]+$/)) // Remove pure numbers
-        .filter(s => !s.match(/^[a-zA-Z\s]{1,3}$/)); // Remove very short words
+        .filter(s => !s.match(/^[a-zA-Z\s]{1,3}$/)) // Remove very short words
+        .filter(s => !s.match(/^[A-Z\s]+$/)) // Remove pure uppercase (likely headers)
+        .filter(s => s.split(' ').length >= 3); // Must have at least 3 words
     
     // Create category-based organization
     const categories = categorizeContent(sentences, query);
@@ -328,7 +341,11 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
         // Clean and add the fact
         const cleanFact = cleanSentence(sentence);
         if (cleanFact && !categories[bestCategory].includes(cleanFact)) {
-            categories[bestCategory].push(cleanFact);
+            // Further clean the fact to make it more readable
+            const finalFact = formatFact(cleanFact, query);
+            if (finalFact && finalFact.length > 10) {
+                categories[bestCategory].push(finalFact);
+            }
         }
     });
     
@@ -340,22 +357,74 @@ function categorizeContent(sentences: string[], query: string): { [key: string]:
     return categories;
 }
 
+function formatFact(fact: string, query: string): string {
+    // Capitalize first letter
+    let formatted = fact.charAt(0).toUpperCase() + fact.slice(1);
+    
+    // Remove redundant words at the beginning
+    formatted = formatted.replace(/^(The|A|An)\s+/i, '');
+    
+    // Clean up common patterns
+    formatted = formatted.replace(/\s+is\s+a\s+/gi, ' is a ');
+    formatted = formatted.replace(/\s+is\s+an\s+/gi, ' is an ');
+    formatted = formatted.replace(/\s+is\s+the\s+/gi, ' is the ');
+    
+    // Remove trailing periods if there are multiple
+    formatted = formatted.replace(/\.+$/, '.');
+    
+    // Ensure it ends with a period
+    if (!formatted.endsWith('.') && !formatted.endsWith('!') && !formatted.endsWith('?')) {
+        formatted += '.';
+    }
+    
+    return formatted.trim();
+}
+
 function cleanSentence(sentence: string): string {
     return sentence
-        // Remove HTML/CSS fragments
+        // Remove HTML/CSS fragments and technical junk
         .replace(/style[^>]*>/gi, '')
         .replace(/border:\s*[^;]+;/gi, '')
         .replace(/position:\s*[^;]+;/gi, '')
+        .replace(/width\d+/gi, '')
+        .replace(/height\d+/gi, '')
+        .replace(/alt\s+width\d+/gi, '')
+        .replace(/type\d+x\d+/gi, '')
+        .replace(/amp;usesul\d+/gi, '')
         .replace(/Retrieved from https?:\/\/[^\s]+/gi, '')
         .replace(/https?:\/\/[^\s]+/gi, '')
         .replace(/www\.[^\s]+/gi, '')
         .replace(/\.com[^\s]*/gi, '')
         .replace(/\.org[^\s]*/gi, '')
         .replace(/\.edu[^\s]*/gi, '')
+        .replace(/en\.wikipedia\.org[^\s]*/gi, '')
+        .replace(/duckduckgo\.com[^\s]*/gi, '')
+        .replace(/britannica\.com[^\s]*/gi, '')
         // Remove HTML tags
         .replace(/<[^>]*>/g, '')
         // Remove CSS properties
         .replace(/[a-zA-Z-]+:\s*[^;]+;/g, '')
+        // Remove Wikipedia-specific junk
+        .replace(/From Wikipedia, the free encyclopedia/gi, '')
+        .replace(/Redirected from [^\s]+/gi, '')
+        .replace(/Look up [^,]+ in Wiktionary/gi, '')
+        .replace(/the free dictionary/gi, '')
+        .replace(/Categories: [^.]*/gi, '')
+        .replace(/Disambiguation pages[^.]*/gi, '')
+        .replace(/Hidden categories:[^.]*/gi, '')
+        .replace(/You searched for: Search/gi, '')
+        .replace(/Click here to search/gi, '')
+        .replace(/See alsoedit/gi, '')
+        .replace(/All pages with titles[^.]*/gi, '')
+        .replace(/Topics referred to by the same term/gi, '')
+        .replace(/This disambiguation page[^.]*/gi, '')
+        .replace(/If an internal link[^.]*/gi, '')
+        .replace(/titlePythonoldid\d+/gi, '')
+        .replace(/Short description is different from Wikidata/gi, '')
+        .replace(/All article disambiguation pages/gi, '')
+        .replace(/Animal common name disambiguation pages/gi, '')
+        .replace(/Human name disambiguation pages/gi, '')
+        .replace(/Disambiguation pages with given-name-holder lists/gi, '')
         // Remove special characters but keep basic punctuation
         .replace(/[^\w\s.,:;!?()-]/g, '')
         // Clean up whitespace
