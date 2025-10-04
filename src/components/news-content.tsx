@@ -39,25 +39,10 @@ const loadingSteps = [
 export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("top");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
-
-  const observer = useRef<IntersectionObserver>();
-  const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-            setPage(prevPage => prevPage + 1);
-        }
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore]);
 
 
   useEffect(() => {
@@ -71,17 +56,13 @@ export function NewsContent() {
     return () => clearInterval(stepInterval);
   }, [loading]);
 
-  const fetchNews = useCallback(async (category: string, pageNum: number) => {
-    if (pageNum === 1) {
-        setLoading(true);
-    } else {
-        setLoadingMore(true);
-    }
+  const fetchNews = useCallback(async (category: string) => {
+    setLoading(true);
     setError(null);
     try {
-      let url = `/api/news?page=${pageNum}`;
+      let url = `/api/news?`;
       const searchCategory = category === 'top' ? 'general' : category;
-      url += category === 'ai' ? `&q=artificial%20intelligence` : `&category=${searchCategory}`;
+      url += category === 'ai' ? `q=artificial%20intelligence` : `category=${searchCategory}`;
       
       const res = await fetch(url);
       if (!res.ok) {
@@ -92,36 +73,19 @@ export function NewsContent() {
       
       const filteredArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]" && article.urlToImage);
       
-      if (pageNum === 1) {
-        setArticles(filteredArticles);
-      } else {
-        setArticles(prev => [...prev, ...filteredArticles]);
-      }
-      setHasMore(filteredArticles.length > 0);
+      setArticles(filteredArticles);
 
     } catch (err: any) {
       setError(err.message);
     } finally {
-      if (pageNum === 1) {
-        setLoading(false);
-      } else {
-        setLoadingMore(false);
-      }
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     setArticles([]);
-    setPage(1);
-    setHasMore(true);
-    fetchNews(activeCategory, 1);
+    fetchNews(activeCategory);
   }, [activeCategory, fetchNews]);
-
-  useEffect(() => {
-    if (page > 1) {
-        fetchNews(activeCategory, page);
-    }
-  }, [page, activeCategory, fetchNews]);
 
 
   const handleReadMore = (article: Article) => {
@@ -136,9 +100,7 @@ export function NewsContent() {
 
   const handleRefresh = () => {
     setArticles([]);
-    setPage(1);
-    setHasMore(true);
-    fetchNews(activeCategory, 1);
+    fetchNews(activeCategory);
   };
 
   return (
@@ -209,7 +171,7 @@ export function NewsContent() {
             <>
                 <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {articles.map((article, i) => (
-                         <Card ref={i === articles.length - 1 ? lastArticleElementRef : null} key={i} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
+                         <Card key={`${article.url}-${i}`} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
                                 <div className="relative w-full h-48 bg-muted">
                                     <img
@@ -240,19 +202,14 @@ export function NewsContent() {
                         </Card>
                     ))}
                 </div>
-                {loadingMore && (
-                     <div className="flex justify-center items-center py-8">
-                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    </div>
-                )}
-                 {!hasMore && !loadingMore && articles.length > 0 && (
-                    <div className="text-center text-muted-foreground py-8">
-                        <p>You've reached the end of the news.</p>
-                    </div>
-                )}
+                <div className="text-center text-muted-foreground py-8">
+                    <p>You've reached the end of the news.</p>
+                </div>
             </>
         )}
     </div>
     </>
   );
 }
+
+    
