@@ -14,17 +14,21 @@ type Article = {
 };
 
 
-const parser = new RssParser();
+const parser = new RssParser({
+    customFields: {
+        item: [['media:content', 'mediaContent']],
+    }
+});
 
 const fallbackRssFeed = "http://rss.cnn.com/rss/cnn_topstories.rss";
 
 async function fetchFromRss(feedUrl: string): Promise<Article[]> {
     const feed = await parser.parseURL(feedUrl);
-    return feed.items.map(item => ({
+    return feed.items.map((item: any) => ({
         title: item.title || "No title",
         description: item.contentSnippet || item.content || "No description",
         url: item.link || "",
-        urlToImage: item.enclosure?.url || "",
+        urlToImage: item.mediaContent?.$?.url || item.enclosure?.url || "",
         source: {
             name: feed.title || "RSS Feed"
         },
