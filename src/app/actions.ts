@@ -266,7 +266,7 @@ export async function chatAction(input: {
 5. Plan a proactive follow-up question, like asking to create a diagram.
 </think>
 
-Photosynthesis is the process plants use to convert light energy into chemical energy in the form of glucose.
+**Answer:** Photosynthesis is the process plants use to convert light energy into chemical energy in the form of glucose.
 
 ---
 
