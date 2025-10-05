@@ -79,6 +79,42 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Check if we have the required environment variables
+          if (!process.env.SAMBANOVA_BASE_URL || !process.env.SAMBANOVA_API_KEY) {
+            console.log('⚠️ Missing Sambanova credentials, using test mode');
+            
+            // Send a test streaming response
+            const testResponse = `Hello! I'm SearnAI, your AI assistant. You asked: "${history[history.length - 1]?.content || 'your question'}".
+
+This is a test streaming response. The streaming functionality is working, but we need to configure the Sambanova API credentials for full functionality.
+
+Here's what I can help you with:
+- Answering questions
+- Providing explanations
+- Creating content
+- And much more!
+
+What would you like to know?`;
+            
+            // Send the test response in chunks to simulate streaming
+            const words = testResponse.split(' ');
+            for (let i = 0; i < words.length; i++) {
+              const word = words[i] + (i < words.length - 1 ? ' ' : '');
+              controller.enqueue(new TextEncoder().encode(`0:${word}`));
+              // Add a small delay to simulate streaming
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            controller.close();
+            return;
+          }
+
+          console.log('🔄 Making API call to Sambanova...', {
+            baseURL: process.env.SAMBANOVA_BASE_URL,
+            model: model || DEFAULT_MODEL_ID,
+            messageCount: history.length
+          });
+
           // Make API call to Sambanova
           const response = await fetch(process.env.SAMBANOVA_BASE_URL + '/v1/chat/completions', {
             method: 'POST',
@@ -98,8 +134,17 @@ export async function POST(req: NextRequest) {
             }),
           });
 
+          console.log('📡 Sambanova response status:', response.status);
+          console.log('📡 Sambanova response headers:', Object.fromEntries(response.headers.entries()));
+
           if (!response.ok) {
-            throw new Error(`Sambanova API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Sambanova API error:', {
+              status: response.status,
+              statusText: response.statusText,
+              body: errorText
+            });
+            throw new Error(`Sambanova API error: ${response.status} - ${errorText}`);
           }
 
           const reader = response.body?.getReader();
@@ -107,22 +152,31 @@ export async function POST(req: NextRequest) {
             throw new Error('No response body');
           }
 
+          console.log('📖 Starting to read streaming response...');
           const decoder = new TextDecoder();
           let buffer = '';
+          let chunkCount = 0;
 
           try {
             while (true) {
               const { done, value } = await reader.read();
-              if (done) break;
+              if (done) {
+                console.log('✅ Streaming completed, total chunks:', chunkCount);
+                break;
+              }
 
+              chunkCount++;
               buffer += decoder.decode(value, { stream: true });
               const lines = buffer.split('\n');
               buffer = lines.pop() || '';
+
+              console.log(`📦 Processing chunk ${chunkCount}, lines: ${lines.length}`);
 
               for (const line of lines) {
                 if (line.startsWith('data: ')) {
                   const data = line.slice(6);
                   if (data === '[DONE]') {
+                    console.log('🏁 Received [DONE] signal, closing stream');
                     controller.close();
                     return;
                   }
@@ -131,21 +185,38 @@ export async function POST(req: NextRequest) {
                     const parsed = JSON.parse(data);
                     if (parsed.choices?.[0]?.delta?.content) {
                       const content = parsed.choices[0].delta.content;
+                      console.log('📝 Sending content:', content.substring(0, 50) + '...');
                       // Send the content in the AI SDK format
                       controller.enqueue(new TextEncoder().encode(`0:${content}`));
                     }
                   } catch (e) {
-                    // Ignore parsing errors
+                    console.log('⚠️ JSON parse error for line:', line.substring(0, 100));
                   }
                 }
               }
             }
           } finally {
             reader.releaseLock();
+            console.log('🔒 Reader released');
           }
         } catch (error: any) {
-          console.error('Streaming error:', error);
-          controller.error(error);
+          console.error('❌ Streaming error:', error);
+          
+          // Send a fallback response instead of erroring
+          const fallbackResponse = `I apologize, but I'm experiencing technical difficulties with streaming. Here's a basic response to your query: "${history[history.length - 1]?.content || 'your question'}".
+
+This is a fallback response while we work on fixing the streaming functionality. Please try again in a moment.`;
+          
+          // Send the fallback response in chunks to simulate streaming
+          const words = fallbackResponse.split(' ');
+          for (let i = 0; i < words.length; i++) {
+            const word = words[i] + (i < words.length - 1 ? ' ' : '');
+            controller.enqueue(new TextEncoder().encode(`0:${word}`));
+            // Add a small delay to simulate streaming
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+          
+          controller.close();
         }
       }
     });
