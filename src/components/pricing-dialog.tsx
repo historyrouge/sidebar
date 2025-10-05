@@ -83,7 +83,7 @@ const tiers = [
             "Team management features",
             "Dedicated account manager",
         ],
-        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Pro%20Plan&amount=499&currency_code INR"
+        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Pro%20Plan&amount=499&currency_code=INR"
     }
 ];
 
