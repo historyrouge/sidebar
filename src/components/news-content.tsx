@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -87,11 +88,6 @@ export function NewsContent() {
     setArticles([]);
     fetchNews();
   };
-  
-  const mainArticle = articles.length > 0 ? articles[0] : null;
-  const headlineArticles = articles.length > 1 ? articles.slice(1, 6) : [];
-  const remainingArticles = articles.length > 6 ? articles.slice(6) : [];
-
 
   return (
     <>
@@ -131,96 +127,50 @@ export function NewsContent() {
         )}
 
         {loading && articles.length === 0 ? (
-             <div className="space-y-8">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <Skeleton className="h-96 w-full" />
-                        <Skeleton className="h-8 w-3/4" />
-                        <Skeleton className="h-4 w-full" />
+             <div className="space-y-6">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex gap-4">
+                        <Skeleton className="h-24 w-32 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-5 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </div>
                     </div>
-                    <div className="space-y-4">
-                         {Array.from({ length: 5 }).map((_, i) => (
-                             <div key={i} className="space-y-2">
-                                <Skeleton className="h-6 w-full" />
-                                <Skeleton className="h-px w-full" />
-                            </div>
-                         ))}
-                    </div>
-                </div>
-                <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <Card key={i}>
-                            <CardHeader className="p-0"><Skeleton className="h-48 w-full" /></CardHeader>
-                            <CardContent className="p-4 space-y-2"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /></CardContent>
-                        </Card>
-                    ))}
-                </div>
+                ))}
             </div>
         ) : !error && articles.length === 0 ? (
             <div className="text-center text-muted-foreground mt-12">
                 <p>No new articles found for this category. Please check back later!</p>
             </div>
         ) : (
-            <>
-                 {mainArticle && (
-                    <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                        <div className="lg:col-span-2 cursor-pointer group" onClick={() => handleReadMore(mainArticle)}>
-                            <div className="relative w-full aspect-[16/10] bg-muted rounded-xl overflow-hidden mb-4">
-                                {mainArticle.urlToImage ? (
-                                    <Image
-                                        src={mainArticle.urlToImage}
-                                        alt={mainArticle.title}
-                                        fill
-                                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                        unoptimized
-                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                    />
-                                ) : <div className="w-full h-full bg-muted"></div>}
-                            </div>
-                            <h2 className="text-2xl lg:text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{mainArticle.title}</h2>
-                            <p className="text-muted-foreground mt-2 text-sm">{mainArticle.description}</p>
-                            <p className="text-xs text-muted-foreground mt-2">{new Date(mainArticle.publishedAt).toLocaleDateString()} &middot; {mainArticle.source.name}</p>
+            <div className="space-y-6">
+                {articles.map((article, i) => (
+                    <div 
+                        key={`${article.url}-${i}`}
+                        className="group grid grid-cols-1 md:grid-cols-[150px_1fr] lg:grid-cols-[200px_1fr] gap-4 cursor-pointer"
+                        onClick={() => handleReadMore(article)}
+                    >
+                        <div className="relative w-full aspect-square md:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                            {article.urlToImage ? (
+                                <Image
+                                    src={article.urlToImage}
+                                    alt={article.title}
+                                    fill
+                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                    unoptimized
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                            ) : <div className="w-full h-full bg-muted"></div>}
                         </div>
-                        <div className="space-y-3">
-                            {headlineArticles.map((article, i) => (
-                                <div key={`${article.url}-${i}`} className="cursor-pointer group" onClick={() => handleReadMore(article)}>
-                                    <p className="font-semibold leading-snug group-hover:text-primary transition-colors">{article.title}</p>
-                                    <p className="text-xs text-muted-foreground">{article.source.name}</p>
-                                    {i < headlineArticles.length - 1 && <Separator className="mt-3" />}
-                                </div>
-                            ))}
+                        <div className="flex flex-col">
+                             <h2 className="text-lg font-bold leading-snug group-hover:text-primary transition-colors">{article.title}</h2>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.description}</p>
+                            <p className="text-xs text-muted-foreground mt-auto pt-2">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
                         </div>
                     </div>
-                )}
-                <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {(mainArticle ? remainingArticles : articles).map((article, i) => (
-                         <Card key={`${article.url}-${i}`} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
-                            <CardHeader className="p-0">
-                                <div className="relative w-full h-48 bg-muted">
-                                    {article.urlToImage ? (
-                                        <Image
-                                            src={article.urlToImage}
-                                            alt={article.title}
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
-                                    ) : null}
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-4 flex-grow flex flex-col">
-                                <CardTitle className="text-lg leading-snug flex-grow">{article.title}</CardTitle>
-                                <p className="text-xs text-muted-foreground mt-1">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
-                                <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
-                            </CardContent>
-                            <CardFooter className="p-4 pt-0">
-                                <Button className="w-full" onClick={() => handleReadMore(article)}>Read More <ExternalLink className="ml-2 h-4 w-4" /></Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </div>
-            </>
+                ))}
+            </div>
         )}
     </div>
     </>
