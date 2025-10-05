@@ -42,6 +42,7 @@ type Message = {
   role: "user" | "model" | "tool";
   content: string;
   image?: string | null;
+  duration?: number;
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
@@ -158,6 +159,7 @@ export function ChatContent() {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [generationTime, setGenerationTime] = useState<number | null>(null);
 
   const [isSynthesizing, setIsSynthesizing] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState<string | null>(null);
@@ -259,6 +261,7 @@ export function ChatContent() {
     currentFileContent?: string | null
   ): Promise<void> => {
       setIsTyping(true);
+      const startTime = Date.now();
       
       const genkitHistory: CoreMessage[] = currentHistory.map(h => ({
         role: h.role,
@@ -273,13 +276,16 @@ export function ChatContent() {
           isMusicMode: activeButton === 'music',
       });
 
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+      setGenerationTime(duration);
       setIsTyping(false);
 
       if (result.error) {
           toast({ title: "Chat Error", description: result.error, variant: 'destructive' });
       } else if (result.data) {
           const modelMessageId = `${Date.now()}-model`;
-          setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response }]);
+          setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
       }
       
   }, [currentModel, activeButton, toast]);
@@ -302,8 +308,11 @@ export function ChatContent() {
 
     if (isImageGenRequest) {
         setIsTyping(true);
+        const startTime = Date.now();
         const prompt = messageToSend.trim();
         const result = await generateImageAction({ prompt });
+        const endTime = Date.now();
+        setGenerationTime((endTime - startTime) / 1000);
         setIsTyping(false);
         if (result.error) {
             toast({ title: "Image Generation Error", description: result.error, variant: 'destructive' });
@@ -506,7 +515,7 @@ export function ChatContent() {
     
     return (
         <>
-            {thinkingText && <ThinkingIndicator text={thinkingText} />}
+            {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
             <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex]}
@@ -681,7 +690,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && <ThinkingIndicator />}
+            {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
           </div>
         </ScrollArea>
 
@@ -774,3 +783,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
