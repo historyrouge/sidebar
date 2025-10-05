@@ -155,11 +155,12 @@ For full AI capabilities with real-time data, please configure the Sambanova API
             
             // Send the test response in chunks to simulate streaming
             const words = testResponse.split(' ');
-            for (let i = 0; i < words.length; i++) {
-              const word = words[i] + (i < words.length - 1 ? ' ' : '');
-              controller.enqueue(new TextEncoder().encode(`0:${word}`));
-              // Add a small delay to simulate streaming
-              await new Promise(resolve => setTimeout(resolve, 50));
+            // Send multiple words at once for faster streaming
+            for (let i = 0; i < words.length; i += 3) {
+              const chunk = words.slice(i, i + 3).join(' ') + (i + 3 < words.length ? ' ' : '');
+              controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
+              // Add a very small delay to simulate streaming (very fast)
+              await new Promise(resolve => setTimeout(resolve, 30));
             }
             
             controller.close();
@@ -306,11 +307,12 @@ The streaming functionality is working perfectly! 🎉 However, we're experienci
           
           // Send the fallback response in chunks to simulate streaming
           const words = fallbackResponse.split(' ');
-          for (let i = 0; i < words.length; i++) {
-            const word = words[i] + (i < words.length - 1 ? ' ' : '');
-            controller.enqueue(new TextEncoder().encode(`0:${word}`));
-            // Add a small delay to simulate streaming
-            await new Promise(resolve => setTimeout(resolve, 50));
+          // Send multiple words at once for faster streaming
+          for (let i = 0; i < words.length; i += 3) {
+            const chunk = words.slice(i, i + 3).join(' ') + (i + 3 < words.length ? ' ' : '');
+            controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
+            // Add a very small delay to simulate streaming (very fast)
+            await new Promise(resolve => setTimeout(resolve, 30));
           }
           
           controller.close();

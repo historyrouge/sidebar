@@ -355,12 +355,19 @@ export function ChatContent() {
         setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: "" }]);
 
         try {
+          let chunkCount = 0;
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              console.log('✅ Streaming completed, total chunks:', chunkCount);
+              break;
+            }
 
+            chunkCount++;
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split('\n');
+
+            console.log(`📦 Processing chunk ${chunkCount}, lines: ${lines.length}`);
 
             for (const line of lines) {
               if (line.startsWith('0:')) {
@@ -368,6 +375,7 @@ export function ChatContent() {
                 const content = line.slice(2);
                 if (content) {
                   accumulatedContent += content;
+                  console.log('📝 Adding content:', content.substring(0, 50) + '...');
                   
                   // Update the last message with accumulated content
                   setHistory(prev => 
@@ -383,6 +391,7 @@ export function ChatContent() {
           }
         } finally {
           reader.releaseLock();
+          console.log('🔒 Reader released');
         }
         
         console.log('✅ Streaming completed successfully');
