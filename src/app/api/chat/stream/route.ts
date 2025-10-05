@@ -1,6 +1,4 @@
 import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
-import { openai } from '@/lib/openai';
 import { CoreMessage } from 'ai';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 
@@ -77,25 +75,102 @@ export async function POST(req: NextRequest) {
       - Build up the response progressively with clear sections`;
     }
 
-    // Create the streaming response
-    const result = await streamText({
-      model: openai(model || DEFAULT_MODEL_ID),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...history
-      ],
-      temperature: 0.7,
-      maxTokens: 2000,
+    // Create a simple streaming response using ReadableStream
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Make API call to Sambanova
+          const response = await fetch(process.env.SAMBANOVA_BASE_URL + '/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.SAMBANOVA_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: model || DEFAULT_MODEL_ID,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...history
+              ],
+              temperature: 0.7,
+              max_tokens: 2000,
+              stream: true,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Sambanova API error: ${response.status}`);
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error('No response body');
+          }
+
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = line.slice(6);
+                  if (data === '[DONE]') {
+                    controller.close();
+                    return;
+                  }
+
+                  try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.choices?.[0]?.delta?.content) {
+                      const content = parsed.choices[0].delta.content;
+                      // Send the content in the AI SDK format
+                      controller.enqueue(new TextEncoder().encode(`0:${content}`));
+                    }
+                  } catch (e) {
+                    // Ignore parsing errors
+                  }
+                }
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        } catch (error: any) {
+          console.error('Streaming error:', error);
+          controller.error(error);
+        }
+      }
     });
 
-    // Return the streaming result using the proper AI SDK format
-    return result.toDataStreamResponse();
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
 
   } catch (error: any) {
     console.error('❌ Streaming chat error:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      cause: error.cause
+    });
+    
     return new Response(JSON.stringify({ 
       error: error.message,
-      details: 'Streaming chat failed'
+      details: 'Streaming chat failed',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
