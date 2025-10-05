@@ -144,14 +144,14 @@ export function NewsContent() {
                 <p>No new articles found for this category. Please check back later!</p>
             </div>
         ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
                 {articles.map((article, i) => (
                     <div 
                         key={`${article.url}-${i}`}
-                        className="group grid grid-cols-1 md:grid-cols-[150px_1fr] lg:grid-cols-[200px_1fr] gap-4 cursor-pointer"
+                        className="group grid grid-cols-1 md:grid-cols-[200px_1fr] lg:grid-cols-[250px_1fr] gap-6 cursor-pointer"
                         onClick={() => handleReadMore(article)}
                     >
-                        <div className="relative w-full aspect-square md:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                        <div className="relative w-full aspect-video md:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
                             {article.urlToImage ? (
                                 <Image
                                     src={article.urlToImage}
@@ -164,9 +164,9 @@ export function NewsContent() {
                             ) : <div className="w-full h-full bg-muted"></div>}
                         </div>
                         <div className="flex flex-col">
-                             <h2 className="text-lg font-bold leading-snug group-hover:text-primary transition-colors">{article.title}</h2>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.description}</p>
-                            <p className="text-xs text-muted-foreground mt-auto pt-2">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
+                             <h2 className="text-xl font-bold leading-snug group-hover:text-primary transition-colors">{article.title}</h2>
+                            <p className="text-base text-muted-foreground mt-2 line-clamp-2">{article.description}</p>
+                            <p className="text-sm text-muted-foreground mt-auto pt-2">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
                         </div>
                     </div>
                 ))}
