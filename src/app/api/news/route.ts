@@ -16,22 +16,29 @@ type Article = {
 
 const parser = new RssParser({
     customFields: {
-        item: [['media:group', 'media:group', {keepArray: false}]],
+        item: [['media:thumbnail', 'media:thumbnail', { keepArray: false }], ['media:group', 'media:group', {keepArray: false}]],
     }
 });
 
-const fallbackRssFeed = "http://rss.cnn.com/rss/edition.rss";
+const rssFeeds = [
+    "http://feeds.bbci.co.uk/news/world/rss.xml",
+    "http://rss.cnn.com/rss/edition.rss"
+];
 
 async function fetchFromRss(feedUrl: string): Promise<Article[]> {
     const feed = await parser.parseURL(feedUrl);
     return feed.items.map((item: any) => {
         const description = item.contentSnippet || item.content || "No description available.";
         
-        // CNN specific image parsing from media:group
         let imageUrl = "";
+        // For CNN RSS feed
         if (item['media:group'] && item['media:group']['media:content'] && item['media:group']['media:content'].length > 0) {
             const largestImage = item['media:group']['media:content'].find((i:any) => i.$.medium === 'image' && i.$.width > 1000);
             imageUrl = largestImage ? largestImage.$.url : item['media:group']['media:content'][0].$.url;
+        } 
+        // For BBC RSS feed
+        else if (item['media:thumbnail']) {
+            imageUrl = item['media:thumbnail'].$.url;
         }
 
         return {
@@ -55,10 +62,21 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get('q');
   const page = searchParams.get('page') || '1';
 
+  const fetchFromAllRss = async () => {
+    for (const feedUrl of rssFeeds) {
+        try {
+            const articles = await fetchFromRss(feedUrl);
+            if (articles.length > 0) return articles;
+        } catch (e) {
+            console.warn(`Failed to fetch from RSS feed: ${feedUrl}`, e);
+        }
+    }
+    return [];
+  }
 
   if (!apiKey) {
     // If no API key, go straight to RSS fallback.
-    const articles = await fetchFromRss(fallbackRssFeed);
+    const articles = await fetchFromAllRss();
     return NextResponse.json({ articles });
   }
 
@@ -67,7 +85,7 @@ export async function GET(request: NextRequest) {
 
   if (q) {
       url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&sortBy=publishedAt&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
-  } else if (category && category !== 'top') {
+  } else if (category && category !== 'general') {
      url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
   } 
   else {
@@ -83,12 +101,12 @@ export async function GET(request: NextRequest) {
         // If API fails (e.g. rate limit), use RSS fallback
         if (response.status === 429 || response.status === 426) {
              console.warn("NewsAPI limit reached or key invalid, falling back to RSS feed.");
-             const articles = await fetchFromRss(fallbackRssFeed);
+             const articles = await fetchFromAllRss();
              return NextResponse.json({ articles });
         }
         console.error("NewsAPI Error:", errorData);
         const errorMessage = errorData?.message || 'Failed to fetch news from NewsAPI';
-        return NextResponse.json({ error: errorMessage }, { status: response.status });
+        throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -97,7 +115,10 @@ export async function GET(request: NextRequest) {
     console.error("Internal Server Error:", err);
     try {
         console.log("Attempting RSS fallback due to server error.");
-        const articles = await fetchFromRss(fallbackRssFeed);
+        const articles = await fetchFromAllRss();
+        if (articles.length === 0) {
+            throw new Error('All RSS fallbacks failed.');
+        }
         return NextResponse.json({ articles });
     } catch (rssErr: any) {
         console.error("RSS Fallback Error:", rssErr);

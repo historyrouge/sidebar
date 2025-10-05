@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.cnn.com',
+      },
+      {
+          protocol: 'https',
+          hostname: 'ichef.bbci.co.uk',
       }
     ],
   },
