@@ -1,12 +1,23 @@
 
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Globe, Construction } from "lucide-react";
+import { Globe, Check } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+
+const languages = [
+    { code: 'en', name: 'English (United States)' },
+    { code: 'hi', name: 'हिन्दी (Hindi)' },
+    { code: 'bn', name: 'বাংলা (Bengali)' },
+    { code: 'te', name: 'తెలుగు (Telugu)' },
+];
 
 export function SettingsLanguageContent() {
+    const [selectedLanguage, setSelectedLanguage] = useState("en");
+
     return (
         <div className="flex flex-col h-full bg-muted/40">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
@@ -21,14 +32,24 @@ export function SettingsLanguageContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5"/> Language</CardTitle>
-                            <CardDescription>Choose the language for the application.</CardDescription>
+                            <CardDescription>Choose the language for the application interface.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                                <Construction className="w-12 h-12 mb-4" />
-                                <h3 className="text-lg font-semibold text-foreground">Feature Coming Soon</h3>
-                                <p className="text-sm">Language settings are currently under development.</p>
-                            </div>
+                            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {languages.map(lang => (
+                                        <SelectItem key={lang.code} value={lang.code}>
+                                            {lang.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Note: This is a demonstration. The application content is currently only available in English.
+                            </p>
                         </CardContent>
                     </Card>
                 </div>

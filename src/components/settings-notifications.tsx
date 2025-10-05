@@ -1,12 +1,52 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Bell, Construction } from "lucide-react";
+import { Bell, Zap, BrainCircuit } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export function SettingsNotificationsContent() {
+    const { toast } = useToast();
+    const [settings, setSettings] = useState({
+        studyReminders: true,
+        featureUpdates: true,
+        quizAlerts: false,
+    });
+
+    useEffect(() => {
+        try {
+            const savedSettings = localStorage.getItem("notificationSettings");
+            if (savedSettings) {
+                setSettings(JSON.parse(savedSettings));
+            }
+        } catch (e) {
+            console.warn("Could not retrieve notification settings from localStorage.");
+        }
+    }, []);
+
+    const handleSettingChange = (key: keyof typeof settings, value: boolean) => {
+        const newSettings = { ...settings, [key]: value };
+        setSettings(newSettings);
+        try {
+            localStorage.setItem("notificationSettings", JSON.stringify(newSettings));
+            toast({
+                title: "Settings Saved",
+                description: "Your notification preferences have been updated.",
+            });
+        } catch (e) {
+            toast({
+                title: "Error",
+                description: "Could not save settings.",
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-muted/40">
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
@@ -21,13 +61,36 @@ export function SettingsNotificationsContent() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Bell className="w-5 h-5"/> Notifications</CardTitle>
-                            <CardDescription>Manage how you receive notifications.</CardDescription>
+                            <CardDescription>Manage how you receive notifications from SearnAI.</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                                <Construction className="w-12 h-12 mb-4" />
-                                <h3 className="text-lg font-semibold text-foreground">Feature Coming Soon</h3>
-                                <p className="text-sm">Notification settings are currently under development.</p>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center justify-between p-4 rounded-lg border">
+                                <div className="space-y-1">
+                                    <Label htmlFor="study-reminders" className="font-semibold flex items-center gap-2">
+                                        <BrainCircuit className="w-4 h-4 text-primary" />
+                                        Study Reminders
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">Receive notifications for scheduled study sessions and flashcard reviews.</p>
+                                </div>
+                                <Switch
+                                    id="study-reminders"
+                                    checked={settings.studyReminders}
+                                    onCheckedChange={(val) => handleSettingChange('studyReminders', val)}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between p-4 rounded-lg border">
+                                <div className="space-y-1">
+                                    <Label htmlFor="feature-updates" className="font-semibold flex items-center gap-2">
+                                        <Zap className="w-4 h-4 text-yellow-500" />
+                                        New Features & Updates
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">Get notified about new tools and improvements to the app.</p>
+                                </div>
+                                <Switch
+                                    id="feature-updates"
+                                    checked={settings.featureUpdates}
+                                    onCheckedChange={(val) => handleSettingChange('featureUpdates', val)}
+                                />
                             </div>
                         </CardContent>
                     </Card>

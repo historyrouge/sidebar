@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Users, Construction } from "lucide-react";
+import { Users, UserX } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
 
@@ -25,9 +25,11 @@ export function SettingsAccountsContent() {
                         </CardHeader>
                         <CardContent>
                              <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                                <Construction className="w-12 h-12 mb-4" />
-                                <h3 className="text-lg font-semibold text-foreground">Feature Coming Soon</h3>
-                                <p className="text-sm">Account management settings are currently under development.</p>
+                                <UserX className="w-12 h-12 mb-4" />
+                                <h3 className="text-lg font-semibold text-foreground">No Account Needed</h3>
+                                <p className="text-sm">
+                                    SearnAI does not require an account to use its core features. All your data is stored locally in your browser.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
