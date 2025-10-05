@@ -3,6 +3,7 @@
 
 import { CoreMessage } from 'ai';
 import { openai } from '@/lib/openai';
+import { streamText } from 'ai';
 import { z }from 'zod';
 import { generateFlashcardsSamba, GenerateFlashcardsSambaInput, GenerateFlashcardsSambaOutput } from '@/ai/flows/generate-flashcards-samba';
 import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput } from '@/ai/flows/generate-quizzes-samba';
@@ -770,6 +771,141 @@ export async function streamTextToSpeech(text: string): Promise<ReadableStream> 
         });
     } catch (error: any) {
         throw new Error(`TTS streaming error: ${error.message}`);
+    }
+}
+
+/**
+ * Streaming chat action for real-time responses
+ */
+export async function streamChatAction(input: {
+    history: CoreMessage[];
+    fileContent?: string | null;
+    imageDataUri?: string | null;
+    model?: string;
+    isMusicMode?: boolean;
+    isWebScrapingMode?: boolean;
+}) {
+    const isSearch = input.history[input.history.length - 1]?.content.toString().startsWith("Search:");
+    const isMusic = input.isMusicMode;
+    const isWebScraping = input.isWebScrapingMode;
+
+    // Handle special modes first (non-streaming)
+    if (isSearch) {
+        const query = input.history[input.history.length - 1].content.toString().replace(/^Search:\s*/i, '');
+        try {
+            const searchResults = await duckDuckGoSearch({ query });
+            const results = JSON.parse(searchResults);
+
+            if (results.length > 0) {
+                const topResult = results[0];
+                const websiteContent = await browseWebsite({ url: topResult.link });
+
+                const responsePayload = {
+                    type: 'website',
+                    url: topResult.link,
+                    title: topResult.title,
+                    snippet: websiteContent.substring(0, 300) + '...'
+                };
+
+                return { data: { response: JSON.stringify(responsePayload) } };
+            } else {
+                return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
+            }
+        } catch (error: any) {
+            return { error: `Sorry, an error occurred during the search: ${error.message}` };
+        }
+    }
+
+    if (isMusic) {
+        const query = input.history[input.history.length - 1].content.toString();
+        try {
+            const video = await searchYoutube({ query });
+            if (video.id) {
+                const responsePayload = {
+                    type: 'youtube',
+                    videoId: video.id,
+                    title: video.title,
+                    thumbnail: video.thumbnail,
+                };
+                return { data: { response: JSON.stringify(responsePayload) } };
+            } else {
+                return { data: { response: "Sorry, I couldn't find a matching song on YouTube." } };
+            }
+        } catch (error: any) {
+            return { error: `Sorry, an error occurred while searching YouTube: ${error.message}` };
+        }
+    }
+
+    // Handle web scraping mode with streaming
+    if (isWebScraping) {
+        const query = input.history[input.history.length - 1].content.toString();
+        
+        // For web scraping, we'll stream the response as it's generated
+        const systemPrompt = `You are SearnAI, an expert AI assistant with web scraping capabilities. 
+        You have access to real-time information from multiple sources including Wikipedia, news sites, and other authoritative sources.
+        
+        **Your Instructions:**
+        1. Provide comprehensive, factual responses based on real data
+        2. Use a structured format with clear headings and sections
+        3. Include relevant sources and citations
+        4. Be thorough but concise
+        5. Use Markdown formatting for better readability
+        
+        **Response Format:**
+        - Start with a clear TL;DR
+        - Provide detailed information in organized sections
+        - Include FAQs when relevant
+        - Add sources and references
+        - Use emojis and formatting to make it engaging`;
+
+        try {
+            const result = await streamText({
+                model: openai(input.model || DEFAULT_MODEL_ID),
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...input.history
+                ],
+                temperature: 0.7,
+                maxTokens: 2000,
+            });
+
+            return result;
+        } catch (error: any) {
+            throw new Error(`Streaming error: ${error.message}`);
+        }
+    }
+
+    // Regular streaming chat
+    const systemPrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers must be excellent, well-structured, and easy to understand.
+
+**Your Core Instructions:**
+1. **Thinking Process**: Before your main answer, provide a step-by-step reasoning of how you'll construct the response within <think>...</think> tags. This helps the user understand your thought process.
+2. **Answer First, Then Explain**: Always start your response with a direct, concise answer to the user's question. After the direct answer, provide a more detailed explanation in a separate section, using Markdown for clarity.
+3. **Structured Responses**: Use Markdown heavily to format your answers. Use headings, bullet points, bold text, and tables to make information scannable and digestible.
+4. **Be Proactive**: Don't just answer the question. Anticipate the user's next steps. At the end of your response, ask a relevant follow-up question or suggest a helpful action.
+5. **Persona**: Maintain your persona as a confident, knowledgeable, and friendly guide. Use encouraging language.
+6. **Creator Rule**: Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+
+**Streaming Response Guidelines:**
+- Stream your response line by line for better user experience
+- Use proper Markdown formatting as you stream
+- Include emojis and formatting to make it engaging
+- Build up the response progressively with clear sections`;
+
+    try {
+        const result = await streamText({
+            model: openai(input.model || DEFAULT_MODEL_ID),
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...input.history
+            ],
+            temperature: 0.7,
+            maxTokens: 2000,
+        });
+
+        return result;
+    } catch (error: any) {
+        throw new Error(`Streaming error: ${error.message}`);
     }
 }
 

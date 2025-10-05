@@ -2,12 +2,13 @@
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
+import { useChat } from 'ai/react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, Zap, ZapOff } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -176,6 +177,7 @@ export function ChatContent() {
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | 'webscrape' | null>(null);
+  const [isStreamingMode, setIsStreamingMode] = useState(true); // Enable streaming by default
 
   const { setActiveVideoId } = useChatStore();
 
@@ -254,6 +256,20 @@ export function ChatContent() {
       }
   }, [isSynthesizing, toast]);
 
+  // Streaming chat hook
+  const { messages: streamMessages, input: streamInput, handleInputChange: handleStreamInputChange, handleSubmit: handleStreamSubmit, isLoading: isStreamLoading, setMessages: setStreamMessages } = useChat({
+    api: '/api/chat/stream',
+    onFinish: (message) => {
+      // Convert stream message to our format
+      const modelMessageId = `${Date.now()}-model`;
+      setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: message.content }]);
+    },
+    onError: (error) => {
+      console.error('Streaming error:', error);
+      toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
+    }
+  });
+
   const executeChat = useCallback(async (
     currentHistory: Message[],
     currentImageDataUri?: string | null,
@@ -282,6 +298,91 @@ export function ChatContent() {
       } else if (result.data) {
           const modelMessageId = `${Date.now()}-model`;
           setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response }]);
+      }
+      
+  }, [currentModel, activeButton, toast]);
+
+  // Streaming version of executeChat
+  const executeStreamingChat = useCallback(async (
+    currentHistory: Message[],
+    currentImageDataUri?: string | null,
+    currentFileContent?: string | null
+  ): Promise<void> => {
+      setIsTyping(true);
+      
+      // Convert to the format expected by useChat
+      const messages = currentHistory.map(h => ({
+        id: h.id,
+        role: h.role,
+        content: String(h.content),
+      }));
+
+      // Set up the streaming request
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+          model: currentModel,
+          isMusicMode: activeButton === 'music',
+          isWebScrapingMode: activeButton === 'webscrape',
+          fileContent: currentFileContent,
+          imageDataUri: currentImageDataUri,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
+      const modelMessageId = `${Date.now()}-model`;
+
+      // Add empty model message to start
+      setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: "" }]);
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.content) {
+                  accumulatedContent += data.content;
+                  
+                  // Update the last message with accumulated content
+                  setHistory(prev => 
+                    prev.map(msg => 
+                      msg.id === modelMessageId 
+                        ? { ...msg, content: accumulatedContent }
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                // Ignore parsing errors for non-JSON lines
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        setIsTyping(false);
       }
       
   }, [currentModel, activeButton, toast]);
@@ -319,7 +420,12 @@ export function ChatContent() {
             setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: JSON.stringify(imagePayload) }]);
         }
     } else {
-        await executeChat(newHistory, imageDataUri, fileContent);
+        // Use streaming mode if enabled, otherwise use regular chat
+        if (isStreamingMode) {
+            await executeStreamingChat(newHistory, imageDataUri, fileContent);
+        } else {
+            await executeChat(newHistory, imageDataUri, fileContent);
+        }
     }
     
     if (activeButton) {
@@ -572,6 +678,15 @@ export function ChatContent() {
                             <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
                                 <Globe className="h-5 w-5" />
                             </Button>
+                            <Button 
+                                type="button" 
+                                variant={isStreamingMode ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => setIsStreamingMode(!isStreamingMode)}
+                                title={isStreamingMode ? 'Disable streaming' : 'Enable streaming'}
+                            >
+                                {isStreamingMode ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
+                            </Button>
                         </div>
                     </div>
                     <form
@@ -735,6 +850,15 @@ export function ChatContent() {
                 </Button>
                 <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
                     <Globe className="h-5 w-5" />
+                </Button>
+                <Button 
+                    type="button" 
+                    variant={isStreamingMode ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => setIsStreamingMode(!isStreamingMode)}
+                    title={isStreamingMode ? 'Disable streaming' : 'Enable streaming'}
+                >
+                    {isStreamingMode ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
                 </Button>
             </div>
           </div>
