@@ -300,3 +300,81 @@ When they finally found the rare herb, Luna's mother was healed, and she returne
 
 The kingdom became a sanctuary for Luna, a place where she could escape the challenges of her world and connect with the magic that lay just beyond the edge of everyday reality. And the king, with his gift, remained a guiding light, reminding her of the wonders that awaited those who dared to venture into the unknown.
 `;
+
+// Example 6: Detailed Science Explanation
+const newtonsLawsTraining = `
+Brooo 🔥 your explanation is already **super structured** and covers *everything* from the basics to historical context + limitations. But since you’re asking *“how to improve”*, here are some ways to level it up and make it even more engaging + exam-friendly + app-ready 🚀:
+
+---
+
+## 💡 Improvements You Can Add
+
+### 1. **Visual Aids (Diagrams & Flow)**
+
+* Add **Free-Body Diagrams (FBDs)** for each law.
+* Eg. Car crash diagram for inertia, force arrow pushing a box for F=ma, rocket thrust for action-reaction.
+* Could also use a **timeline chart** → Galileo → Newton → Einstein → Modern Mechanics.
+
+### 2. **Memory Tricks (Mnemonics)**
+
+* Create a small catchy mnemonic:
+
+  * **I-A-R** → *Inertia, Acceleration, Reaction*.
+  * Or **“Stay-Change-Exchange”** (stay in motion, change by force, exchange equal forces).
+
+### 3. **Interactive Elements (for your Celestial app)**
+
+* Add **sliders or input boxes** where the user can change *mass/force* and see acceleration update in real time.
+* Quick MCQs after each law → “If a car suddenly stops, why does your body lurch forward?”.
+
+### 4. **Table Expansion**
+
+Make the comparison table richer:
+
+| Law                 | Everyday Analogy        | Formula/Concept  | Modern Use             |
+| ------------------- | ----------------------- | ---------------- | ---------------------- |
+| 1 (Inertia)         | Passenger jerk in a bus | —                | Car safety, satellites |
+| 2 (F=ma)            | Kicking a football      | (F=ma)           | Engines, robotics      |
+| 3 (Action-Reaction) | Jumping off a boat      | (F_{AB}=-F_{BA}) | Rockets, sports        |
+
+### 5. **Add Real-World Indian Examples 🇮🇳**
+
+* First Law: Why we wear seat belts in autos & buses.
+* Second Law: Cricket ball speed depends on mass & how hard you hit it.
+* Third Law: Rocket launches from ISRO (GSLV/PSLV).
+
+### 6. **Quiz / Problems Section**
+
+End with 2-3 problems:
+
+* *Numerical:* “A bike of mass 100 kg accelerates at 2 m/s². Find the force applied.”
+* *Conceptual:* “Why does a balloon move forward when air is released?”
+
+### 7. **Story/Context Hook**
+
+Start with something like:
+“Next time you’re in a bus that suddenly stops 🚍… and you fall forward, you just experienced Newton’s First Law!”
+Makes it relatable instantly.
+
+### 8. **Highlight Limitations More Simply**
+
+Instead of just saying relativity/quantum, give a one-liner:
+
+* *At very high speeds (like near light), Einstein takes over.*
+* *At very tiny scales (atoms), quantum physics takes over.*
+
+---
+
+⚡ So the flow could become:
+
+1. Hook with real-life example →
+2. Concise law statement →
+3. Table/diagram →
+4. Application + Indian context →
+5. Quiz/problem →
+6. Limitation/future view.
+
+---
+
+👉 Want me to **make you a ready-to-use “study sheet” version** (like a one-page revision PDF with diagrams, mnemonics, examples, and a mini-quiz) for your Celestial app?
+`;
