@@ -27,21 +27,24 @@ export function ThinkingIndicator({ text }: { text?: string }) {
     return (
         <div className="p-3 rounded-lg bg-muted/50 mb-4">
             <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5"><Bot className="h-3 w-3"/> DeepThink</p>
-            {isAnimating ? (
-                <TypewriterText text={displayText} onComplete={handleAnimationComplete} />
-            ) : (
-                <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-                    <div className="font-mono text-xs whitespace-pre-wrap">
-                        {isExpanded ? displayText : previewLines}
-                    </div>
-                     <CollapsibleTrigger asChild>
-                        <Button variant="link" className="p-0 h-auto text-xs mt-2">
-                           {isExpanded ? 'Show less' : 'Show more'}
-                           <ChevronDown className={cn("h-3 w-3 ml-1 transition-transform", isExpanded && "rotate-180")}/>
-                        </Button>
-                    </CollapsibleTrigger>
-                </Collapsible>
-            )}
+            <div className="relative pl-5">
+                <div className="absolute left-2 top-1 bottom-1 w-px bg-border"></div>
+                {isAnimating ? (
+                    <TypewriterText text={displayText} onComplete={handleAnimationComplete} />
+                ) : (
+                    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                        <div className="font-mono text-xs whitespace-pre-wrap">
+                            {isExpanded ? displayText : previewLines}
+                        </div>
+                         <CollapsibleTrigger asChild>
+                            <Button variant="link" className="p-0 h-auto text-xs mt-2">
+                               {isExpanded ? 'Show less' : 'Show more'}
+                               <ChevronDown className={cn("h-3 w-3 ml-1 transition-transform", isExpanded && "rotate-180")}/>
+                            </Button>
+                        </CollapsibleTrigger>
+                    </Collapsible>
+                )}
+            </div>
         </div>
     );
 }
