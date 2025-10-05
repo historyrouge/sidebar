@@ -256,33 +256,8 @@ export function ChatContent() {
       }
   }, [isSynthesizing, toast]);
 
-  // Streaming chat hook - simplified
-  const { messages: streamMessages, append, isLoading: isStreamLoading } = useChat({
-    api: '/api/chat/stream',
-    onFinish: (message) => {
-      // Convert stream message to our format
-      const modelMessageId = `${Date.now()}-model`;
-      setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: message.content }]);
-    },
-    onError: (error) => {
-      console.error('Streaming error:', error);
-      toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
-    }
-  });
-
-  // Combine regular history with streaming messages for display
-  const displayMessages = React.useMemo(() => {
-    if (isStreamingMode && streamMessages.length > 0) {
-      // Show streaming messages
-      return streamMessages.map((msg, index) => ({
-        id: `stream-${index}`,
-        role: msg.role as "user" | "model" | "tool",
-        content: msg.content,
-        image: null
-      }));
-    }
-    return history;
-  }, [history, streamMessages, isStreamingMode]);
+  // Use regular history for display since we're handling streaming manually
+  const displayMessages = history;
 
   const executeChat = useCallback(async (
     currentHistory: Message[],
@@ -316,7 +291,7 @@ export function ChatContent() {
       
   }, [currentModel, activeButton, toast]);
 
-  // Streaming version of executeChat using useChat hook
+  // Streaming version of executeChat using custom implementation
   const executeStreamingChat = useCallback(async (
     currentHistory: Message[],
     currentImageDataUri?: string | null,
@@ -340,20 +315,77 @@ export function ChatContent() {
 
         console.log('📤 Sending message to streaming API:', lastMessage.content.substring(0, 100));
 
-        // Use the useChat hook's append function for streaming
-        await append({
-          role: 'user',
-          content: lastMessage.content,
-          data: {
+        // Convert to the format expected by the API
+        const messages = currentHistory.map(h => ({
+          role: h.role,
+          content: String(h.content),
+        }));
+
+        // Set up the streaming request
+        const response = await fetch('/api/chat/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages,
             model: currentModel,
             isMusicMode: activeButton === 'music',
             isWebScrapingMode: activeButton === 'webscrape',
             fileContent: currentFileContent,
             imageDataUri: currentImageDataUri,
-          }
+          }),
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const decoder = new TextDecoder();
+        let accumulatedContent = '';
+        const modelMessageId = `${Date.now()}-model`;
+
+        // Add empty model message to start
+        setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: "" }]);
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('0:')) {
+                // AI SDK streaming format: "0:content"
+                const content = line.slice(2);
+                if (content) {
+                  accumulatedContent += content;
+                  
+                  // Update the last message with accumulated content
+                  setHistory(prev => 
+                    prev.map(msg => 
+                      msg.id === modelMessageId 
+                        ? { ...msg, content: accumulatedContent }
+                        : msg
+                    )
+                  );
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
         
-        console.log('✅ Streaming request sent successfully');
+        console.log('✅ Streaming completed successfully');
       } catch (error: any) {
         console.error('❌ Streaming error:', error);
         toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
@@ -361,7 +393,7 @@ export function ChatContent() {
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast, append, isStreamingMode]);
+  }, [currentModel, activeButton, toast, isStreamingMode]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -779,7 +811,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {(isTyping || isStreamLoading) && <ThinkingIndicator text={isStreamLoading ? "Streaming response..." : "Thinking..."} />}
+            {isTyping && <ThinkingIndicator text="Streaming response..." />}
           </div>
         </ScrollArea>
 
