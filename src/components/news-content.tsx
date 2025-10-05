@@ -1,15 +1,14 @@
-
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { Separator } from "./ui/separator";
 
 type Article = {
   title: string;
@@ -21,13 +20,6 @@ type Article = {
   };
   publishedAt: string;
 };
-
-const categories = [
-    { name: "Top Headlines", value: "top" },
-    { name: "Technology", value: "technology" },
-    { name: "Artificial Intelligence", value: "ai" },
-    { name: "Gaming", value: "gaming" },
-];
 
 const loadingSteps = [
     "Fetching top headlines...",
@@ -42,32 +34,25 @@ export function NewsContent() {
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState("top");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
 
   useEffect(() => {
     let stepInterval: NodeJS.Timeout | undefined;
-    if (loading && page === 1) {
+    if (loading) {
         setLoadingStep(0);
         stepInterval = setInterval(() => {
             setLoadingStep(prev => (prev + 1) % loadingSteps.length);
         }, 2000); // Change message every 2 seconds
     }
     return () => clearInterval(stepInterval);
-  }, [loading, page]);
+  }, [loading]);
 
-  const fetchNews = useCallback(async (category: string, pageNum: number) => {
+  const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      let url = `/api/news?page=${pageNum}&`;
-      const searchCategory = category === 'top' ? 'general' : category;
-      url += category === 'ai' ? `q=artificial%20intelligence` : `category=${searchCategory}`;
-      
-      const res = await fetch(url);
+      const res = await fetch(`/api/news?category=general&page=1`);
       if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to fetch news");
@@ -75,9 +60,7 @@ export function NewsContent() {
       const data = await res.json();
       
       const newArticles = (data.articles || []).filter((article: Article) => article.title && article.title !== "[Removed]");
-      
-      setArticles(prev => pageNum === 1 ? newArticles : [...prev, ...newArticles]);
-      setHasMore(newArticles.length > 0 && newArticles.length === 40);
+      setArticles(newArticles);
 
     } catch (err: any) {
       setError(err.message);
@@ -87,17 +70,8 @@ export function NewsContent() {
   }, []);
 
   useEffect(() => {
-    setArticles([]);
-    setPage(1);
-    setHasMore(true);
-    fetchNews(activeCategory, 1);
-  }, [activeCategory, fetchNews]);
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchNews(activeCategory, nextPage);
-  }
+    fetchNews();
+  }, [fetchNews]);
 
   const handleReadMore = (article: Article) => {
     try {
@@ -111,10 +85,13 @@ export function NewsContent() {
 
   const handleRefresh = () => {
     setArticles([]);
-    setPage(1);
-    setHasMore(true);
-    fetchNews(activeCategory, 1);
+    fetchNews();
   };
+  
+  const mainArticle = articles.length > 0 ? articles[0] : null;
+  const headlineArticles = articles.length > 1 ? articles.slice(1, 6) : [];
+  const remainingArticles = articles.length > 6 ? articles.slice(6) : [];
+
 
   return (
     <>
@@ -123,13 +100,13 @@ export function NewsContent() {
             <div className="mt-2 text-lg text-muted-foreground h-7">
                 <AnimatePresence mode="wait">
                     <motion.p
-                        key={loading && page === 1 ? loadingStep : 'default'}
+                        key={loading ? loadingStep : 'default'}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         transition={{ duration: 0.3 }}
                     >
-                       {loading && page === 1 ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
+                       {loading ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
                     </motion.p>
                 </AnimatePresence>
             </div>
@@ -145,14 +122,6 @@ export function NewsContent() {
             </Button>
         </header>
 
-        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full mb-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-                {categories.map(cat => (
-                    <TabsTrigger key={cat.value} value={cat.value}>{cat.name}</TabsTrigger>
-                ))}
-            </TabsList>
-        </Tabs>
-
         {error && (
              <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
                 <p className="text-destructive font-semibold">Failed to load news</p>
@@ -161,20 +130,31 @@ export function NewsContent() {
             </div>
         )}
 
-        {loading && page === 1 ? (
-             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 9 }).map((_, i) => (
-                     <Card key={i}>
-                        <CardHeader className="p-0">
-                            <Skeleton className="h-48 w-full" />
-                        </CardHeader>
-                        <CardContent className="p-4 space-y-2">
-                           <Skeleton className="h-6 w-3/4" />
-                           <Skeleton className="h-4 w-full" />
-                           <Skeleton className="h-4 w-5/6" />
-                        </CardContent>
-                    </Card>
-                ))}
+        {loading && articles.length === 0 ? (
+             <div className="space-y-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <Skeleton className="h-96 w-full" />
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                    </div>
+                    <div className="space-y-4">
+                         {Array.from({ length: 5 }).map((_, i) => (
+                             <div key={i} className="space-y-2">
+                                <Skeleton className="h-6 w-full" />
+                                <Skeleton className="h-px w-full" />
+                            </div>
+                         ))}
+                    </div>
+                </div>
+                <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Card key={i}>
+                            <CardHeader className="p-0"><Skeleton className="h-48 w-full" /></CardHeader>
+                            <CardContent className="p-4 space-y-2"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /></CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
         ) : !error && articles.length === 0 ? (
             <div className="text-center text-muted-foreground mt-12">
@@ -182,8 +162,38 @@ export function NewsContent() {
             </div>
         ) : (
             <>
+                 {mainArticle && (
+                    <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                        <div className="lg:col-span-2 cursor-pointer group" onClick={() => handleReadMore(mainArticle)}>
+                            <div className="relative w-full aspect-[16/10] bg-muted rounded-xl overflow-hidden mb-4">
+                                {mainArticle.urlToImage ? (
+                                    <Image
+                                        src={mainArticle.urlToImage}
+                                        alt={mainArticle.title}
+                                        fill
+                                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                        unoptimized
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                ) : <div className="w-full h-full bg-muted"></div>}
+                            </div>
+                            <h2 className="text-2xl lg:text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{mainArticle.title}</h2>
+                            <p className="text-muted-foreground mt-2 text-sm">{mainArticle.description}</p>
+                            <p className="text-xs text-muted-foreground mt-2">{new Date(mainArticle.publishedAt).toLocaleDateString()} &middot; {mainArticle.source.name}</p>
+                        </div>
+                        <div className="space-y-3">
+                            {headlineArticles.map((article, i) => (
+                                <div key={`${article.url}-${i}`} className="cursor-pointer group" onClick={() => handleReadMore(article)}>
+                                    <p className="font-semibold leading-snug group-hover:text-primary transition-colors">{article.title}</p>
+                                    <p className="text-xs text-muted-foreground">{article.source.name}</p>
+                                    {i < headlineArticles.length - 1 && <Separator className="mt-3" />}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {articles.map((article, i) => (
+                    {(mainArticle ? remainingArticles : articles).map((article, i) => (
                          <Card key={`${article.url}-${i}`} className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
                             <CardHeader className="p-0">
                                 <div className="relative w-full h-48 bg-muted">
@@ -193,7 +203,7 @@ export function NewsContent() {
                                             alt={article.title}
                                             fill
                                             className="object-cover"
-                                            unoptimized // Using this because many news sources don't allow image optimization
+                                            unoptimized
                                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                         />
                                     ) : null}
@@ -205,19 +215,11 @@ export function NewsContent() {
                                 <CardDescription className="mt-2 text-sm line-clamp-3">{article.description}</CardDescription>
                             </CardContent>
                             <CardFooter className="p-4 pt-0">
-                                <Button className="w-full" onClick={() => handleReadMore(article)}>Read More</Button>
+                                <Button className="w-full" onClick={() => handleReadMore(article)}>Read More <ExternalLink className="ml-2 h-4 w-4" /></Button>
                             </CardFooter>
                         </Card>
                     ))}
                 </div>
-                {hasMore && !loading && (
-                    <div className="text-center mt-8">
-                        <Button onClick={handleLoadMore} disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Load More
-                        </Button>
-                    </div>
-                )}
             </>
         )}
     </div>

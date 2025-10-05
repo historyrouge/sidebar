@@ -68,7 +68,7 @@ export function MainDashboard() {
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
-            <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
+            <h1 className="text-xl font-semibold tracking-tight capitalize">{activeView === 'searnai' ? 'Chat' : 'Stories'}</h1>
         </div>
 
         {activeVideoId && (
@@ -122,7 +122,7 @@ export function MainDashboard() {
         </div>
       </header>
        <div className="flex justify-center p-2 border-b">
-            <div className="bg-muted p-1 rounded-lg flex gap-1 w-full">
+            <div className="bg-muted p-1 rounded-lg flex gap-1">
                  <Button 
                     variant={activeView === 'stories' ? 'outline' : 'ghost'} 
                     className={cn("gap-2 flex-1", activeView === 'stories' && 'bg-background')}
