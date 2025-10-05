@@ -2,12 +2,13 @@
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
+import { useChat } from 'ai/react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, Zap, ZapOff } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -175,7 +176,12 @@ export function ChatContent() {
   const [ocrProgress, setOcrProgress] = useState(0);
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | 'webscrape' | null>(null);
+  const [isStreamingMode, setIsStreamingMode] = useState(true); // Enable streaming by default
+  const [showDeepThinkButton, setShowDeepThinkButton] = useState(false);
+  const [isDeepThinking, setIsDeepThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingController, setStreamingController] = useState<AbortController | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -184,7 +190,7 @@ export function ChatContent() {
   }
 
 
-  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image') => {
+  const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image' | 'webscrape') => {
       const newActiveButton = activeButton === tool ? null : tool;
       setActiveButton(newActiveButton);
 
@@ -195,6 +201,8 @@ export function ChatContent() {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
+      } else if (newActiveButton === 'webscrape') {
+        toast({ title: 'Web Scraping Mode Activated', description: 'I\'ll search multiple websites and provide comprehensive answers with sources.' });
       } else {
         // Revert to default model if no special mode is active
         if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
@@ -252,6 +260,9 @@ export function ChatContent() {
       }
   }, [isSynthesizing, toast]);
 
+  // Use regular history for display since we're handling streaming manually
+  const displayMessages = history;
+
   const executeChat = useCallback(async (
     currentHistory: Message[],
     currentImageDataUri?: string | null,
@@ -270,6 +281,7 @@ export function ChatContent() {
           imageDataUri: currentImageDataUri,
           model: currentModel,
           isMusicMode: activeButton === 'music',
+          isWebScrapingMode: activeButton === 'webscrape',
       });
 
       setIsTyping(false);
@@ -283,6 +295,176 @@ export function ChatContent() {
       
   }, [currentModel, activeButton, toast]);
 
+  // Streaming version of executeChat using custom implementation
+  const executeStreamingChat = useCallback(async (
+    currentHistory: Message[],
+    currentImageDataUri?: string | null,
+    currentFileContent?: string | null
+  ): Promise<void> => {
+      console.log('🚀 Starting streaming chat...', { 
+        historyLength: currentHistory.length,
+        model: currentModel,
+        activeButton,
+        isStreamingMode
+      });
+      
+      setIsTyping(true);
+      
+      try {
+        // Get the last user message
+        const lastMessage = currentHistory[currentHistory.length - 1];
+        if (!lastMessage || lastMessage.role !== 'user') {
+          throw new Error('No user message found');
+        }
+
+        console.log('📤 Sending message to streaming API:', lastMessage.content.substring(0, 100));
+
+        // Convert to the format expected by the API
+        const messages = currentHistory.map(h => ({
+          role: h.role,
+          content: String(h.content),
+        }));
+
+        // Create abort controller for streaming
+        const controller = new AbortController();
+        setStreamingController(controller);
+        setIsStreaming(true);
+
+        // Set up the streaming request
+        const response = await fetch('/api/chat/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages,
+            model: currentModel,
+            isMusicMode: activeButton === 'music',
+            isWebScrapingMode: activeButton === 'webscrape',
+            fileContent: currentFileContent,
+            imageDataUri: currentImageDataUri,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const decoder = new TextDecoder();
+        let accumulatedContent = '';
+        const modelMessageId = `${Date.now()}-model`;
+
+        // Add empty model message to start
+        setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: "" }]);
+
+        try {
+          let chunkCount = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              console.log('✅ Streaming completed, total chunks:', chunkCount);
+              break;
+            }
+
+            chunkCount++;
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            console.log(`📦 Processing chunk ${chunkCount}, lines: ${lines.length}`);
+
+            for (const line of lines) {
+              if (line.startsWith('0:')) {
+                // AI SDK streaming format: "0:content"
+                const content = line.slice(2);
+                if (content) {
+                  accumulatedContent += content;
+                  console.log('📝 Adding content:', content.substring(0, 50) + '...');
+                  
+                  // Update the last message with accumulated content
+                  setHistory(prev => 
+                    prev.map(msg => 
+                      msg.id === modelMessageId 
+                        ? { ...msg, content: accumulatedContent }
+                        : msg
+                    )
+                  );
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+          console.log('🔒 Reader released');
+        }
+        
+        console.log('✅ Streaming completed successfully');
+        
+        // Show DeepThink button after streaming completes
+        setShowDeepThinkButton(true);
+      } catch (error: any) {
+        console.error('❌ Streaming error:', error);
+        if (error.name !== 'AbortError') {
+          toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
+        }
+      } finally {
+        setIsTyping(false);
+        setIsStreaming(false);
+        setStreamingController(null);
+      }
+      
+  }, [currentModel, activeButton, toast, isStreamingMode]);
+
+  // DeepThink button handler
+  const handleDeepThink = useCallback(async () => {
+    setIsDeepThinking(true);
+    setShowDeepThinkButton(false);
+    
+    try {
+      // Get the last user message
+      const lastUserMessage = history[history.length - 1];
+      if (!lastUserMessage || lastUserMessage.role !== 'user') {
+        throw new Error('No user message found');
+      }
+
+      // Create a DeepThink prompt
+      const deepThinkPrompt = `Please provide a deeper, more detailed analysis of: "${lastUserMessage.content}". 
+      
+Include:
+- More comprehensive explanations
+- Additional context and background
+- Related concepts and connections
+- Potential implications or applications
+- Further reading suggestions
+
+Make this a thorough, in-depth response that builds upon the initial answer.`;
+
+      // Add the DeepThink request as a new message
+      const deepThinkMessage: Message = {
+        id: `${Date.now()}-deepthink`,
+        role: "user",
+        content: deepThinkPrompt
+      };
+
+      const newHistory = [...history, deepThinkMessage];
+      setHistory(newHistory);
+
+      // Use streaming for DeepThink response
+      await executeStreamingChat(newHistory);
+      
+    } catch (error: any) {
+      console.error('❌ DeepThink error:', error);
+      toast({ title: "DeepThink Error", description: error.message, variant: 'destructive' });
+    } finally {
+      setIsDeepThinking(false);
+    }
+  }, [history, executeStreamingChat, toast]);
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
@@ -296,6 +478,10 @@ export function ChatContent() {
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
+    
+    // Reset DeepThink button state
+    setShowDeepThinkButton(false);
+    setIsDeepThinking(false);
 
     const isImageGenRequest = activeButton === 'image';
 
@@ -316,7 +502,12 @@ export function ChatContent() {
             setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: JSON.stringify(imagePayload) }]);
         }
     } else {
-        await executeChat(newHistory, imageDataUri, fileContent);
+        // Use streaming mode if enabled, otherwise use regular chat
+        if (isStreamingMode) {
+            await executeStreamingChat(newHistory, imageDataUri, fileContent);
+        } else {
+            await executeChat(newHistory, imageDataUri, fileContent);
+        }
     }
     
     if (activeButton) {
@@ -539,6 +730,14 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                        setActiveButton('webscrape');
+                        handleSendMessage('Who is the PM of India?');
+                    }}>Who is the PM of India?</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                        setActiveButton('webscrape');
+                        handleSendMessage('Tell me about Newton\'s laws of motion');
+                    }}>Newton\'s Laws</Button>
                 </div>
                  <div className="w-full max-w-3xl">
                      <div className="flex justify-start mb-2 items-center gap-2">
@@ -557,6 +756,18 @@ export function ChatContent() {
                             </Button>
                              <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
+                            </Button>
+                            <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
+                                <Globe className="h-5 w-5" />
+                            </Button>
+                            <Button 
+                                type="button" 
+                                variant={isStreamingMode ? 'default' : 'outline'} 
+                                disabled={isInputDisabled} 
+                                onClick={() => setIsStreamingMode(!isStreamingMode)}
+                                title={isStreamingMode ? 'Disable streaming' : 'Enable streaming'}
+                            >
+                                {isStreamingMode ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
                             </Button>
                         </div>
                     </div>
@@ -617,7 +828,7 @@ export function ChatContent() {
       />
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-              {history.map((message, index) => (
+              {displayMessages.map((message, index) => (
                   <React.Fragment key={`${message.id}-${index}`}>
                     <div
                       className={cn(
@@ -674,7 +885,48 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && <ThinkingIndicator text={"Thinking..."} />}
+            {isTyping && <ThinkingIndicator text="Streaming response..." />}
+            
+            {/* Stop Streaming Button */}
+            {isStreaming && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={() => {
+                    if (streamingController) {
+                      streamingController.abort();
+                    }
+                  }}
+                  variant="destructive"
+                  className="px-6 py-2 rounded-lg shadow-lg transition-all duration-200"
+                >
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  Stop Streaming
+                </Button>
+              </div>
+            )}
+            
+            {/* DeepThink Button */}
+            {showDeepThinkButton && !isTyping && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={handleDeepThink}
+                  disabled={isDeepThinking}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-200"
+                >
+                  {isDeepThinking ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Deep Thinking...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      DeepThink Analysis
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -718,6 +970,18 @@ export function ChatContent() {
                 </Button>
                  <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                     <ImageIcon className="h-5 w-5" />
+                </Button>
+                <Button type="button" variant={activeButton === 'webscrape' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('webscrape')}>
+                    <Globe className="h-5 w-5" />
+                </Button>
+                <Button 
+                    type="button" 
+                    variant={isStreamingMode ? 'default' : 'outline'} 
+                    disabled={isInputDisabled} 
+                    onClick={() => setIsStreamingMode(!isStreamingMode)}
+                    title={isStreamingMode ? 'Disable streaming' : 'Enable streaming'}
+                >
+                    {isStreamingMode ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
                 </Button>
             </div>
           </div>
