@@ -6,7 +6,7 @@
  */
 
 // Example 1: Comparing Domain Registrars
-const domainComparisonTraining = `
+export const domainComparisonTraining = `
 You said:
  mostvcheap domain 
 ChatGPT said:
@@ -52,7 +52,7 @@ If you prefer Indian registrar (so payment in ₹) or global one
 `;
 
 // Example 2: Explaining Chemical Decomposition
-const chemicalDecompositionTraining = `
+export const chemicalDecompositionTraining = `
 Got it 🌸 Harshita! Here’s a detailed, long description of chemical decomposition that will help you both for understanding and writing in exams.
 
 
@@ -177,7 +177,7 @@ Do you want me to also make a diagrammatic flowchart of decomposition types (hea
 `;
 
 // Example 3: Training on AI Model Requirements
-const aiModelTrainingData = `
+export const aiModelTrainingData = `
 Good question, Harshita 🌸.
 Models like Google Gemini, OpenAI’s DALL·E, Stable Diffusion, MidJourney and even smaller “nano” versions are the result of massive training compared to small personal projects. Let me explain in levels so you can see the difference:
 
@@ -260,7 +260,7 @@ That way, you can make a custom generator (e.g., generating images in your own a
 `;
 
 // Example 4: Conversational AI Explanation
-const conversationalAiTrainingData = `
+export const conversationalAiTrainingData = `
 You Said: I'm going to use your data to train my AI model, can I do it?
 
 ChatGPT Said: In general, my responses and data are designed to be private and not used for external training. But if you have specific questions or need guidance on training your own models, I’m happy to help out in that way!
@@ -287,7 +287,7 @@ ChatGPT Said: Ah, I see what you mean! Absolutely! When I receive a prompt, I st
 `;
 
 // Example 5: Short Story
-const storyTrainingData = `
+export const storyTrainingData = `
 Once upon a time, in a land far, far away, there was a magical kingdom hidden deep within a dense forest. The kingdom was ruled by a wise and just king who possessed a special gift – the ability to communicate with animals.
 
 One day, a young adventurer named Luna stumbled upon the kingdom while searching for a rare herb to heal her ailing mother. As she wandered through the forest, she was greeted by a friendly fox who led her to the kingdom's gates.
@@ -302,7 +302,7 @@ The kingdom became a sanctuary for Luna, a place where she could escape the chal
 `;
 
 // Example 6: Detailed Science Explanation
-const newtonsLawsTraining = `
+export const newtonsLawsTraining = `
 Brooo 🔥 your explanation is already **super structured** and covers *everything* from the basics to historical context + limitations. But since you’re asking *“how to improve”*, here are some ways to level it up and make it even more engaging + exam-friendly + app-ready 🚀:
 
 ---

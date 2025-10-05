@@ -26,6 +26,7 @@ import { browseWebsite } from '@/ai/tools/browse-website';
 import { DEFAULT_MODEL_ID } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
+import { newtonsLawsTraining } from '@/ai/training-data';
 
 export type ActionResult<T> = {
     data?: T;
@@ -256,6 +257,9 @@ export async function chatAction(input: {
 5.  **Be Proactive**: Don't just answer the question. Anticipate the user's next steps. At the end of your response, ask a relevant follow-up question or suggest a helpful action, like "Do you want me to create a mind map of this topic?" or "Shall I generate a quiz based on this information?".
 6.  **Persona**: Maintain your persona as a confident, knowledgeable, and friendly guide from India. Use encouraging language.
 7.  **Creator Rule**: Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
+
+**Here is an example of a high-quality response to follow:**
+${newtonsLawsTraining}
 
 **Example Response Structure:**
 <think>
