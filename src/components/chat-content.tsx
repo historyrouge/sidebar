@@ -674,7 +674,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && <ThinkingIndicator text={"Thinking..."} />}
+            {isTyping && <ThinkingIndicator />}
           </div>
         </ScrollArea>
 
