@@ -48,7 +48,7 @@ const tiers = [
             "Access to Study Planner & Calendar",
             "Ad-free experience",
         ],
-        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Go%20Plan&amount=20&currency_code=INR"
+        href: "https://paypal.me/Rishabharsh/20INR"
     },
     {
         name: "Plus",
@@ -66,7 +66,7 @@ const tiers = [
             "Deck Marketplace to share & sell content",
             "Priority support",
         ],
-        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Plus%20Plan&amount=100&currency_code=INR"
+        href: "https://paypal.me/Rishabharsh/100INR"
     },
     {
         name: "Pro",
@@ -83,7 +83,7 @@ const tiers = [
             "Team management features",
             "Dedicated account manager",
         ],
-        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Pro%20Plan&amount=499&currency_code=INR"
+        href: "https://paypal.me/Rishabharsh/499INR"
     }
 ];
 
