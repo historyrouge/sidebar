@@ -590,9 +590,9 @@ export class EnhancedAIAgent {
       const queryLower = query.toLowerCase();
       if (queryLower === 'news') {
         return {
-          short: "News is information about current events, typically reported by journalists and media organizations.",
-          medium: "News refers to information about current events, typically reported by journalists and media organizations. It can be delivered through various media channels including newspapers, television, radio, websites, and social media platforms.",
-          long: "News is information about current events, typically reported by journalists and media organizations. It serves to inform the public about what is happening in the world around them. News can be categorized into different types such as breaking news, local news, international news, sports news, and entertainment news. The delivery of news has evolved from traditional print and broadcast media to include digital platforms and social media."
+          short: "News covers current events, breaking stories, and important developments happening around the world.",
+          medium: "News encompasses current events, breaking stories, and important developments happening around the world. It includes politics, sports, technology, science, entertainment, and global affairs. Major news sources include Reuters, BBC, The Times of India, and other reputable media organizations that provide real-time updates on significant events.",
+          long: "News is the reporting of current events, breaking stories, and important developments happening around the world. It covers a wide range of topics including politics, sports, technology, science, entertainment, and global affairs. Major news sources like Reuters, BBC, The Times of India, and other reputable media organizations provide real-time updates on significant events. News can be categorized into different types such as breaking news, local news, international news, sports news, and entertainment news. The delivery of news has evolved from traditional print and broadcast media to include digital platforms, social media, and mobile apps, making information more accessible than ever before."
         };
       } else if (queryLower === 'weather') {
         return {
@@ -1091,18 +1091,18 @@ export class EnhancedAIAgent {
       });
     } else if (query.toLowerCase() === 'news') {
       faq.push({
-        q: 'What is news?',
-        a: this.extractAnswer(combinedText, 'news') || 'News is information about current events, typically reported by journalists and media organizations.',
+        q: 'What are the major news categories?',
+        a: this.extractAnswer(combinedText, 'categories') || 'Major news categories include politics, sports, technology, science, entertainment, business, and global affairs. Each category covers current events and developments in that specific field.',
         confidence: 0.9
       });
       faq.push({
-        q: 'What are the types of news?',
-        a: this.extractAnswer(combinedText, 'types') || 'News can be categorized into breaking news, local news, international news, sports news, and entertainment news.',
+        q: 'Which are the most reliable news sources?',
+        a: this.extractAnswer(combinedText, 'sources') || 'Reliable news sources include Reuters, BBC, The Times of India, Associated Press, and other established media organizations with strong editorial standards and fact-checking processes.',
         confidence: 0.8
       });
       faq.push({
-        q: 'How is news delivered?',
-        a: this.extractAnswer(combinedText, 'delivered') || 'News is delivered through newspapers, television, radio, websites, and social media platforms.',
+        q: 'How can I stay updated with breaking news?',
+        a: this.extractAnswer(combinedText, 'breaking') || 'Stay updated with breaking news through news apps, social media alerts, RSS feeds, and following reputable journalists and news organizations on platforms like Twitter and LinkedIn.',
         confidence: 0.8
       });
     } else {
@@ -1141,7 +1141,7 @@ export class EnhancedAIAgent {
   }
 
   /**
-   * Extract answer from text with better handling
+   * Extract answer from text with better handling and contextual fallbacks
    */
   private extractAnswer(text: string, keyword: string): string {
     if (!text || text.trim().length === 0) {
@@ -1155,6 +1155,20 @@ export class EnhancedAIAgent {
       if (answer && answer !== 'undefined' && answer.length > 5) {
         return answer + '.';
       }
+    }
+    
+    // Provide contextual fallbacks based on keyword
+    const keywordLower = keyword.toLowerCase();
+    if (keywordLower.includes('categories')) {
+      return 'Major news categories include politics, sports, technology, science, entertainment, business, and global affairs.';
+    } else if (keywordLower.includes('sources')) {
+      return 'Reliable news sources include Reuters, BBC, The Times of India, Associated Press, and other established media organizations.';
+    } else if (keywordLower.includes('breaking')) {
+      return 'Stay updated with breaking news through news apps, social media alerts, RSS feeds, and following reputable journalists.';
+    } else if (keywordLower.includes('types')) {
+      return 'News can be categorized into breaking news, local news, international news, sports news, and entertainment news.';
+    } else if (keywordLower.includes('delivered')) {
+      return 'News is delivered through newspapers, television, radio, websites, and social media platforms.';
     }
     
     return 'Information not available.';
