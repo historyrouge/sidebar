@@ -256,8 +256,8 @@ export function ChatContent() {
       }
   }, [isSynthesizing, toast]);
 
-  // Streaming chat hook
-  const { messages: streamMessages, input: streamInput, handleInputChange: handleStreamInputChange, handleSubmit: handleStreamSubmit, isLoading: isStreamLoading, setMessages: setStreamMessages } = useChat({
+  // Streaming chat hook - simplified
+  const { messages: streamMessages, append, isLoading: isStreamLoading } = useChat({
     api: '/api/chat/stream',
     onFinish: (message) => {
       // Convert stream message to our format
@@ -269,6 +269,20 @@ export function ChatContent() {
       toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
     }
   });
+
+  // Combine regular history with streaming messages for display
+  const displayMessages = React.useMemo(() => {
+    if (isStreamingMode && streamMessages.length > 0) {
+      // Show streaming messages
+      return streamMessages.map((msg, index) => ({
+        id: `stream-${index}`,
+        role: msg.role as "user" | "model" | "tool",
+        content: msg.content,
+        image: null
+      }));
+    }
+    return history;
+  }, [history, streamMessages, isStreamingMode]);
 
   const executeChat = useCallback(async (
     currentHistory: Message[],
@@ -302,90 +316,52 @@ export function ChatContent() {
       
   }, [currentModel, activeButton, toast]);
 
-  // Streaming version of executeChat
+  // Streaming version of executeChat using useChat hook
   const executeStreamingChat = useCallback(async (
     currentHistory: Message[],
     currentImageDataUri?: string | null,
     currentFileContent?: string | null
   ): Promise<void> => {
+      console.log('🚀 Starting streaming chat...', { 
+        historyLength: currentHistory.length,
+        model: currentModel,
+        activeButton,
+        isStreamingMode
+      });
+      
       setIsTyping(true);
       
-      // Convert to the format expected by useChat
-      const messages = currentHistory.map(h => ({
-        id: h.id,
-        role: h.role,
-        content: String(h.content),
-      }));
-
-      // Set up the streaming request
-      const response = await fetch('/api/chat/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          model: currentModel,
-          isMusicMode: activeButton === 'music',
-          isWebScrapingMode: activeButton === 'webscrape',
-          fileContent: currentFileContent,
-          imageDataUri: currentImageDataUri,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const decoder = new TextDecoder();
-      let accumulatedContent = '';
-      const modelMessageId = `${Date.now()}-model`;
-
-      // Add empty model message to start
-      setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: "" }]);
-
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.content) {
-                  accumulatedContent += data.content;
-                  
-                  // Update the last message with accumulated content
-                  setHistory(prev => 
-                    prev.map(msg => 
-                      msg.id === modelMessageId 
-                        ? { ...msg, content: accumulatedContent }
-                        : msg
-                    )
-                  );
-                }
-              } catch (e) {
-                // Ignore parsing errors for non-JSON lines
-              }
-            }
-          }
+        // Get the last user message
+        const lastMessage = currentHistory[currentHistory.length - 1];
+        if (!lastMessage || lastMessage.role !== 'user') {
+          throw new Error('No user message found');
         }
+
+        console.log('📤 Sending message to streaming API:', lastMessage.content.substring(0, 100));
+
+        // Use the useChat hook's append function for streaming
+        await append({
+          role: 'user',
+          content: lastMessage.content,
+          data: {
+            model: currentModel,
+            isMusicMode: activeButton === 'music',
+            isWebScrapingMode: activeButton === 'webscrape',
+            fileContent: currentFileContent,
+            imageDataUri: currentImageDataUri,
+          }
+        });
+        
+        console.log('✅ Streaming request sent successfully');
+      } catch (error: any) {
+        console.error('❌ Streaming error:', error);
+        toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
       } finally {
-        reader.releaseLock();
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast]);
+  }, [currentModel, activeButton, toast, append, isStreamingMode]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -746,7 +722,7 @@ export function ChatContent() {
       />
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-              {history.map((message, index) => (
+              {displayMessages.map((message, index) => (
                   <React.Fragment key={`${message.id}-${index}`}>
                     <div
                       className={cn(
@@ -803,7 +779,7 @@ export function ChatContent() {
                   </React.Fragment>
                 )
               )}
-            {isTyping && <ThinkingIndicator text={"Thinking..."} />}
+            {(isTyping || isStreamLoading) && <ThinkingIndicator text={isStreamLoading ? "Streaming response..." : "Thinking..."} />}
           </div>
         </ScrollArea>
 
