@@ -154,7 +154,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-card/5 border-r border-border/10 text-sidebar-foreground backdrop-blur-lg">
+    <Sidebar className="bg-card/5 border-r border-border text-sidebar-foreground backdrop-blur-lg">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
