@@ -12,6 +12,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { ShareDialog } from "./share-dialog";
 import Image from "next/image";
@@ -507,7 +508,7 @@ export function ChatContent() {
         <>
             {thinkingText && <ThinkingIndicator text={thinkingText} />}
             <ReactMarkdown
-                remarkPlugins={[remarkMath]}
+                remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex]}
                 className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
                 components={{
@@ -522,6 +523,12 @@ export function ChatContent() {
                         );
                     },
                     p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                    table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,
+                    thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
+                    tbody: ({node, ...props}) => <tbody {...props} />,
+                    tr: ({node, ...props}) => <tr className="border-b border-border" {...props} />,
+                    th: ({node, ...props}) => <th className="p-2 text-left font-semibold" {...props} />,
+                    td: ({node, ...props}) => <td className="p-2" {...props} />,
                 }}
             >
                 {mainContent}
