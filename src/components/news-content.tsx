@@ -1,15 +1,17 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, FormEvent } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2, ExternalLink } from "lucide-react";
+import { RefreshCw, Loader2, ExternalLink, Search, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Separator } from "./ui/separator";
+import { Input } from "./ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 type Article = {
   title: string;
@@ -22,38 +24,41 @@ type Article = {
   publishedAt: string;
 };
 
-const loadingSteps = [
-    "Fetching top headlines...",
-    "Analyzing the latest sources...",
-    "Compiling your news feed...",
-    "Almost there, just a moment...",
+const categories = [
+    { key: "general", name: "Top Stories" },
+    { key: "technology", name: "Technology" },
+    { key: "science", name: "Science" },
+    { key: "sports", name: "Sports" },
+    { key: "business", name: "Business" },
+    { key: "entertainment", name: "Entertainment" },
+    { key: "health", name: "Health" },
 ];
 
+const mainCategories = ["technology", "science", "sports"];
 
 export function NewsContent() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const [category, setCategory] = useState("general");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    let stepInterval: NodeJS.Timeout | undefined;
-    if (loading) {
-        setLoadingStep(0);
-        stepInterval = setInterval(() => {
-            setLoadingStep(prev => (prev + 1) % loadingSteps.length);
-        }, 2000); // Change message every 2 seconds
-    }
-    return () => clearInterval(stepInterval);
-  }, [loading]);
-
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (cat: string, query?: string) => {
     setLoading(true);
     setError(null);
+    setArticles([]);
+
     try {
-      const res = await fetch(`/api/news?category=general&page=1`);
+      let url = `/api/news?page=1`;
+      if (query) {
+        url += `&q=${encodeURIComponent(query)}`;
+      } else {
+        url += `&category=${cat}`;
+      }
+      
+      const res = await fetch(url);
       if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to fetch news");
@@ -71,8 +76,8 @@ export function NewsContent() {
   }, []);
 
   useEffect(() => {
-    fetchNews();
-  }, [fetchNews]);
+    fetchNews(category, searchQuery);
+  }, [fetchNews, category, searchQuery]);
 
   const handleReadMore = (article: Article) => {
     try {
@@ -84,32 +89,58 @@ export function NewsContent() {
     }
   }
 
-  const handleRefresh = () => {
-    setArticles([]);
-    fetchNews();
-  };
+  const handleCategorySelect = (catKey: string) => {
+    setCategory(catKey);
+    setSearchQuery("");
+  }
+  
+  const handleSearch = (e: FormEvent) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const input = form.elements.namedItem('search') as HTMLInputElement;
+      setCategory(""); // Clear category when searching
+      setSearchQuery(input.value);
+  }
+
+  const currentCategoryName = categories.find(c => c.key === category)?.name || "Search Results";
 
   return (
     <>
     <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-        <header className="mb-8 text-center relative">
-            <div className="mt-2 text-lg text-muted-foreground h-7">
-                <AnimatePresence mode="wait">
-                    <motion.p
-                        key={loading ? loadingStep : 'default'}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                       {loading ? loadingSteps[loadingStep] : "Top headlines in technology and education."}
-                    </motion.p>
-                </AnimatePresence>
+        <header className="mb-8 relative">
+            <div className="max-w-2xl mx-auto space-y-4">
+                <form onSubmit={handleSearch}>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input name="search" placeholder="Search for news..." className="w-full pl-10 h-12 text-base rounded-full shadow-lg" />
+                    </div>
+                </form>
+                <div className="flex items-center justify-center gap-2">
+                     <div className="hidden md:flex items-center gap-2">
+                         {categories.filter(c => mainCategories.includes(c.key)).map(c => (
+                            <Button key={c.key} variant={category === c.key ? "default" : "outline"} onClick={() => handleCategorySelect(c.key)}>{c.name}</Button>
+                         ))}
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                More <ChevronDown className="ml-2 h-4 w-4"/>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            {categories.map(c => (
+                                <DropdownMenuItem key={c.key} onSelect={() => handleCategorySelect(c.key)}>
+                                    {c.name}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
-             <Button 
+            <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleRefresh} 
+                onClick={() => fetchNews(category, searchQuery)}
                 disabled={loading}
                 className="absolute right-0 top-1/2 -translate-y-1/2"
             >
@@ -117,6 +148,8 @@ export function NewsContent() {
                 Refresh
             </Button>
         </header>
+
+        <h2 className="text-2xl font-bold mb-6 text-center">{loading ? "Fetching news..." : currentCategoryName}</h2>
 
         {error && (
              <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
@@ -127,28 +160,29 @@ export function NewsContent() {
         )}
 
         {loading && articles.length === 0 ? (
-             <div className="space-y-6">
+             <div className="space-y-8">
                 {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex gap-4">
-                        <Skeleton className="h-24 w-32 rounded-lg" />
-                        <div className="flex-1 space-y-2">
-                            <Skeleton className="h-5 w-3/4" />
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6 items-center">
+                        <Skeleton className="h-40 w-full rounded-lg" />
+                        <div className="space-y-3">
+                            <Skeleton className="h-6 w-3/4" />
                             <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-1/2" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-1/2 mt-2" />
                         </div>
                     </div>
                 ))}
             </div>
-        ) : !error && articles.length === 0 ? (
+        ) : !loading && !error && articles.length === 0 ? (
             <div className="text-center text-muted-foreground mt-12">
-                <p>No new articles found for this category. Please check back later!</p>
+                <p>No articles found. Please try a different search or category.</p>
             </div>
         ) : (
             <div className="space-y-8">
                 {articles.map((article, i) => (
                     <div 
                         key={`${article.url}-${i}`}
-                        className="group grid grid-cols-1 md:grid-cols-[200px_1fr] lg:grid-cols-[250px_1fr] gap-6 cursor-pointer"
+                        className="group grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6 items-center cursor-pointer"
                         onClick={() => handleReadMore(article)}
                     >
                         <div className="relative w-full aspect-video md:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
@@ -161,11 +195,11 @@ export function NewsContent() {
                                     unoptimized
                                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
-                            ) : <div className="w-full h-full bg-muted"></div>}
+                            ) : <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">No Image</div>}
                         </div>
                         <div className="flex flex-col">
                              <h2 className="text-xl font-bold leading-snug group-hover:text-primary transition-colors">{article.title}</h2>
-                            <p className="text-base text-muted-foreground mt-2 line-clamp-2">{article.description}</p>
+                            <p className="text-base text-muted-foreground mt-2 line-clamp-3">{article.description}</p>
                             <p className="text-sm text-muted-foreground mt-auto pt-2">{new Date(article.publishedAt).toLocaleDateString()} &middot; {article.source.name}</p>
                         </div>
                     </div>

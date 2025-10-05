@@ -65,10 +65,10 @@ export async function GET(request: NextRequest) {
   const pageSize = 40;
   let url: string;
 
-  if (category && category !== 'top') {
-     url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
-  } else if (q) {
+  if (q) {
       url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&sortBy=publishedAt&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
+  } else if (category && category !== 'top') {
+     url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
   } 
   else {
       url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=${pageSize}&page=${page}&apiKey=${apiKey}`;
