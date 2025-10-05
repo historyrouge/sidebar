@@ -55,51 +55,51 @@
   }
 
   .light {
-    --background: 0 0% 98%;
-    --foreground: 240 10% 3.9%;
+    --background: 255 75% 98%; /* Very light purple */
+    --foreground: 240 50% 10%; /* Dark blue */
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 255 50% 94%; /* Light purple card */
+    --card-foreground: 240 50% 10%;
  
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 255 50% 92%;
+    --popover-foreground: 240 50% 10%;
  
-    --primary: 210 90% 55%;
+    --primary: 220 90% 55%; /* Bright Blue */
     --primary-foreground: 0 0% 98%;
  
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 10% 3.9%;
+    --secondary: 255 50% 92%; /* Lighter purple */
+    --secondary-foreground: 240 50% 10%;
  
-    --accent: 30 90% 55%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 50 100% 50%; /* Yellow */
+    --accent-foreground: 240 50% 10%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 5% 45%;
+    --muted: 255 50% 92%;
+    --muted-foreground: 240 30% 40%;
  
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 210 90% 55%;
+    --border: 255 30% 88%;
+    --input: 255 30% 90%;
+    --ring: 220 90% 55%;
 
-    --chart-1: 210 80% 50%;
-    --chart-2: 30 90% 55%;
-    --chart-3: 160 70% 40%;
+    --chart-1: 220 80% 50%;
+    --chart-2: 50 90% 55%;
+    --chart-3: 260 70% 40%;
     --chart-4: 280 80% 60%;
     --chart-5: 0 80% 60%;
     
-    --sidebar-background: 240 5% 96%;
-    --sidebar-foreground: 240 10% 3.9%;
-    --sidebar-border: 240 5.9% 90%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 240 10% 3.9%;
-    --sidebar-active: 210 90% 55%;
+    --sidebar-background: 255 60% 96%;
+    --sidebar-foreground: 240 50% 10%;
+    --sidebar-border: 255 30% 88%;
+    --sidebar-accent: 255 40% 90%;
+    --sidebar-accent-foreground: 240 50% 10%;
+    --sidebar-active: 220 90% 55%;
     --sidebar-active-foreground: 0 0% 98%;
-    --sidebar-group-foreground: 240 5% 45%;
+    --sidebar-group-foreground: 240 30% 40%;
 
-    --chat-input-background: 0 0% 100%;
-    --avatar-accent: 210 90% 55%;
+    --chat-input-background: 255 50% 94%;
+    --avatar-accent: 220 90% 55%;
   }
  
   .dark {
