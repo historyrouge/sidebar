@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
+import { PricingDialog } from "./pricing-dialog";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -19,6 +19,7 @@ export function MainDashboard() {
   const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer } = useChatStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
+  const [showPricingDialog, setShowPricingDialog] = useState(false);
 
   const handleNewChat = () => {
     try {
@@ -63,6 +64,7 @@ export function MainDashboard() {
 
   return (
     <div className="flex h-full flex-col">
+      <PricingDialog isOpen={showPricingDialog} onOpenChange={setShowPricingDialog} />
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
@@ -104,7 +106,7 @@ export function MainDashboard() {
         )}
 
         <div className="flex items-center gap-2">
-            <Button>
+            <Button onClick={() => setShowPricingDialog(true)}>
                 <Star className="mr-2 h-4 w-4" />
                 Get Pro
             </Button>
