@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
+import Link from "next/link";
 
 interface PricingDialogProps {
   isOpen: boolean;
@@ -28,7 +29,8 @@ const tiers = [
             "Limited flashcard & quiz generation (5/day)",
             "Text & image-based study sessions",
             "Community support",
-        ]
+        ],
+        href: "#"
     },
     {
         name: "Go",
@@ -45,7 +47,8 @@ const tiers = [
             "Higher generation limits (50/day)",
             "Access to Study Planner & Calendar",
             "Ad-free experience",
-        ]
+        ],
+        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Go%20Plan&amount=20&currency_code=INR"
     },
     {
         name: "Plus",
@@ -62,7 +65,8 @@ const tiers = [
             "Performance Analytics Dashboard",
             "Deck Marketplace to share & sell content",
             "Priority support",
-        ]
+        ],
+        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Plus%20Plan&amount=100&currency_code=INR"
     },
     {
         name: "Pro",
@@ -78,7 +82,8 @@ const tiers = [
             "Advanced tools for educators",
             "Team management features",
             "Dedicated account manager",
-        ]
+        ],
+        href: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=your-paypal-email@example.com&item_name=ScholarSage%20Pro%20Plan&amount=499&currency_code INR"
     }
 ];
 
@@ -108,9 +113,11 @@ export function PricingDialog({ isOpen, onOpenChange }: PricingDialogProps) {
                                 <CardDescription className="text-neutral-300 h-10">{tier.description}</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-1 space-y-3 pt-4">
-                                <Button className="w-full" variant={tier.buttonVariant as any} disabled={tier.disabled}>
-                                    {tier.buttonText}
-                                </Button>
+                                <Link href={tier.href} target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <Button className="w-full" variant={tier.buttonVariant as any} disabled={tier.disabled}>
+                                        {tier.buttonText}
+                                    </Button>
+                                </Link>
                                 <ul className="space-y-2 text-sm text-neutral-300">
                                     {tier.features.map((feature, i) => (
                                         <li key={i} className="flex items-start gap-2">
