@@ -32,7 +32,7 @@ const tiers = [
     },
     {
         name: "Go",
-        price: "₹399",
+        price: "₹20",
         priceDetails: "INR / month (inclusive of GST)",
         description: "Unlock more powerful tools for serious learners.",
         buttonText: "Upgrade to Go",
@@ -49,7 +49,7 @@ const tiers = [
     },
     {
         name: "Plus",
-        price: "₹1,999",
+        price: "₹100",
         priceDetails: "INR / month (inclusive of GST)",
         description: "For students and groups who want to maximize their productivity.",
         buttonText: "Get Plus",
@@ -66,7 +66,7 @@ const tiers = [
     },
     {
         name: "Pro",
-        price: "₹19,900",
+        price: "₹499",
         priceDetails: "INR / month (inclusive of GST)",
         description: "For power users, educators, and institutions.",
         buttonText: "Get Pro",
