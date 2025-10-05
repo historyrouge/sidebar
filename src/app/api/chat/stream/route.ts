@@ -89,20 +89,20 @@ export async function POST(req: NextRequest) {
             let testResponse = '';
             
             if (userQuery.toLowerCase().includes('pm of india') || userQuery.toLowerCase().includes('prime minister')) {
-              testResponse = `# **Prime Minister of India** 🇮🇳
+              testResponse = `# Prime Minister of India 🇮🇳
 
 **Current PM:** Narendra Modi
 
-## **Key Information:**
+## Key Information:
 - **Name:** Narendra Damodardas Modi
 - **Party:** Bharatiya Janata Party (BJP)
-- **Term:** Since May 26, 2014 (Second term since May 30, 2019)
+- **Term:** Since May 26, 2014
 - **Residence:** 7, Lok Kalyan Marg, New Delhi
 
-## **Background:**
+## Background:
 Narendra Modi is the 14th and current Prime Minister of India. He previously served as the Chief Minister of Gujarat from 2001 to 2014.
 
-## **Key Achievements:**
+## Key Achievements:
 - Digital India initiative
 - Make in India campaign
 - Swachh Bharat Abhiyan
@@ -111,41 +111,61 @@ Narendra Modi is the 14th and current Prime Minister of India. He previously ser
 
 *Note: This is a test response. For real-time data, please configure the Sambanova API credentials.*`;
             } else if (userQuery.toLowerCase().includes('python')) {
-              testResponse = `# **Python Programming Language** 🐍
+              testResponse = `# Python Programming Language 🐍
 
 **Python** is a high-level, interpreted programming language known for its simplicity and readability.
 
-## **Key Features:**
+## Key Features:
 - **Easy to learn:** Simple syntax similar to English
 - **Versatile:** Used for web development, data science, AI, automation
 - **Large community:** Extensive libraries and frameworks
 - **Cross-platform:** Runs on Windows, Mac, Linux
 
-## **Popular Uses:**
+## Popular Uses:
 - **Web Development:** Django, Flask frameworks
 - **Data Science:** Pandas, NumPy, Matplotlib
 - **Machine Learning:** TensorFlow, PyTorch, Scikit-learn
 - **Automation:** Scripting and task automation
 
-## **Example Code:**
+## Example Code:
 \`\`\`python
 print("Hello, World!")
 \`\`\`
 
 *Note: This is a test response. For real-time data, please configure the Sambanova API credentials.*`;
+            } else if (userQuery.toLowerCase().includes('newton') || userQuery.toLowerCase().includes('laws of motion')) {
+              testResponse = `# Newton's Laws of Motion 🚀
+
+**Sir Isaac Newton** formulated three fundamental laws of motion that describe the relationship between forces and motion.
+
+## First Law (Law of Inertia):
+An object at rest stays at rest, and an object in motion stays in motion, unless acted upon by an external force.
+
+## Second Law (F = ma):
+The acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass.
+
+## Third Law (Action-Reaction):
+For every action, there is an equal and opposite reaction.
+
+## Real-World Examples:
+- **First Law:** A ball rolling on a frictionless surface
+- **Second Law:** Pushing a heavy vs. light box
+- **Third Law:** Walking (foot pushes ground, ground pushes back)
+
+*Note: This is a test response. For real-time data, please configure the Sambanova API credentials.*`;
             } else {
-              testResponse = `# **SearnAI Response** 🤖
+              testResponse = `# SearnAI Response 🤖
 
 Hello! I'm SearnAI, your AI assistant. You asked: "${userQuery}".
 
-## **What I Can Help With:**
+## What I Can Help With:
 - **Questions & Answers:** Any topic you're curious about
 - **Explanations:** Complex concepts made simple
 - **Content Creation:** Writing, coding, analysis
 - **Research:** Finding and summarizing information
 - **Problem Solving:** Step-by-step solutions
 
-## **Current Status:**
+## Current Status:
 This is a test streaming response. The streaming functionality is working perfectly! 🎉
 
 For full AI capabilities with real-time data, please configure the Sambanova API credentials.
@@ -153,7 +173,7 @@ For full AI capabilities with real-time data, please configure the Sambanova API
 **What would you like to know more about?**`;
             }
             
-            // Send the test response with true token-by-token streaming
+            // Send the test response with improved streaming
             const text = testResponse;
             let index = 0;
             
@@ -161,14 +181,18 @@ For full AI capabilities with real-time data, please configure the Sambanova API
               // Determine chunk size based on content complexity
               let chunkSize = 1;
               
-              // Adaptive pacing based on content
-              if (text[index] === '\n' || text[index] === '#' || text[index] === '*') {
+              // Handle multi-byte characters (emojis, special chars)
+              const char = text[index];
+              if (char.charCodeAt(0) > 127) {
+                // Multi-byte character, take the whole character
+                chunkSize = 1;
+              } else if (char === '\n' || char === '#' || char === '*') {
                 // Pause longer for formatting
                 chunkSize = 1;
-              } else if (text[index] === '.' || text[index] === '!' || text[index] === '?') {
+              } else if (char === '.' || char === '!' || char === '?') {
                 // Pause for sentence endings
                 chunkSize = 1;
-              } else if (text[index] === ' ') {
+              } else if (char === ' ') {
                 // Normal word boundary
                 chunkSize = 1;
               } else {
@@ -177,16 +201,21 @@ For full AI capabilities with real-time data, please configure the Sambanova API
               }
               
               const chunk = text.slice(index, index + chunkSize);
-              controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
+              
+              // Ensure proper UTF-8 encoding
+              const encodedChunk = new TextEncoder().encode(`0:${chunk}`);
+              controller.enqueue(encodedChunk);
               
               // Adaptive delay based on content
-              let delay = 20; // Base delay
+              let delay = 25; // Base delay
               if (chunk === '\n' || chunk === '#') {
-                delay = 100; // Longer pause for formatting
+                delay = 120; // Longer pause for formatting
               } else if (chunk === '.' || chunk === '!' || chunk === '?') {
-                delay = 150; // Pause for sentence endings
+                delay = 180; // Pause for sentence endings
               } else if (chunk === ' ') {
-                delay = 30; // Short pause for word boundaries
+                delay = 40; // Short pause for word boundaries
+              } else if (chunk.charCodeAt(0) > 127) {
+                delay = 50; // Slightly longer for emojis/special chars
               }
               
               await new Promise(resolve => setTimeout(resolve, delay));
@@ -335,7 +364,7 @@ The streaming functionality is working perfectly! 🎉 However, we're experienci
 *This is a fallback response while we resolve the API connectivity.*`;
           }
           
-          // Send the fallback response with true token-by-token streaming
+          // Send the fallback response with improved streaming
           const text = fallbackResponse;
           let index = 0;
           
@@ -343,14 +372,18 @@ The streaming functionality is working perfectly! 🎉 However, we're experienci
             // Determine chunk size based on content complexity
             let chunkSize = 1;
             
-            // Adaptive pacing based on content
-            if (text[index] === '\n' || text[index] === '#' || text[index] === '*') {
+            // Handle multi-byte characters (emojis, special chars)
+            const char = text[index];
+            if (char.charCodeAt(0) > 127) {
+              // Multi-byte character, take the whole character
+              chunkSize = 1;
+            } else if (char === '\n' || char === '#' || char === '*') {
               // Pause longer for formatting
               chunkSize = 1;
-            } else if (text[index] === '.' || text[index] === '!' || text[index] === '?') {
+            } else if (char === '.' || char === '!' || char === '?') {
               // Pause for sentence endings
               chunkSize = 1;
-            } else if (text[index] === ' ') {
+            } else if (char === ' ') {
               // Normal word boundary
               chunkSize = 1;
             } else {
@@ -359,16 +392,21 @@ The streaming functionality is working perfectly! 🎉 However, we're experienci
             }
             
             const chunk = text.slice(index, index + chunkSize);
-            controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
+            
+            // Ensure proper UTF-8 encoding
+            const encodedChunk = new TextEncoder().encode(`0:${chunk}`);
+            controller.enqueue(encodedChunk);
             
             // Adaptive delay based on content
-            let delay = 20; // Base delay
+            let delay = 25; // Base delay
             if (chunk === '\n' || chunk === '#') {
-              delay = 100; // Longer pause for formatting
+              delay = 120; // Longer pause for formatting
             } else if (chunk === '.' || chunk === '!' || chunk === '?') {
-              delay = 150; // Pause for sentence endings
+              delay = 180; // Pause for sentence endings
             } else if (chunk === ' ') {
-              delay = 30; // Short pause for word boundaries
+              delay = 40; // Short pause for word boundaries
+            } else if (chunk.charCodeAt(0) > 127) {
+              delay = 50; // Slightly longer for emojis/special chars
             }
             
             await new Promise(resolve => setTimeout(resolve, delay));
