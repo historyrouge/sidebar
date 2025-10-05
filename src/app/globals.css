@@ -5,41 +5,41 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%; /* #000000 */
-    --foreground: 0 0% 98%; /* #FAFAFA */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%; /* Changed for glass effect */
+    --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
  
-    --popover: 0 0% 4%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 210 90% 55%;
+    --primary-foreground: 0 0% 98%;
  
-    --secondary: 0 0% 12%; /* #1F1F1F */
+    --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
  
-    --accent: 0 0% 12%;
+    --accent: 30 90% 55%;
     --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%; /* #A0A0A0 */
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
  
-    --border: 0 0% 100%; /* Changed for glass effect */
-    --input: 0 0% 12%;
-    --ring: 0 0% 63%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 210 90% 55%;
  
     --radius: 0.75rem;
 
-    --chart-1: 210 40% 96.1%;
-    --chart-2: 145 63% 42%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 25 95% 53%;
-    --chart-5: 25 85% 62%;
+    --chart-1: 210 80% 50%;
+    --chart-2: 30 90% 55%;
+    --chart-3: 160 70% 40%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 0 80% 60%;
     
     --sidebar-background: 0 0% 4%; /* #0A0A0A */
     --sidebar-foreground: 0 0% 90%; /* #E6E6E6 */
@@ -53,41 +53,89 @@
     --chat-input-background: 0 0% 10%;
     --avatar-accent: 225 73% 57%; /* #3B82F6 */
   }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+ 
+    --primary: 210 90% 55%;
+    --primary-foreground: 0 0% 98%;
+ 
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 3.9%;
+ 
+    --accent: 30 90% 55%;
+    --accent-foreground: 0 0% 98%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+ 
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 210 90% 55%;
+
+    --chart-1: 210 80% 50%;
+    --chart-2: 30 90% 55%;
+    --chart-3: 160 70% 40%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 0 80% 60%;
+    
+    --sidebar-background: 240 5% 96%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-accent: 0 0% 100%;
+    --sidebar-accent-foreground: 240 10% 3.9%;
+    --sidebar-active: 210 90% 55%;
+    --sidebar-active-foreground: 0 0% 98%;
+    --sidebar-group-foreground: 240 5% 45%;
+
+    --chat-input-background: 0 0% 100%;
+    --avatar-accent: 210 90% 55%;
+  }
  
   .dark {
-    --background: 0 0% 0%; /* #000000 */
-    --foreground: 0 0% 98%; /* #FAFAFA */
- 
-    --card: 0 0% 100%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
  
-    --popover: 0 0% 4%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 210 90% 55%;
+    --primary-foreground: 0 0% 98%;
  
-    --secondary: 0 0% 12%;
+    --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
  
-    --accent: 0 0% 12%;
+    --accent: 30 90% 55%;
     --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
  
-    --border: 0 0% 100%;
-    --input: 0 0% 12%;
-    --ring: 0 0% 63%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 210 90% 55%;
 
-    --chart-1: 210 40% 96.1%;
-    --chart-2: 145 63% 42%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 25 95% 53%;
-    --chart-5: 25 85% 62%;
+    --chart-1: 210 80% 50%;
+    --chart-2: 30 90% 55%;
+    --chart-3: 160 70% 40%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 0 80% 60%;
 
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 90%;
