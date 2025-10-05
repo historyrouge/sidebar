@@ -153,14 +153,44 @@ For full AI capabilities with real-time data, please configure the Sambanova API
 **What would you like to know more about?**`;
             }
             
-            // Send the test response in chunks to simulate streaming
-            const words = testResponse.split(' ');
-            // Send multiple words at once for faster streaming
-            for (let i = 0; i < words.length; i += 3) {
-              const chunk = words.slice(i, i + 3).join(' ') + (i + 3 < words.length ? ' ' : '');
+            // Send the test response with true token-by-token streaming
+            const text = testResponse;
+            let index = 0;
+            
+            while (index < text.length) {
+              // Determine chunk size based on content complexity
+              let chunkSize = 1;
+              
+              // Adaptive pacing based on content
+              if (text[index] === '\n' || text[index] === '#' || text[index] === '*') {
+                // Pause longer for formatting
+                chunkSize = 1;
+              } else if (text[index] === '.' || text[index] === '!' || text[index] === '?') {
+                // Pause for sentence endings
+                chunkSize = 1;
+              } else if (text[index] === ' ') {
+                // Normal word boundary
+                chunkSize = 1;
+              } else {
+                // Regular character
+                chunkSize = 1;
+              }
+              
+              const chunk = text.slice(index, index + chunkSize);
               controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
-              // Add a very small delay to simulate streaming (very fast)
-              await new Promise(resolve => setTimeout(resolve, 30));
+              
+              // Adaptive delay based on content
+              let delay = 20; // Base delay
+              if (chunk === '\n' || chunk === '#') {
+                delay = 100; // Longer pause for formatting
+              } else if (chunk === '.' || chunk === '!' || chunk === '?') {
+                delay = 150; // Pause for sentence endings
+              } else if (chunk === ' ') {
+                delay = 30; // Short pause for word boundaries
+              }
+              
+              await new Promise(resolve => setTimeout(resolve, delay));
+              index += chunkSize;
             }
             
             controller.close();
@@ -305,14 +335,44 @@ The streaming functionality is working perfectly! 🎉 However, we're experienci
 *This is a fallback response while we resolve the API connectivity.*`;
           }
           
-          // Send the fallback response in chunks to simulate streaming
-          const words = fallbackResponse.split(' ');
-          // Send multiple words at once for faster streaming
-          for (let i = 0; i < words.length; i += 3) {
-            const chunk = words.slice(i, i + 3).join(' ') + (i + 3 < words.length ? ' ' : '');
+          // Send the fallback response with true token-by-token streaming
+          const text = fallbackResponse;
+          let index = 0;
+          
+          while (index < text.length) {
+            // Determine chunk size based on content complexity
+            let chunkSize = 1;
+            
+            // Adaptive pacing based on content
+            if (text[index] === '\n' || text[index] === '#' || text[index] === '*') {
+              // Pause longer for formatting
+              chunkSize = 1;
+            } else if (text[index] === '.' || text[index] === '!' || text[index] === '?') {
+              // Pause for sentence endings
+              chunkSize = 1;
+            } else if (text[index] === ' ') {
+              // Normal word boundary
+              chunkSize = 1;
+            } else {
+              // Regular character
+              chunkSize = 1;
+            }
+            
+            const chunk = text.slice(index, index + chunkSize);
             controller.enqueue(new TextEncoder().encode(`0:${chunk}`));
-            // Add a very small delay to simulate streaming (very fast)
-            await new Promise(resolve => setTimeout(resolve, 30));
+            
+            // Adaptive delay based on content
+            let delay = 20; // Base delay
+            if (chunk === '\n' || chunk === '#') {
+              delay = 100; // Longer pause for formatting
+            } else if (chunk === '.' || chunk === '!' || chunk === '?') {
+              delay = 150; // Pause for sentence endings
+            } else if (chunk === ' ') {
+              delay = 30; // Short pause for word boundaries
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            index += chunkSize;
           }
           
           controller.close();

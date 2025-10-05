@@ -178,6 +178,10 @@ export function ChatContent() {
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | 'webscrape' | null>(null);
   const [isStreamingMode, setIsStreamingMode] = useState(true); // Enable streaming by default
+  const [showDeepThinkButton, setShowDeepThinkButton] = useState(false);
+  const [isDeepThinking, setIsDeepThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingController, setStreamingController] = useState<AbortController | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -321,6 +325,11 @@ export function ChatContent() {
           content: String(h.content),
         }));
 
+        // Create abort controller for streaming
+        const controller = new AbortController();
+        setStreamingController(controller);
+        setIsStreaming(true);
+
         // Set up the streaming request
         const response = await fetch('/api/chat/stream', {
           method: 'POST',
@@ -335,6 +344,7 @@ export function ChatContent() {
             fileContent: currentFileContent,
             imageDataUri: currentImageDataUri,
           }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -395,15 +405,66 @@ export function ChatContent() {
         }
         
         console.log('✅ Streaming completed successfully');
+        
+        // Show DeepThink button after streaming completes
+        setShowDeepThinkButton(true);
       } catch (error: any) {
         console.error('❌ Streaming error:', error);
-        toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
+        if (error.name !== 'AbortError') {
+          toast({ title: "Streaming Error", description: error.message, variant: 'destructive' });
+        }
       } finally {
         setIsTyping(false);
+        setIsStreaming(false);
+        setStreamingController(null);
       }
       
   }, [currentModel, activeButton, toast, isStreamingMode]);
 
+  // DeepThink button handler
+  const handleDeepThink = useCallback(async () => {
+    setIsDeepThinking(true);
+    setShowDeepThinkButton(false);
+    
+    try {
+      // Get the last user message
+      const lastUserMessage = history[history.length - 1];
+      if (!lastUserMessage || lastUserMessage.role !== 'user') {
+        throw new Error('No user message found');
+      }
+
+      // Create a DeepThink prompt
+      const deepThinkPrompt = `Please provide a deeper, more detailed analysis of: "${lastUserMessage.content}". 
+      
+Include:
+- More comprehensive explanations
+- Additional context and background
+- Related concepts and connections
+- Potential implications or applications
+- Further reading suggestions
+
+Make this a thorough, in-depth response that builds upon the initial answer.`;
+
+      // Add the DeepThink request as a new message
+      const deepThinkMessage: Message = {
+        id: `${Date.now()}-deepthink`,
+        role: "user",
+        content: deepThinkPrompt
+      };
+
+      const newHistory = [...history, deepThinkMessage];
+      setHistory(newHistory);
+
+      // Use streaming for DeepThink response
+      await executeStreamingChat(newHistory);
+      
+    } catch (error: any) {
+      console.error('❌ DeepThink error:', error);
+      toast({ title: "DeepThink Error", description: error.message, variant: 'destructive' });
+    } finally {
+      setIsDeepThinking(false);
+    }
+  }, [history, executeStreamingChat, toast]);
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
     const messageToSend = messageContent ?? input;
@@ -417,6 +478,10 @@ export function ChatContent() {
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
+    
+    // Reset DeepThink button state
+    setShowDeepThinkButton(false);
+    setIsDeepThinking(false);
 
     const isImageGenRequest = activeButton === 'image';
 
@@ -821,6 +886,47 @@ export function ChatContent() {
                 )
               )}
             {isTyping && <ThinkingIndicator text="Streaming response..." />}
+            
+            {/* Stop Streaming Button */}
+            {isStreaming && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={() => {
+                    if (streamingController) {
+                      streamingController.abort();
+                    }
+                  }}
+                  variant="destructive"
+                  className="px-6 py-2 rounded-lg shadow-lg transition-all duration-200"
+                >
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  Stop Streaming
+                </Button>
+              </div>
+            )}
+            
+            {/* DeepThink Button */}
+            {showDeepThinkButton && !isTyping && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={handleDeepThink}
+                  disabled={isDeepThinking}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-200"
+                >
+                  {isDeepThinking ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Deep Thinking...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      DeepThink Analysis
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
