@@ -32,7 +32,7 @@ import { YoutubeChatCard } from "./youtube-chat-card";
 import { WebsiteChatCard } from "./website-chat-card";
 import { textToSpeechAction } from "@/app/actions";
 import { CoreMessage } from "ai";
-import { DEFAULT_MODEL_ID } from "@/lib/models";
+import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
 import { ThinkingIndicator } from "./thinking-indicator";
 
