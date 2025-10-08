@@ -6,21 +6,57 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ArrowLeft, ArrowRight, RotateCw, Home, Lock, Globe, X } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+
+const getWebsiteUrl = (command: string): string => {
+    const mapping: Record<string, string> = {
+        "youtube": "https://youtube.com",
+        "spotify": "https://open.spotify.com",
+        "wikipedia": "https://wikipedia.org",
+        "whatsapp": "https://web.whatsapp.com",
+        "news": "https://news.google.com"
+    };
+    const lowerCommand = command.toLowerCase();
+    for (const key in mapping) {
+        if (lowerCommand.includes(key)) {
+            return mapping[key];
+        }
+    }
+    // Fallback to a search engine for other queries
+    return `https://duckduckgo.com/?q=${encodeURIComponent(command)}`;
+};
+
 
 export function WebBrowserContent() {
-    const [url, setUrl] = useState("https://example.com");
-    const [displayUrl, setDisplayUrl] = useState("https://example.com");
-    const iframeRef = useRef<HTMLIFrameElement>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    const initialQuery = searchParams.get('q');
+    const initialUrl = initialQuery ? getWebsiteUrl(initialQuery) : "https://www.google.com/webhp?igu=1";
+
+    const [url, setUrl] = useState(initialUrl);
+    const [displayUrl, setDisplayUrl] = useState(initialUrl);
+    const [iframeError, setIframeError] = useState(false);
+    
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    useEffect(() => {
+        if(initialQuery) {
+            const newUrl = getWebsiteUrl(initialQuery);
+            setUrl(newUrl);
+            setDisplayUrl(newUrl);
+        }
+    }, [initialQuery]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         let finalUrl = url;
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            finalUrl = 'https://' + url;
+        if (!/^(https?:\/\/)/.test(url)) {
+            finalUrl = getWebsiteUrl(url);
         }
         setDisplayUrl(finalUrl);
+        setIframeError(false);
     };
 
     const handleGoBack = () => {
@@ -36,17 +72,17 @@ export function WebBrowserContent() {
     };
     
     const handleGoHome = () => {
-        const homeUrl = "https://example.com";
+        const homeUrl = "https://www.google.com/webhp?igu=1";
         setDisplayUrl(homeUrl);
         setUrl(homeUrl);
+        setIframeError(false);
     }
     
-    useEffect(() => {
-        handleGoHome();
-    }, []);
+    const handleIframeError = () => {
+        setIframeError(true);
+    }
 
     const isSecure = displayUrl.startsWith("https://");
-    const proxiedUrl = `/api/proxy?url=${encodeURIComponent(displayUrl)}`;
 
     return (
         <div className="flex h-full flex-col">
@@ -68,23 +104,50 @@ export function WebBrowserContent() {
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             className="w-full pl-10"
-                            placeholder="Enter a URL..."
+                            placeholder="Enter a URL or search..."
                         />
                     </div>
                 </form>
-                <Button variant="ghost" size="icon" onClick={() => router.back()}><X className="h-5 w-5" /></Button>
+                 <Button variant="ghost" size="icon" onClick={() => router.back()}><X className="h-5 w-5" /></Button>
             </header>
             <main className="flex-1 bg-muted">
-                <iframe
-                    ref={iframeRef}
-                    src={proxiedUrl}
-                    className="w-full h-full border-0"
-                    title="Web Browser"
-                    sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-top-navigation-by-user-activation"
-                    onLoad={() => {
-                        // We can no longer read the URL due to the proxy. This is expected.
-                    }}
-                />
+                {iframeError ? (
+                    <div className="h-full flex items-center justify-center p-4">
+                        <Card className="max-w-md text-center">
+                            <CardHeader>
+                                <CardTitle>Content Cannot Be Displayed</CardTitle>
+                                <CardDescription>This website has security policies that prevent it from being loaded inside another app.</CardDescription>
+                            </CardHeader>
+                             <CardContent>
+                                <p className="text-sm text-muted-foreground">
+                                    This is a common security feature (called X-Frame-Options) used by sites like YouTube, Spotify, and many others.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                ) : (
+                    <iframe
+                        ref={iframeRef}
+                        src={displayUrl}
+                        className="w-full h-full border-0"
+                        title="Web Browser"
+                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-top-navigation-by-user-activation"
+                        onError={handleIframeError}
+                        onLoad={(e) => {
+                            try {
+                                const iframeLocation = e.currentTarget.contentWindow?.location.href;
+                                // If we can read the location, it's not cross-origin and we can update the URL bar.
+                                // If it fails, it's a cross-origin site, and we just leave the URL as is.
+                                if (iframeLocation && iframeLocation !== 'about:blank') {
+                                    setUrl(iframeLocation);
+                                }
+                            } catch (error) {
+                                // This error is expected for cross-origin iframes.
+                                console.log("Cross-origin iframe loaded. URL bar will not update on navigation within iframe.");
+                            }
+                        }}
+                    />
+                )}
             </main>
         </div>
     );
