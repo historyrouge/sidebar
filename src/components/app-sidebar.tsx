@@ -31,6 +31,7 @@ import {
   Globe,
   Calendar,
   Image as ImageIcon,
+  Music,
 } from "lucide-react";
 import {
   Sidebar,

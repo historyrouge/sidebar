@@ -194,22 +194,26 @@ export async function chatAction(input: {
     model?: string,
     isMusicMode?: boolean,
 }): Promise<ActionResult<{ response: string }>> {
-    const isSearch = input.history[input.history.length - 1]?.content.toString().startsWith("Search:");
+    const isSearch = input.history[input.history.length - 1]?.content.toString().toLowerCase().startsWith("search:");
     const isMusic = input.isMusicMode;
 
     if (isSearch) {
-        const query = input.history[input.history.length - 1].content.toString().replace(/^Search:\s*/i, '');
+        const query = input.history[input.history.length - 1].content.toString().replace(/^search:\s*/i, '');
         try {
             const searchResults = await duckDuckGoSearch({ query });
             const results = JSON.parse(searchResults);
 
-            if (results.length > 0) {
-                const topResult = results[0];
-                const websiteContent = await browseWebsite({ url: topResult.link });
+            if (results.noResults) {
+                return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
+            }
+            
+            if (results.results && results.results.length > 0) {
+                const topResult = results.results[0];
+                const websiteContent = await browseWebsite({ url: topResult.url });
 
                 const responsePayload = {
                     type: 'website',
-                    url: topResult.link,
+                    url: topResult.url,
                     title: topResult.title,
                     snippet: websiteContent.substring(0, 300) + '...'
                 };
@@ -219,7 +223,7 @@ export async function chatAction(input: {
                 return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
             }
         } catch (error: any) {
-            return { error: `Sorry, an error occurred during the search: ${'error.message'}` };
+            return { error: `Sorry, an error occurred during the search: ${error.message}` };
         }
     }
 
@@ -239,7 +243,7 @@ export async function chatAction(input: {
                  return { data: { response: "Sorry, I couldn't find a matching song on YouTube." } };
             }
          } catch (error: any) {
-             return { error: `Sorry, an error occurred while searching YouTube: ${'error.message'}` };
+             return { error: `Sorry, an error occurred while searching YouTube: ${error.message}` };
          }
     }
 

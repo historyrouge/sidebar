@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users, CameraRotate } from "lucide-react";
+import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users, RefreshCw } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -411,7 +411,7 @@ export function StudyNowContent() {
                     <div>
                          {videoDevices.length > 1 && (
                             <Button variant="outline" onClick={handleSwitchCamera}>
-                                <CameraRotate className="mr-2 h-4 w-4" /> Switch Camera
+                                <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
                             </Button>
                         )}
                     </div>

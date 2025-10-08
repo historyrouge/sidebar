@@ -783,5 +783,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
