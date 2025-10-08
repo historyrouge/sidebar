@@ -13,7 +13,7 @@ export const AVAILABLE_MODELS = [
         logo: '〰️'
     },
     {
-        id: 'Meta-Llama-3.3-70B-Instruct',
+        id: 'Meta-Llama-3.1-8B-Instruct',
         name: 'Claude 4.5 Sonnet',
         description: 'A large, powerful model for nuanced chat.',
         logo: '✳️'
@@ -32,4 +32,4 @@ export const AVAILABLE_MODELS = [
     },
 ];
 
-export const DEFAULT_MODEL_ID = 'gpt-oss-120b';
+export const DEFAULT_MODEL_ID = 'Llama-3.3-Swallow-70B-Instruct-v0.4';
