@@ -10,23 +10,33 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 const getWebsiteUrl = (command: string): { url: string; newTab: boolean } => {
-    const mapping: Record<string, string> = {
-        "youtube": "https://www.youtube.com/embed/dQw4w9WgXcQ", // Rick Astley as a default embed
-        "spotify": "https://open.spotify.com/embed/track/4cOdK2wGvT3alVeDmMvPaT", // A default track
-        "wikipedia": "https://wikipedia.org",
-        "whatsapp": "https://web.whatsapp.com",
-        "news": "https://news.google.com"
+    // Handle full YouTube URLs by converting them to embed URLs
+    if (command.includes("youtube.com/watch")) {
+        try {
+            const videoId = new URL(command).searchParams.get("v");
+            if (videoId) {
+                return { url: `https://www.youtube.com/embed/${videoId}`, newTab: false };
+            }
+        } catch (e) {
+            console.error("Invalid YouTube URL");
+        }
+    }
+    
+    const mapping: Record<string, {url: string, newTab: boolean}> = {
+        "youtube": { url: "https://www.youtube.com/embed/dQw4w9WgXcQ", newTab: false },
+        "spotify": { url: "https://open.spotify.com/embed/track/4cOdK2wGvT3alVeDmMvPaT", newTab: false },
+        "wikipedia": { url: "https://wikipedia.org", newTab: false },
+        "whatsapp": { url: "https://web.whatsapp.com", newTab: true }, // Will open in new tab
+        "news": { url: "https://news.google.com", newTab: false } // May be blocked
     };
+
     const lowerCommand = command.toLowerCase();
     for (const key in mapping) {
         if (lowerCommand.includes(key)) {
-            // For sites that block iframes but have no embeddable homepage
-            if (key === 'whatsapp') {
-                return { url: mapping[key], newTab: true };
-            }
-            return { url: mapping[key], newTab: false };
+            return mapping[key];
         }
     }
+
     // Fallback to a search engine for other queries
     return { url: `https://duckduckgo.com/?q=${encodeURIComponent(command)}`, newTab: false };
 };
@@ -50,7 +60,6 @@ export function WebBrowserContent() {
             const newUrlData = getWebsiteUrl(initialQuery);
             if (newUrlData.newTab) {
                 window.open(newUrlData.url, "_blank");
-                // Optionally, you can show a message in the iframe area
                 setUrl("about:blank");
                 setDisplayUrl("about:blank");
             } else {
