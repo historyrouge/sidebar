@@ -23,7 +23,7 @@ import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flo
 import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
-import { DEFAULT_MODEL_ID } from '@/lib/models';
+import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
 import { newtonsLawsTraining } from '@/ai/training-data';
@@ -300,21 +300,35 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
         }
     });
 
-    try {
-        const response = await openai.chat.completions.create({
-            model: input.model || DEFAULT_MODEL_ID,
-            messages: messages,
-            stream: false,
-        });
+    const orderedModels = [
+        input.model || DEFAULT_MODEL_ID,
+        ...AVAILABLE_MODELS.map(m => m.id).filter(id => id !== (input.model || DEFAULT_MODEL_ID))
+    ];
 
-        const responseText = response.choices[0]?.message?.content;
-        if (!responseText) {
-            throw new Error("Received an empty response from the AI model.");
+    for (const modelId of orderedModels) {
+        try {
+            const response = await openai.chat.completions.create({
+                model: modelId,
+                messages: messages,
+                stream: false,
+            });
+
+            const responseText = response.choices[0]?.message?.content;
+            if (!responseText) {
+                throw new Error("Received an empty response from the AI model.");
+            }
+
+            return { data: { response: responseText } };
+        } catch (e: any) {
+            console.error(`SambaNova chat error with model ${modelId}:`, e.message);
+            // If this is the last model in the list, return the error.
+            if (orderedModels.indexOf(modelId) === orderedModels.length - 1) {
+                return { error: e.message || "An unknown error occurred with all available AI models." };
+            }
+            // Otherwise, the loop will continue to the next model.
         }
-
-        return { data: { response: responseText }};
-    } catch (e: any) {
-        console.error("SambaNova chat error:", e);
-        return { error: e.message || "An unknown error occurred with the AI model." };
     }
+    
+    // This should not be reached, but as a fallback
+    return { error: "All AI models failed to generate a response." };
 }
