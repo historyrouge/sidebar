@@ -18,7 +18,7 @@ export const AVAILABLE_MODELS = [
         description: 'A large, powerful model for nuanced chat.',
         logo: '✳️'
     },
-     {
+    {
         id: 'Qwen3-32B',
         name: 'Gemini 2.5 Pro',
         description: 'A versatile model for a wide range of tasks.',
