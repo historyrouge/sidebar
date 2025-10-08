@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -35,6 +35,8 @@ import { CoreMessage } from "ai";
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from "@/lib/models";
 import { GeneratedImageCard } from "./generated-image-card";
 import { ThinkingIndicator } from "./thinking-indicator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { BrowserView } from "./browser-view";
 
 
 type Message = {
@@ -574,6 +576,21 @@ export function ChatContent() {
                              <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
                             </Button>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button type="button" variant='outline' disabled={isInputDisabled}>
+                                        <Globe className="h-5 w-5" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
+                                    <DialogHeader className="p-4 border-b">
+                                        <DialogTitle>Browser</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex-1 overflow-hidden">
+                                        <BrowserView initialUrl="https://www.google.com/webhp?igu=1" />
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     </div>
                     <form
@@ -735,6 +752,21 @@ export function ChatContent() {
                  <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                     <ImageIcon className="h-5 w-5" />
                 </Button>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button type="button" variant='outline' disabled={isInputDisabled}>
+                            <Globe className="h-5 w-5" />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
+                        <DialogHeader className="p-4 border-b">
+                            <DialogTitle>Browser</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-hidden">
+                            <BrowserView initialUrl="https://www.google.com/webhp?igu=1" />
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
           </div>
           <form
