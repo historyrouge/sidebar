@@ -19,6 +19,12 @@ export const AVAILABLE_MODELS = [
         logo: '✳️'
     },
     {
+        id: 'Llama-3.3-Swallow-70B-Instruct-v0.4',
+        name: 'Swallow',
+        description: 'A new instruction-tuned model.',
+        logo: '🐦'
+    },
+    {
         id: 'Qwen3-32B',
         name: 'Gemini 2.5 Pro',
         description: 'A versatile model for a wide range of tasks.',
