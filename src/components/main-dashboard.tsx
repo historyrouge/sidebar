@@ -9,15 +9,18 @@ import { ChatContent, useChatStore } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
+import { FloatingBrowser } from "./floating-browser";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  const { activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer } = useChatStore();
+  const { 
+    activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer,
+    activeBrowserUrl, showBrowser
+  } = useChatStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
   const [showPricingDialog, setShowPricingDialog] = useState(false);
@@ -148,6 +151,7 @@ export function MainDashboard() {
          ) : (
             <NewsContent />
          )}
+         {activeBrowserUrl && showBrowser && <FloatingBrowser />}
          {activeVideoId && showPlayer && (
              <div className="fixed bottom-4 right-4 z-50 group">
                 <iframe

@@ -54,9 +54,14 @@ type ChatStore = {
   activeVideoTitle: string | null;
   isPlaying: boolean;
   showPlayer: boolean;
+  activeBrowserUrl: string | null;
+  activeBrowserTitle: string | null;
+  showBrowser: boolean;
   setActiveVideoId: (id: string | null, title: string | null) => void;
   togglePlay: () => void;
   setShowPlayer: (show: boolean) => void;
+  setActiveBrowserUrl: (url: string | null, title: string | null) => void;
+  setShowBrowser: (show: boolean) => void;
 };
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -64,9 +69,14 @@ export const useChatStore = create<ChatStore>((set) => ({
   activeVideoTitle: null,
   isPlaying: false,
   showPlayer: false,
+  activeBrowserUrl: null,
+  activeBrowserTitle: null,
+  showBrowser: false,
   setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: !!id, showPlayer: !!id }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setShowPlayer: (show) => set({ showPlayer: show }),
+  setActiveBrowserUrl: (url, title) => set({ activeBrowserUrl: url, activeBrowserTitle: title, showBrowser: !!url }),
+  setShowBrowser: (show) => set({ showBrowser: show }),
 }));
 
 
