@@ -9,10 +9,10 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
-const getWebsiteUrl = (command: string): string => {
+const getWebsiteUrl = (command: string): { url: string; newTab: boolean } => {
     const mapping: Record<string, string> = {
-        "youtube": "https://youtube.com",
-        "spotify": "https://open.spotify.com",
+        "youtube": "https://www.youtube.com/embed/dQw4w9WgXcQ", // Rick Astley as a default embed
+        "spotify": "https://open.spotify.com/embed/track/4cOdK2wGvT3alVeDmMvPaT", // A default track
         "wikipedia": "https://wikipedia.org",
         "whatsapp": "https://web.whatsapp.com",
         "news": "https://news.google.com"
@@ -20,11 +20,15 @@ const getWebsiteUrl = (command: string): string => {
     const lowerCommand = command.toLowerCase();
     for (const key in mapping) {
         if (lowerCommand.includes(key)) {
-            return mapping[key];
+            // For sites that block iframes but have no embeddable homepage
+            if (key === 'whatsapp') {
+                return { url: mapping[key], newTab: true };
+            }
+            return { url: mapping[key], newTab: false };
         }
     }
     // Fallback to a search engine for other queries
-    return `https://duckduckgo.com/?q=${encodeURIComponent(command)}`;
+    return { url: `https://duckduckgo.com/?q=${encodeURIComponent(command)}`, newTab: false };
 };
 
 
@@ -33,30 +37,42 @@ export function WebBrowserContent() {
     const searchParams = useSearchParams();
     
     const initialQuery = searchParams.get('q');
-    const initialUrl = initialQuery ? getWebsiteUrl(initialQuery) : "https://www.google.com/webhp?igu=1";
+    const initialUrlData = initialQuery ? getWebsiteUrl(initialQuery) : { url: "https://www.google.com/webhp?igu=1", newTab: false };
 
-    const [url, setUrl] = useState(initialUrl);
-    const [displayUrl, setDisplayUrl] = useState(initialUrl);
+    const [url, setUrl] = useState(initialUrlData.url);
+    const [displayUrl, setDisplayUrl] = useState(initialUrlData.url);
     const [iframeError, setIframeError] = useState(false);
     
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         if(initialQuery) {
-            const newUrl = getWebsiteUrl(initialQuery);
-            setUrl(newUrl);
-            setDisplayUrl(newUrl);
+            const newUrlData = getWebsiteUrl(initialQuery);
+            if (newUrlData.newTab) {
+                window.open(newUrlData.url, "_blank");
+                // Optionally, you can show a message in the iframe area
+                setUrl("about:blank");
+                setDisplayUrl("about:blank");
+            } else {
+                setUrl(newUrlData.url);
+                setDisplayUrl(newUrlData.url);
+            }
         }
     }, [initialQuery]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        let finalUrl = url;
+        let finalUrlData = { url: url, newTab: false };
         if (!/^(https?:\/\/)/.test(url)) {
-            finalUrl = getWebsiteUrl(url);
+            finalUrlData = getWebsiteUrl(url);
         }
-        setDisplayUrl(finalUrl);
-        setIframeError(false);
+
+        if (finalUrlData.newTab) {
+            window.open(finalUrlData.url, '_blank');
+        } else {
+            setDisplayUrl(finalUrlData.url);
+            setIframeError(false);
+        }
     };
 
     const handleGoBack = () => {
@@ -136,13 +152,10 @@ export function WebBrowserContent() {
                         onLoad={(e) => {
                             try {
                                 const iframeLocation = e.currentTarget.contentWindow?.location.href;
-                                // If we can read the location, it's not cross-origin and we can update the URL bar.
-                                // If it fails, it's a cross-origin site, and we just leave the URL as is.
                                 if (iframeLocation && iframeLocation !== 'about:blank') {
                                     setUrl(iframeLocation);
                                 }
                             } catch (error) {
-                                // This error is expected for cross-origin iframes.
                                 console.log("Cross-origin iframe loaded. URL bar will not update on navigation within iframe.");
                             }
                         }}
