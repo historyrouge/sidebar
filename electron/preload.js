@@ -1,29 +1,12 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose a safe, context-isolated API to the renderer process (Next.js app)
+// Expose a minimal API to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
-  // From Renderer to Main
-  sendSearchResults: (data) => ipcRenderer.send('search-results', data),
-  sendWebViewNavigation: (url) => ipcRenderer.send('webview-navigation', url),
-
-  // From Main to Renderer
-  onSearchResults: (callback) => {
-    const handler = (event, ...args) => callback(...args);
-    ipcRenderer.on('search-results-from-main', handler);
-    // Return a cleanup function
-    return () => ipcRenderer.removeListener('search-results-from-main', handler);
+  send: (channel, data) => {
+    ipcRenderer.send(channel, data);
   },
-  onOpenInWebview: (callback) => {
-    const handler = (event, ...args) => callback(...args);
-    ipcRenderer.on('open-in-webview', handler);
-    return () => ipcRenderer.removeListener('open-in-webview', handler);
+  on: (channel, cb) => {
+    ipcRenderer.on(channel, (event, ...args) => cb(...args));
   },
-  onWebViewNavigation: (callback) => {
-    const handler = (event, ...args) => callback(...args);
-    ipcRenderer.on('webview-navigated', handler);
-    return () => ipcRenderer.removeListener('webview-navigated', handler);
-  }
 });
-
-    
