@@ -509,15 +509,21 @@ export function ChatContent() {
   const renderMessageContent = (message: Message) => {
     const thinkMatch = message.content.match(/<think>([\s\S]*?)<\/think>/);
     const thinkingText = thinkMatch ? thinkMatch[1].trim() : null;
-    const mainContent = thinkMatch ? message.content.replace(/<think>[\s\S]*?<\/think>/, '').trim() : message.content;
+    let mainContent = thinkMatch ? message.content.replace(/<think>[\s\S]*?<\/think>/, '').trim() : message.content;
     
     try {
         const data = JSON.parse(mainContent);
         if (data.type === 'youtube' && data.videoId) {
             return <YoutubeChatCard videoData={data} onPin={() => setActiveVideoId(data.videoId, data.title)} />;
         }
-        if (data.type === 'website' && data.url) {
-            return <WebsiteChatCard websiteData={data} />;
+        if (data.type === 'website_results' && Array.isArray(data.results)) {
+            return (
+                <div className="space-y-3">
+                    {data.results.map((result: any, index: number) => (
+                        <WebsiteChatCard key={index} websiteData={result} />
+                    ))}
+                </div>
+            );
         }
         if (data.type === 'image' && data.imageDataUri) {
             return <GeneratedImageCard imageDataUri={data.imageDataUri} prompt={data.prompt} />;
@@ -526,6 +532,16 @@ export function ChatContent() {
         // Not a JSON object, so render as plain text
     }
     
+    // Fallback for single website result for backward compatibility
+    try {
+        const data = JSON.parse(mainContent);
+        if (data.type === 'website' && data.url) {
+            mainContent = `I found this website for you: [${data.title || data.url}](${data.url})`;
+        }
+    } catch (e) {
+        // Not a JSON object
+    }
+
     return (
         <>
             {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
@@ -826,3 +842,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    

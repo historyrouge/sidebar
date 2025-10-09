@@ -201,12 +201,13 @@ export async function chatAction(input: {
         try {
             const searchResults = await duckDuckGoSearch({ query });
             if (searchResults.results && searchResults.results.length > 0) {
-                const topResult = searchResults.results[0];
                  const responsePayload = {
-                    type: 'website',
-                    url: topResult.url,
-                    title: topResult.title,
-                    snippet: topResult.snippet,
+                    type: 'website_results',
+                    results: searchResults.results.map(r => ({
+                        url: r.url,
+                        title: r.title,
+                        snippet: r.snippet,
+                    }))
                 };
                  return { data: { response: JSON.stringify(responsePayload) } };
             } else {
@@ -326,3 +327,5 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
     // This should not be reached, but as a fallback
     return { error: "All AI models failed to generate a response." };
 }
+
+    
