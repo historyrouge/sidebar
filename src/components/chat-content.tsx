@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -16,7 +17,7 @@ import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { ShareDialog } from "./share-dialog";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import Link from "next/link";
 import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 import { useRouter } from "next/navigation";
