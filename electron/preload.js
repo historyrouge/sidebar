@@ -9,16 +9,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // From Main to Renderer
   onSearchResults: (callback) => {
-    ipcRenderer.on('search-results-from-main', (event, ...args) => callback(...args));
+    const handler = (event, ...args) => callback(...args);
+    ipcRenderer.on('search-results-from-main', handler);
     // Return a cleanup function
-    return () => ipcRenderer.removeAllListeners('search-results-from-main');
+    return () => ipcRenderer.removeListener('search-results-from-main', handler);
   },
   onOpenInWebview: (callback) => {
-    ipcRenderer.on('open-in-webview', (event, ...args) => callback(...args));
-    return () => ipcRenderer.removeAllListeners('open-in-webview');
+    const handler = (event, ...args) => callback(...args);
+    ipcRenderer.on('open-in-webview', handler);
+    return () => ipcRenderer.removeListener('open-in-webview', handler);
   },
   onWebViewNavigation: (callback) => {
-    ipcRenderer.on('webview-navigated', (event, ...args) => callback(...args));
-    return () => ipcRenderer.removeAllListeners('webview-navigated');
+    const handler = (event, ...args) => callback(...args);
+    ipcRenderer.on('webview-navigated', handler);
+    return () => ipcRenderer.removeListener('webview-navigated', handler);
   }
 });
+
+    

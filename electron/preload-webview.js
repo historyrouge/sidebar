@@ -8,3 +8,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.sendToHost('search-results-from-webview', data);
   }
 });
+
+    

@@ -32,11 +32,11 @@ const WebSearchAgent = () => {
     setWebviewUrl(url);
   };
   
-  async function extractResultsFromWebview(webview: any, maxWait = 2500) {
+  async function extractResultsFromWebview(webview: any, maxWait = 2500): Promise<SearchResult[]> {
     if (!webview) return [];
     
     // The script is imported from extractors.js
-    const extractionScript = extractGoogleResults;
+    const extractionScript = `(${extractGoogleResults.toString()})()`;
 
     const execWithTimeout = (script: string, timeout = maxWait): Promise<SearchResult[]> => {
       return new Promise((resolve) => {
@@ -144,7 +144,7 @@ const WebSearchAgent = () => {
         handleSearch(url);
     });
     return () => cleanup();
-  }, [handleSearch]);
+  }, []);
 
   return (
     <div className="flex h-full gap-4">
@@ -201,7 +201,6 @@ const WebSearchAgent = () => {
               src={webviewUrl}
               className="w-full h-full border-0"
               allowpopups="true"
-              preload="./preload-webview.js"
             />
           </CardContent>
         </Card>
@@ -211,3 +210,5 @@ const WebSearchAgent = () => {
 };
 
 export default WebSearchAgent;
+
+    

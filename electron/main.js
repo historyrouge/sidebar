@@ -61,8 +61,10 @@ app.on('web-contents-created', (event, contents) => {
     contents.on('will-attach-webview', (event, webPreferences, params) => {
       // Allow preload script to be loaded in the webview
       webPreferences.preload = path.join(__dirname, 'preload-webview.js');
-      webPreferences.contextIsolation = true;
+      webPreferences.contextIsolation = false; // Important for webview IPC
       webPreferences.nodeIntegration = false;
     });
   }
 });
+
+    

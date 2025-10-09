@@ -4,8 +4,7 @@
 // NOTE: Google's DOM structure changes frequently. This is a best-effort implementation
 // and may need updates. It includes multiple selectors as fallbacks.
 
-export const extractGoogleResults = `
-(() => {
+export const extractGoogleResults = () => {
   try {
     const results = [];
     const seen = new Set();
@@ -67,5 +66,6 @@ export const extractGoogleResults = `
   } catch (err) {
     return [];
   }
-})()
-`;
+};
+
+    
