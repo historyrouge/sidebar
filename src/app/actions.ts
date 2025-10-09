@@ -22,7 +22,6 @@ import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
 import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
-import { browseWebsite } from '@/ai/tools/browse-website';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
@@ -201,24 +200,15 @@ export async function chatAction(input: {
         const query = input.history[input.history.length - 1].content.toString().replace(/^search:\s*/i, '');
         try {
             const searchResults = await duckDuckGoSearch({ query });
-            const results = JSON.parse(searchResults);
-
-            if (results.noResults) {
-                return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
-            }
-            
-            if (results.results && results.results.length > 0) {
-                const topResult = results.results[0];
-                const websiteContent = await browseWebsite({ url: topResult.url });
-
-                const responsePayload = {
+            if (searchResults.results && searchResults.results.length > 0) {
+                const topResult = searchResults.results[0];
+                 const responsePayload = {
                     type: 'website',
                     url: topResult.url,
                     title: topResult.title,
-                    snippet: websiteContent.substring(0, 300) + '...'
+                    snippet: topResult.snippet,
                 };
-
-                return { data: { response: JSON.stringify(responsePayload) } };
+                 return { data: { response: JSON.stringify(responsePayload) } };
             } else {
                 return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
             }

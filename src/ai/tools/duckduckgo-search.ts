@@ -5,6 +5,18 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { search } from 'node-duckduckgo';
 
+const SearchResultSchema = z.object({
+    title: z.string(),
+    url: z.string().url(),
+    snippet: z.string(),
+});
+
+const SearchOutputSchema = z.object({
+    results: z.array(SearchResultSchema).optional(),
+    noResults: z.boolean().optional(),
+});
+
+
 export const duckDuckGoSearch = ai.defineTool(
   {
     name: 'duckDuckGoSearch',
@@ -12,15 +24,24 @@ export const duckDuckGoSearch = ai.defineTool(
     inputSchema: z.object({
       query: z.string().describe('The search query.'),
     }),
-    outputSchema: z.string().describe('A JSON string of the search results.'),
+    outputSchema: SearchOutputSchema,
   },
   async ({ query }) => {
     try {
       const searchResults = await search({ query, maxResults: 5, safeSearch: 'off' });
-      return JSON.stringify(searchResults.results);
+      if (!searchResults.results || searchResults.results.length === 0) {
+        return { noResults: true };
+      }
+      // Map results to the expected schema (url instead of link)
+      const mappedResults = searchResults.results.map(r => ({
+          title: r.title,
+          url: r.url,
+          snippet: r.snippet,
+      }));
+      return { results: mappedResults };
     } catch (error) {
       console.error('DuckDuckGo search error:', error);
-      return JSON.stringify({ error: 'Failed to perform web search.' });
+      return { noResults: true };
     }
   }
 );

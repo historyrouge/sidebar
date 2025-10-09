@@ -14,4 +14,3 @@ import '@/ai/flows/generate-image.ts';
 import '@/ai/training-data.ts';
 import '@/ai/tools/youtube-search.ts';
 import '@/ai/tools/duckduckgo-search.ts';
-import '@/ai/tools/browse-website.ts';
