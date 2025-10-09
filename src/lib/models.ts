@@ -13,7 +13,7 @@ export const AVAILABLE_MODELS = [
         logo: '〰️'
     },
     {
-        id: 'Meta-Llama-3.1-8B-Instruct',
+        id: 'Meta-Llama-3.3-70B-Instruct',
         name: 'Claude 4.5 Sonnet',
         description: 'A large, powerful model for nuanced chat.',
         logo: '✳️'
@@ -29,6 +29,12 @@ export const AVAILABLE_MODELS = [
         name: 'Gemini 2.5 Pro',
         description: 'A versatile model for a wide range of tasks.',
         logo: '🇬'
+    },
+    {
+        id: 'Meta-Llama-3.1-8B-Instruct',
+        name: 'Llama 3.1',
+        description: 'A fast and capable model for general chat.',
+        logo: '🦙'
     },
 ];
 
