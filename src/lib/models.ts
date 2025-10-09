@@ -32,4 +32,4 @@ export const AVAILABLE_MODELS = [
     },
 ];
 
-export const DEFAULT_MODEL_ID = 'Llama-3.3-Swallow-70B-Instruct-v0.4';
+export const DEFAULT_MODEL_ID = 'gpt-oss-120b';
