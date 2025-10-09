@@ -201,10 +201,7 @@ const WebSearchAgent = () => {
               src={webviewUrl}
               className="w-full h-full border-0"
               allowpopups="true"
-              // The preload attribute in <webview> needs to be a file path.
-              // This requires specific bundling configuration with Electron.
-              // Assuming a build step places the preload script correctly.
-              preload={`file://${process.env.NODE_ENV === 'development' ? path.join(__dirname, 'electron', 'preload-webview.js') : path.join(process.resourcesPath, 'app', 'electron', 'preload-webview.js')}`}
+              preload="./preload-webview.js"
             />
           </CardContent>
         </Card>
