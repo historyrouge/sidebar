@@ -1,4 +1,3 @@
-
 // This preload runs in the *webview guest* context. It exposes a small bridge
 // so host (renderer) can call `window.__celestial.receiveMessage(msg)` and
 // guest will react and then call ipcRenderer.sendToHost('gai-response', payload)
@@ -163,3 +162,5 @@ function extractFromNode(node) {
     return { answerHtml: '', answerText: '', sources: [], error: e?.message || String(e) };
   }
 }
+
+    

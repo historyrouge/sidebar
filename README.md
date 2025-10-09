@@ -93,3 +93,5 @@ This patch adds a simple Electron + Next integration that automates Google AI in
 * Add an explicit UI that instructs the user to sign into Google inside the mini-browser.
 * Improve selectors for Google AI page (Bard / ai.google) for more robust extraction.
 * Add rate-limiting debounce and UX improvements (skeleton loading, errors, retry buttons).
+
+    
