@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generalChatAction, GeneralChatInput, summarizeContentAction, SummarizeContentOutput } from "@/app/actions";
+import { chatAction, SummarizeContentOutput, summarizeContentAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
+import { CoreMessage } from "ai";
 
 type Message = {
   role: "user" | "model";
@@ -98,16 +99,15 @@ export function NewsReaderContent() {
     setInput("");
 
     startTyping(async () => {
-      const fullHistory = [...history, userMessage];
-      const context = summary?.summary || article.description;
-      const chatInput: GeneralChatInput = {
+      const fullHistory: CoreMessage[] = [...history, userMessage].map(m => ({role: m.role, content: m.content}));
+      
+      const fileContent = `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${summary?.summary || article.description}". Answer the user's question based on this context.`;
+      
+      const result = await chatAction({
         history: fullHistory,
-        prompt: `The user is asking a follow-up question about the news article titled "${article.title}". Here is the article summary for context: "${context}".`,
-        model: 'qwen'
-      };
-
-      // News chat uses Qwen
-      const result = await generalChatAction(chatInput);
+        fileContent: fileContent,
+        model: 'Meta-Llama-3.1-8B-Instruct' // Use a fast model for news chat
+      });
 
       if (result.error) {
         toast({ title: "Chat Error", description: result.error, variant: "destructive" });

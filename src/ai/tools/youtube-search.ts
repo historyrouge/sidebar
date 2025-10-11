@@ -3,7 +3,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import Youtube from 'youtube-sr';
 
 export const searchYoutube = ai.defineTool(
   {
@@ -20,6 +19,8 @@ export const searchYoutube = ai.defineTool(
   },
   async ({ query }) => {
     try {
+      // Dynamic import to avoid build issues with youtube-sr
+      const Youtube = (await import('youtube-sr')).default;
       const video = await Youtube.searchOne(query, 'video', false);
       if (video) {
         return { 
@@ -36,4 +37,3 @@ export const searchYoutube = ai.defineTool(
     }
   }
 );
-
