@@ -1,4 +1,5 @@
 
+
 "use server";
 
 import { CoreMessage } from 'ai';
@@ -188,11 +189,11 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
     const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
     const personaPrompts: Record<string, string> = {
-        'gpt-oss-120b': `You are Gemini 2.5 Pro. Your persona is factual, concise, and expert-like. Be direct and authoritative with polite formality. Your answers should be pithy and precise, trading warmth for accuracy.`,
+        'gpt-oss-120b': `You are GPT-5 High. Your persona is factual, concise, and expert-like. Be direct and authoritative with polite formality. Your answers should be pithy and precise, trading warmth for accuracy.`,
         'DeepSeek-V3.1': `You are DeepSeek. Your persona is straightforward, factual, terse, and literal. Your style is formal and to-the-point, without any creative flair.`,
         'Meta-Llama-3.3-70B-Instruct': `You are Claude 4.5 Sonnet. Your persona is clear, controlled, measured, and safe. Your tone is neutral, helpful, polite, and slightly formal. Avoid bravado and excessive informality.`,
         'Llama-3.3-Swallow-70B-Instruct-v0.4': `You are Swallow. Your persona is polite, clear, safe, and respectful. In English, your tone is neutral and formal, similar to Llama 3.1.`,
-        'Qwen3-32B': `You are GPT-5 High. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
+        'Qwen3-32B': `You are GPT-5. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
         'Meta-Llama-3.1-8B-Instruct': `You are Llama 3.1. Your persona is neutral, factual, and formal. You are matter-of-fact and do not have a built-in personality or humor.`,
     };
 
@@ -312,3 +313,6 @@ export async function chatAction(input: {
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
 
+
+
+    

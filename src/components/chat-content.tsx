@@ -205,16 +205,16 @@ export function ChatContent() {
       setActiveButton(newActiveButton);
 
       if (newActiveButton === 'deepthink') {
-        setCurrentModel('gpt-oss-120b');
-        toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
+        setCurrentModel('Qwen3-32B');
+        toast({ title: 'Model Switched', description: 'DeepThink activated: Using GPT-5 for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
-        if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
-             setCurrentModel('Llama-4-Maverick-17B-128E-Instruct');
+        if (currentModel === 'Qwen3-32B' && newActiveButton !== 'deepthink') {
+             setCurrentModel('Meta-Llama-3.1-8B-Instruct');
         }
       }
   };
@@ -882,6 +882,8 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
 
