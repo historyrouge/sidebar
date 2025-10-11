@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from '@/components/theme-provider';
 import { PageLoader } from '@/components/page-loader';
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'SearnAI',
@@ -30,10 +31,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AuthProvider>
             <PageLoader>
               {children}
             </PageLoader>
             <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
