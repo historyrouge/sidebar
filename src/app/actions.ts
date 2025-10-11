@@ -25,7 +25,6 @@ import { searchYoutube } from '@/ai/tools/youtube-search';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
-import { newtonsLawsTraining } from '@/ai/training-data';
 
 export type ActionResult<T> = {
     data?: T;
@@ -185,6 +184,28 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
     }
 }
 
+const getSystemPrompt = (modelId: string, fileContent: string | null | undefined): string => {
+    const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
+    
+    const personaPrompts: Record<string, string> = {
+        'gpt-oss-120b': `You are GPT-5 High. Your persona is factual, concise, and expert-like. Be direct and authoritative with polite formality. Your answers should be pithy and precise, trading warmth for accuracy.`,
+        'DeepSeek-V3.1': `You are DeepSeek. Your persona is straightforward, factual, terse, and literal. Your style is formal and to-the-point, without any creative flair.`,
+        'Meta-Llama-3.3-70B-Instruct': `You are Claude 4.5 Sonnet. Your persona is clear, controlled, measured, and safe. Your tone is neutral, helpful, polite, and slightly formal. Avoid bravado and excessive informality.`,
+        'Llama-3.3-Swallow-70B-Instruct-v0.4': `You are Swallow. Your persona is polite, clear, safe, and respectful. In English, your tone is neutral and formal, similar to Llama 3.1.`,
+        'Qwen3-32B': `You are Gemini 2.5 Pro. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
+        'Meta-Llama-3.1-8B-Instruct': `You are Llama 3.1. Your persona is neutral, factual, and formal. You are matter-of-fact and do not have a built-in personality or humor.`,
+    };
+
+    const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
+
+    const fileContext = fileContent 
+        ? `\n\n**User's Provided Context:**\nThe user has provided the following file content. Use it as the primary context for your answer.\n\n---\n${fileContent}\n---` 
+        : '';
+        
+    return `${basePrompt}\n\n${persona}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
+};
+
+
 // Main non-streaming chat action
 export async function chatAction(input: {
     history: CoreMessage[],
@@ -238,46 +259,8 @@ export async function chatAction(input: {
          }
     }
 
-    const systemPrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Your answers must be excellent, comprehensive, well-researched, and easy to understand.
-
-**Your Core Instructions:**
-1.  **Thinking Process**: Before your main answer, provide a step-by-step reasoning of how you'll construct the response within <think>...</think> tags. This helps the user understand your thought process. This is for your internal monologue and will be stripped out before showing the user.
-2.  **Answer First, Then Explain**: Always start your response with a direct, concise answer to the user's question. After the direct answer, provide a much more detailed, in-depth explanation in a separate section, using Markdown for clarity.
-3.  **Provide Comprehensive Detail**: Your main goal is to be thorough. For any given topic, you should explain:
-    *   **What it is**: Define the concept clearly.
-    *   **How it works**: Provide step-by-step explanations, examples, or analogies.
-    *   **Why it matters**: Explain its significance, applications, and impact.
-    *   **Context**: Include historical background, pros and cons, or future implications where relevant.
-4.  **Structured Responses**: Use Markdown heavily to format your answers. Use headings, subheadings, bullet points, bold text, and tables to make complex information scannable and digestible.
-5.  **Be Proactive**: Don't just answer the question. Anticipate the user's next steps. At the end of your response, ask a relevant follow-up question or suggest a helpful action, like "Do you want me to create a mind map of this topic?" or "Shall I generate a quiz based on this information?".
-6.  **Persona**: Maintain your persona as a confident, knowledgeable, and friendly guide from India. Use encouraging language.
-7.  **Creator Rule**: Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
-
-**Here is an example of a high-quality response to follow:**
-${newtonsLawsTraining}
-
-**Example Response Structure:**
-<think>
-1. Acknowledge the user's query about photosynthesis.
-2. Formulate a direct, one-sentence definition as the primary answer.
-3. Structure the detailed explanation with headings: "What is Photosynthesis?", "The Chemical Equation", "The Two Stages of Photosynthesis", and "Why is it Important?".
-4. For the stages, break them down into light-dependent and light-independent reactions.
-5. Plan a proactive follow-up question, like asking to create a diagram.
-</think>
-
-**Answer:** Photosynthesis is the process plants use to convert light energy into chemical energy in the form of glucose.
-
----
-
-### In-Depth Explanation of Photosynthesis
-
-... (A very detailed, multi-paragraph explanation covering the definition, equation, stages, and importance in great detail, with clear formatting) ...
-
----
-
-👉 **What's next?** Shall I create a diagram illustrating the two stages of photosynthesis for you?
-
-${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided the following file content. Use it as the primary context for your answer.\n\n---\n${input.fileContent}\n---` : ''}`;
+    const selectedModelId = input.model || DEFAULT_MODEL_ID;
+    const systemPrompt = getSystemPrompt(selectedModelId, input.fileContent);
 
     const messages: any[] = [{ role: 'system', content: systemPrompt }];
 
@@ -296,9 +279,11 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
     });
 
     const orderedModels = [
-        input.model || DEFAULT_MODEL_ID,
-        ...AVAILABLE_MODELS.map(m => m.id).filter(id => id !== (input.model || DEFAULT_MODEL_ID))
+        selectedModelId,
+        ...AVAILABLE_MODELS.map(m => m.id).filter(id => id !== selectedModelId)
     ];
+    
+    let lastError: any = null;
 
     for (const modelId of orderedModels) {
         try {
@@ -312,20 +297,17 @@ ${input.fileContent ? `\n\n**User's Provided Context:**\nThe user has provided t
             if (!responseText) {
                 throw new Error("Received an empty response from the AI model.");
             }
+            
+            const modelName = AVAILABLE_MODELS.find(m => m.id === modelId)?.name || modelId;
+            const finalResponse = `**Response from ${modelName}**\n\n${responseText}`;
 
-            return { data: { response: responseText } };
+            return { data: { response: finalResponse } };
         } catch (e: any) {
+            lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
-            // If this is the last model in the list, return the error.
-            if (orderedModels.indexOf(modelId) === orderedModels.length - 1) {
-                return { error: e.message || "An unknown error occurred with all available AI models." };
-            }
-            // Otherwise, the loop will continue to the next model.
+            // If this is not the last model, the loop will continue to the next one.
         }
     }
     
-    // This should not be reached, but as a fallback
-    return { error: "All AI models failed to generate a response." };
+    return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
-
-    
