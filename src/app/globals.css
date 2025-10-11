@@ -206,4 +206,13 @@
         -ms-overflow-style: none; /* IE and Edge */
         scrollbar-width: none; /* Firefox */
     }
+
+    .model-response-header {
+      @apply inline-block px-3 py-1 mb-3 text-xs font-semibold rounded-full bg-black/30 text-white/90 border border-white/10 backdrop-blur-sm;
+    }
+    .light .model-response-header {
+      @apply bg-white/30 text-black/80 border-black/10;
+    }
 }
+
+    

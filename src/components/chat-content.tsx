@@ -542,6 +542,46 @@ export function ChatContent() {
         // Not a JSON object
     }
 
+    const responseHeaderMatch = mainContent.match(/\*\*Response from (.*?)\*\*\n\n/);
+    if (responseHeaderMatch) {
+      const modelName = responseHeaderMatch[1];
+      const restOfContent = mainContent.substring(responseHeaderMatch[0].length);
+      return (
+        <>
+          <div className="model-response-header">
+            <strong>Response from {modelName}</strong>
+          </div>
+          {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
+          <ReactMarkdown
+            remarkPlugins={[remarkMath, remarkGfm]}
+            rehypePlugins={[rehypeKatex]}
+            className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+            components={{
+                code({ node, inline, className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                        <CodeBox language={match[1]} code={String(children).replace(/\n$/, '')} />
+                    ) : (
+                        <code className={className} {...props}>
+                            {children}
+                        </code>
+                    );
+                },
+                p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,
+                thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
+                tbody: ({node, ...props}) => <tbody {...props} />,
+                tr: ({node, ...props}) => <tr className="border-b border-border" {...props} />,
+                th: ({node, ...props}) => <th className="p-2 text-left font-semibold" {...props} />,
+                td: ({node, ...props}) => <td className="p-2" {...props} />,
+            }}
+          >
+            {restOfContent}
+          </ReactMarkdown>
+        </>
+      )
+    }
+
     return (
         <>
             {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
@@ -842,5 +882,7 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
 
     
