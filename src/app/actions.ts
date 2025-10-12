@@ -328,5 +328,3 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
-
-export * from '@/ai/flows/answer-with-sources';
