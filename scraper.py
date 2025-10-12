@@ -1,35 +1,24 @@
-import urllib.request
-import re
+from flask import Flask, request, jsonify
+import requests
+from bs4 import BeautifulSoup
 
-def scrape_title(url):
-    """
-    Scrapes the title from a given URL.
-    """
+app = Flask(__name__)
+
+@app.route('/scrape', methods=['POST'])
+def scrape():
+    data = request.json
+    url = data.get("url")
+
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+
     try:
-        with urllib.request.urlopen(url) as response:
-            # Read and decode the response content
-            html = response.read().decode('utf-8', errors='ignore')
-            
-            # Use a simple regex to find the content of the <title> tag
-            title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
-            
-            if title_match:
-                return title_match.group(1).strip()
-            else:
-                return "No title found."
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        title = soup.title.string if soup.title else "No title found"
+        return jsonify({"url": url, "title": title})
     except Exception as e:
-        return f"An error occurred: {e}"
+        return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    # Example usage:
-    target_url = "https://example.com"
-    print(f"Scraping title from: {target_url}")
-    
-    title = scrape_title(target_url)
-    print(f"Title: {title}")
-
-    # You can try another URL by uncommenting the lines below
-    # target_url_2 = "https://news.google.com"
-    # print(f"\nScraping title from: {target_url_2}")
-    # title_2 = scrape_title(target_url_2)
-    # print(f"Title: {title_2}")
+if __name__ == '__main__':
+    app.run(port=5000)
