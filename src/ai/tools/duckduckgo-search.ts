@@ -1,4 +1,4 @@
-
+'''
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -49,21 +49,15 @@ export const duckDuckGoSearch = ai.defineTool(
             const snippetEl = $(el).find('.result__snippet');
             
             const title = titleEl.text().trim();
-            let url = titleEl.attr('href');
+            const url = titleEl.attr('href');
             const snippet = snippetEl.text().trim();
             
             if (title && url && snippet) {
-                 // Convert relative URL to absolute
-                const urlObj = new URL(url, 'https://duckduckgo.com');
-                const finalUrl = urlObj.searchParams.get('uddg');
-                
-                if (finalUrl) {
-                    results.push({
-                        title,
-                        url: decodeURIComponent(finalUrl),
-                        snippet,
-                    });
-                }
+                results.push({
+                    title,
+                    url: url,
+                    snippet,
+                });
             }
         });
       
@@ -78,3 +72,4 @@ export const duckDuckGoSearch = ai.defineTool(
     }
   }
 );
+''
