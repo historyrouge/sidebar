@@ -19,7 +19,6 @@ import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutpu
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
-import { answerWithSources, AnswerWithSourcesInput, AnswerWithSourcesOutput } from '@/ai/flows/answer-with-sources';
 import { webSearch } from '@/ai/tools/web-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
@@ -169,15 +168,6 @@ export async function summarizeContentAction(input: SummarizeContentInput): Prom
 export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<ActionResult<ChatWithTutorOutput>> {
     try {
         const data = await chatWithTutor(input);
-        return { data };
-    } catch (e: any) {
-        return { error: e.message };
-    }
-}
-
-export async function answerWithSourcesAction(input: AnswerWithSourcesInput): Promise<ActionResult<AnswerWithSourcesOutput>> {
-    try {
-        const data = await answerWithSources(input);
         return { data };
     } catch (e: any) {
         return { error: e.message };

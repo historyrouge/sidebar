@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -69,7 +70,6 @@ const studyTools = [
 const resources = [
     { name: "PDF Hub", icon: <File />, href: "/pdf-hub" },
     { name: "Web Browser", icon: <Globe />, href: "/web-browser" },
-    { name: "Web Scraper", icon: <Search />, href: "/web-scraper" },
     { name: "YouTube Tools", icon: <Youtube />, href: "/youtube-extractor" },
     { name: "News", icon: <Rss />, href: "/news" },
     { name: "eBooks", icon: <BookOpen />, href: "/ebooks" },
