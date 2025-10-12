@@ -11,7 +11,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
+import { webSearch } from '@/ai/tools/web-search';
 import {z} from 'zod';
 
 const AnalyzeContentInputSchema = z.object({
@@ -42,10 +42,10 @@ const prompt = ai.definePrompt({
   name: 'analyzeContentPrompt',
   input: {schema: AnalyzeContentInputSchema},
   output: {schema: AnalyzeContentOutputSchema},
-  tools: [duckDuckGoSearch],
+  tools: [webSearch],
   prompt: `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
 
-First, use the duckDuckGoSearch tool to search for the main topic of the content to gather additional context and information.
+First, use the webSearch tool to search for the main topic of the content to gather additional context and information.
 
 Content to analyze:
 ---

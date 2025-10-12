@@ -3,14 +3,14 @@
 /**
  * @fileOverview Answers a question by searching the web and citing sources.
  *
- * - answerWithSources - A function that answers a user's query using web search.
+ * - answerWithSources - A function that answers a user\'s query using web search.
  * - AnswerWithSourcesInput - The input type for the function.
  * - AnswerWithSourcesOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
+import { webSearch } from '@/ai/tools/web-search';
 import { browseWebsite } from '@/ai/tools/browse-website';
 
 const AnswerWithSourcesInputSchema = z.object({
@@ -32,7 +32,7 @@ const prompt = ai.definePrompt({
   name: 'answerWithSourcesPrompt',
   input: {schema: z.object({ query: z.string(), context: z.string() })},
   output: {schema: z.object({ answer: z.string() })},
-  prompt: `You are an expert researcher. Your task is to answer the user's query based on the provided web content.
+  prompt: `You are an expert researcher. Your task is to answer the user\'s query based on the provided web content.
 
 User Query:
 ---
@@ -55,10 +55,10 @@ const answerWithSourcesFlow = ai.defineFlow(
   },
   async ({ query }) => {
     // 1. Search the web for relevant pages
-    const searchResult = await duckDuckGoSearch({ query });
+    const searchResult = await webSearch({ query });
     
     if (searchResult.noResults || !searchResult.results || searchResult.results.length === 0) {
-      return { answer: "Sorry, I couldn't find any relevant information on the web for that query.", source: "https://duckduckgo.com" };
+      return { answer: "Sorry, I couldn\'t find any relevant information on the web for that query.", source: "https://duckduckgo.com" };
     }
 
     // 2. Browse the content of the top search result

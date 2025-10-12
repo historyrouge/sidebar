@@ -20,7 +20,7 @@ import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from 
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
 import { answerWithSources, AnswerWithSourcesInput, AnswerWithSourcesOutput } from '@/ai/flows/answer-with-sources';
-import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
+import { webSearch } from '@/ai/tools/web-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
 import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
@@ -220,7 +220,7 @@ export async function chatAction(input: {
     if (isSearch) {
         const query = input.history[input.history.length - 1].content.toString().replace(/^search:\s*/i, '');
         try {
-            const searchResults = await duckDuckGoSearch({ query });
+            const searchResults = await webSearch({ query });
             if (searchResults.results && searchResults.results.length > 0) {
                  const responsePayload = {
                     type: 'website_results',

@@ -1,4 +1,4 @@
-'''
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -16,9 +16,9 @@ const SearchOutputSchema = z.object({
     noResults: z.boolean().optional(),
 });
 
-export const duckDuckGoSearch = ai.defineTool(
+export const webSearch = ai.defineTool(
   {
-    name: 'duckDuckGoSearch',
+    name: 'webSearch',
     description: 'Searches the web using DuckDuckGo and returns the top results.',
     inputSchema: z.object({
       query: z.string().describe('The search query.'),
@@ -49,15 +49,21 @@ export const duckDuckGoSearch = ai.defineTool(
             const snippetEl = $(el).find('.result__snippet');
             
             const title = titleEl.text().trim();
-            const url = titleEl.attr('href');
+            let url = titleEl.attr('href');
             const snippet = snippetEl.text().trim();
             
             if (title && url && snippet) {
-                results.push({
-                    title,
-                    url: url,
-                    snippet,
-                });
+                 // Convert relative URL to absolute
+                const urlObj = new URL(url, 'https://duckduckgo.com');
+                const finalUrl = urlObj.searchParams.get('uddg');
+                
+                if (finalUrl) {
+                    results.push({
+                        title,
+                        url: decodeURIComponent(finalUrl),
+                        snippet,
+                    });
+                }
             }
         });
       
@@ -67,9 +73,8 @@ export const duckDuckGoSearch = ai.defineTool(
       return { results };
 
     } catch (error) {
-      console.error('DuckDuckGo search error:', error);
+      console.error('Web search error:', error);
       return { noResults: true, error: (error as Error).message };
     }
   }
 );
-''
