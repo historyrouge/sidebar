@@ -195,15 +195,15 @@ export function ChatContent() {
       setActiveButton(newActiveButton);
 
       if (newActiveButton === 'deepthink') {
-        setCurrentModel('gemini-2.5-pro');
-        toast({ title: 'Model Switched', description: 'DeepThink activated: Using Gemini 2.5 Pro for complex reasoning.' });
+        setCurrentModel('gpt-oss-120b');
+        toast({ title: 'Model Switched', description: 'DeepThink activated: Using GPT-5 for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
-        if (currentModel === 'gemini-2.5-pro' && newActiveButton !== 'deepthink') {
+        if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
              setCurrentModel(DEFAULT_MODEL_ID);
         }
       }
@@ -575,7 +575,7 @@ export function ChatContent() {
       return (
         <>
           <div className="model-response-header">
-            <strong>Response from {modelName}</strong>
+            <strong>Response from SearnAI (Auto Model)</strong>
           </div>
           {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
           <ReactMarkdown
@@ -776,7 +776,7 @@ export function ChatContent() {
                                   onPause={() => setIsSynthesizing(null)}
                                 />
                               )}
-                              {message.role === 'model' && (
+                              {message.role === 'model' && message.role !== 'browser' && (
                                 <div className="mt-2 flex items-center gap-1 transition-opacity">
                                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                     <Copy className="h-4 w-4" />
