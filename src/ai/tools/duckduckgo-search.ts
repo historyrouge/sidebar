@@ -42,10 +42,10 @@ export const duckDuckGoSearch = ai.defineTool(
 
         const results: z.infer<typeof SearchResultSchema>[] = [];
         
-        $('.result').each((i, el) => {
+        $('div.web-result').each((i, el) => {
             if (results.length >= 8) return;
 
-            const titleEl = $(el).find('.result__title a');
+            const titleEl = $(el).find('a.result__a');
             const snippetEl = $(el).find('.result__snippet');
             
             const title = titleEl.text().trim();
