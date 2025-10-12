@@ -22,18 +22,6 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: 'static.toiimg.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.cnn.com',
-      },
-      {
-          protocol: 'https',
-          hostname: 'ichef.bbci.co.uk',
-      }
     ],
   },
   async headers() {
