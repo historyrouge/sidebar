@@ -1,6 +1,7 @@
 
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const isDev = require('electron-is-dev');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -15,7 +16,15 @@ function createWindow() {
   });
 
   const devUrl = 'http://localhost:3000';
-  win.loadURL(devUrl);
+  
+  if (isDev) {
+    win.loadURL(devUrl);
+    win.webContents.openDevTools();
+  } else {
+    // In a real build, you'd load a file, e.g., `win.loadFile('build/index.html')`
+    win.loadURL(devUrl); 
+  }
+
 
   // Optional: forward messages from webview to main if needed
   ipcMain.on('from-renderer', (event, channel, payload) => {
