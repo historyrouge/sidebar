@@ -3,15 +3,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-
-// A basic function to strip HTML tags. This is not perfect but good for extracting text content.
-function stripHtml(html: string): string {
-    return html.replace(/<style[^>]*>.*<\/style>/gs, '') // remove style blocks
-               .replace(/<script[^>]*>.*<\/script>/gs, '') // remove script blocks
-               .replace(/<[^>]+>/g, ' ') // remove all other tags
-               .replace(/\s\s+/g, ' ') // collapse whitespace
-               .trim();
-}
+import * as cheerio from 'cheerio';
 
 
 async function fetchPageContent(url: string): Promise<string> {
@@ -28,7 +20,14 @@ async function fetchPageContent(url: string): Promise<string> {
         }
 
         const html = await response.text();
-        const textContent = stripHtml(html);
+        const $ = cheerio.load(html);
+
+        // Remove script and style tags
+        $('script, style').remove();
+
+        // Get text from the body, replacing block elements with newlines for better readability
+        let textContent = $('body').text() || '';
+        textContent = textContent.replace(/\s\s+/g, ' ').trim();
 
         // Return a manageable chunk of text to avoid overwhelming the model
         return textContent.substring(0, 8000);

@@ -14,6 +14,7 @@ const SearchResultSchema = z.object({
 const SearchOutputSchema = z.object({
     results: z.array(SearchResultSchema).optional(),
     noResults: z.boolean().optional(),
+    error: z.string().optional(),
 });
 
 export const webSearch = ai.defineTool(
@@ -53,7 +54,7 @@ export const webSearch = ai.defineTool(
             const snippet = snippetEl.text().trim();
             
             if (title && url && snippet) {
-                 // Convert relative URL to absolute
+                // The URL from DDG HTML is a redirect. We need to extract the actual URL from the 'uddg' param.
                 const urlObj = new URL(url, 'https://duckduckgo.com');
                 const finalUrl = urlObj.searchParams.get('uddg');
                 
