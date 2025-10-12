@@ -1,20 +1,12 @@
+
 "use client";
 import { MainLayout } from "@/components/main-layout";
-import { WebBrowserContent } from '@/components/web-browser-content';
-import { Suspense } from "react";
-
-function WebScraperPageContent() {
-    return (
-        <MainLayout>
-           <WebBrowserContent />
-        </MainLayout>
-    );
-}
+import { WebScraperContent } from '@/components/web-scraper-content';
 
 export default function WebScraperPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <WebScraperPageContent />
-        </Suspense>
-    )
+        <MainLayout>
+           <WebScraperContent />
+        </MainLayout>
+    );
 }

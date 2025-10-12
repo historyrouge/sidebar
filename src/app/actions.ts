@@ -20,6 +20,7 @@ import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutpu
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
+import { answerWithSources, AnswerWithSourcesInput, AnswerWithSourcesOutput } from '@/ai/flows/answer-with-sources';
 import { duckDuckGoSearch } from '@/ai/tools/duckduckgo-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
@@ -184,6 +185,15 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
     }
 }
 
+export async function answerWithSourcesAction(input: AnswerWithSourcesInput): Promise<ActionResult<AnswerWithSourcesOutput>> {
+    try {
+        const data = await answerWithSources(input);
+        return { data };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
 const getSystemPrompt = (modelId: string, fileContent: string | null | undefined): string => {
     const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
@@ -318,3 +328,5 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+export * from '@/ai/flows/answer-with-sources';
