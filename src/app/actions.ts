@@ -11,7 +11,7 @@ import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput } from '@/
 import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPaperOutput } from '@/ai/flows/generate-question-paper';
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput } from '@/ai/flows/generate-ebook-chapter';
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput } from '@/ai/flows/generate-presentation';
-import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
+import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/aiflows/generate-edited-content';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { imageToText, ImageToTextInput, ImageToTextOutput } from '@/ai/flows/image-to-text';
@@ -260,9 +260,8 @@ export async function chatAction(input: {
     }
 
     const selectedModelId = input.model || DEFAULT_MODEL_ID;
-    const systemPrompt = getSystemPrompt(selectedModelId, input.fileContent);
-
-    const messages: any[] = [{ role: 'system', content: systemPrompt }];
+    
+    const messages: any[] = [];
 
     input.history.forEach(msg => {
         if (msg.role === 'user' && input.imageDataUri) {
@@ -273,27 +272,27 @@ export async function chatAction(input: {
                     { type: 'image_url', image_url: { url: input.imageDataUri } }
                 ]
             });
-        } else {
+        } else if(msg.role !== 'system') { // Ensure no system messages are passed in history
             messages.push({ role: msg.role, content: msg.content });
         }
     });
 
-    const orderedModels = [
-        selectedModelId,
-        ...AVAILABLE_MODELS.map(m => m.id).filter(id => id !== selectedModelId)
-    ];
+    const allModels = AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto');
+    const modelsToTry = selectedModelId === 'auto' 
+        ? allModels
+        : [selectedModelId, ...allModels.filter(id => id !== selectedModelId)];
+
     
     let lastError: any = null;
 
-    // When model is 'auto', try models in order. Otherwise, just use the selected one.
-    const modelsToTry = selectedModelId === 'auto' ? orderedModels.filter(id => id !== 'auto') : [selectedModelId];
-
-
     for (const modelId of modelsToTry) {
         try {
+            const systemPrompt = getSystemPrompt(modelId, input.fileContent);
+            const requestMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+
             const response = await openai.chat.completions.create({
                 model: modelId,
-                messages: messages,
+                messages: requestMessages,
                 stream: false,
             });
 
@@ -309,7 +308,11 @@ export async function chatAction(input: {
         } catch (e: any) {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
-            // If this is not the last model, the loop will continue to the next one.
+            // If this is not the last model and we are in auto mode, the loop will continue.
+            if(selectedModelId !== 'auto') {
+                // If not in auto mode, fail immediately on the selected model.
+                break;
+            }
         }
     }
     

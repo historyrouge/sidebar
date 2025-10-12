@@ -1,6 +1,12 @@
 
 export const AVAILABLE_MODELS = [
     {
+        id: 'auto',
+        name: 'Auto',
+        description: 'Automatically selects the best model.',
+        logo: '✨'
+    },
+    {
         id: 'gpt-oss-120b',
         name: 'Gemini 2.5 Pro',
         description: 'For difficult problems & complex reasoning.',
@@ -26,7 +32,7 @@ export const AVAILABLE_MODELS = [
     },
     {
         id: 'Qwen3-32B',
-        name: 'GPT-5 High',
+        name: 'GPT-5',
         description: 'A versatile model for a wide range of tasks.',
         logo: '🇬'
     },
@@ -38,5 +44,4 @@ export const AVAILABLE_MODELS = [
     },
 ];
 
-export const DEFAULT_MODEL_ID = 'gpt-oss-120b';
-
+export const DEFAULT_MODEL_ID = 'auto';
