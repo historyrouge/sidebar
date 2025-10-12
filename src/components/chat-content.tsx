@@ -303,7 +303,7 @@ export function ChatContent() {
     }
     const messageId = `${Date.now()}`;
     const userMessage: Message = { id: messageId, role: "user", content: messageToSend, image: imageDataUri };
-    const newHistory = [...history.filter(m => m.role !== 'browser'), userMessage];
+    const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
 
@@ -362,15 +362,12 @@ export function ChatContent() {
 
   const handleBrowserToggle = (url: string | null) => {
     setHistory(prev => {
-        const existingBrowser = prev.find(m => m.role === 'browser');
+        // Remove any existing browser views first to only have one at a time.
+        const filtered = prev.filter(m => m.role !== 'browser');
         if (url) {
-            // If opening a new URL, remove any existing browser and add the new one
-            const filtered = prev.filter(m => m.role !== 'browser');
             return [...filtered, { id: `browser-${Date.now()}`, role: 'browser', content: url }];
-        } else {
-            // If closing (url is null), just remove all browser messages
-            return prev.filter(m => m.role !== 'browser');
         }
+        return filtered;
     });
   };
 
@@ -886,8 +883,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-
-    
-
