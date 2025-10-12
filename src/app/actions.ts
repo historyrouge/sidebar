@@ -14,7 +14,6 @@ import { generatePresentation, GeneratePresentationInput, GeneratePresentationOu
 import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
-import { imageToText, ImageToTextInput, ImageToTextOutput } from '@/ai/flows/image-to-text';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
 import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
@@ -125,15 +124,6 @@ export async function generatePresentationAction(input: GeneratePresentationInpu
 export async function generateEditedContentAction(input: GenerateEditedContentInput): Promise<ActionResult<GenerateEditedContentOutput>> {
     try {
         const data = await generateEditedContent(input);
-        return { data };
-    } catch (e: any) {
-        return { error: e.message };
-    }
-}
-
-export async function imageToTextAction(input: ImageToTextInput): Promise<ActionResult<ImageToTextOutput>> {
-    try {
-        const data = await imageToText(input);
         return { data };
     } catch (e: any) {
         return { error: e.message };

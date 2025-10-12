@@ -2,7 +2,7 @@
 "use client";
 
 import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, chatWithTutorAction, imageToTextAction, AnalyzeImageContentInput } from "@/app/actions";
+import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, chatWithTutorAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,12 +19,12 @@ import { TutorChat } from "./tutor-chat";
 import { useRouter } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
-import imageToDataUri from "image-to-data-uri";
 import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
 import { Progress } from "./ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import Tesseract from 'tesseract.js';
 
 declare const puter: any;
 
@@ -43,6 +43,8 @@ export function StudyNowContent() {
   const [isLoadingMaterial, startLoadingMaterial] = useTransition();
   const [isGeneratingFlashcards, startGeneratingFlashcards] = useTransition();
   const [isGeneratingQuiz, startGeneratingQuiz] = useTransition();
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -229,22 +231,42 @@ export function StudyNowContent() {
         if (file.type.startsWith("image/")) {
             startLoadingMaterial(async () => {
                 try {
-                    const dataUri = await imageToDataUri(URL.createObjectURL(file));
-                    setImageDataUri(dataUri);
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const dataUri = e.target?.result as string;
+                        setImageDataUri(dataUri);
+                        setAnalysis(null);
+                        setFlashcards(null);
 
-                    const ocrResult = await imageToTextAction({ imageDataUri: dataUri });
-                    if (ocrResult.error) {
-                        throw new Error(ocrResult.error);
-                    }
+                        setIsOcrProcessing(true);
+                        setOcrProgress(0);
 
-                    setContent(ocrResult.data?.text || "");
-                    setTitle(file.name);
-                    setAnalysis(null); 
-                    setFlashcards(null); 
-                    
-                    toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
+                        try {
+                            const { data: { text } } = await Tesseract.recognize(
+                                file,
+                                'eng',
+                                { 
+                                    logger: m => {
+                                        if (m.status === 'recognizing text') {
+                                            setOcrProgress(Math.round(m.progress * 100));
+                                        }
+                                    }
+                                }
+                            );
+                            setContent(text);
+                            setTitle(file.name);
+                            toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
+                        } catch (ocrError: any) {
+                             toast({ title: "OCR Failed", description: ocrError.message || "Could not extract text.", variant: "destructive" });
+                             setContent(""); // Clear content on OCR fail
+                        } finally {
+                           setIsOcrProcessing(false);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+
                 } catch (error: any) {
-                    toast({ title: "Image processing failed", description: error.message || "Could not read the image file or extract text.", variant: "destructive" });
+                    toast({ title: "Image processing failed", description: error.message || "Could not read the image file.", variant: "destructive" });
                     setImageDataUri(null);
                 }
             });
@@ -351,12 +373,23 @@ export function StudyNowContent() {
             
             setIsCameraOpen(false);
             setImageDataUri(dataUri);
+            
+            setIsOcrProcessing(true);
+            setOcrProgress(0);
 
             try {
-                const ocrResult = await imageToTextAction({ imageDataUri: dataUri });
-                if (ocrResult.error) throw new Error(ocrResult.error);
-
-                setContent(ocrResult.data?.text || "");
+                const { data: { text } } = await Tesseract.recognize(
+                    dataUri,
+                    'eng',
+                    { 
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                setOcrProgress(Math.round(m.progress * 100));
+                            }
+                        }
+                    }
+                );
+                setContent(text || "");
                 setTitle("Camera Capture");
                 setAnalysis(null);
                 setFlashcards(null);
@@ -364,8 +397,9 @@ export function StudyNowContent() {
                 toast({ title: "Image Captured & Text Extracted!", description: "The captured image is ready for analysis." });
             } catch (error: any) {
                 toast({ title: "OCR Failed", description: error.message || "Could not extract text from the captured image.", variant: "destructive" });
-                // Keep image but content will be empty
                 setContent("");
+            } finally {
+                setIsOcrProcessing(false);
             }
         });
     };
@@ -443,7 +477,14 @@ export function StudyNowContent() {
               {isLoadingMaterial ? <Skeleton className="w-full h-full min-h-[300px] flex-1" /> : imageDataUri ? (
                 <div className="relative flex-1 min-h-[300px]">
                     <Image src={imageDataUri} alt="Uploaded content" layout="fill" objectFit="contain" className="rounded-md border" />
-                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage}><X className="h-4 w-4" /></Button>
+                     {isOcrProcessing && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 rounded-md">
+                            <Loader2 className="h-8 w-8 animate-spin text-white" />
+                            <p className="text-white mt-2">Extracting text... {ocrProgress}%</p>
+                            <Progress value={ocrProgress} className="w-40 mt-2 h-1" />
+                        </div>
+                    )}
+                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={clearImage} disabled={isOcrProcessing}><X className="h-4 w-4" /></Button>
                 </div>
               ) : (
                 <div className="relative h-full">
@@ -457,7 +498,7 @@ export function StudyNowContent() {
                {imageDataUri && <Textarea placeholder="Text extracted via OCR will appear here. You can edit it before analysis." className="h-24 resize-none" value={content} onChange={(e) => setContent(e.target.value)} />}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
-              <Button onClick={handleAnalyze} disabled={isLoading || (!imageDataUri && content.trim().length < 50)}>
+              <Button onClick={handleAnalyze} disabled={isLoading || isOcrProcessing || (!imageDataUri && content.trim().length < 50)}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze
               </Button>
