@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -32,6 +31,7 @@ import {
   Calendar,
   Image as ImageIcon,
   Music,
+  Bot,
 } from "lucide-react";
 import {
   Sidebar,
@@ -80,6 +80,7 @@ const resources = [
 const mainNav = [
     { name: "Home", icon: <Home />, href: "/" },
     { name: "Planner", icon: <Calendar />, href: "/planner" },
+    { name: "Agent", icon: <Bot />, href: "/agent" },
 ]
 
 const AppLogo = () => (
