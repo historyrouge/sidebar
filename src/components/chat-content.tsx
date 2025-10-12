@@ -38,7 +38,7 @@ import { GeneratedImageCard } from "./generated-image-card";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { BrowserView } from "./browser-view";
-
+import { motion } from "framer-motion";
 
 type Message = {
   id: string;
@@ -708,81 +708,87 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-              {history.map((message, index) => (
-                  <React.Fragment key={`${message.id}-${index}`}>
-                    <div
-                      className={cn(
-                        "flex w-full items-start gap-4",
-                        message.role === "user" ? "justify-end" : ""
-                      )}
-                    >
-                      {message.role === "user" ? (
-                        <div className="flex items-start gap-4 justify-end">
-                          <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                            {message.image && (
-                              <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
-                            )}
-                            <p className="text-base whitespace-pre-wrap">{message.content}</p>
-                          </div>
-                          <Avatar className="h-9 w-9 border">
-                            <AvatarFallback><User className="size-5" /></AvatarFallback>
-                          </Avatar>
-                        </div>
-                      ) : (
-                        <div className={cn("group w-full flex items-start gap-4")}>
-                          <div className="w-full">
-                            {renderMessageContent(message)}
-                            {audioDataUri && isSynthesizing === message.id && (
-                              <audio
-                                ref={audioRef}
-                                src={audioDataUri}
-                                autoPlay
-                                onEnded={() => setIsSynthesizing(null)}
-                                onPause={() => setIsSynthesizing(null)}
-                              />
-                            )}
-                            <div className="mt-2 flex items-center gap-1 transition-opacity">
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                <Share2 className="h-4 w-4" />
-                              </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
-                                {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                              </Button>
-                              <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                <RefreshCw className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {index < history.length - 1 && (
-                      <Separator className="my-8" />
-                    )}
-                  </React.Fragment>
-                )
-              )}
-            {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
-            {activeInlineBrowserUrl && (
-                <div className="h-[60vh] flex flex-col border rounded-xl bg-card overflow-hidden">
-                    <div className="flex items-center justify-between p-2 border-b">
-                        <p className="text-sm font-semibold truncate ml-2">Inline Browser</p>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveInlineBrowserUrl(null)}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div className="flex-1">
-                        <BrowserView initialUrl={activeInlineBrowserUrl} />
-                    </div>
+       {activeInlineBrowserUrl ? (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="h-[90vh] flex flex-col border rounded-2xl bg-card overflow-hidden m-4"
+              >
+                <div className="flex items-center justify-between p-2 border-b">
+                    <p className="text-sm font-semibold truncate ml-2">Inline Browser</p>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveInlineBrowserUrl(null)}>
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
-            )}
-          </div>
-        </ScrollArea>
+                <div className="flex-1">
+                    <BrowserView initialUrl={activeInlineBrowserUrl} />
+                </div>
+            </motion.div>
+        ) : (
+          <ScrollArea className="flex-1" ref={scrollAreaRef}>
+              <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
+                  {history.map((message, index) => (
+                      <React.Fragment key={`${message.id}-${index}`}>
+                        <div
+                          className={cn(
+                            "flex w-full items-start gap-4",
+                            message.role === "user" ? "justify-end" : ""
+                          )}
+                        >
+                          {message.role === "user" ? (
+                            <div className="flex items-start gap-4 justify-end">
+                              <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                                {message.image && (
+                                  <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                                )}
+                                <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                              </div>
+                              <Avatar className="h-9 w-9 border">
+                                <AvatarFallback><User className="size-5" /></AvatarFallback>
+                              </Avatar>
+                            </div>
+                          ) : (
+                            <div className={cn("group w-full flex items-start gap-4")}>
+                              <div className="w-full">
+                                {renderMessageContent(message)}
+                                {audioDataUri && isSynthesizing === message.id && (
+                                  <audio
+                                    ref={audioRef}
+                                    src={audioDataUri}
+                                    autoPlay
+                                    onEnded={() => setIsSynthesizing(null)}
+                                    onPause={() => setIsSynthesizing(null)}
+                                  />
+                                )}
+                                <div className="mt-2 flex items-center gap-1 transition-opacity">
+                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                    <Share2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                                    {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                                  </Button>
+                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {index < history.length - 1 && (
+                          <Separator className="my-8" />
+                        )}
+                      </React.Fragment>
+                    )
+                  )}
+                {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
+              </div>
+            </ScrollArea>
+        )}
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
