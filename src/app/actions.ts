@@ -11,7 +11,7 @@ import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput } from '@/
 import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPaperOutput } from '@/ai/flows/generate-question-paper';
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput } from '@/ai/flows/generate-ebook-chapter';
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput } from '@/ai/flows/generate-presentation';
-import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/aiflows/generate-edited-content';
+import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { imageToText, ImageToTextInput, ImageToTextOutput } from '@/ai/flows/image-to-text';
@@ -318,3 +318,5 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+    
