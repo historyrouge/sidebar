@@ -669,21 +669,9 @@ export function ChatContent() {
                              <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
                             </Button>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button type="button" variant='outline' disabled={isInputDisabled}>
-                                        <Globe className="h-5 w-5" />
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
-                                    <DialogHeader className="p-4 border-b">
-                                        <DialogTitle>Browser</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="flex-1 overflow-hidden">
-                                        <BrowserView initialUrl="https://www.google.com/webhp?igu=1" />
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
+                            <Button type="button" variant='outline' disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                                <Globe className="h-5 w-5" />
+                            </Button>
                         </div>
                     </div>
                     <form
@@ -847,21 +835,9 @@ export function ChatContent() {
                  <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                     <ImageIcon className="h-5 w-5" />
                 </Button>
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button type="button" variant='outline' disabled={isInputDisabled}>
-                            <Globe className="h-5 w-5" />
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
-                        <DialogHeader className="p-4 border-b">
-                            <DialogTitle>Browser</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex-1 overflow-hidden">
-                            <BrowserView initialUrl="https://www.google.com/webhp?igu=1" />
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <Button type="button" variant='outline' disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                    <Globe className="h-5 w-5" />
+                </Button>
             </div>
           </div>
           <form
@@ -914,3 +890,4 @@ export function ChatContent() {
     
 
     
+
