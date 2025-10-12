@@ -196,7 +196,7 @@ export function ChatContent() {
 
       if (newActiveButton === 'deepthink') {
         setCurrentModel('gpt-oss-120b');
-        toast({ title: 'Model Switched', description: 'DeepThink activated: Using GPT-5 for complex reasoning.' });
+        toast({ title: 'Model Switched', description: 'DeepThink activated: Using Gemini 2.5 Pro for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
@@ -303,7 +303,10 @@ export function ChatContent() {
     }
     const messageId = `${Date.now()}`;
     const userMessage: Message = { id: messageId, role: "user", content: messageToSend, image: imageDataUri };
-    const newHistory = [...history, userMessage];
+    
+    // Filter out any existing browser views before adding new message
+    const newHistory = [...history.filter(m => m.role !== 'browser'), userMessage];
+
     setHistory(newHistory);
     setInput("");
 
@@ -565,14 +568,14 @@ export function ChatContent() {
         // Not a JSON object
     }
 
-    const responseHeaderMatch = mainContent.match(/\*\*Response from (.*?)\*\*\\n\\n/);
+    const responseHeaderMatch = mainContent.match(/\*\*Response from (.*?)\*\*\n\n/);
     if (responseHeaderMatch) {
       const modelName = responseHeaderMatch[1];
       const restOfContent = mainContent.substring(responseHeaderMatch[0].length);
       return (
         <>
           <div className="model-response-header">
-            <strong>Response from SearnAI (Auto Model)</strong>
+            <strong>Response from {modelName}</strong>
           </div>
           {thinkingText && <ThinkingIndicator text={thinkingText} duration={message.duration} />}
           <ReactMarkdown
