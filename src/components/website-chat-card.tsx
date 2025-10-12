@@ -10,15 +10,15 @@ type WebsiteChatCardProps = {
         title?: string;
         snippet?: string;
     };
-    onWebViewToggle: (url: string | null) => void;
+    onBrowserToggle: (url: string) => void;
 };
 
-export function WebsiteChatCard({ websiteData, onWebViewToggle }: WebsiteChatCardProps) {
+export function WebsiteChatCard({ websiteData, onBrowserToggle }: WebsiteChatCardProps) {
     const { url, title, snippet } = websiteData;
     const displayUrl = new URL(url).hostname;
 
     const handleViewClick = () => {
-        onWebViewToggle(url);
+        onBrowserToggle(url);
     };
 
     return (

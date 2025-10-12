@@ -42,7 +42,7 @@ import { motion } from "framer-motion";
 
 type Message = {
   id: string;
-  role: "user" | "model" | "tool";
+  role: "user" | "model" | "tool" | "browser";
   content: string;
   image?: string | null;
   duration?: number;
@@ -182,7 +182,6 @@ export function ChatContent() {
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
-  const [activeInlineBrowserUrl, setActiveInlineBrowserUrl] = useState<string | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -268,7 +267,7 @@ export function ChatContent() {
       const startTime = Date.now();
       
       const genkitHistory: CoreMessage[] = currentHistory.map(h => ({
-        role: h.role,
+        role: h.role as 'user' | 'model' | 'tool',
         content: String(h.content),
       }));
 
@@ -304,10 +303,9 @@ export function ChatContent() {
     }
     const messageId = `${Date.now()}`;
     const userMessage: Message = { id: messageId, role: "user", content: messageToSend, image: imageDataUri };
-    const newHistory = [...history, userMessage];
+    const newHistory = [...history.filter(m => m.role !== 'browser'), userMessage];
     setHistory(newHistory);
     setInput("");
-    setActiveInlineBrowserUrl(null); // Close any open inline browser
 
     const isImageGenRequest = activeButton === 'image';
 
@@ -347,7 +345,6 @@ export function ChatContent() {
 
       const historyForRegen = history.slice(0, lastUserMessageIndex + 1);
       setHistory(historyForRegen);
-      setActiveInlineBrowserUrl(null);
       
       const lastUserMessage = historyForRegen[lastUserMessageIndex];
       await executeChat(historyForRegen, lastUserMessage.image, fileContent);
@@ -361,6 +358,20 @@ export function ChatContent() {
   
   const handleShare = (text: string) => {
     setShareContent(text);
+  };
+
+  const handleBrowserToggle = (url: string | null) => {
+    setHistory(prev => {
+        const existingBrowser = prev.find(m => m.role === 'browser');
+        if (url) {
+            // If opening a new URL, remove any existing browser and add the new one
+            const filtered = prev.filter(m => m.role !== 'browser');
+            return [...filtered, { id: `browser-${Date.now()}`, role: 'browser', content: url }];
+        } else {
+            // If closing (url is null), just remove all browser messages
+            return prev.filter(m => m.role !== 'browser');
+        }
+    });
   };
 
   useEffect(() => {
@@ -494,12 +505,34 @@ export function ChatContent() {
     if (viewport) {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
-  }, [history, activeInlineBrowserUrl]);
+  }, [history]);
   
   const showWelcome = history.length === 0 && !isTyping;
   const isInputDisabled = isTyping || isOcrProcessing;
 
   const renderMessageContent = (message: Message) => {
+    if (message.role === 'browser') {
+        return (
+             <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="h-[60vh] flex flex-col border rounded-2xl bg-card overflow-hidden my-4"
+              >
+                <div className="flex items-center justify-between p-2 border-b">
+                    <p className="text-sm font-semibold truncate ml-2">Inline Browser</p>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleBrowserToggle(null)}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+                <div className="flex-1">
+                    <BrowserView initialUrl={message.content} />
+                </div>
+            </motion.div>
+        )
+    }
+
     const thinkMatch = message.content.match(/<think>([\s\S]*?)<\/think>/);
     const thinkingText = thinkMatch ? thinkMatch[1].trim() : null;
     let mainContent = thinkMatch ? message.content.replace(/<think>[\s\S]*?<\/think>/, '').trim() : message.content;
@@ -513,7 +546,7 @@ export function ChatContent() {
             return (
                 <div className="space-y-3">
                     {data.results.map((result: any, index: number) => (
-                        <WebsiteChatCard key={index} websiteData={result} onWebViewToggle={setActiveInlineBrowserUrl} />
+                        <WebsiteChatCard key={index} websiteData={result} onBrowserToggle={handleBrowserToggle} />
                     ))}
                 </div>
             );
@@ -708,59 +741,42 @@ export function ChatContent() {
         onOpenChange={(open) => !open && setShareContent(null)}
         content={shareContent || ""}
       />
-       {activeInlineBrowserUrl ? (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="h-[90vh] flex flex-col border rounded-2xl bg-card overflow-hidden m-4"
-              >
-                <div className="flex items-center justify-between p-2 border-b">
-                    <p className="text-sm font-semibold truncate ml-2">Inline Browser</p>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveInlineBrowserUrl(null)}>
-                        <X className="h-4 w-4" />
-                    </Button>
-                </div>
-                <div className="flex-1">
-                    <BrowserView initialUrl={activeInlineBrowserUrl} />
-                </div>
-            </motion.div>
-        ) : (
-          <ScrollArea className="flex-1" ref={scrollAreaRef}>
-              <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
-                  {history.map((message, index) => (
-                      <React.Fragment key={`${message.id}-${index}`}>
-                        <div
-                          className={cn(
-                            "flex w-full items-start gap-4",
-                            message.role === "user" ? "justify-end" : ""
-                          )}
-                        >
-                          {message.role === "user" ? (
-                            <div className="flex items-start gap-4 justify-end">
-                              <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                                {message.image && (
-                                  <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
-                                )}
-                                <p className="text-base whitespace-pre-wrap">{message.content}</p>
-                              </div>
-                              <Avatar className="h-9 w-9 border">
-                                <AvatarFallback><User className="size-5" /></AvatarFallback>
-                              </Avatar>
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+            <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
+                {history.map((message, index) => (
+                    <React.Fragment key={`${message.id}-${index}`}>
+                      <div
+                        className={cn(
+                          "flex w-full items-start gap-4",
+                          message.role === "user" ? "justify-end" : ""
+                        )}
+                      >
+                        {message.role === "user" ? (
+                          <div className="flex items-start gap-4 justify-end">
+                            <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                              {message.image && (
+                                <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
+                              )}
+                              <p className="text-base whitespace-pre-wrap">{message.content}</p>
                             </div>
-                          ) : (
-                            <div className={cn("group w-full flex items-start gap-4")}>
-                              <div className="w-full">
-                                {renderMessageContent(message)}
-                                {audioDataUri && isSynthesizing === message.id && (
-                                  <audio
-                                    ref={audioRef}
-                                    src={audioDataUri}
-                                    autoPlay
-                                    onEnded={() => setIsSynthesizing(null)}
-                                    onPause={() => setIsSynthesizing(null)}
-                                  />
-                                )}
+                            <Avatar className="h-9 w-9 border">
+                              <AvatarFallback><User className="size-5" /></AvatarFallback>
+                            </Avatar>
+                          </div>
+                        ) : (
+                          <div className={cn("group w-full flex items-start gap-4")}>
+                            <div className="w-full">
+                              {renderMessageContent(message)}
+                              {audioDataUri && isSynthesizing === message.id && (
+                                <audio
+                                  ref={audioRef}
+                                  src={audioDataUri}
+                                  autoPlay
+                                  onEnded={() => setIsSynthesizing(null)}
+                                  onPause={() => setIsSynthesizing(null)}
+                                />
+                              )}
+                              {message.role === 'model' && (
                                 <div className="mt-2 flex items-center gap-1 transition-opacity">
                                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
                                     <Copy className="h-4 w-4" />
@@ -775,20 +791,20 @@ export function ChatContent() {
                                     <RefreshCw className="h-4 w-4" />
                                   </Button>
                                 </div>
-                              </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        {index < history.length - 1 && (
-                          <Separator className="my-8" />
+                          </div>
                         )}
-                      </React.Fragment>
-                    )
-                  )}
-                {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
-              </div>
-            </ScrollArea>
-        )}
+                      </div>
+                      {index < history.length - 1 && (
+                        <Separator className="my-8" />
+                      )}
+                    </React.Fragment>
+                  )
+                )}
+              {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
+            </div>
+          </ScrollArea>
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
