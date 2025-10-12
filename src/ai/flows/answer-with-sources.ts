@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -59,7 +58,7 @@ const answerWithSourcesFlow = ai.defineFlow(
     const searchResult = await duckDuckGoSearch({ query });
     
     if (searchResult.noResults || !searchResult.results || searchResult.results.length === 0) {
-      return { answer: "Sorry, I couldn't find any relevant information on the web for that query.", source: "" };
+      return { answer: "Sorry, I couldn't find any relevant information on the web for that query.", source: "https://duckduckgo.com" };
     }
 
     // 2. Browse the content of the top search result
@@ -83,4 +82,3 @@ const answerWithSourcesFlow = ai.defineFlow(
     };
   }
 );
-
