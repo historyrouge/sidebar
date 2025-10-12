@@ -55,14 +55,9 @@ type ChatStore = {
   activeVideoTitle: string | null;
   isPlaying: boolean;
   showPlayer: boolean;
-  activeBrowserUrl: string | null;
-  activeBrowserTitle: string | null;
-  showBrowser: boolean;
   setActiveVideoId: (id: string | null, title: string | null) => void;
   togglePlay: () => void;
   setShowPlayer: (show: boolean) => void;
-  setActiveBrowserUrl: (url: string | null, title: string | null) => void;
-  setShowBrowser: (show: boolean) => void;
 };
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -70,14 +65,9 @@ export const useChatStore = create<ChatStore>((set) => ({
   activeVideoTitle: null,
   isPlaying: false,
   showPlayer: false,
-  activeBrowserUrl: null,
-  activeBrowserTitle: null,
-  showBrowser: false,
   setActiveVideoId: (id, title) => set({ activeVideoId: id, activeVideoTitle: title, isPlaying: !!id, showPlayer: !!id }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setShowPlayer: (show) => set({ showPlayer: show }),
-  setActiveBrowserUrl: (url, title) => set({ activeBrowserUrl: url, activeBrowserTitle: title, showBrowser: !!url }),
-  setShowBrowser: (show) => set({ showBrowser: show }),
 }));
 
 
@@ -192,6 +182,7 @@ export function ChatContent() {
 
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
+  const [activeInlineBrowserUrl, setActiveInlineBrowserUrl] = useState<string | null>(null);
 
   const { setActiveVideoId } = useChatStore();
 
@@ -205,16 +196,16 @@ export function ChatContent() {
       setActiveButton(newActiveButton);
 
       if (newActiveButton === 'deepthink') {
-        setCurrentModel('gpt-oss-120b');
-        toast({ title: 'Model Switched', description: 'DeepThink activated: Using SearnAI V3.1 for complex reasoning.' });
+        setCurrentModel('gemini-2.5-pro');
+        toast({ title: 'Model Switched', description: 'DeepThink activated: Using Gemini 2.5 Pro for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
-        if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
-             setCurrentModel('Llama-4-Maverick-17B-128E-Instruct');
+        if (currentModel === 'gemini-2.5-pro' && newActiveButton !== 'deepthink') {
+             setCurrentModel(DEFAULT_MODEL_ID);
         }
       }
   };
@@ -316,6 +307,7 @@ export function ChatContent() {
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setInput("");
+    setActiveInlineBrowserUrl(null); // Close any open inline browser
 
     const isImageGenRequest = activeButton === 'image';
 
@@ -355,6 +347,7 @@ export function ChatContent() {
 
       const historyForRegen = history.slice(0, lastUserMessageIndex + 1);
       setHistory(historyForRegen);
+      setActiveInlineBrowserUrl(null);
       
       const lastUserMessage = historyForRegen[lastUserMessageIndex];
       await executeChat(historyForRegen, lastUserMessage.image, fileContent);
@@ -501,7 +494,7 @@ export function ChatContent() {
     if (viewport) {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
-  }, [history]);
+  }, [history, activeInlineBrowserUrl]);
   
   const showWelcome = history.length === 0 && !isTyping;
   const isInputDisabled = isTyping || isOcrProcessing;
@@ -520,7 +513,7 @@ export function ChatContent() {
             return (
                 <div className="space-y-3">
                     {data.results.map((result: any, index: number) => (
-                        <WebsiteChatCard key={index} websiteData={result} />
+                        <WebsiteChatCard key={index} websiteData={result} onWebViewToggle={setActiveInlineBrowserUrl} />
                     ))}
                 </div>
             );
@@ -542,7 +535,7 @@ export function ChatContent() {
         // Not a JSON object
     }
 
-    const responseHeaderMatch = mainContent.match(/\*\*Response from (.*?)\*\*\n\n/);
+    const responseHeaderMatch = mainContent.match(/\*\*Response from (.*?)\*\*\\n\\n/);
     if (responseHeaderMatch) {
       const modelName = responseHeaderMatch[1];
       const restOfContent = mainContent.substring(responseHeaderMatch[0].length);
@@ -775,6 +768,19 @@ export function ChatContent() {
                 )
               )}
             {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
+            {activeInlineBrowserUrl && (
+                <div className="h-[60vh] flex flex-col border rounded-xl bg-card overflow-hidden">
+                    <div className="flex items-center justify-between p-2 border-b">
+                        <p className="text-sm font-semibold truncate ml-2">Inline Browser</p>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveInlineBrowserUrl(null)}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div className="flex-1">
+                        <BrowserView initialUrl={activeInlineBrowserUrl} />
+                    </div>
+                </div>
+            )}
           </div>
         </ScrollArea>
 

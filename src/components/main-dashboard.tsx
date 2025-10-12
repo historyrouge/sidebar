@@ -12,14 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
-import { FloatingBrowser } from "./floating-browser";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const { 
-    activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer,
-    activeBrowserUrl, showBrowser
+    activeVideoId, activeVideoTitle, setActiveVideoId, isPlaying, togglePlay, showPlayer, setShowPlayer
   } = useChatStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
@@ -151,7 +149,6 @@ export function MainDashboard() {
          ) : (
             <NewsContent />
          )}
-         {activeBrowserUrl && showBrowser && <FloatingBrowser />}
          {activeVideoId && showPlayer && (
              <div className="fixed bottom-4 right-4 z-50 group">
                 <iframe

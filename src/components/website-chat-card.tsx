@@ -3,7 +3,6 @@
 
 import { Button } from "./ui/button";
 import { Globe, ExternalLink, Eye } from "lucide-react";
-import { useChatStore } from "./chat-content";
 
 type WebsiteChatCardProps = {
     websiteData: {
@@ -11,15 +10,15 @@ type WebsiteChatCardProps = {
         title?: string;
         snippet?: string;
     };
+    onWebViewToggle: (url: string | null) => void;
 };
 
-export function WebsiteChatCard({ websiteData }: WebsiteChatCardProps) {
+export function WebsiteChatCard({ websiteData, onWebViewToggle }: WebsiteChatCardProps) {
     const { url, title, snippet } = websiteData;
-    const { setActiveBrowserUrl } = useChatStore();
     const displayUrl = new URL(url).hostname;
 
     const handleViewClick = () => {
-        setActiveBrowserUrl(url, title || url);
+        onWebViewToggle(url);
     };
 
     return (
@@ -42,7 +41,7 @@ export function WebsiteChatCard({ websiteData }: WebsiteChatCardProps) {
                 <div className="mt-4 flex gap-2">
                     <Button variant="default" size="sm" className="w-full" onClick={handleViewClick}>
                         <Eye className="mr-2 h-4 w-4" />
-                        View Website
+                        View Inline
                     </Button>
                      <a href={url} target="_blank" rel="noopener noreferrer" className="w-full">
                         <Button variant="outline" size="sm" className="w-full">
