@@ -462,16 +462,38 @@ export function ChatContent() {
         return;
     }
 
+    setIsOcrProcessing(true);
+    setOcrProgress(0);
     const reader = new FileReader();
     reader.onloadend = async () => {
         const dataUri = reader.result as string;
         setImageDataUri(dataUri);
         setFileContent(null);
-        setFileName(null);
-        toast({
-            title: "Image Attached",
-            description: `You can now ask questions about the image.`,
-        });
+        setFileName(file.name);
+        
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                dataUri,
+                'eng',
+                { 
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            setOcrProgress(Math.round(m.progress * 100));
+                        }
+                    }
+                }
+            );
+            setFileContent(text);
+            toast({
+                title: "Image & Text Attached",
+                description: `Text has been extracted. You can now ask questions.`,
+            });
+        } catch (error) {
+            toast({ title: "OCR Failed", description: "Could not extract text from the image.", variant: "destructive" });
+            setFileContent(""); // Clear content on failure
+        } finally {
+            setIsOcrProcessing(false);
+        }
     };
     reader.readAsDataURL(file);
 
@@ -796,20 +818,21 @@ export function ChatContent() {
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
-          {imageDataUri && (
+          {(imageDataUri || isOcrProcessing) && (
             <div className="relative mb-2 w-fit">
-              <Image src={imageDataUri} alt="Image preview" width={80} height={80} className="rounded-md border object-cover" />
+              <Image src={imageDataUri || ""} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />
               {isOcrProcessing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md">
-                    <p className="text-primary font-bold text-base drop-shadow-md">{Math.round(ocrProgress)}%</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md">
+                    <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
+                    <Progress value={ocrProgress} className="w-16 h-1 mt-1"/>
                 </div>
               )}
-              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => setImageDataUri(null)} disabled={isOcrProcessing}>
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => { setImageDataUri(null); setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
                   <X className="h-4 w-4" />
               </Button>
             </div>
           )}
-          {fileContent && fileName && !isOcrProcessing && (
+          {fileContent && fileName && !imageDataUri && (
             <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
               <FileText className="h-4 w-4" />
               <span className="flex-1 truncate">{fileName}</span>
