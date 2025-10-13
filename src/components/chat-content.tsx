@@ -674,50 +674,38 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
-                     <div className="flex justify-start mb-2 items-center gap-2">
+                    <div className="flex justify-center mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
                         </div>
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
+                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
                             <Button 
-                                variant={activeButton === 'deepthink' ? 'default' : 'outline'}
+                                variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
+                                className="h-9 px-3"
                                 onClick={() => handleToolButtonClick('deepthink')}
                             >
+                                <Wand2 className="h-4 w-4 mr-2"/>
                                 DeepThink
                             </Button>
-                            <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                            <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                             <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                             <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
                             </Button>
-                            <Button type="button" variant='outline' disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                            <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
                                 <Globe className="h-5 w-5" />
                             </Button>
                         </div>
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
-                        className="relative w-full rounded-xl border border-border/10 bg-card/5 backdrop-blur-lg p-2 shadow-lg focus-within:border-primary flex items-center gap-2"
+                        className="relative w-full rounded-full border border-border bg-card p-1 shadow-lg focus-within:border-primary flex items-center gap-1"
                     >
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                                    <Paperclip className="h-5 w-5" />
-                                    <span className="sr-only">Attach file</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
+                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
                             <Search className="h-5 w-5" />
                             <span className="sr-only">Search</span>
                         </Button>
-
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -726,12 +714,24 @@ export function ChatContent() {
                             className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
                         />
                         <input type="file" ref={fileInputRef} className="hidden" />
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 pr-1">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                        <Paperclip className="h-5 w-5" />
+                                        <span className="sr-only">Attach file</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                             </Button>
-                            <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                            <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0 rounded-full" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
                                 <Send className="h-5 w-5" />
                                 <span className="sr-only">Send</span>
                             </Button>
@@ -841,50 +841,38 @@ export function ChatContent() {
               </Button>
             </div>
           )}
-          <div className="flex justify-start mb-2 items-center gap-2">
-            <div className="bg-muted/50 p-1 rounded-lg w-fit">
-                <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+            <div className="flex justify-center mb-2 items-center gap-2">
+                <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+                </div>
+                <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
+                    <Button 
+                        variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
+                        className="h-9 px-3"
+                        onClick={() => handleToolButtonClick('deepthink')}
+                    >
+                        <Wand2 className="h-4 w-4 mr-2"/>
+                        DeepThink
+                    </Button>
+                    <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                        <Music className="h-5 w-5" />
+                    </Button>
+                    <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                        <ImageIcon className="h-5 w-5" />
+                    </Button>
+                    <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                        <Globe className="h-5 w-5" />
+                    </Button>
+                </div>
             </div>
-            <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-2">
-                <Button 
-                    variant={activeButton === 'deepthink' ? 'default' : 'outline'}
-                    onClick={() => handleToolButtonClick('deepthink')}
-                >
-                    DeepThink
-                </Button>
-                <Button type="button" variant={activeButton === 'music' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
-                    <Music className="h-5 w-5" />
-                </Button>
-                 <Button type="button" variant={activeButton === 'image' ? 'default' : 'outline'} disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
-                    <ImageIcon className="h-5 w-5" />
-                </Button>
-                <Button type="button" variant='outline' disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
-                    <Globe className="h-5 w-5" />
-                </Button>
-            </div>
-          </div>
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-xl border border-border/10 bg-card/5 backdrop-blur-lg p-2 shadow-lg focus-within:border-primary"
+              className="relative flex items-center rounded-full border border-border bg-card p-1 shadow-lg focus-within:border-primary"
           >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
-                      <Paperclip className="h-5 w-5" />
-                      <span className="sr-only">Attach file</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
                   <Search className="h-5 w-5" />
                   <span className="sr-only">Search</span>
               </Button>
-
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -893,12 +881,24 @@ export function ChatContent() {
                 className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
               />
               <input type="file" ref={fileInputRef} className="hidden" />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 pr-1">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                            <Paperclip className="h-5 w-5" />
+                            <span className="sr-only">Attach file</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0 rounded-full" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Send</span>
                 </Button>
