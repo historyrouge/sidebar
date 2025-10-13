@@ -1,13 +1,26 @@
 
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import WebAgentContent from "@/components/web-agent-content";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
+import { Loader2 } from "lucide-react";
 
 export function AgentContent() {
-    const isElectron = !!(window as any).electronAPI;
+    const [isElectron, setIsElectron] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        setIsElectron(!!(window as any).electronAPI);
+    }, []);
+
+    if (isElectron === null) {
+        return (
+            <div className="flex h-full flex-col items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
 
     if (!isElectron) {
         return (
