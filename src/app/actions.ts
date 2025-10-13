@@ -253,21 +253,12 @@ export async function chatAction(input: {
     const hasFileContext = !!input.fileContent || !!input.imageDataUri;
     const selectedModelId = hasFileContext ? 'gpt-oss-120b' : (input.model || DEFAULT_MODEL_ID);
     
-    const messages: any[] = [];
-
-    input.history.forEach(msg => {
-        if (msg.role === 'user' && input.imageDataUri) {
-            messages.push({
-                role: 'user',
-                content: [
-                    { type: 'text', text: msg.content as string },
-                    { type: 'image_url', image_url: { url: input.imageDataUri } }
-                ]
-            });
-        } else if(msg.role !== 'system') { // Ensure no system messages are passed in history
-            messages.push({ role: msg.role, content: msg.content });
-        }
-    });
+    // The main fix is here: The SambaNova models do not support the Vision (multi-modal) format.
+    // We must ensure the 'content' is always a simple string.
+    const messages: any[] = input.history.map(msg => ({
+        role: msg.role,
+        content: msg.content as string, // Always treat content as a string.
+    }));
 
     const allModels = AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto');
     let modelsToTry: string[];
@@ -313,6 +304,8 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+    
 
     
 
