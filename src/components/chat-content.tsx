@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, FileUp, FileAudio } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -39,6 +38,12 @@ import { ThinkingIndicator } from "./thinking-indicator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { BrowserView } from "./browser-view";
 import { motion } from "framer-motion";
+import * as pdfjs from 'pdfjs-dist';
+
+// Required for pdf.js to work
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+}
 
 type Message = {
   id: string;
@@ -441,23 +446,90 @@ export function ChatContent() {
     }
   };
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type === "text/plain") {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setFileContent(e.target?.result as string);
-            setFileName(file.name);
-            setImageDataUri(null);
-        };
-        reader.readAsText(file);
-      } else {
-        toast({ title: "Invalid file type", description: "Please upload a .txt file.", variant: "destructive" });
-      }
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (file.type === "text/plain") {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setFileContent(e.target?.result as string);
+                    setFileName(file.name);
+                    setImageDataUri(null);
+                    toast({ title: "Text File Attached", description: "The content is ready to be sent with your next message." });
+                };
+                reader.readAsText(file);
+            } else if (file.type.startsWith("audio/")) {
+                handleAudioFileChange(file);
+            } else if (file.type === "application/pdf") {
+                handlePdfFileChange(file);
+            } else {
+                toast({ title: "Invalid file type", description: "Please upload a .txt, audio, or .pdf file.", variant: "destructive" });
+            }
+        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const handlePdfFileChange = async (file: File) => {
+        setIsOcrProcessing(true); // Re-use OCR state for PDF processing
+        setOcrProgress(0);
+        setFileName(file.name);
+        setImageDataUri(null);
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                setOcrProgress(Math.round((i / pdf.numPages) * 100));
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                fullText += pageText + '\n\n';
+            }
+            setFileContent(fullText);
+            toast({ title: "PDF Processed", description: "Text extracted. Ready to send with your next message." });
+        } catch (e: any) {
+            toast({ title: "PDF Processing Failed", description: e.message || 'Could not extract text.', variant: "destructive" });
+            setFileContent(null);
+            setFileName(null);
+        } finally {
+            setIsOcrProcessing(false);
+        }
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+
+    const handleAudioFileChange = async (file: File) => {
+        setIsOcrProcessing(true);
+        setOcrProgress(0);
+        setFileName(file.name);
+        setImageDataUri(null);
+        toast({ title: "Transcribing Audio...", description: "This may take a moment." });
+
+        try {
+            const { pipeline } = await import('@xenova/transformers');
+            const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-turbo');
+            const audio = await file.arrayBuffer();
+            
+            const transcript = await transcriber(audio, {
+                chunk_length_s: 30,
+                stride_length_s: 5,
+                callback_function: (beams: any[]) => {
+                    const progress = beams[0].progress;
+                    setOcrProgress(Math.round(progress));
+                },
+            });
+
+            setFileContent(transcript.text);
+            toast({ title: "Audio Transcribed!", description: "The extracted text will be sent with your next message." });
+            
+        } catch (error) {
+            console.error("Audio transcription error:", error);
+            toast({ title: "Audio Transcription Failed", description: "Could not process the audio file.", variant: "destructive" });
+            setFileContent(null);
+            setFileName(null);
+        } finally {
+            setIsOcrProcessing(false);
+        }
+    };
+
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -507,9 +579,12 @@ export function ChatContent() {
   };
 
 
-  const handleOpenFileDialog = () => {
+  const handleOpenFileDialog = (type: 'text' | 'pdf' | 'audio') => {
     if (fileInputRef.current) {
-        fileInputRef.current.accept = ".txt";
+        if (type === 'text') fileInputRef.current.accept = ".txt";
+        else if (type === 'pdf') fileInputRef.current.accept = ".pdf";
+        else if (type === 'audio') fileInputRef.current.accept = "audio/*";
+        
         fileInputRef.current.onchange = handleFileChange;
         fileInputRef.current.click();
     }
@@ -712,12 +787,19 @@ export function ChatContent() {
                             <Search className="h-5 w-5" />
                             <span className="sr-only">Search</span>
                         </Button>
-                        <Input
+                        <Textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Message SearnAI..."
                             disabled={isInputDisabled}
-                            className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+                            className="h-10 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
+                            rows={1}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendMessage();
+                                }
+                            }}
                         />
                         <input type="file" ref={fileInputRef} className="hidden" />
                         <div className="flex items-center gap-1 pr-1">
@@ -729,8 +811,10 @@ export function ChatContent() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><File className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
@@ -824,27 +908,24 @@ export function ChatContent() {
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
         <div className="p-4 mx-auto max-w-3xl">
-          {(imageDataUri || isOcrProcessing) && (
-            <div className="relative mb-2 w-fit">
-              <Image src={imageDataUri || ""} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />
-              {isOcrProcessing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md">
-                    <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
-                    <Progress value={ocrProgress} className="w-16 h-1 mt-1"/>
-                </div>
-              )}
-              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => { setImageDataUri(null); setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
-                  <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          {fileContent && fileName && !imageDataUri && (
-            <div className="relative mb-2 flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border">
-              <FileText className="h-4 w-4" />
-              <span className="flex-1 truncate">{fileName}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }}>
-                  <X className="h-4 w-4" />
-              </Button>
+          {(imageDataUri || (fileContent && fileName)) && (
+             <div className="relative mb-2 w-fit">
+                {isOcrProcessing && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md z-10">
+                        <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
+                        <Progress value={ocrProgress} className="w-16 h-1 mt-1"/>
+                    </div>
+                )}
+                {imageDataUri && <Image src={imageDataUri || ""} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />}
+                {fileContent && fileName && !imageDataUri && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border w-full max-w-sm">
+                        {fileName.endsWith('.pdf') ? <File className="h-5 w-5 flex-shrink-0" /> : <FileText className="h-5 w-5 flex-shrink-0" />}
+                        <span className="flex-1 truncate">{fileName}</span>
+                    </div>
+                )}
+                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => { setImageDataUri(null); setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
+                    <X className="h-4 w-4" />
+                </Button>
             </div>
           )}
             <div className="flex justify-center mb-2 items-center gap-2">
@@ -879,12 +960,19 @@ export function ChatContent() {
                   <Search className="h-5 w-5" />
                   <span className="sr-only">Search</span>
               </Button>
-              <Input
+              <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message SearnAI..."
                 disabled={isInputDisabled}
-                className="h-10 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0"
+                className="h-10 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
+                rows={1}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                    }
+                }}
               />
               <input type="file" ref={fileInputRef} className="hidden" />
               <div className="flex items-center gap-1 pr-1">
@@ -896,8 +984,10 @@ export function ChatContent() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={handleOpenImageDialog}>Image</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={handleOpenFileDialog}>Text File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><File className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
@@ -915,6 +1005,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-
-    
