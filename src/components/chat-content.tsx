@@ -519,7 +519,7 @@ export function ChatContent() {
 
         try {
             const { pipeline } = await import('@xenova/transformers');
-            const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-turbo');
+            const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
             
             const audio = await AudioDecoder.decode(file);
             
@@ -537,7 +537,7 @@ export function ChatContent() {
             
         } catch (error) {
             console.error("Audio transcription error:", error);
-            toast({ title: "Audio Transcription Failed", description: "Could not process the audio file.", variant: "destructive" });
+            toast({ title: "Audio Transcription Failed", description: "Could not process the audio file. This may be due to a network issue.", variant: "destructive" });
             setFileContent(null);
             setFileName(null);
         } finally {
@@ -1020,5 +1020,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
