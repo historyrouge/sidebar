@@ -9,15 +9,8 @@ import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 
-const accentColors = [
-    { name: 'orange', color: 'hsl(25 95% 53%)' },
-    { name: 'rose', color: 'hsl(347 77% 50%)' },
-    { name: 'green', color: 'hsl(142 71% 40%)' },
-    { name: 'default', color: 'hsl(221 83% 53%)' }, // Blue
-];
-
 export function SettingsAppearanceContent() {
-  const { theme, setTheme, accentColor, setAccentColor } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex flex-col h-full bg-muted/40">
@@ -59,24 +52,16 @@ export function SettingsAppearanceContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Palette className="w-5 h-5"/> Accent Color</CardTitle>
-                        <CardDescription>Choose an accent color for highlights and primary buttons.</CardDescription>
+                        <CardDescription>The application now uses a consistent gray accent color.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-wrap gap-3">
-                            {accentColors.map(color => (
-                                <button
-                                    key={color.name}
-                                    onClick={() => setAccentColor && setAccentColor(color.name)}
-                                    className={cn(
-                                        "h-10 w-10 rounded-full border-2 transition-all flex items-center justify-center",
-                                        accentColor === color.name ? 'border-foreground scale-110' : 'border-transparent'
-                                    )}
-                                    style={{ backgroundColor: color.color }}
-                                    aria-label={`Set accent color to ${color.name}`}
-                                >
-                                    {accentColor === color.name && <Check className="w-5 h-5 text-white" />}
-                                </button>
-                            ))}
+                       <div className="flex flex-wrap gap-3">
+                            <div
+                                className="h-10 w-10 rounded-full border-2 border-foreground flex items-center justify-center"
+                                style={{ backgroundColor: 'hsl(0 0% 50%)' }}
+                            >
+                                <Check className="w-5 h-5 text-white" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
