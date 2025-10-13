@@ -38,13 +38,7 @@ export async function analyzeContent(input: AnalyzeContentInput): Promise<Analyz
   return analyzeContentFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'analyzeContentPrompt',
-  input: {schema: AnalyzeContentInputSchema},
-  output: {schema: AnalyzeContentOutputSchema},
-  tools: [webSearch],
-  model: geminiPro,
-  prompt: `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
+const analysisPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
 
 First, use the webSearch tool to search for the main topic of the content to gather additional context and information.
 
@@ -59,8 +53,7 @@ Please perform the following actions with expert detail, using both the provided
 3.  **Extract and Explain Code Examples**: If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array.
 4.  **Generate Insightful Questions**: Create a list of potential questions that go beyond simple factual recall. These questions should test for deeper understanding, critical thinking, and the ability to apply the concepts.
 5.  **Suggest Related Topics**: Recommend a list of related topics or areas of study that would be logical next steps for someone learning this material.
-`,
-});
+`;
 
 const analyzeContentFlow = ai.defineFlow(
   {
@@ -68,8 +61,16 @@ const analyzeContentFlow = ai.defineFlow(
     inputSchema: AnalyzeContentInputSchema,
     outputSchema: AnalyzeContentOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await ai.generate({
+      prompt: analysisPrompt,
+      model: 'DeepSeek-V3.1',
+      input: input,
+      output: {
+        schema: AnalyzeContentOutputSchema,
+      },
+      tools: [webSearch],
+    });
     return output!;
   }
 );
