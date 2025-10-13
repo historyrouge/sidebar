@@ -9,10 +9,8 @@
  * - AnalyzeContentOutput - The return type for the analyzeContent function.
  */
 
-import {ai} from '@/ai/genkit';
-import { webSearch } from '@/ai/tools/web-search';
+import { openai } from '@/lib/openai';
 import {z} from 'zod';
-import { geminiPro } from '@genkit-ai/google-genai';
 
 const AnalyzeContentInputSchema = z.object({
   content: z.string().describe('The content to analyze.'),
@@ -34,43 +32,69 @@ const AnalyzeContentOutputSchema = z.object({
 });
 export type AnalyzeContentOutput = z.infer<typeof AnalyzeContentOutputSchema>;
 
-export async function analyzeContent(input: AnalyzeContentInput): Promise<AnalyzeContentOutput> {
-  return analyzeContentFlow(input);
-}
 
-const analysisPrompt = `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
-
-First, use the webSearch tool to search for the main topic of the content to gather additional context and information.
+const analysisSystemPrompt = `You are SearnAI, an expert educator and AI tool with a confident and helpful Indian-style personality. Your task is to analyze the given content to help students study more effectively. Your answers should be nice, good, and correct. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.
 
 Content to analyze:
 ---
 {{{content}}}
 ---
 
-Please perform the following actions with expert detail, using both the provided content and the information from your web search:
-1.  **Generate a Comprehensive Summary**: Create a concise, one-paragraph summary that captures the main ideas and purpose of the content.
-2.  **Identify Key Concepts & Relationships**: Identify the most important concepts. For each concept, provide a clear explanation and describe how it relates to other key concepts in the text.
-3.  **Extract and Explain Code Examples**: If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array.
-4.  **Generate Insightful Questions**: Create a list of potential questions that go beyond simple factual recall. These questions should test for deeper understanding, critical thinking, and the ability to apply the concepts.
-5.  **Suggest Related Topics**: Recommend a list of related topics or areas of study that would be logical next steps for someone learning this material.
+You must perform the following actions and provide your response in a valid JSON format. The JSON object should match the following schema:
+{
+    "type": "object",
+    "properties": {
+        "summary": { "type": "string" },
+        "keyConcepts": { "type": "array", "items": { "type": "object", "properties": { "concept": { "type": "string" }, "explanation": { "type": "string" } } } },
+        "codeExamples": { "type": "array", "items": { "type": "object", "properties": { "code": { "type": "string" }, "explanation": { "type": "string" } } } },
+        "potentialQuestions": { "type": "array", "items": { "type": "string" } },
+        "relatedTopics": { "type": "array", "items": { "type": "string" } }
+    },
+    "required": ["summary", "keyConcepts", "codeExamples", "potentialQuestions", "relatedTopics"]
+}
+
+
+Please provide the following content in the JSON response:
+1.  **Summary**: Create a concise, one-paragraph summary that captures the main ideas and purpose of the content.
+2.  **Key Concepts**: Identify the most important concepts. For each concept, provide a clear explanation and describe how it relates to other key concepts in the text.
+3.  **Code Examples**: If there are any code snippets (e.g., in Python, JavaScript, HTML), extract them. For each snippet, provide a brief explanation of what the code does. If no code is present, return an empty array.
+4.  **Insightful Questions**: Create a list of potential questions that go beyond simple factual recall. These questions should test for deeper understanding, critical thinking, and the ability to apply the concepts.
+5.  **Related Topics**: Recommend a list of related topics or areas of study that would be logical next steps for someone learning this material.
 `;
 
-const analyzeContentFlow = ai.defineFlow(
-  {
-    name: 'analyzeContentFlow',
-    inputSchema: AnalyzeContentInputSchema,
-    outputSchema: AnalyzeContentOutputSchema,
-  },
-  async (input) => {
-    const { output } = await ai.generate({
-      prompt: analysisPrompt,
-      model: 'Deepseek-V2-Lite',
-      input: input,
-      output: {
-        schema: AnalyzeContentOutputSchema,
-      },
-      tools: [webSearch],
-    });
-    return output!;
-  }
-);
+export async function analyzeContent(input: AnalyzeContentInput): Promise<AnalyzeContentOutput> {
+    if (!process.env.SAMBANOVA_API_KEY || !process.env.SAMBANOVA_BASE_URL) {
+        throw new Error("SambaNova API key or base URL is not configured.");
+    }
+    
+    let jsonResponseString;
+    try {
+        const prompt = analysisSystemPrompt.replace('{{{content}}}', input.content);
+
+        const response = await openai.chat.completions.create({
+            model: 'DeepSeek-V3.1',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+            temperature: 0.5,
+        });
+
+        if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
+            throw new Error("Received an empty or invalid response from SambaNova.");
+        }
+        jsonResponseString = response.choices[0].message.content;
+
+    } catch (error: any) {
+        console.error("SambaNova content analysis error:", error);
+        throw new Error(error.message || "An unknown error occurred while analyzing content with SambaNova.");
+    }
+
+    try {
+        const jsonResponse = JSON.parse(jsonResponseString);
+        const validatedOutput = AnalyzeContentOutputSchema.parse(jsonResponse);
+        return validatedOutput;
+    } catch (error) {
+        console.error("JSON parsing or validation error:", error);
+        console.error("Invalid JSON string from SambaNova:", jsonResponseString);
+        throw new Error("The AI model returned an invalid format. Please try again.");
+    }
+}
