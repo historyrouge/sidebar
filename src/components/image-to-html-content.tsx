@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { generateHtmlFromImageAction, GenerateHtmlFromImageOutput } from "@/app/actions";
+import { generateHtmlFromImageAction } from "@/app/actions";
+import { GenerateHtmlFromImageOutput } from "@/lib/image-to-html-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";

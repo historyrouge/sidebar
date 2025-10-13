@@ -12,7 +12,8 @@ import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPape
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput } from '@/ai/flows/generate-ebook-chapter';
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput } from '@/ai/flows/generate-presentation';
 import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
-import { generateHtmlFromImage, GenerateHtmlFromImageInput, GenerateHtmlFromImageOutput } from '@/ai/flows/generate-html-from-image';
+import { generateHtmlFromImage } from "@/ai/flows/generate-html-from-image";
+import { GenerateHtmlFromImageInput, GenerateHtmlFromImageOutput } from "@/lib/image-to-html-types";
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
