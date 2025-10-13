@@ -1,4 +1,3 @@
-
 // src/ai/flows/analyze-content.ts
 'use server';
 
@@ -13,6 +12,7 @@
 import {ai} from '@/ai/genkit';
 import { webSearch } from '@/ai/tools/web-search';
 import {z} from 'zod';
+import { geminiPro } from '@genkit-ai/google-genai';
 
 const AnalyzeContentInputSchema = z.object({
   content: z.string().describe('The content to analyze.'),
@@ -43,6 +43,7 @@ const prompt = ai.definePrompt({
   input: {schema: AnalyzeContentInputSchema},
   output: {schema: AnalyzeContentOutputSchema},
   tools: [webSearch],
+  model: geminiPro,
   prompt: `You are an expert educator and AI tool. Your task is to analyze the given content to help students study more effectively.
 
 First, use the webSearch tool to search for the main topic of the content to gather additional context and information.
