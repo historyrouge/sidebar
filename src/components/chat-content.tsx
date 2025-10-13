@@ -335,6 +335,11 @@ export function ChatContent() {
         await executeChat(newHistory, imageDataUri, fileContent);
     }
     
+    // Reset file/image context after sending the message
+    setImageDataUri(null);
+    setFileContent(null);
+    setFileName(null);
+    
     if (activeButton) {
         setActiveButton(null);
     }
@@ -350,6 +355,7 @@ export function ChatContent() {
       setHistory(historyForRegen);
       
       const lastUserMessage = historyForRegen[lastUserMessageIndex];
+      // When regenerating, we must pass the same context as the original message
       await executeChat(historyForRegen, lastUserMessage.image, fileContent);
   };
 
@@ -909,3 +915,6 @@ export function ChatContent() {
     </div>
   );
 }
+
+
+    

@@ -250,7 +250,8 @@ export async function chatAction(input: {
          }
     }
 
-    const selectedModelId = input.model || DEFAULT_MODEL_ID;
+    const hasFileContext = !!input.fileContent || !!input.imageDataUri;
+    const selectedModelId = hasFileContext ? 'gpt-oss-120b' : (input.model || DEFAULT_MODEL_ID);
     
     const messages: any[] = [];
 
@@ -269,10 +270,14 @@ export async function chatAction(input: {
     });
 
     const allModels = AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto');
-    const modelsToTry = selectedModelId === 'auto' 
-        ? allModels
-        : [selectedModelId, ...allModels.filter(id => id !== selectedModelId)];
+    let modelsToTry: string[];
 
+    if (selectedModelId === 'auto') {
+        modelsToTry = allModels;
+    } else {
+        // Prioritize the selected model, then add others as fallbacks
+        modelsToTry = [selectedModelId, ...allModels.filter(id => id !== selectedModelId)];
+    }
     
     let lastError: any = null;
 
@@ -299,9 +304,8 @@ export async function chatAction(input: {
         } catch (e: any) {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
-            // If this is not the last model and we are in auto mode, the loop will continue.
+            // If a specific model was chosen and it failed, don't try others.
             if(selectedModelId !== 'auto') {
-                // If not in auto mode, fail immediately on the selected model.
                 break;
             }
         }
@@ -309,5 +313,9 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+    
+
+    
 
     
