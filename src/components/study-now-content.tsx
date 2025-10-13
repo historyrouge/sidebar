@@ -62,6 +62,27 @@ export function StudyNowContent() {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+    // Check for content from PDF Hub
+    const pdfContent = localStorage.getItem('pdfStudyContent');
+    if (pdfContent) {
+        try {
+            const { title: pdfTitle, content: pdfText } = JSON.parse(pdfContent);
+            setTitle(pdfTitle);
+            setContent(pdfText);
+            toast({
+                title: "PDF Content Loaded",
+                description: `Successfully loaded content from ${pdfTitle}.pdf. Click Analyze to begin.`,
+            });
+        } catch (e) {
+            console.error("Failed to parse PDF content from localStorage", e);
+        } finally {
+            // Clear the item so it's not loaded again on subsequent visits
+            localStorage.removeItem('pdfStudyContent');
+        }
+    }
+  }, [toast]);
+
+  useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
@@ -591,5 +612,3 @@ export function StudyNowContent() {
     </div>
   );
 }
-
-    

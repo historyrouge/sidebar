@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,36 +10,70 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, FileUp, File } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
+import * as pdfjs from 'pdfjs-dist';
+
+// Required for pdf.js to work
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+}
+
 
 export function PdfHubContent() {
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile && selectedFile.type === 'application/pdf') {
             setFile(selectedFile);
         } else {
+            setFile(null);
             toast({ title: 'Invalid File', description: 'Please select a PDF file.', variant: 'destructive' });
         }
     };
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!file) {
             toast({ title: 'No file selected', description: 'Please choose a PDF file to upload.', variant: 'destructive' });
             return;
         }
         
         setIsLoading(true);
-        // Simulate a network request and show the coming soon message
-        setTimeout(() => {
+        toast({ title: 'Processing PDF...', description: 'Extracting text. This may take a moment.' });
+        
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+            
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                fullText += pageText + '\n\n';
+            }
+            
+            // Store the extracted content and title in localStorage for the Study Session page to pick up.
+            localStorage.setItem('pdfStudyContent', JSON.stringify({
+                title: file.name.replace(/\.pdf$/i, ''),
+                content: fullText
+            }));
+
+            toast({ title: 'PDF Processed!', description: 'Redirecting to Study Session...' });
+            router.push('/study-now');
+
+        } catch (error: any) {
+            console.error("PDF processing error:", error);
             toast({ 
-                title: 'Coming Soon!', 
-                description: 'PDF processing and study features will be implemented in a future step.'
+                title: 'PDF Processing Failed', 
+                description: error.message || 'Could not extract text from the PDF.',
+                variant: 'destructive'
             });
+        } finally {
             setIsLoading(false);
-        }, 1500);
+        }
     };
 
     return (
