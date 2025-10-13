@@ -214,15 +214,17 @@ export function ChatContent() {
       setActiveButton(newActiveButton);
 
       if (newActiveButton === 'deepthink') {
-        setCurrentModel('gpt-5');
-        toast({ title: 'Model Switched', description: 'DeepThink activated: Using GPT-5 for complex reasoning.' });
+        setCurrentModel('gpt-oss-120b');
+        toast({ title: 'Model Switched', description: 'DeepThink activated: Using Gemini 2.5 Pro for complex reasoning.' });
       } else if (newActiveButton === 'music') {
         toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
       } else if (newActiveButton === 'image') {
         toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
       } else {
         // Revert to default model if no special mode is active
-        setCurrentModel(DEFAULT_MODEL_ID);
+        if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
+             setCurrentModel(DEFAULT_MODEL_ID);
+        }
       }
   };
 
@@ -1019,5 +1021,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    

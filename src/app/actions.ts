@@ -170,17 +170,17 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
     
     const personaPrompts: Record<string, string> = {
         'gemini-2.5-pro': `You are Gemini 2.5 Pro. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
+        'gpt-oss-120b': `You are Gemini 2.5 Pro. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
         'DeepSeek-V3.1': `You are DeepSeek. Your persona is straightforward, factual, terse, and literal. Your style is formal and to-the-point, without any creative flair.`,
         'Meta-Llama-3.3-70B-Instruct': `You are Claude 4.5 Sonnet. Your persona is clear, controlled, measured, and safe. Your tone is neutral, helpful, polite, and slightly formal. Avoid bravado and excessive informality.`,
         'Llama-3.3-Swallow-70B-Instruct-v0.4': `You are Swallow. Your persona is polite, clear, safe, and respectful. In English, your tone is neutral and formal, similar to Llama 3.1.`,
-        'gpt-5': `You are GPT-5. Your persona is factual, concise, and expert-like. Be direct and authoritative with polite formality. Your answers should be pithy and precise, trading warmth for accuracy.`,
         'Meta-Llama-3.1-8B-Instruct': `You are Llama 3.1. Your persona is neutral, factual, and formal. You are matter-of-fact and do not have a built-in personality or humor.`,
     };
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
 
     const fileContext = fileContent 
-        ? `\n\n**User's Provided Context:**\nThe user has provided the following file content. Use it as the primary context for your answer.\n\n---\n${fileContent}\n---` 
+        ? `\n\n**User's Provided Context:**\nThe user has provided the following text content, which was extracted from a file or image. Use it as the primary context for your answer.\n\n---\n${fileContent}\n---` 
         : '';
         
     return `${basePrompt}\n\n${persona}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
@@ -241,38 +241,45 @@ export async function chatAction(input: {
     }
 
     const selectedModelId = input.model || DEFAULT_MODEL_ID;
+    
+    // If an image is provided, force the model to be one with vision capabilities
+    const finalModelId = (input.imageDataUri && selectedModelId !== 'gpt-oss-120b') ? 'gpt-oss-120b' : selectedModelId;
 
     const messages: any[] = [];
 
     input.history.forEach(msg => {
-        if (msg.role === 'user' && input.imageDataUri) {
-            messages.push({
-                role: 'user',
-                content: [
-                    { type: 'text', text: msg.content as string },
-                    { type: 'image_url', image_url: { url: input.imageDataUri } }
-                ]
-            });
-        } else {
-            messages.push({ role: msg.role, content: msg.content });
+        let content: any = msg.content;
+        
+        // If this is the last user message and there's an image, create a multi-part message.
+        if (msg.role === 'user' && input.history[input.history.length - 1] === msg && input.imageDataUri) {
+            content = [{ type: 'text', text: msg.content as string }];
+            if (input.fileContent) {
+                // If OCR text is available, add it to the text part of the prompt.
+                content[0].text = `[USER PROMPT]: ${msg.content}\n\n[CONTEXT FROM IMAGE OCR]:\n${input.fileContent}`;
+            }
+            content.push({ type: 'image_url', image_url: { url: input.imageDataUri } });
         }
+        
+        messages.push({ role: msg.role, content: content });
     });
 
-    const modelsToTry = (selectedModelId === 'auto' || !selectedModelId)
+    const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')
-      : [selectedModelId];
+      : [finalModelId];
     
     let lastError: any = null;
 
     for (const modelId of modelsToTry) {
         try {
-            const systemPrompt = getSystemPrompt(modelId, input.fileContent);
+            // For image analysis with OCR, context is in the message. Otherwise, it's in the system prompt.
+            const systemPrompt = getSystemPrompt(modelId, (input.imageDataUri && input.fileContent) ? null : input.fileContent);
             const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
 
             const response = await openai.chat.completions.create({
                 model: modelId,
                 messages: fullMessages,
                 stream: false,
+                max_tokens: modelId === 'gpt-oss-120b' ? 4096 : undefined, // Larger max tokens for vision model
             });
 
             const responseText = response.choices[0]?.message?.content;
@@ -288,13 +295,16 @@ export async function chatAction(input: {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
             // If a specific model was chosen and it failed, don't try others.
-            if(selectedModelId !== 'auto') {
+            if(finalModelId !== 'auto') {
                 break;
             }
         }
     }
     
+    // Check for specific token limit error
+    if (lastError?.message?.includes('maximum context length')) {
+        return { error: "The provided content is too long for the selected AI model. Please shorten it or try a different model." };
+    }
+
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
-
-    
