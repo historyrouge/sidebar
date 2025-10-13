@@ -66,7 +66,6 @@ const studyTools = [
     { name: "Question Paper", icon: <FileText />, href: "/question-paper" },
     { name: "Presentation Maker", icon: <Presentation />, href: "/presentation-maker" },
     { name: "Image Generation", icon: <ImageIcon />, href: "/image-generation" },
-    { name: "Image to HTML", icon: <View />, href: "/image-to-html" },
 ];
 
 const resources = [
