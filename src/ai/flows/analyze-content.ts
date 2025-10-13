@@ -64,7 +64,7 @@ const analyzeContentFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
       prompt: analysisPrompt,
-      model: 'DeepSeek-V3.1',
+      model: 'Deepseek-V2-Lite',
       input: input,
       output: {
         schema: AnalyzeContentOutputSchema,
