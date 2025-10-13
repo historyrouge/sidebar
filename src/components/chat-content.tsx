@@ -663,6 +663,7 @@ export function ChatContent() {
         if (data.type === 'website_results' && Array.isArray(data.results)) {
             return (
                 <div className="space-y-3">
+                    <p className="text-sm">I searched the entire internet and found these results:</p>
                     {data.results.map((result: any, index: number) => (
                         <WebsiteChatCard key={index} websiteData={result} onBrowserToggle={handleBrowserToggle} />
                     ))}
