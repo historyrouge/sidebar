@@ -8,7 +8,7 @@ export const AVAILABLE_MODELS = [
     },
     {
         id: 'gpt-oss-120b',
-        name: 'GPT-OSS',
+        name: 'Gemini 2.5 Flash',
         description: 'For the most complex reasoning & difficult problems.',
         logo: '🌀'
     },
