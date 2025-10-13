@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, FileUp, File } from "lucide-react";
-import { BackButton } from "../components/back-button";
-import { SidebarTrigger } from "../components/ui/sidebar";
+import { BackButton } from "@/components/back-button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import * as pdfjs from 'pdfjs-dist';
 
 // Required for pdf.js to work
