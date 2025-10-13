@@ -7,9 +7,9 @@ export const AVAILABLE_MODELS = [
         logo: '✨'
     },
     {
-        id: 'gemini-2.5-pro',
-        name: 'Gemini 2.5 Pro',
-        description: 'For difficult problems & complex reasoning.',
+        id: 'gpt-oss-120b',
+        name: 'GPT-OSS',
+        description: 'For the most complex reasoning & difficult problems.',
         logo: '🌀'
     },
     {

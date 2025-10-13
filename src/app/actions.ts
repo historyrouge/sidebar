@@ -169,11 +169,11 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
     const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
     const personaPrompts: Record<string, string> = {
-        'gemini-2.5-pro': `You are Gemini 2.5 Pro. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
-        'gpt-oss-120b': `You are Gemini 2.5 Pro. Your persona is versatile, expressive, and optimistic, with a natural, energetic "Google" personality. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
+        'gpt-oss-120b': `You are GPT-OSS, a powerful vision-capable model. Analyze the user's image and text carefully to provide an accurate, detailed response.`,
         'DeepSeek-V3.1': `You are DeepSeek. Your persona is straightforward, factual, terse, and literal. Your style is formal and to-the-point, without any creative flair.`,
         'Meta-Llama-3.3-70B-Instruct': `You are Claude 4.5 Sonnet. Your persona is clear, controlled, measured, and safe. Your tone is neutral, helpful, polite, and slightly formal. Avoid bravado and excessive informality.`,
         'Llama-3.3-Swallow-70B-Instruct-v0.4': `You are Swallow. Your persona is polite, clear, safe, and respectful. In English, your tone is neutral and formal, similar to Llama 3.1.`,
+        'gpt-5': `You are GPT-5. Your persona is versatile, expressive, and optimistic. You can be friendly and informal, or professional as needed. A touch of humor is appropriate when it fits.`,
         'Meta-Llama-3.1-8B-Instruct': `You are Llama 3.1. Your persona is neutral, factual, and formal. You are matter-of-fact and do not have a built-in personality or humor.`,
     };
 
@@ -242,8 +242,11 @@ export async function chatAction(input: {
 
     const selectedModelId = input.model || DEFAULT_MODEL_ID;
     
-    // If an image is provided, force the model to be one with vision capabilities
-    const finalModelId = (input.imageDataUri && selectedModelId !== 'gpt-oss-120b') ? 'gpt-oss-120b' : selectedModelId;
+    // If an image is provided, ALWAYS force the model to be gpt-oss-120b
+    let finalModelId = input.imageDataUri ? 'gpt-oss-120b' : selectedModelId;
+    if (finalModelId === 'auto') {
+        finalModelId = DEFAULT_MODEL_ID; // Fallback from auto if not an image
+    }
 
     const messages: any[] = [];
 
@@ -295,7 +298,7 @@ export async function chatAction(input: {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
             // If a specific model was chosen and it failed, don't try others.
-            if(finalModelId !== 'auto') {
+            if(finalModelId !== 'auto' && modelsToTry.length === 1) {
                 break;
             }
         }
