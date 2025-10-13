@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -6,8 +7,8 @@
  * - generateHtmlFromImage - A function that takes an image and returns HTML and CSS.
  */
 
-import {ai, visionModel} from '@/ai/genkit';
-import {z} from 'zod';
+import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import { GenerateHtmlFromImageInput, GenerateHtmlFromImageInputSchema, GenerateHtmlFromImageOutput, GenerateHtmlFromImageOutputSchema } from '@/lib/image-to-html-types';
 
 
@@ -19,7 +20,7 @@ const prompt = ai.definePrompt({
   name: 'generateHtmlFromImagePrompt',
   input: {schema: GenerateHtmlFromImageInputSchema},
   output: {schema: GenerateHtmlFromImageOutputSchema},
-  model: visionModel,
+  model: googleAI.model('gemini-pro-vision'),
   prompt: `You are an expert web developer specializing in converting images to high-quality, clean HTML and CSS.
 Analyze the provided image of a user interface and generate the corresponding HTML and CSS code.
 
