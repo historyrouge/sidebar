@@ -1,12 +1,13 @@
 "use client";
 
+import { MainLayout } from "@/components/main-layout";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, FileUp, File } from "lucide-react";
+import { Loader2, FileUp, File as FileIcon } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import * as pdfjs from 'pdfjs-dist';
@@ -76,54 +77,56 @@ export default function PdfHubPage() {
     };
 
     return (
-        <div className="flex h-full flex-col">
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
-                <div className="flex items-center gap-2">
-                    <SidebarTrigger className="md:hidden" />
-                    <BackButton />
-                    <h1 className="text-xl font-semibold tracking-tight">PDF Studio</h1>
-                </div>
-            </header>
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                <div className="mx-auto w-full max-w-md space-y-6">
-                    <Card className="text-center">
-                        <CardHeader>
-                            <CardTitle>Upload Your PDF</CardTitle>
-                            <CardDescription>Upload a PDF document to extract its text and create a study session.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="flex flex-col items-center justify-center p-8 rounded-lg border-2 border-dashed border-muted-foreground/30 text-center cursor-pointer hover:bg-muted/50 transition-colors min-h-[200px]"
-                                onClick={() => document.getElementById('pdf-upload')?.click()}
-                            >
-                                {file ? (
-                                    <>
-                                        <File className="w-16 h-16 text-primary" />
-                                        <p className="mt-4 font-semibold text-foreground">{file.name}</p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <FileUp className="w-12 h-12 text-muted-foreground" />
-                                        <p className="mt-4 font-semibold">Click to upload or drag and drop</p>
-                                        <p className="text-sm text-muted-foreground">PDF (max 5MB)</p>
-                                    </>
-                                )}
-                                <Input 
-                                    id="pdf-upload"
-                                    type="file" 
-                                    className="hidden" 
-                                    accept="application/pdf"
-                                    onChange={handleFileChange}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Button className="w-full" size="lg" disabled={!file || isLoading} onClick={handleUpload}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Create Study Session
-                    </Button>
-                </div>
-            </main>
-        </div>
+        <MainLayout>
+            <div className="flex h-full flex-col">
+                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
+                    <div className="flex items-center gap-2">
+                        <SidebarTrigger className="md:hidden" />
+                        <BackButton />
+                        <h1 className="text-xl font-semibold tracking-tight">PDF Studio</h1>
+                    </div>
+                </header>
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                    <div className="mx-auto w-full max-w-md space-y-6">
+                        <Card className="text-center">
+                            <CardHeader>
+                                <CardTitle>Upload Your PDF</CardTitle>
+                                <CardDescription>Upload a PDF document to extract its text and create a study session.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div 
+                                    className="flex flex-col items-center justify-center p-8 rounded-lg border-2 border-dashed border-muted-foreground/30 text-center cursor-pointer hover:bg-muted/50 transition-colors min-h-[200px]"
+                                    onClick={() => document.getElementById('pdf-upload')?.click()}
+                                >
+                                    {file ? (
+                                        <>
+                                            <FileIcon className="w-16 h-16 text-primary" />
+                                            <p className="mt-4 font-semibold text-foreground">{file.name}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileUp className="w-12 h-12 text-muted-foreground" />
+                                            <p className="mt-4 font-semibold">Click to upload or drag and drop</p>
+                                            <p className="text-sm text-muted-foreground">PDF (max 5MB)</p>
+                                        </>
+                                    )}
+                                    <Input 
+                                        id="pdf-upload"
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="application/pdf"
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Button className="w-full" size="lg" disabled={!file || isLoading} onClick={handleUpload}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Create Study Session
+                        </Button>
+                    </div>
+                </main>
+            </div>
+        </MainLayout>
     );
 }
