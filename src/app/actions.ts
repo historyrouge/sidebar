@@ -213,7 +213,7 @@ export async function chatAction(input: {
                 };
                  return { data: { response: JSON.stringify(responsePayload) } };
             } else {
-                return { data: { response: "Sorry, I couldn't find any relevant websites for that search." } };
+                return { data: { response: "I searched the entire internet and couldn't find any relevant websites for that search." } };
             }
         } catch (error: any) {
             return { error: `Sorry, an error occurred during the search: ${error.message}` };
@@ -257,7 +257,7 @@ export async function chatAction(input: {
                 // If OCR text is available, add it to the text part of the prompt.
                 content[0].text = `[USER PROMPT]: ${msg.content}\n\n[CONTEXT FROM IMAGE OCR]:\n${input.fileContent}`;
             }
-            content.push({ type: 'image_url', image_url: { url: input.imageDataUri } });
+            content.push({ type: 'image_url', image_url: input.imageDataUri });
         }
         
         messages.push({ role: msg.role, content: content });
