@@ -39,6 +39,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { BrowserView } from "./browser-view";
 import { motion } from "framer-motion";
 import * as pdfjs from 'pdfjs-dist';
+import wav from 'wav';
+import { Buffer } from 'buffer';
+
 
 // Required for pdf.js to work
 if (typeof window !== 'undefined') {
@@ -74,6 +77,17 @@ export const useChatStore = create<ChatStore>((set) => ({
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setShowPlayer: (show) => set({ showPlayer: show }),
 }));
+
+
+// Helper to decode audio
+class AudioDecoder {
+    static async decode(file: File): Promise<Float32Array> {
+        const arrayBuffer = await file.arrayBuffer();
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
+        return decodedAudio.getChannelData(0);
+    }
+}
 
 
 const CodeBox = ({ language, code: initialCode }: { language: string, code: string }) => {
@@ -506,18 +520,19 @@ export function ChatContent() {
         try {
             const { pipeline } = await import('@xenova/transformers');
             const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-turbo');
-            const audio = await file.arrayBuffer();
+            
+            const audio = await AudioDecoder.decode(file);
             
             const transcript = await transcriber(audio, {
                 chunk_length_s: 30,
                 stride_length_s: 5,
                 callback_function: (beams: any[]) => {
                     const progress = beams[0].progress;
-                    setOcrProgress(Math.round(progress));
+                    if(progress > ocrProgress) setOcrProgress(Math.round(progress));
                 },
             });
 
-            setFileContent(transcript.text);
+            setFileContent((transcript as any).text);
             toast({ title: "Audio Transcribed!", description: "The extracted text will be sent with your next message." });
             
         } catch (error) {
