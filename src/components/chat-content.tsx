@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, FileUp, FileAudio } from "lucide-react";
+import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, FileUp, FileAudio, File as FileIcon } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -813,7 +813,7 @@ export function ChatContent() {
                                 <DropdownMenuContent>
                                     <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><File className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -919,7 +919,7 @@ export function ChatContent() {
                 {imageDataUri && <Image src={imageDataUri || ""} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />}
                 {fileContent && fileName && !imageDataUri && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border w-full max-w-sm">
-                        {fileName.endsWith('.pdf') ? <File className="h-5 w-5 flex-shrink-0" /> : <FileText className="h-5 w-5 flex-shrink-0" />}
+                        {fileName.endsWith('.pdf') ? <FileIcon className="h-5 w-5 flex-shrink-0" /> : <FileText className="h-5 w-5 flex-shrink-0" />}
                         <span className="flex-1 truncate">{fileName}</span>
                     </div>
                 )}
@@ -986,7 +986,7 @@ export function ChatContent() {
                     <DropdownMenuContent>
                         <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><File className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -1005,3 +1005,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
