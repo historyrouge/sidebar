@@ -12,6 +12,7 @@ import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPape
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput } from '@/ai/flows/generate-ebook-chapter';
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput } from '@/ai/flows/generate-presentation';
 import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
+import { generateHtmlFromImage, GenerateHtmlFromImageInput, GenerateHtmlFromImageOutput } from '@/ai/flows/generate-html-from-image';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
@@ -132,6 +133,15 @@ export async function generateEditedContentAction(input: GenerateEditedContentIn
 export async function generateImageAction(input: GenerateImageInput): Promise<ActionResult<GenerateImageOutput>> {
     try {
         const data = await generateImage(input);
+        return { data };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
+export async function generateHtmlFromImageAction(input: GenerateHtmlFromImageInput): Promise<ActionResult<GenerateHtmlFromImageOutput>> {
+    try {
+        const data = await generateHtmlFromImage(input);
         return { data };
     } catch (e: any) {
         return { error: e.message };
