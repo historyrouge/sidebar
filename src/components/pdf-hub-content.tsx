@@ -31,12 +31,12 @@ export function PdfHubContent() {
         }
         
         setIsLoading(true);
-        toast({ 
-            title: 'Coming Soon!', 
-            description: 'PDF processing and study features will be implemented in a future step.'
-        });
-        // Simulate a network request
+        // Simulate a network request and show the coming soon message
         setTimeout(() => {
+            toast({ 
+                title: 'Coming Soon!', 
+                description: 'PDF processing and study features will be implemented in a future step.'
+            });
             setIsLoading(false);
         }, 1500);
     };
