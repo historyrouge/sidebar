@@ -17,7 +17,6 @@ import { GenerateHtmlFromImageInput, GenerateHtmlFromImageOutput } from "@/lib/i
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
-import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
@@ -152,15 +151,6 @@ export async function generateHtmlFromImageAction(input: GenerateHtmlFromImageIn
 export async function analyzeContentAction(content: string): Promise<ActionResult<AnalyzeContentOutput>> {
     try {
         const data = await analyzeContent({ content });
-        return { data };
-    } catch (e: any) {
-        return { error: e.message };
-    }
-}
-
-export async function analyzeImageContentAction(input: AnalyzeImageContentInput): Promise<ActionResult<AnalyzeImageContentOutput>> {
-    try {
-        const data = await analyzeImageContent(input);
         return { data };
     } catch (e: any) {
         return { error: e.message };
@@ -319,3 +309,5 @@ export async function chatAction(input: {
     
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+    

@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput, AnalyzeImageContentOutput, SummarizeContentOutput } from "@/app/actions";
-import { analyzeContentAction, analyzeImageContentAction, generateFlashcardsAction, generateQuizAction, textToSpeechAction, chatWithTutorAction } from "@/app/actions";
+import type { AnalyzeContentOutput, GenerateFlashcardsOutput, GenerateQuizzesOutput } from "@/app/actions";
+import { analyzeContentAction, generateFlashcardsAction, textToSpeechAction, chatWithTutorAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Moon, Sun, Wand2, Save, Image as ImageIcon, X, Volume2, Pilcrow, CheckCircle2, Circle, Camera, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, MapPin, Calendar, Users, RefreshCw } from "lucide-react";
+import { FileUp, Loader2, Wand2, Image as ImageIcon, X, Volume2, Pilcrow, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, Camera, RefreshCw } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -19,7 +19,6 @@ import { TutorChat } from "./tutor-chat";
 import { useRouter } from "next/navigation";
 import { Input } from "./ui/input";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { BackButton } from "./back-button";
 import { Progress } from "./ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
@@ -31,7 +30,7 @@ declare const puter: any;
 export function StudyNowContent() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [analysis, setAnalysis] = useState<AnalyzeContentOutput | AnalyzeImageContentOutput | null>(null);
+  const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
@@ -108,11 +107,6 @@ export function StudyNowContent() {
 
 
   const handleAnalyze = useCallback(async () => {
-    if (imageDataUri) {
-      handleAnalyzeImage();
-      return;
-    }
-
     if (content.trim().length < 50) {
       toast({
         title: "Content too short",
@@ -131,21 +125,7 @@ export function StudyNowContent() {
             setActiveTab("analysis");
         }
     });
-  }, [content, imageDataUri, toast]);
-
-  const handleAnalyzeImage = useCallback(async () => {
-    if (!imageDataUri) return;
-    startAnalyzing(async () => {
-        const result = await analyzeImageContentAction({ imageDataUri: imageDataUri, prompt: content });
-        if (result.error) {
-            toast({ title: "Image Analysis Failed", description: result.error, variant: "destructive" });
-        } else {
-            setAnalysis(result.data as AnalyzeImageContentOutput);
-            setFlashcards(null);
-            setActiveTab("analysis");
-        }
-    });
-  }, [imageDataUri, content, toast]);
+  }, [content, toast]);
 
   const handleGenerateFlashcards = useCallback(async () => {
     if (!analysis) return;
@@ -413,8 +393,6 @@ export function StudyNowContent() {
     { value: "tutor", label: "Tutor", disabled: !analysis }
   ];
 
-  const analysisAsImageOutput = analysis as AnalyzeImageContentOutput;
-
   return (
     <div className="flex h-screen flex-col bg-muted/40">
         <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
@@ -470,7 +448,7 @@ export function StudyNowContent() {
           <Card className="flex flex-col @container">
             <CardHeader>
               <CardTitle>Your Study Material</CardTitle>
-              <CardDescription>Paste text, upload a document, or capture an image. Analysis is done by {imageDataUri ? 'Gemini' : 'Qwen'}.</CardDescription>
+              <CardDescription>Paste text, upload a document, or capture an image. Analysis is done by Qwen.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
               <Input placeholder="Enter a title for your material..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-semibold" disabled={isLoading} />
@@ -498,7 +476,7 @@ export function StudyNowContent() {
                {imageDataUri && <Textarea placeholder="Text extracted via OCR will appear here. You can edit it before analysis." className="h-24 resize-none" value={content} onChange={(e) => setContent(e.target.value)} />}
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-2 @sm:flex-row">
-              <Button onClick={handleAnalyze} disabled={isLoading || isOcrProcessing || (!imageDataUri && content.trim().length < 50)}>
+              <Button onClick={handleAnalyze} disabled={isLoading || isOcrProcessing || content.trim().length < 50}>
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                 Analyze
               </Button>
@@ -560,24 +538,6 @@ export function StudyNowContent() {
                             {analysis.keyConcepts?.map((concept, i) => <div key={i} className="py-2"><p className="font-semibold !my-0">{concept.concept}</p><p className="text-muted-foreground !my-0">{concept.explanation}</p></div>)}
                             </AccordionContent>
                         </AccordionItem>
-                        {'entities' in analysis && (
-                            <AccordionItem value="entities" className="rounded-md border bg-card px-4">
-                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Entities</div></AccordionTrigger>
-                                <AccordionContent className="space-y-3">
-                                    {analysisAsImageOutput.entities.people.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><Users className="size-4"/>People</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.people.map(p => <span key={p} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{p}</span>)}</div></div>}
-                                    {analysisAsImageOutput.entities.places.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><MapPin className="size-4"/>Places</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.places.map(p => <span key={p} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{p}</span>)}</div></div>}
-                                    {analysisAsImageOutput.entities.dates.length > 0 && <div><h4 className="flex items-center gap-2 text-sm font-semibold mb-1"><Calendar className="size-4"/>Dates</h4><div className="flex flex-wrap gap-2">{analysisAsImageOutput.entities.dates.map(d => <span key={d} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{d}</span>)}</div></div>}
-                                </AccordionContent>
-                            </AccordionItem>
-                        )}
-                        {'diagrams' in analysis && analysisAsImageOutput.diagrams.length > 0 && (
-                            <AccordionItem value="diagrams" className="rounded-md border bg-card px-4">
-                                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><ListTree />Diagrams & Processes</div></AccordionTrigger>
-                                <AccordionContent className="space-y-4">
-                                {analysisAsImageOutput.diagrams.map((d, i) => <div key={i}><h4 className="font-semibold">{d.title}</h4><p className="text-sm text-muted-foreground">{d.explanation}</p></div>)}
-                                </AccordionContent>
-                            </AccordionItem>
-                        )}
                         {analysis.codeExamples?.length > 0 && (
                             <AccordionItem value="code-examples" className="rounded-md border bg-card px-4">
                                 <AccordionTrigger className="py-4 text-left font-medium hover:no-underline text-base"><div className="flex items-center gap-3"><Code />Code Examples</div></AccordionTrigger>
@@ -631,3 +591,5 @@ export function StudyNowContent() {
     </div>
   );
 }
+
+    
