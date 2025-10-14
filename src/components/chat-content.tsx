@@ -799,10 +799,6 @@ export function ChatContent() {
                         onSubmit={handleFormSubmit}
                         className="glass-chat-bar p-2 flex items-center gap-1"
                     >
-                         <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
-                            <Search className="h-5 w-5" />
-                            <span className="sr-only">Search</span>
-                        </Button>
                         <Textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -972,10 +968,6 @@ export function ChatContent() {
               onSubmit={handleFormSubmit}
               className="glass-chat-bar p-2 flex items-center gap-1"
           >
-              <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Search</span>
-              </Button>
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
