@@ -804,7 +804,7 @@ export function ChatContent() {
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Message SearnAI..."
                             disabled={isInputDisabled}
-                            className="h-10 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
+                            className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
                             rows={1}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -814,10 +814,10 @@ export function ChatContent() {
                             }}
                         />
                         <input type="file" ref={fileInputRef} className="hidden" />
-                        <div className="flex items-center gap-1 pr-1">
+                        <div className="flex items-center gap-1">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
                                         <Paperclip className="h-5 w-5" />
                                         <span className="sr-only">Attach file</span>
                                     </Button>
@@ -829,11 +829,11 @@ export function ChatContent() {
                                     <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                             </Button>
-                            <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0 rounded-full" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
                                 <Send className="h-5 w-5" />
                                 <span className="sr-only">Send</span>
                             </Button>
@@ -964,16 +964,16 @@ export function ChatContent() {
                     </Button>
                 </div>
             </div>
-          <form
+           <form
               onSubmit={handleFormSubmit}
-              className="glass-chat-bar p-2 flex items-center gap-1"
+              className="relative flex items-center p-3 glassmorphism-chat-bar"
           >
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message SearnAI..."
                 disabled={isInputDisabled}
-                className="h-10 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
+                className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
                 rows={1}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -983,10 +983,10 @@ export function ChatContent() {
                 }}
               />
               <input type="file" ref={fileInputRef} className="hidden" />
-              <div className="flex items-center gap-1 pr-1">
+              <div className="flex items-center gap-1">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" disabled={isInputDisabled}>
+                        <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
                             <Paperclip className="h-5 w-5" />
                             <span className="sr-only">Attach file</span>
                         </Button>
@@ -998,11 +998,11 @@ export function ChatContent() {
                         <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="h-9 w-9 flex-shrink-0" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0 rounded-full" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Send</span>
                 </Button>
@@ -1013,3 +1013,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    

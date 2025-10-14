@@ -188,7 +188,9 @@
         @apply text-primary/80 hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md;
     }
     .code-box pre {
-      @apply my-0 p-4 rounded-b-xl bg-black/90 text-sm text-white/95;
+      @apply my-0 p-4 rounded-b-xl text-sm;
+      background-color: #121212 !important; /* Dark background */
+      color: #eaeaea !important; /* Light gray text */
     }
 
     .bg-chat-input {
@@ -213,11 +215,49 @@
     .light .model-response-header {
       @apply bg-white/30 text-black/80 border-black/10;
     }
-    
-    .glass-chat-bar {
-      @apply bg-background/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg transition-all duration-300;
+
+    /* Glassmorphism Chat Bar */
+    .glassmorphism-chat-bar {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      @apply rounded-full shadow-lg transition-all duration-300 ease-in-out;
     }
-    .glass-chat-bar:focus-within {
-      @apply border-primary/50 ring-2 ring-primary/30;
+
+    .light .glassmorphism-chat-bar {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .glassmorphism-chat-bar:focus-within {
+      border-color: #00c6ff;
+      box-shadow: 0 0 25px rgba(0, 198, 255, 0.4);
+    }
+
+    .chat-icon-button {
+      @apply text-muted-foreground transition-colors duration-200 ease-in-out hover:text-primary focus:text-primary;
+    }
+    
+    .chat-icon-button:hover {
+        transform: scale(1.1);
+    }
+    
+    .send-button:active {
+        animation: pulse 0.5s;
+    }
+
+    .chat-textarea::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      font-style: italic;
+    }
+    .light .chat-textarea::placeholder {
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0,198,255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0,198,255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,198,255, 0); }
     }
 }
