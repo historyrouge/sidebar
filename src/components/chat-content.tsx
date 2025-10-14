@@ -304,7 +304,7 @@ export function ChatContent() {
       setIsTyping(false);
 
       if (result.error) {
-          toast({ title: "Chat Error", description: result.error, variant: 'destructive' });
+          toast({ title: "Chat Error", description: result.error, variant: "destructive" });
       } else if (result.data) {
           const modelMessageId = `${Date.now()}-model`;
           setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
@@ -340,7 +340,7 @@ export function ChatContent() {
         setGenerationTime((endTime - startTime) / 1000);
         setIsTyping(false);
         if (result.error) {
-            toast({ title: "Image Generation Error", description: result.error, variant: 'destructive' });
+            toast({ title: "Image Generation Error", description: result.error, variant: "destructive" });
         } else if (result.data) {
             const imagePayload = {
                 type: 'image',
@@ -797,7 +797,7 @@ export function ChatContent() {
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
-                        className="relative w-full rounded-full border border-border bg-card p-1 shadow-lg focus-within:border-primary flex items-center gap-1"
+                        className="glass-chat-bar p-2 flex items-center gap-1"
                     >
                          <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
                             <Search className="h-5 w-5" />
@@ -970,7 +970,7 @@ export function ChatContent() {
             </div>
           <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center rounded-full border border-border bg-card p-1 shadow-lg focus-within:border-primary"
+              className="glass-chat-bar p-2 flex items-center gap-1"
           >
               <Button type="button" size="icon" variant="ghost" className="h-9 w-9 flex-shrink-0" onClick={() => setInput("Search: ")} disabled={isInputDisabled}>
                   <Search className="h-5 w-5" />
