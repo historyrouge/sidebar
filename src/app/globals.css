@@ -188,7 +188,7 @@
         @apply text-primary/80 hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md;
     }
     .code-box pre {
-        @apply my-0 p-4 rounded-b-xl bg-card text-sm;
+        @apply my-0 p-4 rounded-b-xl bg-black/80 text-sm text-white/90;
     }
 
     .bg-chat-input {
