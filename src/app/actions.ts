@@ -169,7 +169,7 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
     const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
     const personaPrompts: Record<string, string> = {
-        'gpt-oss-120b': `You are GPT-OSS, a powerful vision-capable model. Analyze the user's query and any provided context carefully to provide an accurate, detailed response.`,
+        'gpt-oss-120b': `You are an expert AI assistant with a confident and helpful Indian-style personality. You are a powerful vision-capable model. When provided with text extracted from an image, analyze it as if you were looking at the image itself.`,
         'DeepSeek-V3.1': `You are DeepSeek. Your persona is straightforward, factual, terse, and literal. Your style is formal and to-the-point, without any creative flair.`,
         'Meta-Llama-3.3-70B-Instruct': `You are Claude 4.5 Sonnet. Your persona is clear, controlled, measured, and safe. Your tone is neutral, helpful, polite, and slightly formal. Avoid bravado and excessive informality.`,
         'Llama-3.3-Swallow-70B-Instruct-v0.4': `You are Swallow. Your persona is polite, clear, safe, and respectful. In English, your tone is neutral and formal, similar to Llama 3.1.`,
@@ -280,28 +280,15 @@ export async function chatAction(input: {
         finalModelId = DEFAULT_MODEL_ID; // Fallback from auto if not an image
     }
 
-    const messages: any[] = [];
-
-    // When an image is provided, the content must be a list of parts
-    if (input.imageDataUri) {
-        const userMessage = input.history[input.history.length-1];
-        const otherMessages = input.history.slice(0, -1);
-        
-        otherMessages.forEach(msg => messages.push({ role: msg.role, content: msg.content }));
-        
-        messages.push({
-            role: 'user',
-            content: [
-                { text: input.fileContent ? `Context from OCR: ${input.fileContent}\n\nUser question: ${userMessage.content}` : userMessage.content },
-                { media: { url: input.imageDataUri } }
-            ]
-        });
-
-    } else {
-        input.history.forEach(msg => {
-            messages.push({ role: msg.role, content: msg.content });
-        });
-    }
+    const messages: CoreMessage[] = input.history.map(msg => {
+        // This is the fix. We are ensuring the content is always a string.
+        // If an image was attached, its OCR'd text is in fileContent, which is
+        // already being appended to the system prompt. The user's text query is in msg.content.
+        return {
+            role: msg.role as 'user' | 'model' | 'tool',
+            content: String(msg.content)
+        };
+    });
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')
@@ -311,16 +298,15 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            // For vision model, we don't pass the fileContent in the system prompt
-            // as it's already part of the multipart message.
-            const systemPrompt = getSystemPrompt(modelId, (modelId !== 'gpt-oss-120b' && input.fileContent) ? input.fileContent : null);
-            const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+            // For vision model, we now pass the OCR'd text in fileContent via the system prompt
+            const systemPrompt = getSystemPrompt(modelId, input.fileContent);
+            const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
             const response = await openai.chat.completions.create({
                 model: modelId,
-                messages: fullMessages,
+                messages: fullMessages as any, // Cast to any to handle the CoreMessage type
                 stream: false,
-                max_tokens: modelId === 'gpt-oss-120b' ? 4096 : undefined, // Larger max tokens for vision model
+                max_tokens: modelId === 'gpt-oss-120b' ? 4096 : undefined,
             });
 
             const responseText = response.choices[0]?.message?.content;
@@ -350,5 +336,7 @@ export async function chatAction(input: {
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
 
+
+    
 
     
