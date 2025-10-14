@@ -177,13 +177,45 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
         'Meta-Llama-3.1-8B-Instruct': `You are Llama 3.1. Your persona is neutral, factual, and formal. You are matter-of-fact and do not have a built-in personality or humor.`,
     };
 
+    const ocrInstruction = `
+Whenever the user provides OCR-scanned text or an image containing text, do NOT include any of the following meta-commentary in your response:
+- "What the OCR Text Is Trying to Tell You"
+- "Cleaned-up version"
+- Notes about OCR mis-reads or scanning artefacts
+- Any explanation paragraphs like “After that, I break down each part…”
+
+Instead, give a direct, final formatted answer only — like a clean list, table, or syllabus — without repeating unnecessary meta-text.
+For example, if the OCR text contains a school curriculum, just return the neat version like this:
+
+---
+
+🏫 Sri Chaitanya School – Infinity Batch (2024-25)
+Date: 25-02-2025 (Tuesday)
+
+Mathematics:
+* Quadratic Equations (Progressions – Aim 1-6, Concept-V, Goal 5-7)
+
+Physics:
+* Friction (Aim 1-4)
+* Coordinate System (Complete)
+* Horizontal Circular Motion (Complete)
+
+Chemistry:
+* Ionic Equilibrium
+* Colligative Properties (Aim 1-4)
+
+---
+
+Always skip messy OCR bits and directly show the cleaned content in an organized, readable format.
+`;
+
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
 
     const fileContext = fileContent 
         ? `\n\n**User's Provided Context:**\nThe user has provided the following text content, which was extracted from a file or image. Use it as the primary context for your answer.\n\n---\n${fileContent}\n---` 
         : '';
         
-    return `${basePrompt}\n\n${persona}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
+    return `${basePrompt}\n\n${persona}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${ocrInstruction}${fileContext}`;
 };
 
 
@@ -250,22 +282,26 @@ export async function chatAction(input: {
 
     const messages: any[] = [];
 
-    input.history.forEach(msg => {
-        let content: any = msg.content;
+    // When an image is provided, the content must be a list of parts
+    if (input.imageDataUri) {
+        const userMessage = input.history[input.history.length-1];
+        const otherMessages = input.history.slice(0, -1);
         
-        // If this is the last user message and there's an image, create a single text string with context.
-        if (msg.role === 'user' && input.history[input.history.length - 1] === msg && input.imageDataUri) {
-            if (input.fileContent) {
-                // If OCR text is available, combine it with the user's prompt.
-                content = `[USER PROMPT]: ${msg.content as string}\n\n[CONTEXT FROM IMAGE OCR]:\n${input.fileContent}`;
-            } else {
-                // If no OCR text, just use the prompt. The vision model will see the image.
-                content = msg.content as string;
-            }
-        }
+        otherMessages.forEach(msg => messages.push({ role: msg.role, content: msg.content }));
         
-        messages.push({ role: msg.role, content: content });
-    });
+        messages.push({
+            role: 'user',
+            content: [
+                { text: input.fileContent ? `Context from OCR: ${input.fileContent}\n\nUser question: ${userMessage.content}` : userMessage.content },
+                { media: { url: input.imageDataUri } }
+            ]
+        });
+
+    } else {
+        input.history.forEach(msg => {
+            messages.push({ role: msg.role, content: msg.content });
+        });
+    }
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')
@@ -275,6 +311,8 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
+            // For vision model, we don't pass the fileContent in the system prompt
+            // as it's already part of the multipart message.
             const systemPrompt = getSystemPrompt(modelId, (modelId !== 'gpt-oss-120b' && input.fileContent) ? input.fileContent : null);
             const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
 
