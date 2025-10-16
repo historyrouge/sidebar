@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, Wand2, Image as ImageIcon, X, Volume2, Pilcrow, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, Camera, RefreshCw } from "lucide-react";
+import { FileUp, Loader2, Wand2, Image as ImageIcon, X, Volume2, Pilcrow, BrainCircuit, HelpCircle, BookCopy, ListTree, Code, Copy, Mic, MicOff, Camera } from "lucide-react";
 import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { Flashcard } from "./flashcard";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -21,9 +21,8 @@ import { Input } from "./ui/input";
 import Image from "next/image";
 import { BackButton } from "./back-button";
 import { Progress } from "./ui/progress";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import Tesseract from 'tesseract.js';
+import { CameraCaptureDialog } from "./camera-capture-dialog";
 
 declare const puter: any;
 
@@ -51,15 +50,8 @@ export function StudyNowContent() {
   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
 
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isStreamReady, setIsStreamReady] = useState(false);
-
-  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
-  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined);
-  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     // Check for content from PDF Hub
@@ -314,128 +306,36 @@ export function StudyNowContent() {
 
   const handleTutorChat = async (history: any) => await chatWithTutorAction({ content, history });
 
-    const startCamera = useCallback(async (deviceId?: string) => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-        }
-        setIsStreamReady(false);
-        
-        const videoConstraints: MediaTrackConstraints = {
-            facingMode: { ideal: "environment" }
-        };
-        if (deviceId) {
-            videoConstraints.deviceId = { exact: deviceId };
-        }
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
-            streamRef.current = stream;
-            setHasCameraPermission(true);
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.onloadedmetadata = () => setIsStreamReady(true);
+  const handleCaptureImage = (dataUri: string) => {
+    startLoadingMaterial(async () => {
+      setIsOcrProcessing(true);
+      setOcrProgress(0);
+      try {
+        setImageDataUri(dataUri);
+        const { data: { text } } = await Tesseract.recognize(
+          dataUri,
+          'eng',
+          {
+            logger: m => {
+              if (m.status === 'recognizing text') {
+                setOcrProgress(Math.round(m.progress * 100));
+              }
             }
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            setHasCameraPermission(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        const getDevicesAndStart = async () => {
-            if (isCameraOpen) {
-                try {
-                    setHasCameraPermission(null);
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const videoDevs = devices.filter(d => d.kind === 'videoinput');
-                    setVideoDevices(videoDevs);
-    
-                    let initialDeviceId = currentDeviceId;
-                    if (!initialDeviceId && videoDevs.length > 0) {
-                        const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
-                        initialDeviceId = backCamera ? backCamera.deviceId : videoDevs[0].deviceId;
-                        setCurrentDeviceId(initialDeviceId);
-                    }
-    
-                    await startCamera(initialDeviceId);
-                } catch(e) {
-                    console.error("Failed to enumerate devices:", e);
-                    setHasCameraPermission(false);
-                }
-            }
-        };
-
-        getDevicesAndStart();
-
-        return () => {
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-            }
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
-        };
-    }, [isCameraOpen, currentDeviceId, startCamera]);
-
-    const handleSwitchCamera = () => {
-        if (videoDevices.length > 1) {
-            const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
-            const nextIndex = (currentIndex + 1) % videoDevices.length;
-            setCurrentDeviceId(videoDevices[nextIndex].deviceId);
-        }
-    };
-
-
-    const handleCaptureImage = () => {
-        if (!videoRef.current) return;
-
-        startLoadingMaterial(async () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = videoRef.current!.videoWidth;
-            canvas.height = videoRef.current!.videoHeight;
-            const context = canvas.getContext('2d');
-            if (!context) {
-                toast({ title: "Capture failed", description: "Could not get canvas context.", variant: "destructive" });
-                return;
-            }
-            context.drawImage(videoRef.current!, 0, 0, canvas.width, canvas.height);
-            const dataUri = canvas.toDataURL('image/png');
-            
-            setIsCameraOpen(false);
-            
-            setIsOcrProcessing(true);
-            setOcrProgress(0);
-
-            try {
-                const processedDataUri = await preprocessImage(dataUri);
-                setImageDataUri(processedDataUri);
-
-                const { data: { text } } = await Tesseract.recognize(
-                    processedDataUri,
-                    'eng',
-                    { 
-                        logger: m => {
-                            if (m.status === 'recognizing text') {
-                                setOcrProgress(Math.round(m.progress * 100));
-                            }
-                        }
-                    }
-                );
-                setContent(text || "");
-                setTitle("Camera Capture");
-                setAnalysis(null);
-                setFlashcards(null);
-
-                toast({ title: "Image Captured & Text Extracted!", description: "The captured image is ready for analysis." });
-            } catch (error: any) {
-                toast({ title: "OCR Failed", description: error.message || "Could not extract text from the captured image.", variant: "destructive" });
-                setContent("");
-            } finally {
-                setIsOcrProcessing(false);
-            }
-        });
-    };
+          }
+        );
+        setContent(text || "");
+        setTitle("Camera Capture");
+        setAnalysis(null);
+        setFlashcards(null);
+        toast({ title: "Image Captured & Text Extracted!", description: "The captured image is ready for analysis." });
+      } catch (error: any) {
+        toast({ title: "OCR Failed", description: error.message || "Could not extract text from the captured image.", variant: "destructive" });
+        setContent("");
+      } finally {
+        setIsOcrProcessing(false);
+      }
+    });
+  };
 
   const isLoading = isAnalyzing || isLoadingMaterial || isGeneratingFlashcards || isGeneratingQuiz;
   
@@ -448,47 +348,11 @@ export function StudyNowContent() {
 
   return (
     <div className="flex h-screen flex-col bg-muted/40">
-        <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-            <DialogContent>
-                <DialogHeader><DialogTitle>Capture from Camera</DialogTitle></DialogHeader>
-                <div className="relative">
-                    <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted />
-                    {hasCameraPermission === null && 
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-                            <div className="text-center">
-                                <Loader2 className="animate-spin h-8 w-8 mx-auto" />
-                                <p className="mt-2 text-muted-foreground">Requesting camera access...</p>
-                            </div>
-                        </div>
-                    }
-                    {hasCameraPermission === false && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/80 p-4">
-                            <Alert variant="destructive">
-                                <AlertTitle>Camera Access Required</AlertTitle>
-                                <AlertDescription>
-                                    Please allow camera access in your browser settings to use this feature. You may need to reload the page after granting permission.
-                                </AlertDescription>
-                            </Alert>
-                        </div>
-                    )}
-                </div>
-                <DialogFooter className="flex justify-between w-full">
-                    <div>
-                         {videoDevices.length > 1 && (
-                            <Button variant="outline" onClick={handleSwitchCamera}>
-                                <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
-                            </Button>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                        <Button onClick={handleCaptureImage} disabled={!hasCameraPermission || !isStreamReady || isLoadingMaterial}>
-                            {isLoadingMaterial ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isStreamReady ? 'Capture & OCR' : 'Starting...'}
-                        </Button>
-                    </div>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+       <CameraCaptureDialog 
+        isOpen={isCameraDialogOpen}
+        onOpenChange={setIsCameraDialogOpen}
+        onCapture={handleCaptureImage}
+      />
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
@@ -536,7 +400,7 @@ export function StudyNowContent() {
               <div className="flex items-stretch gap-2 flex-1">
                 <Button variant="outline" className="flex-1" onClick={handleFileUploadClick} disabled={isLoading}><FileUp className="mr-2 h-4 w-4" />.txt</Button>
                 <Button variant="outline" className="flex-1" onClick={handleImageUploadClick} disabled={isLoading}><ImageIcon className="mr-2 h-4 w-4" />Image</Button>
-                <Button variant="outline" className="flex-1" onClick={() => { setIsCameraOpen(true); }} disabled={isLoading}><Camera className="mr-2 h-4 w-4" />Capture</Button>
+                <Button variant="outline" className="flex-1" onClick={() => setIsCameraDialogOpen(true)} disabled={isLoading}><Camera className="mr-2 h-4 w-4" />Capture</Button>
               </div>
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
               <input type="file" ref={imageInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
@@ -644,5 +508,3 @@ export function StudyNowContent() {
     </div>
   );
 }
-
-    
