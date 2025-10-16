@@ -41,8 +41,6 @@ import { motion } from "framer-motion";
 import * as pdfjs from 'pdfjs-dist';
 import wav from 'wav';
 import { Buffer } from 'buffer';
-import imageToDataUri from 'image-to-data-uri';
-
 
 // Required for pdf.js to work
 if (typeof window !== 'undefined') {
@@ -546,6 +544,39 @@ export function ChatContent() {
         }
     };
 
+    const resizeImage = (file: File, maxSize: number): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.createElement("img");
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) return reject(new Error("Could not get canvas context"));
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL("image/jpeg"));
+                };
+                img.onerror = reject;
+                img.src = event.target?.result as string;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -559,44 +590,37 @@ export function ChatContent() {
     setIsOcrProcessing(true);
     setOcrProgress(0);
 
-    // Resize image before OCR
-    const MAX_DIMENSION = 2000;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const dataUri = e.target?.result as string;
-        let imageForOcr: string | File = file;
+    try {
+        const resizedDataUri = await resizeImage(file, 2000);
+        setImageDataUri(resizedDataUri);
+        setFileContent(null);
+        setFileName(file.name);
 
-        try {
-            const resizedDataUri = await imageToDataUri(dataUri, MAX_DIMENSION, MAX_DIMENSION, 'image/jpeg');
-            setImageDataUri(resizedDataUri);
-            setFileContent(null);
-            setFileName(file.name);
-
-            const { data: { text } } = await Tesseract.recognize(
-                resizedDataUri,
-                'eng',
-                { 
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            setOcrProgress(Math.round(m.progress * 100));
-                        }
+        const { data: { text } } = await Tesseract.recognize(
+            resizedDataUri,
+            'eng',
+            { 
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        setOcrProgress(Math.round(m.progress * 100));
                     }
                 }
-            );
-            setFileContent(text);
-            toast({
-                title: "Image & Text Attached",
-                description: `Text has been extracted. You can now ask questions.`,
-            });
+            }
+        );
+        setFileContent(text);
+        toast({
+            title: "Image & Text Attached",
+            description: `Text has been extracted. You can now ask questions.`,
+        });
 
-        } catch (error: any) {
-            toast({ title: "OCR or Image processing Failed", description: error.message || "Could not extract text from the image.", variant: "destructive" });
-            setFileContent(""); // Clear content on failure
-        } finally {
-            setIsOcrProcessing(false);
-        }
-    };
-    reader.readAsDataURL(file);
+    } catch (error: any) {
+        toast({ title: "OCR or Image processing Failed", description: error.message || "Could not extract text from the image.", variant: "destructive" });
+        setFileContent(null);
+        setImageDataUri(null);
+        setFileName(null);
+    } finally {
+        setIsOcrProcessing(false);
+    }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -1021,3 +1045,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
