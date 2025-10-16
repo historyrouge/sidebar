@@ -192,17 +192,20 @@ For example, if the OCR text contains a school curriculum, just return the neat 
 🏫 Sri Chaitanya School – Infinity Batch (2024-25)
 Date: 25-02-2025 (Tuesday)
 
-Mathematics:
-* Quadratic Equations (Progressions – Aim 1-6, Concept-V, Goal 5-7)
+**Mathematics:**
+*   **Track A:** Progressions (Aim: 1 to 4)
+*   **Track B:** 
+    1.  Quadratic Equations (Aim: 4 to 6)
+    2.  Coordinate System (Aim: 1)
 
-Physics:
-* Friction (Aim 1-4)
-* Coordinate System (Complete)
-* Horizontal Circular Motion (Complete)
+**Physics:**
+*   Friction
+*   Concept - V
+*   Horizontal Circular Motion (Complete)
 
-Chemistry:
-* Ionic Equilibrium
-* Colligative Properties (Aim 1-4)
+**Chemistry:**
+1.  Ionic Equilibrium (Goal 5 to 7)
+2.  Colligative Properties (Goal 1 to 4)
 
 ---
 
