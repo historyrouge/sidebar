@@ -178,47 +178,40 @@ const getSystemPrompt = (modelId: string, fileContent: string | null | undefined
     };
 
     const ocrInstruction = `
-Whenever the user provides OCR-scanned text or an image containing text, do NOT include any of the following meta-commentary in your response:
-- "What the OCR Text Is Trying to Tell You"
-- "Cleaned-up version"
-- Notes about OCR mis-reads or scanning artefacts
-- Any explanation paragraphs like “After that, I break down each part…”
+A critical part of your function is handling text that has been extracted from images via Optical Character Recognition (OCR). You must follow these rules strictly:
 
-Instead, give a direct, final formatted answer only — like a clean list, table, or syllabus — without repeating unnecessary meta-text.
-For example, if the OCR text contains a school curriculum, just return the neat version like this:
+**Rule 1: Reconstruct Structured Content**
+If the OCR text appears to be from a structured document (like a syllabus, table, or list) but is jumbled, your primary goal is to accurately reconstruct the original structure. Do NOT include any meta-commentary like "Here is the cleaned-up version." Simply provide the clean, corrected output.
+
+For example, if the OCR text is "Physics: Friction, Chemistry: Ionic Equilibrium, Physics: Circular Motion", you must correctly group the topics under their respective subjects:
 
 ---
-
-🏫 Sri Chaitanya School – Infinity Batch (2024-25)
-Date: 25-02-2025 (Tuesday)
-
-**Mathematics:**
-*   **Track A:** Progressions (Aim: 1 to 4)
-*   **Track B:** 
-    1.  Quadratic Equations (Aim: 4 to 6)
-    2.  Coordinate System (Aim: 1)
-
 **Physics:**
 *   Friction
-*   Concept - V
-*   Horizontal Circular Motion (Complete)
+*   Circular Motion
 
 **Chemistry:**
-1.  Ionic Equilibrium (Goal 5 to 7)
-2.  Colligative Properties (Goal 1 to 4)
-
+*   Ionic Equilibrium
 ---
 
-Always skip messy OCR bits and directly show the cleaned content in an organized, readable format.
+**Rule 2: Handle Corrupted/Nonsensical Text**
+If the OCR text is heavily corrupted, nonsensical, or just a random jumble of characters with no discernible meaning, you MUST NOT attempt to interpret it. Instead, you must respond with the following message exactly:
+
+---
+The OCR-extracted text is heavily corrupted and does not contain any coherent information that can be reliably reconstructed. It appears to be a random mix of letters, numbers, symbols and fragmented words, making it impossible to extract a meaningful list, table, or narrative.
+
+**What to do next?**
+If you need the content interpreted, please provide a clearer scan or a higher-resolution image of the original document (or type out the text manually). That will allow me to give you an accurate, well-structured answer.
+---
 `;
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
 
     const fileContext = fileContent 
-        ? `\n\n**User's Provided Context:**\nThe user has provided the following text content, which was extracted from a file or image. Use it as the primary context for your answer.\n\n---\n${fileContent}\n---` 
+        ? `\n\n**User's Provided Context (from OCR or file):**\nThis is the primary context for your answer. Adhere to the OCR handling rules.\n\n---\n${fileContent}\n---` 
         : '';
         
-    return `${basePrompt}\n\n${persona}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${ocrInstruction}${fileContext}`;
+    return `${basePrompt}\n\n${persona}\n\n${ocrInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
 };
 
 
