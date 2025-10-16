@@ -226,7 +226,7 @@ export function StudyNowContent() {
     }
   };
 
-  const resizeImage = (file: File, maxSize: number): Promise<string> => {
+  const preprocessImage = (file: File, maxSize: number = 2000): Promise<string> => {
       return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => {
@@ -249,8 +249,12 @@ export function StudyNowContent() {
                   canvas.height = height;
                   const ctx = canvas.getContext("2d");
                   if (!ctx) return reject(new Error("Could not get canvas context"));
+
+                  // Grayscale and contrast
+                  ctx.filter = 'grayscale(1) contrast(1.5)';
                   ctx.drawImage(img, 0, 0, width, height);
-                  resolve(canvas.toDataURL("image/jpeg"));
+
+                  resolve(canvas.toDataURL("image/jpeg", 0.95)); // Use high quality JPEG
               };
               img.onerror = reject;
               img.src = event.target?.result as string;
@@ -274,13 +278,13 @@ export function StudyNowContent() {
         setOcrProgress(0);
 
         try {
-            const resizedDataUri = await resizeImage(file, 2000);
-            setImageDataUri(resizedDataUri);
+            const processedDataUri = await preprocessImage(file);
+            setImageDataUri(processedDataUri);
             setAnalysis(null);
             setFlashcards(null);
             
             const { data: { text } } = await Tesseract.recognize(
-                resizedDataUri,
+                processedDataUri,
                 'eng',
                 { 
                     logger: m => {
@@ -399,14 +403,16 @@ export function StudyNowContent() {
             const dataUri = canvas.toDataURL('image/png');
             
             setIsCameraOpen(false);
-            setImageDataUri(dataUri);
             
             setIsOcrProcessing(true);
             setOcrProgress(0);
 
             try {
+                const processedDataUri = await preprocessImage(dataUri);
+                setImageDataUri(processedDataUri);
+
                 const { data: { text } } = await Tesseract.recognize(
-                    dataUri,
+                    processedDataUri,
                     'eng',
                     { 
                         logger: m => {

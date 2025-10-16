@@ -3,10 +3,10 @@
 
 /**
  * @fileOverview This file is no longer used and will be removed.
- * Image analysis is now handled client-side with Tesseract.js in study-now-content.tsx.
+ * Image analysis is now handled client-side with Tesseract.js.
  */
 
-import { ai, visionModel } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const AnalyzeImageContentInputSchema = z.object({
