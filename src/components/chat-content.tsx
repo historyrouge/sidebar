@@ -829,7 +829,7 @@ export function ChatContent() {
                     </div>
                     <form
                         onSubmit={handleFormSubmit}
-                        className="glass-chat-bar p-2 flex items-center gap-1"
+                        className="glassmorphism-chat-bar p-2 flex items-center gap-1"
                     >
                         <Textarea
                             value={input}
