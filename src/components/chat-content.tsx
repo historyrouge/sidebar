@@ -41,6 +41,7 @@ import { motion } from "framer-motion";
 import * as pdfjs from 'pdfjs-dist';
 import wav from 'wav';
 import { Buffer } from 'buffer';
+import imageToDataUri from 'image-to-data-uri';
 
 
 // Required for pdf.js to work
@@ -557,16 +558,22 @@ export function ChatContent() {
 
     setIsOcrProcessing(true);
     setOcrProgress(0);
+
+    // Resize image before OCR
+    const MAX_DIMENSION = 2000;
     const reader = new FileReader();
-    reader.onloadend = async () => {
-        const dataUri = reader.result as string;
-        setImageDataUri(dataUri);
-        setFileContent(null);
-        setFileName(file.name);
-        
+    reader.onload = async (e) => {
+        const dataUri = e.target?.result as string;
+        let imageForOcr: string | File = file;
+
         try {
+            const resizedDataUri = await imageToDataUri(dataUri, MAX_DIMENSION, MAX_DIMENSION, 'image/jpeg');
+            setImageDataUri(resizedDataUri);
+            setFileContent(null);
+            setFileName(file.name);
+
             const { data: { text } } = await Tesseract.recognize(
-                dataUri,
+                resizedDataUri,
                 'eng',
                 { 
                     logger: m => {
@@ -581,8 +588,9 @@ export function ChatContent() {
                 title: "Image & Text Attached",
                 description: `Text has been extracted. You can now ask questions.`,
             });
-        } catch (error) {
-            toast({ title: "OCR Failed", description: "Could not extract text from the image.", variant: "destructive" });
+
+        } catch (error: any) {
+            toast({ title: "OCR or Image processing Failed", description: error.message || "Could not extract text from the image.", variant: "destructive" });
             setFileContent(""); // Clear content on failure
         } finally {
             setIsOcrProcessing(false);
@@ -1013,5 +1021,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    

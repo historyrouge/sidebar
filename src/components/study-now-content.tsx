@@ -24,6 +24,7 @@ import { Progress } from "./ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import Tesseract from 'tesseract.js';
+import imageToDataUri from 'image-to-data-uri';
 
 declare const puter: any;
 
@@ -228,54 +229,53 @@ export function StudyNowContent() {
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-        if (file.type.startsWith("image/")) {
-            startLoadingMaterial(async () => {
-                try {
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const dataUri = e.target?.result as string;
-                        setImageDataUri(dataUri);
-                        setAnalysis(null);
-                        setFlashcards(null);
+    if (!file) return;
 
-                        setIsOcrProcessing(true);
-                        setOcrProgress(0);
-
-                        try {
-                            const { data: { text } } = await Tesseract.recognize(
-                                file,
-                                'eng',
-                                { 
-                                    logger: m => {
-                                        if (m.status === 'recognizing text') {
-                                            setOcrProgress(Math.round(m.progress * 100));
-                                        }
-                                    }
-                                }
-                            );
-                            setContent(text);
-                            setTitle(file.name);
-                            toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
-                        } catch (ocrError: any) {
-                             toast({ title: "OCR Failed", description: ocrError.message || "Could not extract text.", variant: "destructive" });
-                             setContent(""); // Clear content on OCR fail
-                        } finally {
-                           setIsOcrProcessing(false);
-                        }
-                    };
-                    reader.readAsDataURL(file);
-
-                } catch (error: any) {
-                    toast({ title: "Image processing failed", description: error.message || "Could not read the image file.", variant: "destructive" });
-                    setImageDataUri(null);
-                }
-            });
-        } else {
-            toast({ title: "Invalid file type", description: "Please upload an image file (e.g., PNG, JPG).", variant: "destructive" });
-        }
+    if (!file.type.startsWith("image/")) {
+        toast({ title: "Invalid file type", description: "Please upload an image file (e.g., PNG, JPG).", variant: "destructive" });
+        return;
     }
-  };
+
+    startLoadingMaterial(async () => {
+        setIsOcrProcessing(true);
+        setOcrProgress(0);
+
+        const MAX_DIMENSION = 2000;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const dataUri = e.target?.result as string;
+            
+            try {
+                const resizedDataUri = await imageToDataUri(dataUri, MAX_DIMENSION, MAX_DIMENSION, 'image/jpeg');
+                setImageDataUri(resizedDataUri);
+                setAnalysis(null);
+                setFlashcards(null);
+                
+                const { data: { text } } = await Tesseract.recognize(
+                    resizedDataUri,
+                    'eng',
+                    { 
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                setOcrProgress(Math.round(m.progress * 100));
+                            }
+                        }
+                    }
+                );
+                setContent(text);
+                setTitle(file.name);
+                toast({ title: "Image & Text Loaded!", description: "Text has been extracted via OCR. Click Analyze to begin." });
+            } catch (error: any) {
+                toast({ title: "Image processing or OCR failed", description: error.message || "Could not read or process the image file.", variant: "destructive" });
+                setImageDataUri(null);
+                setContent("");
+            } finally {
+                setIsOcrProcessing(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+};
 
   const clearImage = () => {
     setImageDataUri(null); setTitle(""); setContent(""); setAnalysis(null); setFlashcards(null);
