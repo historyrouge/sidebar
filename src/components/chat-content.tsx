@@ -655,7 +655,7 @@ export function ChatContent() {
     if (viewport) {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
-  }, [history]);
+  }, [history, isTyping]);
   
   const showWelcome = history.length === 0 && !isTyping;
   const isInputDisabled = isTyping || isOcrProcessing;
