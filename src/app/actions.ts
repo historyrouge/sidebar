@@ -30,6 +30,24 @@ export type ActionResult<T> = {
     error?: string;
 };
 
+// Sanitizer function to fix KaTeX issues
+const sanitizeKatex = (text: string): string => {
+    // 1. Replace [ ... ] with $$ ... $$
+    let sanitizedText = text.replace(/\[\s*([\s\S]*?)\s*\]/g, (match, content) => {
+        // Avoid replacing if it's a markdown link like [text](url)
+        if (/\(https?:\/\//.test(match)) {
+            return match;
+        }
+        return `$$${content.trim()}$$`;
+    });
+
+    // 2. Remove stray commas inside exponents, like ^{,m} -> ^{m}
+    sanitizedText = sanitizedText.replace(/\^{\s*,\s*([a-zA-Z0-9]+)\s*}/g, '^{$1}');
+
+    return sanitizedText;
+};
+
+
 export async function generateFlashcardsAction(input: GenerateFlashcardsSambaInput): Promise<ActionResult<GenerateFlashcardsSambaOutput>> {
     try {
         const data = await generateFlashcardsSamba(input);
@@ -123,7 +141,7 @@ export async function generatePresentationAction(input: GeneratePresentationInpu
 export async function generateEditedContentAction(input: GenerateEditedContentInput): Promise<ActionResult<GenerateEditedContentOutput>> {
     try {
         const data = await generateEditedContent(input);
-        return { data };
+        return { data: { editedContent: sanitizeKatex(data.editedContent) } };
     } catch (e: any) {
         return { error: e.message };
     }
@@ -159,7 +177,7 @@ export async function summarizeContentAction(input: SummarizeContentInput): Prom
 export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<ActionResult<ChatWithTutorOutput>> {
     try {
         const data = await chatWithTutor(input);
-        return { data };
+        return { data: { response: sanitizeKatex(data.response) } };
     } catch (e: any) {
         return { error: e.message };
     }
@@ -316,11 +334,14 @@ export async function chatAction(input: {
                 max_tokens: modelId === 'gpt-oss-120b' ? 4096 : undefined,
             });
 
-            const responseText = response.choices[0]?.message?.content;
+            let responseText = response.choices[0]?.message?.content;
             if (!responseText) {
                 throw new Error("Received an empty response from the AI model.");
             }
             
+            // Sanitize the response here
+            responseText = sanitizeKatex(responseText);
+
             const modelName = AVAILABLE_MODELS.find(m => m.id === modelId)?.name || modelId;
             const finalResponse = `**Response from ${modelName}**\n\n${responseText}`;
 
@@ -347,6 +368,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
