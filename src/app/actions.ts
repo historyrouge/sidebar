@@ -32,7 +32,7 @@ export type ActionResult<T> = {
 
 // Sanitizer function to fix KaTeX issues
 const sanitizeKatex = (text: string): string => {
-    // 1. Replace [ ... ] with $$ ... $$
+    // Rule 1: Replace [ ... ] with $$ ... $$ for block math
     let sanitizedText = text.replace(/\[\s*([\s\S]*?)\s*\]/g, (match, content) => {
         // Avoid replacing if it's a markdown link like [text](url)
         if (/\(https?:\/\//.test(match)) {
@@ -41,7 +41,12 @@ const sanitizeKatex = (text: string): string => {
         return `$$${content.trim()}$$`;
     });
 
-    // 2. Remove stray commas inside exponents, like ^{,m} -> ^{m}
+    // Rule 2: Replace (...) with $$...$$ if it contains LaTeX commands
+    sanitizedText = sanitizedText.replace(/\(\s*([^)]*\\\w+[^)]*)\s*\)/g, (match, content) => {
+        return `$$${content.trim()}$$`;
+    });
+    
+    // Rule 3: Remove stray commas inside exponents, like ^{,m} -> ^{m}
     sanitizedText = sanitizedText.replace(/\^{\s*,\s*([a-zA-Z0-9]+)\s*}/g, '^{$1}');
 
     return sanitizedText;
@@ -231,7 +236,7 @@ When you generate mathematical formulas or equations, you MUST wrap them in the 
 $$
 \sum_{i=1}^{n} i = \frac{n(n+1)}{2}
 $$
-**IMPORTANT: Do NOT use square brackets \`[...]\` or any other format for math. Only use \`$\` and \`$$\`. This is a strict requirement.**
+**IMPORTANT: Do NOT use square brackets \`[...]\`, parentheses \`(..)\` or any other format for math. Only use \`$\` and \`$$\`. This is a strict requirement.**
 `;
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
@@ -368,6 +373,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
