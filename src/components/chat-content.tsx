@@ -909,6 +909,9 @@ export function ChatContent() {
                           </div>
                         ) : (
                           <div className={cn("group w-full flex items-start gap-4")}>
+                            <Avatar className="h-9 w-9 border">
+                              <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                            </Avatar>
                             <div className="w-full">
                               {renderMessageContent(message)}
                               {audioDataUri && isSynthesizing === message.id && (
