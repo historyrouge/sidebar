@@ -7,6 +7,7 @@ import { TypewriterText } from "./typewriter-text";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 const customThinkingText = `At its core, this topic is a knot of cause and consequence: simple mechanics meet human meaning. On the factual layer, the parts interact because of predictable laws and patterns — we can trace inputs to outputs, which gives us control. On the human layer, those same patterns are refracted through hope, fear, habit and imagination — that’s where outcomes feel personal. Historically, what looks new is usually a remix of older survival strategies and social tools; context changes, but the motives often repeat. Technologically, today's tools amplify scale and speed: opportunities become risks, and private choices turn public quickly. Ethically, that creates responsibility — to use knowledge in ways that enlarge dignity rather than erode it.
 
