@@ -206,14 +206,14 @@ If you need the content interpreted, please provide a clearer scan or a higher-r
 `;
 
     const mathInstruction = `
-**Rule 3: Mathematical Formula Formatting**
+**Rule 3: STRICTLY USE KaTeX for Math Formatting**
 When you generate mathematical formulas or equations, you MUST wrap them in the correct delimiters for KaTeX rendering.
 - For **inline mathematics**, use single dollar signs. Example: The formula is $E = mc^2$.
-- For **block-level mathematics**, use double dollar signs. Example:
+- For **block-level mathematics** (equations on their own line), use double dollar signs. Example:
 $$
 \sum_{i=1}^{n} i = \frac{n(n+1)}{2}
 $$
-Do NOT use square brackets \`[...]\` or any other format for math.
+**IMPORTANT: Do NOT use square brackets \`[...]\` or any other format for math. Only use \`$\` and \`$$\`. This is a strict requirement.**
 `;
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
@@ -347,5 +347,6 @@ export async function chatAction(input: {
     
 
     
+
 
 
