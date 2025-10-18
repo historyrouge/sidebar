@@ -28,8 +28,11 @@ export function ThinkingIndicator({ text, duration }: { text: string | null, dur
 
     if (text === null) {
         return (
-            <div className="flex items-center justify-center p-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-start gap-4">
+                 <Avatar className="h-9 w-9 border">
+                    <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
+                </Avatar>
+                <div className="flex items-center gap-2 text-muted-foreground p-3 bg-muted rounded-xl">
                     <Loader2 className="h-5 w-5 animate-spin" />
                     <span>The AI is thinking...</span>
                 </div>
@@ -64,5 +67,3 @@ export function ThinkingIndicator({ text, duration }: { text: string | null, dur
         </div>
     );
 }
-
-    
