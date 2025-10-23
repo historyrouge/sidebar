@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { KeyRound, Copy, Plus, AlertTriangle, Loader2 } from "lucide-react";
@@ -10,24 +10,50 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "./ui/input";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 export function SettingsApiContent() {
     const { toast } = useToast();
+    const { user } = useAuth();
     const [apiKey, setApiKey] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const generateApiKey = () => {
+    // In a real app, you'd fetch existing keys. For now, we just generate a new one.
+
+    const generateApiKey = async () => {
+        if (!user) {
+            toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
+            return;
+        }
         setIsGenerating(true);
-        // Simulate a network request
-        setTimeout(() => {
-            const newKey = `sk-${[...Array(32)].map(() => Math.random().toString(36)[2]).join('')}`;
-            setApiKey(newKey);
-            setIsGenerating(false);
+        setApiKey(null);
+        
+        try {
+            const token = await user.getIdToken();
+            const response = await fetch('/api/keys', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate API key.');
+            }
+
+            const { key } = await response.json();
+            setApiKey(key);
             toast({
                 title: "API Key Generated",
                 description: "Your new API key is ready to use.",
             });
-        }, 1000);
+
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const copyToClipboard = () => {
@@ -52,9 +78,9 @@ export function SettingsApiContent() {
                 <div className="mx-auto max-w-2xl space-y-8">
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4"/>
-                        <AlertTitle>Developer Preview</AlertTitle>
+                        <AlertTitle>Developer API</AlertTitle>
                         <AlertDescription>
-                            The SearnAI API is currently in a preview state. This is a mock interface for generating keys.
+                            This is a real API key generation system. Treat your keys like passwords and do not share them.
                         </AlertDescription>
                     </Alert>
 

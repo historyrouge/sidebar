@@ -10,6 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export function AuthForm({ type }: { type: "login" | "signup" }) {
   const { user, loading: authLoading } = useAuth();
@@ -23,30 +30,52 @@ export function AuthForm({ type }: { type: "login" | "signup" }) {
     e.preventDefault();
     setLoading(true);
 
-    // This is a placeholder for actual auth logic.
-    // Since accounts are disabled, we'll just simulate a login/signup
-    // and redirect to the main page.
-    setTimeout(() => {
+    try {
+        if (type === 'signup') {
+            await createUserWithEmailAndPassword(auth, email, password);
+            toast({
+                title: 'Signup Successful',
+                description: "Welcome to SearnAI! Please log in.",
+            });
+            router.push("/login");
+        } else {
+            await signInWithEmailAndPassword(auth, email, password);
+            toast({
+                title: 'Login Successful',
+                description: "Welcome back!",
+            });
+            router.push("/");
+        }
+    } catch (error: any) {
         toast({
-            title: type === 'login' ? 'Login Successful' : 'Signup Successful',
-            description: "Welcome to SearnAI!",
+            title: `Authentication Failed`,
+            description: error.message,
+            variant: "destructive"
         });
-        router.push("/");
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   };
   
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setLoading(true);
-    // This is a placeholder for actual auth logic.
-    setTimeout(() => {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
         toast({
             title: "Sign-in Successful",
             description: "Welcome to SearnAI!",
         });
         router.push("/");
+    } catch (error: any) {
+        toast({
+            title: "Google Sign-in Failed",
+            description: error.message,
+            variant: "destructive"
+        });
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   };
 
   const isLoading = loading || authLoading;
@@ -107,16 +136,11 @@ export function AuthForm({ type }: { type: "login" | "signup" }) {
       </Button>
       
       {type === 'login' ? (
-        <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
-                Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
-                Privacy Policy
+        <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{' '}
+            <Link href="/signup" className="underline hover:text-primary">
+                Sign up
             </Link>
-            .
         </p>
       ) : (
          <p className="text-center text-sm text-muted-foreground">

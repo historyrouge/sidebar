@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   "projectId": "scholarsage-ue2av",
@@ -15,7 +16,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Authentication is no longer used, but we keep the firestore instance for other potential features.
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-export { app, db };
+export { app, auth, db };
