@@ -16,7 +16,7 @@ import { generateEditedContent, GenerateEditedContentInput, GenerateEditedConten
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
-import { analyzeImageContent } from '@/ai/flows/analyze-image-content';
+import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
@@ -28,7 +28,6 @@ import { ai } from '@/ai/genkit'; // Keep for other actions
 import { GenerateImageInput, GenerateImageOutput } from '@/components/image-generation-content';
 import { AnalyzeCodeInput, AnalyzeCodeOutput } from '@/lib/code-analysis-types';
 import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput } from '@/lib/question-paper-types';
-import { AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/lib/image-analysis-types';
 
 
 export type ActionResult<T> = {
@@ -332,18 +331,24 @@ export async function chatAction(input: {
     }
     
     const userMessage = input.history[input.history.length - 1];
-    let finalContent: (string | { type: "image_url"; image_url: { url: string; } })[] = [String(userMessage.content)];
-    
+    let finalUserMessage: CoreMessage;
+
     if (finalModelId === 'gpt-oss-120b' && input.imageDataUri) {
-         finalContent.push({
-            type: "image_url",
-            image_url: { url: input.imageDataUri }
-        });
+        // Correctly format for vision model
+        finalUserMessage = {
+            ...userMessage,
+            content: [
+                { type: "text", text: String(userMessage.content) },
+                { type: "image_url", image_url: { url: input.imageDataUri } }
+            ]
+        };
+    } else {
+        finalUserMessage = userMessage;
     }
 
     const messages: CoreMessage[] = [
         ...input.history.slice(0, -1),
-        { ...userMessage, content: finalContent as any }
+        finalUserMessage
     ];
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
@@ -354,7 +359,6 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            // For vision model, we now pass the OCR'd text in fileContent via the system prompt
             const systemPrompt = getSystemPrompt(modelId, input.fileContent);
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
@@ -370,7 +374,6 @@ export async function chatAction(input: {
                 throw new Error("Received an empty response from the AI model.");
             }
             
-            // Sanitize the response here
             responseText = sanitizeKatex(responseText);
 
             const modelName = AVAILABLE_MODELS.find(m => m.id === modelId)?.name || modelId;
@@ -380,14 +383,12 @@ export async function chatAction(input: {
         } catch (e: any) {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
-            // If a specific model was chosen and it failed, don't try others.
             if(finalModelId !== 'auto' && modelsToTry.length === 1) {
                 break;
             }
         }
     }
     
-    // Check for specific token limit error
     if (lastError?.message?.includes('maximum context length')) {
         return { error: "The provided content is too long for the selected AI model. Please shorten it or try a different model." };
     }
@@ -399,6 +400,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
