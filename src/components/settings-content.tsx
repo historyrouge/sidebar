@@ -4,7 +4,7 @@
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { SlidersHorizontal, Database, Bell, Paintbrush, Computer, Calendar, Users, Lock, Info, Globe, ThumbsUp, ChevronRight, Edit } from "lucide-react";
+import { SlidersHorizontal, Database, Bell, Paintbrush, Computer, Calendar, Users, Lock, Info, Globe, ThumbsUp, ChevronRight, Edit, KeyRound } from "lucide-react";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -88,6 +88,15 @@ export function SettingsContent() {
                         <SettingsItem icon={<Lock className="h-5 w-5 text-muted-foreground" />} label="Security & Privacy" href="/settings/security" />
                          <Separator />
                         <SettingsItem icon={<Users className="h-5 w-5 text-muted-foreground" />} label="Accounts" href="/settings/accounts" />
+                    </CardContent>
+                </Card>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base font-semibold">Developer</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2 pt-0">
+                         <SettingsItem icon={<KeyRound className="h-5 w-5 text-muted-foreground" />} label="API Keys" href="/settings/api" />
                     </CardContent>
                 </Card>
 

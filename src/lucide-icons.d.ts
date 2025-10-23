@@ -1,4 +1,5 @@
 
+
 declare module 'lucide-react' {
     import { SVGProps, ComponentType } from 'react';
     
@@ -11,6 +12,7 @@ declare module 'lucide-react' {
     export const Newspaper: LucideIcon;
     export const MessageSquare: LucideIcon;
     export const Star: LucideIcon;
+    export const KeyRound: LucideIcon;
   
     // Re-export all other members from the original module
     export * from 'lucide-react/dist/lucide-react';
