@@ -43,9 +43,13 @@ const AnalysisCard = ({ title, icon, children, className }: { title: string, ico
 
 let modelPromise: Promise<cocoSsd.ObjectDetection> | null = null;
 
-const loadModel = () => {
+const loadModel = async () => {
   if (!modelPromise) {
-    modelPromise = tf.ready().then(() => cocoSsd.load());
+    modelPromise = (async () => {
+      await tf.setBackend('webgl'); // Use GPU acceleration
+      await tf.ready();
+      return await cocoSsd.load();
+    })();
   }
   return modelPromise;
 };
