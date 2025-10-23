@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
@@ -8,7 +9,7 @@ import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Shapes, Smile, Sp
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import { analyzeImageContentAction } from "@/app/actions";
-import { AnalyzeImageContentOutput } from "@/ai/flows/analyze-image-content";
+import { AnalyzeImageContentOutput } from "@/lib/image-analysis-types";
 import { Skeleton } from "./ui/skeleton";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";

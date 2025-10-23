@@ -7,24 +7,29 @@ import { openai } from '@/lib/openai';
 import { z }from 'zod';
 import { generateFlashcardsSamba, GenerateFlashcardsSambaInput, GenerateFlashcardsSambaOutput } from '@/ai/flows/generate-flashcards-samba';
 import { generateQuizzesSamba, GenerateQuizzesSambaInput, GenerateQuizzesSambaOutput } from '@/ai/flows/generate-quizzes-samba';
-import { analyzeCode, AnalyzeCodeInput, AnalyzeCodeOutput } from '@/ai/flows/analyze-code';
+import { analyzeCode } from '@/ai/flows/analyze-code';
 import { generateMindMap, GenerateMindMapInput, GenerateMindMapOutput } from '@/ai/flows/generate-mindmap';
-import { generateQuestionPaper, GenerateQuestionPaperInput, GenerateQuestionPaperOutput } from '@/ai/flows/generate-question-paper';
+import { generateQuestionPaper } from '@/ai/flows/generate-question-paper';
 import { generateEbookChapter, GenerateEbookChapterInput, GenerateEbookChapterOutput } from '@/ai/flows/generate-ebook-chapter';
 import { generatePresentation, GeneratePresentationInput, GeneratePresentationOutput } from '@/ai/flows/generate-presentation';
 import { generateEditedContent, GenerateEditedContentInput, GenerateEditedContentOutput } from '@/ai/flows/generate-edited-content';
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
-import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
+import { analyzeImageContent } from '@/ai/flows/analyze-image-content';
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
 import { webSearch } from '@/ai/tools/web-search';
 import { searchYoutube } from '@/ai/tools/youtube-search';
 import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from '@/lib/models';
-import { generateImage, GenerateImageInput, GenerateImageOutput } from "@/ai/flows/generate-image";
+import { generateImage } from "@/ai/flows/generate-image";
 import { ai } from '@/ai/genkit'; // Keep for other actions
+import { GenerateImageInput, GenerateImageOutput } from '@/components/image-generation-content';
+import { AnalyzeCodeInput, AnalyzeCodeOutput } from '@/lib/code-analysis-types';
+import { GenerateQuestionPaperInput, GenerateQuestionPaperOutput } from '@/lib/question-paper-types';
+import { AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/lib/image-analysis-types';
+
 
 export type ActionResult<T> = {
     data?: T;
@@ -394,6 +399,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
