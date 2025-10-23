@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useCallback, useRef } from "react";
+import { useState, useTransition, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +63,7 @@ export function AnalyzerContent() {
     const imageRef = useRef<HTMLImageElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const getLocalAnalysis = async (dataUri: string): Promise<LocalAnalysis> => {
+    const getLocalAnalysis = useCallback(async (dataUri: string): Promise<LocalAnalysis> => {
         const imageElement = imageRef.current;
         if (!imageElement) throw new Error("Image element not ready");
 
@@ -123,9 +123,9 @@ export function AnalyzerContent() {
         setAnalysisProgress(100);
 
         return { ...colorAndBrightness, objects, text };
-    };
+    }, []);
 
-    const handleAnalyze = (dataUri: string) => {
+    const handleAnalyze = useCallback((dataUri: string) => {
         setAnalysisResult(null);
         startAnalyzing(async () => {
             try {
@@ -140,13 +140,20 @@ export function AnalyzerContent() {
                 setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]);
                 toast({ title: "Analysis Complete!" });
             } catch (error: any) {
-                 toast({ title: "Analysis Failed", description: error.toString(), variant: "destructive" });
+                 toast({ title: "Analysis Failed", description: error.message || error.toString(), variant: "destructive" });
             } finally {
                 setAnalysisStatus("");
                 setAnalysisProgress(0);
             }
         });
-    };
+    }, [getLocalAnalysis, toast]);
+
+    useEffect(() => {
+        if (imageDataUri) {
+            handleAnalyze(imageDataUri);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [imageDataUri]);
 
 
     const handleFileChange = (files: FileList | null) => {
@@ -156,7 +163,7 @@ export function AnalyzerContent() {
             reader.onload = (e) => {
                 const result = e.target?.result as string;
                 setImageDataUri(result);
-                handleAnalyze(result);
+                // The useEffect will now trigger the analysis
             };
             reader.readAsDataURL(file);
         } else {
@@ -303,3 +310,5 @@ export function AnalyzerContent() {
         </div>
     );
 }
+    
+    
