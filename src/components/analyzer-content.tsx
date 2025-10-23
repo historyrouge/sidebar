@@ -5,16 +5,21 @@ import { useState, useTransition, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Sun, Droplets } from "lucide-react";
+import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Sun, Bot, FileText, ScanText, Tag } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
-import { Skeleton } from "./ui/skeleton";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import * as cocoSsd from "@tensorflow-models/coco-ssd";
+import * as tf from "@tensorflow/tfjs";
+import Tesseract from 'tesseract.js';
+import { Progress } from "./ui/progress";
 
 type LocalAnalysis = {
     dominantColors: { hex: string; name: string }[];
     brightness: number;
+    objects: cocoSsd.DetectedObject[];
+    text: string;
 }
 
 type AnalysisHistoryItem = {
@@ -36,18 +41,36 @@ const AnalysisCard = ({ title, icon, children, className }: { title: string, ico
     </motion.div>
 );
 
+let modelPromise: Promise<cocoSsd.ObjectDetection> | null = null;
+
+const loadModel = () => {
+  if (!modelPromise) {
+    modelPromise = tf.ready().then(() => cocoSsd.load());
+  }
+  return modelPromise;
+};
+
 export function AnalyzerContent() {
     const [imageDataUri, setImageDataUri] = useState<string | null>(null);
     const [isAnalyzing, startAnalyzing] = useTransition();
     const [analysisResult, setAnalysisResult] = useState<LocalAnalysis | null>(null);
     const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState(0);
+    const [analysisStatus, setAnalysisStatus] = useState("");
+
     const { toast } = useToast();
+    const imageRef = useRef<HTMLImageElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // Function to get dominant colors locally
-    const getLocalAnalysis = (dataUri: string): Promise<LocalAnalysis> => {
-        return new Promise((resolve, reject) => {
+    const getLocalAnalysis = async (dataUri: string): Promise<LocalAnalysis> => {
+        const imageElement = imageRef.current;
+        if (!imageElement) throw new Error("Image element not ready");
+
+        // 1. Color and Brightness Analysis
+        setAnalysisStatus("Analyzing colors...");
+        setAnalysisProgress(10);
+        const colorAndBrightness = await new Promise<Pick<LocalAnalysis, 'dominantColors' | 'brightness'>>((resolve, reject) => {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d', { willReadFrequently: true });
             if (!canvas || !ctx) return reject('Canvas not ready');
@@ -55,54 +78,51 @@ export function AnalyzerContent() {
             const img = new window.Image();
             img.onload = () => {
                 const aspectRatio = img.width / img.height;
-                const canvasWidth = 200;
-                const canvasHeight = 200 / aspectRatio;
+                const canvasWidth = 100;
+                const canvasHeight = 100 / aspectRatio;
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
-                
                 ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-
                 try {
                     const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
                     const colorCount: { [key: string]: number } = {};
                     let totalBrightness = 0;
-                    const pixelCount = imageData.length / 4;
-
                     for (let i = 0; i < imageData.length; i += 4) {
-                        const r = imageData[i];
-                        const g = imageData[i + 1];
-                        const b = imageData[i + 2];
-                        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                        totalBrightness += brightness;
-
-                        // Simple color bucketing
-                        const r_bucket = Math.round(r / 51) * 51;
-                        const g_bucket = Math.round(g / 51) * 51;
-                        const b_bucket = Math.round(b / 51) * 51;
-                        const hex = `#${r_bucket.toString(16).padStart(2, '0')}${g_bucket.toString(16).padStart(2, '0')}${b_bucket.toString(16).padStart(2, '0')}`;
-                        
+                        const [r, g, b] = [imageData[i], imageData[i + 1], imageData[i + 2]];
+                        totalBrightness += (r * 299 + g * 587 + b * 114) / 1000;
+                        const hex = `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
                         colorCount[hex] = (colorCount[hex] || 0) + 1;
                     }
-
-                    const dominantColors = Object.entries(colorCount)
-                        .sort(([, a], [, b]) => b - a)
-                        .slice(0, 5)
-                        .map(([hex]) => ({ hex, name: hex })); // Simplified name
-
-                    const averageBrightness = Math.round((totalBrightness / pixelCount / 255) * 100);
-
-                    resolve({
-                        dominantColors,
-                        brightness: averageBrightness,
-                    });
-
+                    const dominantColors = Object.entries(colorCount).sort(([, a], [, b]) => b - a).slice(0, 5).map(([hex]) => ({ hex, name: hex }));
+                    const averageBrightness = Math.round((totalBrightness / (imageData.length / 4)) / 2.55);
+                    resolve({ dominantColors, brightness: averageBrightness });
                 } catch (e) {
-                    reject('Could not process image data. It might be from a different origin.');
+                    reject('Could not process image data.');
                 }
             };
-            img.onerror = () => reject('Failed to load image');
+            img.onerror = () => reject('Failed to load image for color analysis');
             img.src = dataUri;
         });
+        setAnalysisProgress(33);
+
+        // 2. Object Detection
+        setAnalysisStatus("Detecting objects...");
+        const model = await loadModel();
+        const objects = await model.detect(imageElement);
+        setAnalysisProgress(66);
+
+        // 3. Text Extraction (OCR)
+        setAnalysisStatus("Extracting text...");
+        const { data: { text } } = await Tesseract.recognize(dataUri, 'eng', {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    setAnalysisProgress(66 + Math.round(m.progress * 34));
+                }
+            }
+        });
+        setAnalysisProgress(100);
+
+        return { ...colorAndBrightness, objects, text };
     };
 
     const handleAnalyze = (dataUri: string) => {
@@ -117,10 +137,13 @@ export function AnalyzerContent() {
                     analysis: result,
                     timestamp: new Date()
                 };
-                setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]); // Keep history to 6 items
+                setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]);
                 toast({ title: "Analysis Complete!" });
             } catch (error: any) {
                  toast({ title: "Analysis Failed", description: error.toString(), variant: "destructive" });
+            } finally {
+                setAnalysisStatus("");
+                setAnalysisProgress(0);
             }
         });
     };
@@ -168,6 +191,7 @@ export function AnalyzerContent() {
     return (
         <div className="flex h-full flex-col bg-[#1A1A1A] text-neutral-200" style={{'--warm-g-start': '#2d2d2d', '--warm-g-end': '#1a1a1a'} as React.CSSProperties}>
             <canvas ref={canvasRef} className="hidden"></canvas>
+            {imageDataUri && <img ref={imageRef} src={imageDataUri} alt="hidden analysis target" className="hidden" />}
             <div 
                 className="absolute inset-0 z-0 opacity-40 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
             />
@@ -175,7 +199,7 @@ export function AnalyzerContent() {
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
                     <BackButton />
-                    <h1 className="text-xl font-semibold tracking-tight">Photo Analyzer</h1>
+                    <h1 className="text-xl font-semibold tracking-tight">Local Photo Analyzer</h1>
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative z-10">
@@ -217,23 +241,34 @@ export function AnalyzerContent() {
                             </Card>
 
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-semibold">Local Analysis</h2>
+                                <h2 className="text-2xl font-semibold">Local AI Analysis</h2>
                                 {isAnalyzing ? (
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <Skeleton className="h-32 w-full" />
-                                            <Skeleton className="h-32 w-full" />
-                                        </div>
+                                    <div className="flex flex-col items-center gap-4 text-center">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="font-semibold">{analysisStatus}</p>
+                                        <Progress value={analysisProgress} className="w-full max-w-sm" />
                                     </div>
                                 ) : analysisResult && (
-                                     <div className="grid grid-cols-2 gap-4">
-                                        <AnalysisCard title="Dominant Colors" icon={<Palette />}>
+                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <AnalysisCard title="Dominant Colors" icon={<Palette />} className="lg:col-span-2">
                                             <div className="flex flex-wrap gap-2">
                                                 {analysisResult.dominantColors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
                                             </div>
                                         </AnalysisCard>
                                         <AnalysisCard title="Brightness" icon={<Sun />}>
                                             <p className="text-3xl font-bold">{analysisResult.brightness}%</p>
+                                        </AnalysisCard>
+                                        <AnalysisCard title="Detected Objects" icon={<Bot />} className="lg:col-span-3">
+                                            {analysisResult.objects.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {analysisResult.objects.map((obj, i) => <div key={i} className="flex items-center gap-2 text-xs bg-neutral-700/60 px-2 py-1 rounded-full"><Tag className="w-3 h-3" /> {obj.class} <span className="text-neutral-400">({Math.round(obj.score * 100)}%)</span></div>)}
+                                                </div>
+                                            ) : <p className="text-xs text-neutral-400">No objects detected.</p>}
+                                        </AnalysisCard>
+                                        <AnalysisCard title="Extracted Text (OCR)" icon={<ScanText />} className="lg:col-span-3">
+                                            {analysisResult.text ? (
+                                                <p className="text-xs text-neutral-300 whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">{analysisResult.text}</p>
+                                            ) : <p className="text-xs text-neutral-400">No text found in the image.</p>}
                                         </AnalysisCard>
                                     </div>
                                 )}
@@ -268,5 +303,3 @@ export function AnalyzerContent() {
         </div>
     );
 }
-
-    
