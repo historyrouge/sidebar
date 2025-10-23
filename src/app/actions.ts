@@ -16,6 +16,7 @@ import { generateEditedContent, GenerateEditedContentInput, GenerateEditedConten
 import { helpChat, HelpChatInput, HelpChatOutput } from '@/ai/flows/help-chatbot';
 import { getYoutubeTranscript, GetYoutubeTranscriptInput, GetYoutubeTranscriptOutput } from '@/ai/flows/youtube-transcript';
 import { analyzeContent, AnalyzeContentInput, AnalyzeContentOutput } from '@/ai/flows/analyze-content';
+import { analyzeImageContent, AnalyzeImageContentInput, AnalyzeImageContentOutput } from '@/ai/flows/analyze-image-content';
 import { summarizeContent, SummarizeContentInput, SummarizeContentOutput } from '@/ai/flows/summarize-content';
 import { textToSpeech, TextToSpeechInput, TextToSpeechOutput } from '@/ai/flows/text-to-speech';
 import { chatWithTutor, ChatWithTutorInput, ChatWithTutorOutput } from '@/ai/flows/chat-tutor';
@@ -170,6 +171,16 @@ export async function analyzeContentAction(content: string): Promise<ActionResul
     }
 }
 
+export async function analyzeImageContentAction(input: AnalyzeImageContentInput): Promise<ActionResult<AnalyzeImageContentOutput>> {
+    try {
+        const data = await analyzeImageContent(input);
+        return { data };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
+
 export async function summarizeContentAction(input: SummarizeContentInput): Promise<ActionResult<SummarizeContentOutput>> {
     try {
         const data = await summarizeContent(input);
@@ -314,16 +325,21 @@ export async function chatAction(input: {
     if (finalModelId === 'auto') {
         finalModelId = DEFAULT_MODEL_ID; // Fallback from auto if not an image
     }
+    
+    const userMessage = input.history[input.history.length - 1];
+    let finalContent: (string | { type: "image_url"; image_url: { url: string; } })[] = [String(userMessage.content)];
+    
+    if (finalModelId === 'gpt-oss-120b' && input.imageDataUri) {
+         finalContent.push({
+            type: "image_url",
+            image_url: { url: input.imageDataUri }
+        });
+    }
 
-    const messages: CoreMessage[] = input.history.map(msg => {
-        // This is the fix. We are ensuring the content is always a string.
-        // If an image was attached, its OCR'd text is in fileContent, which is
-        // already being appended to the system prompt. The user's text query is in msg.content.
-        return {
-            role: msg.role as 'user' | 'model' | 'tool',
-            content: String(msg.content)
-        };
-    });
+    const messages: CoreMessage[] = [
+        ...input.history.slice(0, -1),
+        { ...userMessage, content: finalContent as any }
+    ];
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')
@@ -378,6 +394,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
