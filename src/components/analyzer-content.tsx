@@ -1,23 +1,26 @@
 
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Shapes, Smile, Sparkles, BrainCircuit, Droplets } from "lucide-react";
+import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Sun, Droplets } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
-import { analyzeImageContentAction } from "@/app/actions";
-import { AnalyzeImageContentOutput } from "@/lib/image-analysis-types";
 import { Skeleton } from "./ui/skeleton";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 
+type LocalAnalysis = {
+    dominantColors: { hex: string; name: string }[];
+    brightness: number;
+}
+
 type AnalysisHistoryItem = {
     id: string;
     imageUrl: string;
-    analysis: AnalyzeImageContentOutput;
+    analysis: LocalAnalysis;
     timestamp: Date;
 }
 
@@ -36,10 +39,92 @@ const AnalysisCard = ({ title, icon, children, className }: { title: string, ico
 export function AnalyzerContent() {
     const [imageDataUri, setImageDataUri] = useState<string | null>(null);
     const [isAnalyzing, startAnalyzing] = useTransition();
-    const [analysisResult, setAnalysisResult] = useState<AnalyzeImageContentOutput | null>(null);
+    const [analysisResult, setAnalysisResult] = useState<LocalAnalysis | null>(null);
     const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Function to get dominant colors locally
+    const getLocalAnalysis = (dataUri: string): Promise<LocalAnalysis> => {
+        return new Promise((resolve, reject) => {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d', { willReadFrequently: true });
+            if (!canvas || !ctx) return reject('Canvas not ready');
+
+            const img = new window.Image();
+            img.onload = () => {
+                const aspectRatio = img.width / img.height;
+                const canvasWidth = 200;
+                const canvasHeight = 200 / aspectRatio;
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                
+                ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+                try {
+                    const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+                    const colorCount: { [key: string]: number } = {};
+                    let totalBrightness = 0;
+                    const pixelCount = imageData.length / 4;
+
+                    for (let i = 0; i < imageData.length; i += 4) {
+                        const r = imageData[i];
+                        const g = imageData[i + 1];
+                        const b = imageData[i + 2];
+                        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                        totalBrightness += brightness;
+
+                        // Simple color bucketing
+                        const r_bucket = Math.round(r / 51) * 51;
+                        const g_bucket = Math.round(g / 51) * 51;
+                        const b_bucket = Math.round(b / 51) * 51;
+                        const hex = `#${r_bucket.toString(16).padStart(2, '0')}${g_bucket.toString(16).padStart(2, '0')}${b_bucket.toString(16).padStart(2, '0')}`;
+                        
+                        colorCount[hex] = (colorCount[hex] || 0) + 1;
+                    }
+
+                    const dominantColors = Object.entries(colorCount)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([hex]) => ({ hex, name: hex })); // Simplified name
+
+                    const averageBrightness = Math.round((totalBrightness / pixelCount / 255) * 100);
+
+                    resolve({
+                        dominantColors,
+                        brightness: averageBrightness,
+                    });
+
+                } catch (e) {
+                    reject('Could not process image data. It might be from a different origin.');
+                }
+            };
+            img.onerror = () => reject('Failed to load image');
+            img.src = dataUri;
+        });
+    };
+
+    const handleAnalyze = (dataUri: string) => {
+        setAnalysisResult(null);
+        startAnalyzing(async () => {
+            try {
+                const result = await getLocalAnalysis(dataUri);
+                setAnalysisResult(result);
+                 const newHistoryItem: AnalysisHistoryItem = {
+                    id: new Date().toISOString(),
+                    imageUrl: dataUri,
+                    analysis: result,
+                    timestamp: new Date()
+                };
+                setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]); // Keep history to 6 items
+                toast({ title: "Analysis Complete!" });
+            } catch (error: any) {
+                 toast({ title: "Analysis Failed", description: error.toString(), variant: "destructive" });
+            }
+        });
+    };
+
 
     const handleFileChange = (files: FileList | null) => {
         const file = files?.[0];
@@ -56,26 +141,6 @@ export function AnalyzerContent() {
         }
     };
 
-    const handleAnalyze = (dataUri: string) => {
-        setAnalysisResult(null);
-        startAnalyzing(async () => {
-            const result = await analyzeImageContentAction({ imageDataUri: dataUri });
-            if (result.error) {
-                toast({ title: "Analysis Failed", description: result.error, variant: "destructive" });
-            } else if (result.data) {
-                setAnalysisResult(result.data);
-                const newHistoryItem = {
-                    id: new Date().toISOString(),
-                    imageUrl: dataUri,
-                    analysis: result.data,
-                    timestamp: new Date()
-                };
-                setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]); // Keep history to 6 items
-                toast({ title: "Analysis Complete!" });
-            }
-        });
-    };
-    
     const handleClear = () => {
         setImageDataUri(null);
         setAnalysisResult(null);
@@ -102,6 +167,7 @@ export function AnalyzerContent() {
 
     return (
         <div className="flex h-full flex-col bg-[#1A1A1A] text-neutral-200" style={{'--warm-g-start': '#2d2d2d', '--warm-g-end': '#1a1a1a'} as React.CSSProperties}>
+            <canvas ref={canvasRef} className="hidden"></canvas>
             <div 
                 className="absolute inset-0 z-0 opacity-40 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"
             />
@@ -151,36 +217,23 @@ export function AnalyzerContent() {
                             </Card>
 
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-semibold">AI Analysis</h2>
+                                <h2 className="text-2xl font-semibold">Local Analysis</h2>
                                 {isAnalyzing ? (
                                     <div className="space-y-4">
-                                        <Skeleton className="h-24 w-full" />
                                         <div className="grid grid-cols-2 gap-4">
                                             <Skeleton className="h-32 w-full" />
                                             <Skeleton className="h-32 w-full" />
                                         </div>
-                                        <Skeleton className="h-40 w-full" />
                                     </div>
                                 ) : analysisResult && (
-                                     <div className="bento-grid">
-                                        <AnalysisCard title="Description" icon={<Sparkles />} className="bento-main">
-                                            <p>{analysisResult.description}</p>
-                                        </AnalysisCard>
-                                        <AnalysisCard title="Mood & Tone" icon={<Smile />}>
-                                            <p className="capitalize">{analysisResult.mood.join(', ')}</p>
-                                        </AnalysisCard>
-                                        <AnalysisCard title="Key Objects" icon={<Shapes />}>
-                                            <ul className="list-disc list-inside">
-                                                {analysisResult.objects.map((obj, i) => <li key={i}>{obj}</li>)}
-                                            </ul>
-                                        </AnalysisCard>
+                                     <div className="grid grid-cols-2 gap-4">
                                         <AnalysisCard title="Dominant Colors" icon={<Palette />}>
                                             <div className="flex flex-wrap gap-2">
-                                                {analysisResult.colors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
+                                                {analysisResult.dominantColors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
                                             </div>
                                         </AnalysisCard>
-                                        <AnalysisCard title="Composition" icon={<BrainCircuit />}>
-                                            <p>{analysisResult.composition.join(', ')}</p>
+                                        <AnalysisCard title="Brightness" icon={<Sun />}>
+                                            <p className="text-3xl font-bold">{analysisResult.brightness}%</p>
                                         </AnalysisCard>
                                     </div>
                                 )}
@@ -212,16 +265,8 @@ export function AnalyzerContent() {
                     )}
                 </div>
             </main>
-            <style jsx>{`
-                .bento-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 1rem;
-                }
-                .bento-main {
-                    grid-column: span 2;
-                }
-            `}</style>
         </div>
     );
 }
+
+    
