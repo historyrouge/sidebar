@@ -5,7 +5,7 @@ import { useState, useTransition, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image as ImageIcon, UploadCloud, X, Palette, Sun, Bot, FileText, ScanText, Tag } from "lucide-react";
+import { Loader2, Image as ImageIcon, UploadCloud, X, Sun, Bot, ScanText, Tag } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import Image from "next/image";
@@ -250,7 +250,7 @@ export function AnalyzerContent() {
                                     </div>
                                 ) : analysisResult && (
                                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <AnalysisCard title="Dominant Colors" icon={<Palette />} className="lg:col-span-2">
+                                        <AnalysisCard title="Dominant Colors" icon={<ImageIcon />} className="lg:col-span-2">
                                             <div className="flex flex-wrap gap-2">
                                                 {analysisResult.dominantColors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
                                             </div>
