@@ -34,6 +34,7 @@ import {
   Music,
   Bot,
   View,
+  FlaskConical,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,7 @@ import { useRouter } from "next/navigation";
 const studyTools = [
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
     { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
+    { name: "Analyzer", icon: <FlaskConical />, href: "/analyzer" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
     { name: "Flashcards", icon: <Layers />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },
@@ -85,26 +87,32 @@ const mainNav = [
 ]
 
 const AppLogo = () => (
-  <svg
-    className="size-5"
-    viewBox="0 0 100 100"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M50 2.88675L93.3013 26.4434V73.5566L50 97.1132L6.69873 73.5566V26.4434L50 2.88675Z"
-      fill="currentColor"
-      className="text-primary-foreground"
-    />
-    <path
-      d="M63 40.5C63 36.3579 59.6421 33 55.5 33H44.5C40.3579 33 37 36.3579 37 40.5V43.5C37 47.6421 40.3579 51 44.5 51H55.5C59.6421 51 63 54.3579 63 58.5V61.5C63 65.6421 59.6421 69 55.5 69H44.5C40.3579 69 37 65.6421 37 61.5"
-      stroke="hsl(var(--primary))"
-      strokeWidth="8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: "hsl(var(--accent-start))", stopOpacity: 1 }} />
+          <stop offset="100%" style={{ stopColor: "hsl(var(--accent-end))", stopOpacity: 1 }} />
+        </linearGradient>
+      </defs>
+      <path
+        d="M50 2.88675L93.3013 26.4434V73.5566L50 97.1132L6.69873 73.5566V26.4434L50 2.88675Z"
+        fill="currentColor"
+        className="text-primary-foreground"
+      />
+      <path
+        d="M63 40.5C63 36.3579 59.6421 33 55.5 33H44.5C40.3579 33 37 36.3579 37 40.5V43.5C37 47.6421 40.3579 51 44.5 51H55.5C59.6421 51 63 54.3579 63 58.5V61.5C63 65.6421 59.6421 69 55.5 69H44.5C40.3579 69 37 65.6421 37 61.5"
+        stroke="url(#logoGradient)"
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 
 
 export function AppSidebar() {
@@ -144,9 +152,11 @@ export function AppSidebar() {
               <SidebarMenuButton
                 tooltip={item.name}
                 isActive={pathname === item.href}
-                className="justify-start w-full gap-2.5 px-3"
-                onClick={handleLinkClick}
+                className="justify-start w-full gap-2.5 px-3 relative"
               >
+                 {pathname === item.href && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                  )}
                   <div className="transition-transform duration-200 group-hover/menu-button:scale-110">
                     {item.icon}
                   </div>
@@ -158,45 +168,86 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-card/5 border-r border-border text-sidebar-foreground backdrop-blur-lg">
+    <Sidebar className="bg-black/80 border-r border-neutral-800/50 text-sidebar-foreground backdrop-blur-lg">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-900 text-primary-foreground border border-neutral-700">
                 <AppLogo />
             </div>
-            <h1 className="text-lg font-semibold">SearnAI</h1>
+            <h1 className="text-lg font-semibold tracking-wider text-gradient">SearnAI</h1>
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-grow flex flex-col">
         <div className="flex-grow">
             <SidebarMenu>
+                 <SidebarMenuItem>
+                    <Link href="/" passHref>
+                        <SidebarMenuButton
+                            isActive={pathname === '/'}
+                            className="justify-start w-full gap-2.5 px-3 relative"
+                        >
+                            {pathname === "/" && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                            )}
+                            <Home />
+                            <span className="text-sm">Home</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton
                         onClick={handleNewChat}
-                        className="justify-start w-full gap-2.5 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+                        className="justify-start w-full gap-2.5 px-3"
                     >
-                        <FileEdit />
+                        <MessageSquare />
                         <span className="text-sm">New Chat</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
-                 {renderMenuItems(mainNav)}
+                 <SidebarMenuItem>
+                    <Link href="/planner" passHref>
+                        <SidebarMenuButton
+                            isActive={pathname === '/planner'}
+                            className="justify-start w-full gap-2.5 px-3 relative"
+                        >
+                             {pathname === "/planner" && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                            )}
+                            <Calendar />
+                            <span className="text-sm">Planner</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/agent" passHref>
+                        <SidebarMenuButton
+                            isActive={pathname === '/agent'}
+                            className="justify-start w-full gap-2.5 px-3 relative"
+                        >
+                             {pathname === "/agent" && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                            )}
+                            <Bot />
+                            <span className="text-sm">Agent</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
             </SidebarMenu>
             
-            <SidebarSeparator className="my-4" />
+            <SidebarSeparator className="my-4 border-neutral-800/60" />
             
             <SidebarMenu>
                  <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Study Tools</SidebarGroupLabel>
                  {renderMenuItems(studyTools)}
             </SidebarMenu>
 
-            <SidebarSeparator className="my-4" />
+            <SidebarSeparator className="my-4 border-neutral-800/60" />
 
             <SidebarMenu>
                  <SidebarGroupLabel className="uppercase text-xs font-semibold tracking-wider px-3 my-2 text-sidebar-group-foreground">Resources</SidebarGroupLabel>
                  {renderMenuItems(resources)}
             </SidebarMenu>
         </div>
-        <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <SidebarFooter className="p-2 border-t border-neutral-800/60">
             <SidebarMenu>
                  <SidebarMenuItem>
                     <Link href="/settings">
