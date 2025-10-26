@@ -33,7 +33,15 @@ const nextConfig: NextConfig = {
             ]
         }
     ]
-  }
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/__/auth/:path*',
+        destination: 'https://scholarsage-ue2av.firebaseapp.com/__/auth/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
