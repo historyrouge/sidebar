@@ -4,3 +4,10 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# This rewrite rule is essential for Firebase Authentication to work on Netlify.
+# It proxies the special Firebase auth handler path to the Firebase service.
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://{{YOUR_PROJECT_ID}}.firebaseapp.com/__/auth/:splat"
+  status = 200
