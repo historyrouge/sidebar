@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -41,6 +42,7 @@ import { motion } from "framer-motion";
 import * as pdfjs from 'pdfjs-dist';
 import wav from 'wav';
 import { Buffer } from 'buffer';
+import { useAuth } from "@/hooks/use-auth";
 
 // Required for pdf.js to work
 if (typeof window !== 'undefined') {
@@ -172,6 +174,7 @@ export function ChatContent() {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -291,6 +294,7 @@ export function ChatContent() {
 
       const result = await chatAction({ 
           history: genkitHistory, 
+          userName: user?.displayName,
           fileContent: currentFileContent, 
           imageDataUri: currentImageDataUri,
           model: currentModel,
@@ -309,7 +313,7 @@ export function ChatContent() {
           setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
       }
       
-  }, [currentModel, activeButton, toast]);
+  }, [currentModel, activeButton, toast, user]);
 
 
   const handleSendMessage = useCallback(async (messageContent?: string) => {
@@ -320,7 +324,8 @@ export function ChatContent() {
       recognitionRef.current?.stop();
     }
     const messageId = `${Date.now()}`;
-    const userMessage: Message = { id: messageId, role: "user", content: messageToSend, image: imageDataUri };
+    const formattedContent = `**You said:** ${messageToSend}`;
+    const userMessage: Message = { id: messageId, role: "user", content: formattedContent, image: imageDataUri };
     
     // Filter out any existing browser views before adding new message
     const newHistory = [...history.filter(m => m.role !== 'browser'), userMessage];
@@ -897,11 +902,14 @@ export function ChatContent() {
                       >
                         {message.role === "user" ? (
                           <div className="flex items-start gap-4 justify-end">
-                            <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                              {message.image && (
-                                <Image src={message.image} alt="User upload" width={200} height={200} className="rounded-md mb-2" />
-                              )}
-                              <p className="text-base whitespace-pre-wrap">{message.content}</p>
+                             <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                               <ReactMarkdown
+                                  remarkPlugins={[remarkMath, remarkGfm]}
+                                  rehypePlugins={[rehypeKatex]}
+                                  className="prose dark:prose-invert max-w-none text-sm"
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
                             </div>
                             <Avatar className="h-9 w-9 border">
                               <AvatarFallback><User className="size-5" /></AvatarFallback>

@@ -203,8 +203,8 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
     }
 }
 
-const getSystemPrompt = (modelId: string, fileContent: string | null | undefined): string => {
-    const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
+const getSystemPrompt = (modelId: string, userName: string | null, fileContent: string | null | undefined): string => {
+    const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. You are currently speaking with ${userName || 'a student'}. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
     const personaPrompts: Record<string, string> = {
         'gpt-oss-120b': `You are an expert AI assistant with a confident and helpful Indian-style personality. You are a powerful vision-capable model. When provided with text extracted from an image, analyze it as if you were looking at the image itself.
@@ -272,6 +272,7 @@ $$
 // Main non-streaming chat action
 export async function chatAction(input: {
     history: CoreMessage[],
+    userName?: string | null,
     fileContent?: string | null,
     imageDataUri?: string | null,
     model?: string,
@@ -359,7 +360,7 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            const systemPrompt = getSystemPrompt(modelId, input.fileContent);
+            const systemPrompt = getSystemPrompt(modelId, input.userName || null, input.fileContent);
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
             const response = await openai.chat.completions.create({
@@ -400,6 +401,7 @@ export async function chatAction(input: {
     
 
     
+
 
 
 
