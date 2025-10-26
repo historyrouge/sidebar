@@ -5,7 +5,7 @@ import { useState, useTransition, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image as ImageIcon, UploadCloud, X, Sun, Bot, ScanText, Tag } from "lucide-react";
+import { Loader2, Image as ImageIcon, UploadCloud, X, Sun, Bot, ScanText, Tag, Trash2, Info } from "lucide-react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import Image from "next/image";
@@ -20,6 +20,8 @@ type LocalAnalysis = {
     brightness: number;
     objects: cocoSsd.DetectedObject[];
     text: string;
+    aiDescription: string;
+    aiTags: { label: string; score: number }[];
 }
 
 type AnalysisHistoryItem = {
@@ -42,17 +44,62 @@ const AnalysisCard = ({ title, icon, children, className }: { title: string, ico
 );
 
 let modelPromise: Promise<cocoSsd.ObjectDetection> | null = null;
-
-const loadModel = async () => {
+const loadCocoModel = async () => {
   if (!modelPromise) {
     modelPromise = (async () => {
-      await tf.setBackend('webgl'); // Use GPU acceleration
+      await tf.setBackend('webgl');
       await tf.ready();
       return await cocoSsd.load();
     })();
   }
   return modelPromise;
 };
+
+// Singleton for transformer pipeline
+let pipelinePromise: any = null;
+const getPipeline = async (type: 'zero-shot-image-classification' | 'image-to-text') => {
+    if (!pipelinePromise) {
+        const { pipeline } = await import('@xenova/transformers');
+        pipelinePromise = pipeline;
+    }
+    const pipe = await pipelinePromise;
+    return await pipe(type, 'Xenova/clip-vit-base-patch32');
+};
+
+const preprocessImage = (file: File, maxSize: number = 640): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.createElement("img");
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return reject(new Error("Could not get canvas context"));
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL("image/jpeg", 0.9));
+            };
+            img.onerror = reject;
+            img.src = event.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
 
 export function AnalyzerContent() {
     const [imageDataUri, setImageDataUri] = useState<string | null>(null);
@@ -67,18 +114,29 @@ export function AnalyzerContent() {
     const imageRef = useRef<HTMLImageElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
+    useEffect(() => {
+        const savedHistory = localStorage.getItem('analysisHistory');
+        if (savedHistory) {
+            setHistory(JSON.parse(savedHistory));
+        }
+    }, []);
+
+    useEffect(() => {
+        if(history.length > 0) {
+            localStorage.setItem('analysisHistory', JSON.stringify(history));
+        }
+    }, [history]);
+
     const getLocalAnalysis = useCallback(async (dataUri: string): Promise<LocalAnalysis> => {
         const imageElement = imageRef.current;
         if (!imageElement) throw new Error("Image element not ready");
 
-        // 1. Color and Brightness Analysis
         setAnalysisStatus("Analyzing colors...");
         setAnalysisProgress(10);
         const colorAndBrightness = await new Promise<Pick<LocalAnalysis, 'dominantColors' | 'brightness'>>((resolve, reject) => {
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d', { willReadFrequently: true });
             if (!canvas || !ctx) return reject('Canvas not ready');
-
             const img = new window.Image();
             img.onload = () => {
                 const aspectRatio = img.width / img.height;
@@ -107,26 +165,38 @@ export function AnalyzerContent() {
             img.onerror = () => reject('Failed to load image for color analysis');
             img.src = dataUri;
         });
-        setAnalysisProgress(33);
 
-        // 2. Object Detection
         setAnalysisStatus("Detecting objects...");
-        const model = await loadModel();
-        const objects = await model.detect(imageElement);
-        setAnalysisProgress(66);
+        setAnalysisProgress(25);
+        const cocoModel = await loadCocoModel();
+        const objects = await cocoModel.detect(imageElement);
 
-        // 3. Text Extraction (OCR)
-        setAnalysisStatus("Extracting text...");
+        setAnalysisStatus("Extracting text (OCR)...");
+        setAnalysisProgress(50);
         const { data: { text } } = await Tesseract.recognize(dataUri, 'eng', {
             logger: m => {
                 if (m.status === 'recognizing text') {
-                    setAnalysisProgress(66 + Math.round(m.progress * 34));
+                    setAnalysisProgress(50 + Math.round(m.progress * 25));
                 }
             }
         });
+        
+        setAnalysisStatus("Generating AI description...");
+        setAnalysisProgress(75);
+        const captioner = await getPipeline('image-to-text');
+        const captionResult = await captioner(dataUri);
+        const aiDescription = captionResult?.[0]?.generated_text || "Could not generate a description.";
+        
+        setAnalysisStatus("Classifying content...");
+        setAnalysisProgress(90);
+        const classifier = await getPipeline('zero-shot-image-classification');
+        const candidate_labels = ['photograph', 'illustration', 'comic', 'diagram', 'line art', '3d render', 'landscape', 'portrait', 'screenshot'];
+        const tagsResult = await classifier(dataUri, candidate_labels);
+        const aiTags = tagsResult ? tagsResult.filter((t:any) => t.score > 0.8).sort((a:any, b:any) => b.score - a.score) : [];
+
         setAnalysisProgress(100);
 
-        return { ...colorAndBrightness, objects, text };
+        return { ...colorAndBrightness, objects, text, aiDescription, aiTags };
     }, []);
 
     const handleAnalyze = useCallback((dataUri: string) => {
@@ -141,7 +211,7 @@ export function AnalyzerContent() {
                     analysis: result,
                     timestamp: new Date()
                 };
-                setHistory(prev => [newHistoryItem, ...prev.slice(0, 5)]);
+                setHistory(prev => [newHistoryItem, ...prev.slice(0, 11)]);
                 toast({ title: "Analysis Complete!" });
             } catch (error: any) {
                  toast({ title: "Analysis Failed", description: error.message || error.toString(), variant: "destructive" });
@@ -152,28 +222,27 @@ export function AnalyzerContent() {
         });
     }, [getLocalAnalysis, toast]);
 
-    useEffect(() => {
-        if (imageDataUri) {
-            handleAnalyze(imageDataUri);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [imageDataUri]);
-
-
-    const handleFileChange = (files: FileList | null) => {
+    const handleFileChange = async (files: FileList | null) => {
         const file = files?.[0];
         if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const result = e.target?.result as string;
-                setImageDataUri(result);
-                // The useEffect will now trigger the analysis
-            };
-            reader.readAsDataURL(file);
+            startAnalyzing(async () => {
+                try {
+                    const processedDataUri = await preprocessImage(file);
+                    setImageDataUri(processedDataUri);
+                } catch (e) {
+                    toast({ title: "Image processing failed", variant: "destructive" });
+                }
+            });
         } else {
             toast({ title: "Invalid File", description: "Please upload an image.", variant: "destructive" });
         }
     };
+    
+    useEffect(() => {
+        if (imageDataUri && !analysisResult) {
+            handleAnalyze(imageDataUri);
+        }
+    }, [imageDataUri, analysisResult, handleAnalyze]);
 
     const handleClear = () => {
         setImageDataUri(null);
@@ -198,6 +267,12 @@ export function AnalyzerContent() {
         setImageDataUri(item.imageUrl);
         setAnalysisResult(item.analysis);
     }
+
+    const clearHistory = () => {
+        setHistory([]);
+        localStorage.removeItem('analysisHistory');
+        toast({ title: 'History cleared!' });
+    };
 
     return (
         <div className="flex h-full flex-col bg-[#1A1A1A] text-neutral-200" style={{'--warm-g-start': '#2d2d2d', '--warm-g-end': '#1a1a1a'} as React.CSSProperties}>
@@ -253,30 +328,38 @@ export function AnalyzerContent() {
 
                             <div className="space-y-6">
                                 <h2 className="text-2xl font-semibold">Local AI Analysis</h2>
-                                {isAnalyzing ? (
+                                {isAnalyzing && !analysisResult ? (
                                     <div className="flex flex-col items-center gap-4 text-center">
                                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
                                         <p className="font-semibold">{analysisStatus}</p>
                                         <Progress value={analysisProgress} className="w-full max-w-sm" />
                                     </div>
                                 ) : analysisResult && (
-                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <AnalysisCard title="Dominant Colors" icon={<ImageIcon />} className="lg:col-span-2">
+                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <AnalysisCard title="AI Description" icon={<Info />} className="md:col-span-3">
+                                            <p className="text-xs text-neutral-300">{analysisResult.aiDescription}</p>
+                                        </AnalysisCard>
+                                        <AnalysisCard title="AI Tags" icon={<Bot />} className="md:col-span-2">
                                             <div className="flex flex-wrap gap-2">
-                                                {analysisResult.dominantColors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
+                                                 {analysisResult.aiTags.map((tag, i) => <div key={i} className="flex items-center gap-2 text-xs bg-neutral-700/60 px-2 py-1 rounded-full"><Tag className="w-3 h-3" /> {tag.label}</div>)}
                                             </div>
                                         </AnalysisCard>
                                         <AnalysisCard title="Brightness" icon={<Sun />}>
                                             <p className="text-3xl font-bold">{analysisResult.brightness}%</p>
                                         </AnalysisCard>
-                                        <AnalysisCard title="Detected Objects" icon={<Bot />} className="lg:col-span-3">
+                                        <AnalysisCard title="Dominant Colors" icon={<ImageIcon />} className="md:col-span-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                {analysisResult.dominantColors.map(color => <div key={color.hex} className="flex items-center gap-2 text-xs"><div className="h-4 w-4 rounded-full border border-neutral-600" style={{backgroundColor: color.hex}}></div> {color.name}</div>)}
+                                            </div>
+                                        </AnalysisCard>
+                                        <AnalysisCard title="Detected Objects" icon={<Bot />} className="md:col-span-3">
                                             {analysisResult.objects.length > 0 ? (
                                                 <div className="flex flex-wrap gap-2">
                                                     {analysisResult.objects.map((obj, i) => <div key={i} className="flex items-center gap-2 text-xs bg-neutral-700/60 px-2 py-1 rounded-full"><Tag className="w-3 h-3" /> {obj.class} <span className="text-neutral-400">({Math.round(obj.score * 100)}%)</span></div>)}
                                                 </div>
                                             ) : <p className="text-xs text-neutral-400">No objects detected.</p>}
                                         </AnalysisCard>
-                                        <AnalysisCard title="Extracted Text (OCR)" icon={<ScanText />} className="lg:col-span-3">
+                                        <AnalysisCard title="Extracted Text (OCR)" icon={<ScanText />} className="md:col-span-3">
                                             {analysisResult.text ? (
                                                 <p className="text-xs text-neutral-300 whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">{analysisResult.text}</p>
                                             ) : <p className="text-xs text-neutral-400">No text found in the image.</p>}
@@ -289,7 +372,12 @@ export function AnalyzerContent() {
                     
                     {history.length > 0 && (
                         <div className="mt-12">
-                            <h3 className="text-xl font-semibold mb-4 text-center">Analysis History</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-semibold text-center">Analysis History</h3>
+                                <Button variant="outline" size="sm" onClick={clearHistory}>
+                                    <Trash2 className="mr-2 h-4 w-4"/> Clear History
+                                </Button>
+                            </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 {history.map(item => (
                                     <motion.div key={item.id} whileHover={{scale: 1.05}}>
@@ -314,5 +402,3 @@ export function AnalyzerContent() {
         </div>
     );
 }
-    
-    
