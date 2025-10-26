@@ -1,15 +1,17 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, onAuthStateChanged, updateProfile } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { User, onAuthStateChanged, updateProfile, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   updateUserProfileInAuth: (displayName: string) => Promise<void>;
+  signOutUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -37,10 +40,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signOutUser = useCallback(async () => {
+    try {
+        await signOut(auth);
+        router.push('/login');
+    } catch (error) {
+        console.error("Sign out error", error);
+    }
+  }, [router]);
+
   const value = {
     user,
     loading,
     updateUserProfileInAuth,
+    signOutUser,
   };
   
   if (loading) {
