@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { BackButton } from "./back-button";
 import { SidebarTrigger } from "./ui/sidebar";
-import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, getDoc, runTransaction, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ type User = {
     name: string;
     avatar: string;
     isFollowing: boolean;
-    mutuals: number;
+    followerCount: number;
     aiHint?: string;
 };
 
@@ -34,7 +34,7 @@ const FriendCard = ({ user, onFollowToggle, isLoading }: { user: User, onFollowT
             <div className="flex justify-between items-center">
                 <div>
                     <div className="font-semibold">{user.name || 'Anonymous User'}</div>
-                    {user.mutuals > 0 && <div className="text-xs text-muted-foreground">{user.mutuals} mutuals</div>}
+                    {user.followerCount > 0 && <div className="text-xs text-muted-foreground">{user.followerCount} {user.followerCount === 1 ? 'follower' : 'followers'}</div>}
                 </div>
                 <Button 
                     variant={user.isFollowing ? 'secondary' : 'default'} 
@@ -77,7 +77,7 @@ export function FriendsContent() {
                             name: userData.name || userData.displayName || "Anonymous",
                             avatar: userData.photoURL || `https://placehold.co/40x40.png`,
                             isFollowing: followDoc.exists(),
-                            mutuals: 0, // Mutuals logic to be implemented later
+                            followerCount: userData.followerCount || 0,
                             aiHint: "profile picture"
                         };
                     })
@@ -95,7 +95,9 @@ export function FriendsContent() {
         }
     };
 
-    fetchUsers();
+    if (currentUser) {
+        fetchUsers();
+    }
   }, [currentUser, toast]);
   
   const handleFollowToggle = async (userIdToToggle: string, isCurrentlyFollowing: boolean) => {
@@ -103,20 +105,35 @@ export function FriendsContent() {
       
       setFollowLoading(prev => ({...prev, [userIdToToggle]: true}));
 
-      const followDocRef = doc(db, "users", currentUser.uid, "following", userIdToToggle);
+      const currentUserDocRef = doc(db, "users", currentUser.uid);
+      const userToToggleDocRef = doc(db, "users", userIdToToggle);
+      const followingDocRef = doc(currentUserDocRef, "following", userIdToToggle);
+      const followerDocRef = doc(userToToggleDocRef, "followers", currentUser.uid);
 
       try {
-          if (isCurrentlyFollowing) {
-              await deleteDoc(followDocRef);
-              toast({ title: "Unfollowed", description: "You are no longer following this user." });
-          } else {
-              await setDoc(followDocRef, { followedAt: new Date() });
-              toast({ title: "Followed!", description: "You are now following this user." });
-          }
-          // Update UI instantly
-          setUsers(prevUsers => prevUsers.map(u => 
-              u.id === userIdToToggle ? { ...u, isFollowing: !isCurrentlyFollowing } : u
-          ));
+            await runTransaction(db, async (transaction) => {
+                if (isCurrentlyFollowing) {
+                    // Unfollow
+                    transaction.delete(followingDocRef);
+                    transaction.delete(followerDocRef);
+                    transaction.update(currentUserDocRef, { followingCount: increment(-1) });
+                    transaction.update(userToToggleDocRef, { followerCount: increment(-1) });
+                } else {
+                    // Follow
+                    transaction.set(followingDocRef, { followedAt: new Date() });
+                    transaction.set(followerDocRef, { followerAt: new Date() });
+                    transaction.update(currentUserDocRef, { followingCount: increment(1) });
+                    transaction.update(userToToggleDocRef, { followerCount: increment(1) });
+                }
+            });
+
+            toast({ title: isCurrentlyFollowing ? "Unfollowed" : "Followed!", description: `Your follow status has been updated.` });
+
+            // Update UI instantly
+            setUsers(prevUsers => prevUsers.map(u => 
+                u.id === userIdToToggle ? { ...u, isFollowing: !isCurrentlyFollowing, followerCount: u.followerCount + (isCurrentlyFollowing ? -1 : 1) } : u
+            ));
+
       } catch (error) {
           console.error("Error updating follow status: ", error);
           toast({ title: "Error", description: "Could not update follow status.", variant: "destructive" });
