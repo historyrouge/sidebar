@@ -1,11 +1,11 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { User, onAuthStateChanged, updateProfile, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -20,15 +20,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in, check if their profile is complete
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists() && pathname !== '/onboarding') {
+          // Profile is not complete, redirect to onboarding
+          router.push('/onboarding');
+        } else if (userDoc.exists() && pathname === '/onboarding') {
+           router.push('/');
+        }
+        setUser(user);
+      } else {
+        // User is signed out
+        setUser(null);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router, pathname]);
 
   const updateUserProfileInAuth = async (displayName: string) => {
     if (auth.currentUser) {
@@ -56,7 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOutUser,
   };
   
-  if (loading) {
+  const publicRoutes = ['/login', '/signup', '/onboarding'];
+  if (loading && !publicRoutes.includes(pathname)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

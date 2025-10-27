@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -11,10 +10,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { updateUserProfile } from "@/app/actions";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export function OnboardingForm() {
-  const { user, updateUserProfileInAuth } = useAuth();
+  const { user, updateUserProfileInAuth, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -61,20 +61,23 @@ export function OnboardingForm() {
     setLoading(true);
 
     try {
+        // This updates the Firebase Auth profile (for display name)
         await updateUserProfileInAuth(name);
 
-        const result = await updateUserProfile({
+        // This creates/updates the user's profile document in Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, {
             name: name,
             college: college,
-            favoriteSubject: favoriteSubject
-        });
+            favoriteSubject: favoriteSubject,
+            email: user.email,
+            photoURL: user.photoURL,
+            followerCount: 0,
+            followingCount: 0,
+        }, { merge: true });
 
-        if (result.error) {
-            toast({ title: "Failed to save profile", description: result.error, variant: "destructive" });
-        } else {
-            toast({ title: "Profile saved!", description: "Welcome to Easy Learn AI!" });
-            router.push("/");
-        }
+        toast({ title: "Profile saved!", description: "Welcome to SearnAI!" });
+        router.push("/");
     } catch (error: any) {
         toast({ title: "An error occurred", description: error.message, variant: "destructive" });
     } finally {
@@ -83,20 +86,21 @@ export function OnboardingForm() {
   };
 
   const progress = (step / totalSteps) * 100;
+  const isLoading = loading || authLoading;
 
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Welcome to Easy Learn AI!</CardTitle>
+        <CardTitle className="text-2xl">Welcome to SearnAI!</CardTitle>
         <CardDescription>Let's set up your profile.</CardDescription>
         <Progress value={progress} className="mt-2" />
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 min-h-[150px]">
         {step === 1 && (
             <div className="space-y-2">
                 <Label htmlFor="name">What's your name?</Label>
                 <Input id="name" placeholder="e.g., Jane Doe" value={name} onChange={(e) => setName(e.target.value)} />
-                <p className="text-sm text-muted-foreground">So we know what to call you!</p>
+                <p className="text-sm text-muted-foreground">This will be your display name.</p>
             </div>
         )}
         {step === 2 && (
@@ -116,13 +120,13 @@ export function OnboardingForm() {
       </CardContent>
       <CardFooter className="flex justify-between">
         {step > 1 ? (
-          <Button variant="outline" onClick={handleBack} disabled={loading}>Back</Button>
+          <Button variant="outline" onClick={handleBack} disabled={isLoading}>Back</Button>
         ) : <div />}
         {step < totalSteps ? (
-          <Button onClick={handleNext}>Next</Button>
+          <Button onClick={handleNext} disabled={isLoading}>Next</Button>
         ) : (
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Finish
           </Button>
         )}

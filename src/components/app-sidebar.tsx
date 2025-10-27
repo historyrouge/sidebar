@@ -35,6 +35,7 @@ import {
   Bot,
   View,
   FlaskConical,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -230,6 +231,20 @@ export function AppSidebar() {
                             )}
                             <Bot />
                             <span className="text-sm">Agent</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/friends" passHref>
+                        <SidebarMenuButton
+                            isActive={pathname === '/friends'}
+                            className="justify-start w-full gap-2.5 px-3 relative"
+                        >
+                             {pathname === "/friends" && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                            )}
+                            <Users />
+                            <span className="text-sm">Friends</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
