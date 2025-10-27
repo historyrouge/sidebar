@@ -19,20 +19,16 @@ export const searchYoutube = ai.defineTool(
   },
   async ({ query }) => {
     try {
-      // Dynamic import to avoid build issues with youtube-sr
-      const Youtube = (await import('youtube-sr')).default;
-      const video = await Youtube.searchOne(query, 'video', false);
-      if (video) {
-        return { 
-          id: video.id,
-          title: video.title,
-          thumbnail: video.thumbnail?.url
-        };
+      // In a production environment, this should be the full absolute URL
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/youtube-search?query=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        console.error('YouTube search API error:', await response.text());
+        return {};
       }
-      return {};
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('YouTube search error:', error);
-      // In case of an API error, return an empty object to prevent the flow from crashing.
+      console.error('YouTube search fetch error:', error);
       return {};
     }
   }
