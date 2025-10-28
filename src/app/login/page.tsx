@@ -9,10 +9,10 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Welcome back to SearnAI</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            Your personal AI-powered study partner.
           </CardDescription>
         </CardHeader>
         <CardContent>
