@@ -1,5 +1,4 @@
 
-
 "use client";
 import { MainLayout } from "@/components/main-layout";
 import { MainDashboard } from "@/components/main-dashboard";
@@ -16,10 +15,20 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      const checkOnboarding = async () => {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (!userDoc.exists()) {
-          router.push('/onboarding');
+      const checkOnboarding = async (retries = 3, delay = 500) => {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (!userDoc.exists()) {
+            router.push('/onboarding');
+          }
+        } catch (error: any) {
+          if (error.code === 'unavailable' && retries > 0) {
+            console.warn(`Firestore offline, retrying... (${retries} left)`);
+            setTimeout(() => checkOnboarding(retries - 1, delay * 2), delay);
+          } else {
+            // Handle other errors or final failure
+            console.error("Failed to check onboarding status:", error);
+          }
         }
       };
       checkOnboarding();
