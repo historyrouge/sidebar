@@ -10,8 +10,8 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { BackButton } from "./back-button";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import * as cocoSsd from "@tensorflow-models/coco-ssd";
-import * as tf from "@tensorflow/tfjs";
+import type * as cocoSsd from "@tensorflow-models/coco-ssd";
+import type * as tf from "@tensorflow/tfjs";
 import Tesseract from 'tesseract.js';
 import { Progress } from "./ui/progress";
 
@@ -47,9 +47,11 @@ let modelPromise: Promise<cocoSsd.ObjectDetection> | null = null;
 const loadCocoModel = async () => {
   if (!modelPromise) {
     modelPromise = (async () => {
-      await tf.setBackend('webgl');
-      await tf.ready();
-      return await cocoSsd.load();
+      const tfModule = await import("@tensorflow/tfjs");
+      await tfModule.setBackend('webgl');
+      await tfModule.ready();
+      const cocoSsdModule = await import("@tensorflow-models/coco-ssd");
+      return await cocoSsdModule.load();
     })();
   }
   return modelPromise;
@@ -59,11 +61,12 @@ const loadCocoModel = async () => {
 let pipelinePromise: any = null;
 const getPipeline = async (type: 'zero-shot-image-classification' | 'image-to-text') => {
     if (!pipelinePromise) {
-        const { pipeline } = await import('@xenova/transformers');
-        pipelinePromise = pipeline;
+        pipelinePromise = import('@xenova/transformers').then(m => m.pipeline);
     }
     const pipe = await pipelinePromise;
-    return await pipe(type, 'Xenova/clip-vit-base-patch32');
+    // This model is small and good for web.
+    const modelId = type === 'image-to-text' ? 'Xenova/vit-gpt2-image-captioning' : 'Xenova/clip-vit-base-patch32';
+    return await pipe(type, modelId);
 };
 
 const preprocessImage = (file: File, maxSize: number = 640): Promise<string> => {
