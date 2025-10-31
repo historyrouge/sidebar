@@ -123,8 +123,8 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4% 12%; /* Darker grey for bot messages */
+    --muted-foreground: 0 0% 95%; /* Whiter text for bot messages */
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
