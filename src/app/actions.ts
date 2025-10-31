@@ -360,7 +360,7 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            const systemPrompt = getSystemPrompt(modelId, input.userName || null, input.fileContent);
+            const systemPrompt = getSystemPrompt(modelId, "Guest", input.fileContent);
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
             const response = await openai.chat.completions.create({

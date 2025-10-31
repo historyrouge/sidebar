@@ -57,7 +57,6 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
 
 const studyTools = [
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
@@ -122,7 +121,6 @@ export function AppSidebar() {
   const router = useRouter();
   const currentPathname = usePathname();
   const [pathname, setPathname] = useState("");
-  const { user, signOutUser } = useAuth();
 
   useEffect(() => {
     setPathname(currentPathname);
@@ -265,21 +263,6 @@ export function AppSidebar() {
             </SidebarMenu>
         </div>
         <SidebarFooter className="p-2 border-t border-neutral-800/60">
-            {user && (
-                <div className="p-3 rounded-md bg-sidebar-accent/50 mb-2">
-                    <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                            <AvatarFallback>{user.displayName?.[0] || user.email?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-semibold truncate">{user.displayName || user.email}</p>
-                        </div>
-                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOutUser}>
-                            <LogOut className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            )}
             <SidebarMenu>
                  <SidebarMenuItem>
                     <Link href="/settings">

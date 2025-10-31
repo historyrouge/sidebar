@@ -4,8 +4,9 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/hooks/use-auth';
 import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/hooks/use-auth';
+import { WelcomeDialog } from '@/components/welcome-dialog';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -30,8 +31,9 @@ export default function RootLayout({
         >
           <AuthProvider>
             {children}
-            <Toaster />
+            <WelcomeDialog />
           </AuthProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
