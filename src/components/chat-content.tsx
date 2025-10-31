@@ -986,9 +986,9 @@ export function ChatContent() {
           </ScrollArea>
 
        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
-        <div className="p-4 mx-auto max-w-3xl">
+        <div className="p-4 mx-auto w-full">
           {(imageDataUri || (fileContent && fileName)) && (
-             <div className="relative mb-2 w-fit">
+             <div className="relative mb-2 w-fit mx-auto max-w-3xl">
                 {isOcrProcessing && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md z-10">
                         <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
@@ -1033,7 +1033,7 @@ export function ChatContent() {
             </div>
            <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center p-3 glassmorphism-chat-bar"
+              className="relative flex items-center p-3 glassmorphism-chat-bar max-w-3xl mx-auto"
           >
               <Textarea
                 value={input}
