@@ -277,7 +277,6 @@ export async function chatAction(input: {
     imageDataUri?: string | null,
     model?: string,
     isMusicMode?: boolean,
-    signal?: AbortSignal,
 }): Promise<ActionResult<{ response: string }>> {
     const isSearch = input.history[input.history.length - 1]?.content.toString().toLowerCase().startsWith("search:");
     const isMusic = input.isMusicMode;
@@ -369,7 +368,7 @@ export async function chatAction(input: {
                 messages: fullMessages as any, // Cast to any to handle the CoreMessage type
                 stream: false,
                 max_tokens: modelId === 'gpt-oss-120b' ? 4096 : undefined,
-            }, { signal: input.signal });
+            });
 
             let responseText = response.choices[0]?.message?.content;
             if (!responseText) {
@@ -383,10 +382,6 @@ export async function chatAction(input: {
 
             return { data: { response: finalResponse } };
         } catch (e: any) {
-            if (e.name === 'AbortError') {
-                console.log("Chat generation was aborted.");
-                return { error: "Request aborted." };
-            }
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
             if(finalModelId !== 'auto' && modelsToTry.length === 1) {

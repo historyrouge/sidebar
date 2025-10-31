@@ -175,7 +175,6 @@ export function ChatContent() {
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const abortControllerRef = useRef<AbortController | null>(null);
   
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -288,9 +287,6 @@ export function ChatContent() {
       setIsTyping(true);
       const startTime = Date.now();
       
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
-
       const genkitHistory: CoreMessage[] = currentHistory.map(h => ({
         role: h.role as 'user' | 'model' | 'tool',
         content: String(h.content),
@@ -304,7 +300,6 @@ export function ChatContent() {
             imageDataUri: currentImageDataUri,
             model: currentModel,
             isMusicMode: activeButton === 'music',
-            signal: signal,
         });
 
         const endTime = Date.now();
@@ -326,7 +321,6 @@ export function ChatContent() {
           }
       } finally {
         setIsTyping(false);
-        abortControllerRef.current = null;
       }
       
   }, [currentModel, activeButton, toast, user]);
@@ -387,11 +381,8 @@ export function ChatContent() {
   }, [input, isRecording, history, executeChat, imageDataUri, fileContent, activeButton]);
   
   const handleStopGeneration = () => {
-    if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-        setIsTyping(false);
-    }
+    // This is now a no-op as the abort controller has been removed.
+    // Kept for potential future re-implementation.
   };
 
   const handleRegenerateResponse = async () => {
@@ -676,11 +667,7 @@ export function ChatContent() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isTyping) {
-        handleStopGeneration();
-    } else {
-        handleSendMessage();
-    }
+    handleSendMessage();
   };
 
   useEffect(() => {
@@ -898,9 +885,9 @@ export function ChatContent() {
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                             </Button>
-                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isOcrProcessing || (!input.trim() && !imageDataUri && !fileContent)}>
-                                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                                <span className="sr-only">{isTyping ? "Stop" : "Send"}</span>
+                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                                <Send className="h-5 w-5" />
+                                <span className="sr-only">Send</span>
                             </Button>
                         </div>
                     </form>
@@ -1073,9 +1060,9 @@ export function ChatContent() {
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}>
-                     {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                    <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
+                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
+                    <Send className="h-5 w-5" />
+                    <span className="sr-only">Send</span>
                 </Button>
               </div>
           </form>
