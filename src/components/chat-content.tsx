@@ -175,6 +175,7 @@ export function ChatContent() {
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -287,30 +288,45 @@ export function ChatContent() {
       setIsTyping(true);
       const startTime = Date.now();
       
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
       const genkitHistory: CoreMessage[] = currentHistory.map(h => ({
         role: h.role as 'user' | 'model' | 'tool',
         content: String(h.content),
       }));
 
-      const result = await chatAction({ 
-          history: genkitHistory, 
-          userName: user?.displayName,
-          fileContent: currentFileContent, 
-          imageDataUri: currentImageDataUri,
-          model: currentModel,
-          isMusicMode: activeButton === 'music',
-      });
+      try {
+        const result = await chatAction({ 
+            history: genkitHistory, 
+            userName: user?.displayName,
+            fileContent: currentFileContent, 
+            imageDataUri: currentImageDataUri,
+            model: currentModel,
+            isMusicMode: activeButton === 'music',
+            signal: signal,
+        });
 
-      const endTime = Date.now();
-      const duration = (endTime - startTime) / 1000;
-      setGenerationTime(duration);
-      setIsTyping(false);
+        const endTime = Date.now();
+        const duration = (endTime - startTime) / 1000;
+        setGenerationTime(duration);
+        setIsTyping(false);
 
-      if (result.error) {
-          toast({ title: "Chat Error", description: result.error, variant: "destructive" });
-      } else if (result.data) {
-          const modelMessageId = `${Date.now()}-model`;
-          setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
+        if (result.error) {
+            toast({ title: "Chat Error", description: result.error, variant: "destructive" });
+        } else if (result.data) {
+            const modelMessageId = `${Date.now()}-model`;
+            setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
+        }
+      } catch (error: any) {
+          if (error.name === 'AbortError') {
+              toast({ title: 'Generation Stopped', description: 'You have stopped the AI response.' });
+          } else {
+              toast({ title: "Chat Error", description: error.message, variant: "destructive" });
+          }
+      } finally {
+        setIsTyping(false);
+        abortControllerRef.current = null;
       }
       
   }, [currentModel, activeButton, toast, user]);
@@ -369,6 +385,14 @@ export function ChatContent() {
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, isRecording, history, executeChat, imageDataUri, fileContent, activeButton]);
+  
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+        setIsTyping(false);
+    }
+  };
 
   const handleRegenerateResponse = async () => {
       const lastUserMessageIndex = history.findLastIndex(m => m.role === 'user');
@@ -652,7 +676,11 @@ export function ChatContent() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSendMessage();
+    if (isTyping) {
+        handleStopGeneration();
+    } else {
+        handleSendMessage();
+    }
   };
 
   useEffect(() => {
@@ -810,7 +838,7 @@ export function ChatContent() {
                  <div className="w-full max-w-3xl">
                     <div className="flex justify-center mb-2 items-center gap-2">
                         <div className="bg-muted/50 p-1 rounded-lg w-fit">
-                            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+                            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
                         </div>
                         <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
                             <Button 
@@ -821,13 +849,13 @@ export function ChatContent() {
                                 <Wand2 className="h-4 w-4 mr-2"/>
                                 DeepThink
                             </Button>
-                            <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                            <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
                                 <Music className="h-5 w-5" />
                             </Button>
-                             <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                             <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
                                 <ImageIcon className="h-5 w-5" />
                             </Button>
-                            <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                            <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
                                 <Globe className="h-5 w-5" />
                             </Button>
                         </div>
@@ -840,7 +868,7 @@ export function ChatContent() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Message SearnAI..."
-                            disabled={isInputDisabled}
+                            disabled={isOcrProcessing}
                             className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
                             rows={1}
                             onKeyDown={(e) => {
@@ -854,7 +882,7 @@ export function ChatContent() {
                         <div className="flex items-center gap-1">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
+                                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
                                         <Paperclip className="h-5 w-5" />
                                         <span className="sr-only">Attach file</span>
                                     </Button>
@@ -866,13 +894,13 @@ export function ChatContent() {
                                     <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                             </Button>
-                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
-                                <Send className="h-5 w-5" />
-                                <span className="sr-only">Send</span>
+                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isOcrProcessing || (!input.trim() && !imageDataUri && !fileContent)}>
+                                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                                <span className="sr-only">{isTyping ? "Stop" : "Send"}</span>
                             </Button>
                         </div>
                     </form>
@@ -985,7 +1013,7 @@ export function ChatContent() {
           )}
             <div className="flex justify-center mb-2 items-center gap-2">
                 <div className="bg-muted/50 p-1 rounded-lg w-fit">
-                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isInputDisabled} />
+                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
                 </div>
                 <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
                     <Button 
@@ -996,13 +1024,13 @@ export function ChatContent() {
                         <Wand2 className="h-4 w-4 mr-2"/>
                         DeepThink
                     </Button>
-                    <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('music')}>
+                    <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
                         <Music className="h-5 w-5" />
                     </Button>
-                    <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleToolButtonClick('image')}>
+                    <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
                         <ImageIcon className="h-5 w-5" />
                     </Button>
-                    <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isInputDisabled} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                    <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
                         <Globe className="h-5 w-5" />
                     </Button>
                 </div>
@@ -1015,7 +1043,7 @@ export function ChatContent() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message SearnAI..."
-                disabled={isInputDisabled}
+                disabled={isOcrProcessing}
                 className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
                 rows={1}
                 onKeyDown={(e) => {
@@ -1029,7 +1057,7 @@ export function ChatContent() {
               <div className="flex items-center gap-1">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
+                        <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
                             <Paperclip className="h-5 w-5" />
                             <span className="sr-only">Attach file</span>
                         </Button>
@@ -1041,13 +1069,13 @@ export function ChatContent() {
                         <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
+                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
-                    <Send className="h-5 w-5" />
-                    <span className="sr-only">Send</span>
+                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}>
+                     {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                    <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
                 </Button>
               </div>
           </form>
@@ -1056,5 +1084,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
