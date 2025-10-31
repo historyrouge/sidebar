@@ -13,7 +13,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 55%;
+    --primary: 210 90% 45%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 240 3.7% 15.9%;
@@ -25,12 +25,12 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4% 12%; /* Darker grey for bot messages */
+    --muted-foreground: 0 0% 95%; /* Whiter text for bot messages */
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 210 90% 55%;
+    --ring: 210 90% 45%;
  
     --radius: 0.75rem;
 
@@ -63,7 +63,7 @@
     --popover: 255 50% 92%;
     --popover-foreground: 240 50% 10%;
  
-    --primary: 220 90% 55%; /* Bright Blue */
+    --primary: 220 90% 45%; /* Darker Bright Blue */
     --primary-foreground: 0 0% 98%;
  
     --secondary: 255 50% 92%; /* Lighter purple */
@@ -80,7 +80,7 @@
  
     --border: 0 0% 0%; /* black */
     --input: 255 30% 90%;
-    --ring: 220 90% 55%;
+    --ring: 220 90% 45%;
 
     --chart-1: 220 80% 50%;
     --chart-2: 50 90% 55%;
@@ -93,12 +93,12 @@
     --sidebar-border: 0 0% 0%; /* black */
     --sidebar-accent: 255 40% 90%;
     --sidebar-accent-foreground: 240 50% 10%;
-    --sidebar-active: 220 90% 55%;
+    --sidebar-active: 220 90% 45%;
     --sidebar-active-foreground: 0 0% 98%;
     --sidebar-group-foreground: 240 30% 40%;
 
     --chat-input-background: 255 50% 94%;
-    --avatar-accent: 220 90% 55%;
+    --avatar-accent: 220 90% 45%;
   }
  
   .dark {
@@ -111,7 +111,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 55%;
+    --primary: 210 90% 45%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 240 3.7% 15.9%;
@@ -128,7 +128,7 @@
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 210 90% 55%;
+    --ring: 210 90% 45%;
 
     --chart-1: 210 80% 50%;
     --chart-2: 30 90% 55%;
