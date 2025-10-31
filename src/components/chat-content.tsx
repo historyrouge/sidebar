@@ -667,7 +667,11 @@ export function ChatContent() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSendMessage();
+    if (isTyping) {
+        handleStopGeneration();
+    } else {
+        handleSendMessage();
+    }
   };
 
   useEffect(() => {
@@ -678,7 +682,7 @@ export function ChatContent() {
   }, [history, isTyping]);
   
   const showWelcome = history.length === 0 && !isTyping;
-  const isInputDisabled = isTyping || isOcrProcessing;
+  const isInputDisabled = isOcrProcessing;
 
   const renderMessageContent = (message: Message) => {
     if (message.role === 'browser') {
@@ -885,9 +889,14 @@ export function ChatContent() {
                                 {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                                 <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                             </Button>
-                            <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
-                                <Send className="h-5 w-5" />
-                                <span className="sr-only">Send</span>
+                            <Button 
+                                type="submit" 
+                                size="icon" 
+                                className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" 
+                                disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
+                            >
+                                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                                <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
                             </Button>
                         </div>
                     </form>
@@ -1060,9 +1069,14 @@ export function ChatContent() {
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button type="submit" size="icon" className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}>
-                    <Send className="h-5 w-5" />
-                    <span className="sr-only">Send</span>
+                <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" 
+                    disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
+                >
+                    {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                    <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
                 </Button>
               </div>
           </form>
@@ -1071,3 +1085,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
