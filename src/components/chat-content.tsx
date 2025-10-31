@@ -819,7 +819,7 @@ export function ChatContent() {
   if (showWelcome) {
     return (
         <div className="flex h-full flex-col items-center justify-center p-4">
-             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-8">
+             <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
                 <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
@@ -827,28 +827,28 @@ export function ChatContent() {
                     <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
                 </div>
                  <div className="w-full max-w-3xl">
-                    <div className="flex justify-center mb-2 items-center gap-2">
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit">
+                    <div className="mb-2 w-full">
+                        <div className="bg-muted/50 p-1 rounded-lg w-full flex items-center justify-between gap-1">
                             <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
-                        </div>
-                        <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
-                            <Button 
-                                variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
-                                className="h-9 px-3"
-                                onClick={() => handleToolButtonClick('deepthink')}
-                            >
-                                <Wand2 className="h-4 w-4 mr-2"/>
-                                DeepThink
-                            </Button>
-                            <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
-                                <Music className="h-5 w-5" />
-                            </Button>
-                             <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
-                                <ImageIcon className="h-5 w-5" />
-                            </Button>
-                            <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
-                                <Globe className="h-5 w-5" />
-                            </Button>
+                            <div className="flex gap-1">
+                                <Button 
+                                    variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
+                                    className="h-9 px-3"
+                                    onClick={() => handleToolButtonClick('deepthink')}
+                                >
+                                    <Wand2 className="h-4 w-4 mr-2"/>
+                                    DeepThink
+                                </Button>
+                                <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
+                                    <Music className="h-5 w-5" />
+                                </Button>
+                                <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
+                                    <ImageIcon className="h-5 w-5" />
+                                </Button>
+                                <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                                    <Globe className="h-5 w-5" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <form
@@ -1007,28 +1007,28 @@ export function ChatContent() {
                 </Button>
             </div>
           )}
-            <div className="flex justify-center mb-2 items-center gap-2">
-                <div className="bg-muted/50 p-1 rounded-lg w-fit">
+            <div className="mb-2 w-full max-w-3xl mx-auto">
+                <div className="bg-muted/50 p-1 rounded-lg w-full flex items-center justify-between gap-1">
                     <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
-                </div>
-                <div className="bg-muted/50 p-1 rounded-lg w-fit flex gap-1">
-                    <Button 
-                        variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
-                        className="h-9 px-3"
-                        onClick={() => handleToolButtonClick('deepthink')}
-                    >
-                        <Wand2 className="h-4 w-4 mr-2"/>
-                        DeepThink
-                    </Button>
-                    <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
-                        <Music className="h-5 w-5" />
-                    </Button>
-                    <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
-                        <ImageIcon className="h-5 w-5" />
-                    </Button>
-                    <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
-                        <Globe className="h-5 w-5" />
-                    </Button>
+                    <div className="flex gap-1">
+                        <Button 
+                            variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
+                            className="h-9 px-3"
+                            onClick={() => handleToolButtonClick('deepthink')}
+                        >
+                            <Wand2 className="h-4 w-4 mr-2"/>
+                            DeepThink
+                        </Button>
+                        <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
+                            <Music className="h-5 w-5" />
+                        </Button>
+                        <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
+                            <ImageIcon className="h-5 w-5" />
+                        </Button>
+                        <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
+                            <Globe className="h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
             </div>
            <form
@@ -1086,4 +1086,5 @@ export function ChatContent() {
   );
 }
 
+    
     
