@@ -13,24 +13,24 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 55%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 0% 80%;
+    --primary-foreground: 240 10% 3.9%;
  
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
  
-    --accent: 30 90% 55%;
+    --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 240 4% 12%; /* Darker grey for bot messages */
-    --muted-foreground: 0 0% 95%; /* Whiter text for bot messages */
+    --muted: 0 0% 15%; /* Darker grey for bot messages */
+    --muted-foreground: 0 0% 98%; /* Whiter text for bot messages */
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 210 90% 45%;
+    --ring: 0 0% 80%;
  
     --radius: 0.75rem;
 
@@ -54,33 +54,33 @@
   }
 
   .light {
-    --background: 255 75% 98%; /* Very light purple */
-    --foreground: 240 50% 10%; /* Dark blue */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-    --card: 255 50% 94%; /* Light purple card */
-    --card-foreground: 240 50% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
  
-    --popover: 255 50% 92%;
-    --popover-foreground: 240 50% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
  
-    --primary: 210 90% 55%;
+    --primary: 240 5.9% 10%;
     --primary-foreground: 0 0% 98%;
  
-    --secondary: 255 50% 92%; /* Lighter purple */
-    --secondary-foreground: 240 50% 10%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 240 5.9% 10%;
  
-    --accent: 50 100% 50%; /* Yellow */
-    --accent-foreground: 240 50% 10%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 240 5.9% 10%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 255 50% 92%;
-    --muted-foreground: 240 30% 40%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 240 5.9% 10%;
  
-    --border: 240 3.7% 15.9%;
-    --input: 255 30% 90%;
-    --ring: 220 90% 45%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 240 5.9% 10%;
 
     --chart-1: 220 80% 50%;
     --chart-2: 50 90% 55%;
@@ -88,16 +88,16 @@
     --chart-4: 280 80% 60%;
     --chart-5: 0 80% 60%;
     
-    --sidebar-background: 255 60% 96%;
-    --sidebar-foreground: 240 50% 10%;
-    --sidebar-border: 0 0% 0%; /* black */
-    --sidebar-accent: 255 40% 90%;
-    --sidebar-accent-foreground: 240 50% 10%;
-    --sidebar-active: 220 90% 45%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-border: 0 0% 89.8%;
+    --sidebar-accent: 0 0% 96.1%;
+    --sidebar-accent-foreground: 240 10% 3.9%;
+    --sidebar-active: 240 5.9% 10%;
     --sidebar-active-foreground: 0 0% 98%;
-    --sidebar-group-foreground: 240 30% 40%;
+    --sidebar-group-foreground: 240 5.9% 10%;
 
-    --chat-input-background: 255 50% 94%;
+    --chat-input-background: 0 0% 96.1%;
     --avatar-accent: 220 90% 45%;
   }
  
@@ -111,24 +111,24 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 55%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
  
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
  
-    --accent: 30 90% 55%;
+    --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --muted: 240 4% 12%; /* Darker grey for bot messages */
-    --muted-foreground: 0 0% 95%; /* Whiter text for bot messages */
+    --muted: 0 0% 15%; /* Darker grey for bot messages */
+    --muted-foreground: 0 0% 98%; /* Whiter text for bot messages */
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 210 90% 45%;
+    --ring: 240 4.9% 83.9%;
 
     --chart-1: 210 80% 50%;
     --chart-2: 30 90% 55%;
