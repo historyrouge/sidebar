@@ -7,9 +7,9 @@ import { type ThemeProviderProps } from "next-themes/dist/types"
 
 const ACCENT_COLOR_KEY = 'accent-color';
 
-const grayAccent: Record<string, string> = {
-    light: '0 0% 50%',
-    dark: '0 0% 80%',
+const navyBlueAccent: Record<string, string> = {
+    light: '220 40% 40%', // A pleasant navy blue for light mode
+    dark: '210 90% 55%',  // A vibrant navy blue for dark mode
 };
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
@@ -27,7 +27,7 @@ function AccentColorUpdater() {
   React.useEffect(() => {
     const root = document.documentElement;
     const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
-    const color = grayAccent[mode];
+    const color = navyBlueAccent[mode];
     root.style.setProperty('--primary', color);
   }, [resolvedTheme]);
 
