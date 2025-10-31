@@ -921,7 +921,7 @@ export function ChatContent() {
                       <div
                         className={cn(
                           "flex w-full items-start gap-4",
-                          message.role === "user" ? "justify-end" : ""
+                          message.role === "user" ? "justify-end" : "justify-start"
                         )}
                       >
                         {message.role === "user" ? (
@@ -935,43 +935,35 @@ export function ChatContent() {
                                   {message.content}
                                 </ReactMarkdown>
                             </div>
-                            <Avatar className="h-9 w-9 border">
-                              <AvatarFallback><User className="size-5" /></AvatarFallback>
-                            </Avatar>
                           </div>
                         ) : (
-                          <div className={cn("group w-full flex items-start gap-4")}>
-                            <Avatar className="h-9 w-9 border">
-                              <AvatarFallback><Bot className="size-5" /></AvatarFallback>
-                            </Avatar>
-                            <div className="w-full">
-                              {renderMessageContent(message)}
-                              {audioDataUri && isSynthesizing === message.id && (
-                                <audio
-                                  ref={audioRef}
-                                  src={audioDataUri}
-                                  autoPlay
-                                  onEnded={() => setIsSynthesizing(null)}
-                                  onPause={() => setIsSynthesizing(null)}
-                                />
-                              )}
-                              {message.role === 'model' && message.role !== 'browser' && (
-                                <div className="mt-2 flex items-center gap-1 transition-opacity">
-                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                    <Copy className="h-4 w-4" />
-                                  </Button>
-                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                    <Share2 className="h-4 w-4" />
-                                  </Button>
-                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
-                                    {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                                  </Button>
-                                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                    <RefreshCw className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
+                          <div className="w-full">
+                            {renderMessageContent(message)}
+                            {audioDataUri && isSynthesizing === message.id && (
+                              <audio
+                                ref={audioRef}
+                                src={audioDataUri}
+                                autoPlay
+                                onEnded={() => setIsSynthesizing(null)}
+                                onPause={() => setIsSynthesizing(null)}
+                              />
+                            )}
+                            {message.role === 'model' && message.role !== 'browser' && (
+                              <div className="mt-2 flex items-center gap-1 transition-opacity">
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                                  {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1088,3 +1080,4 @@ export function ChatContent() {
 
     
     
+
