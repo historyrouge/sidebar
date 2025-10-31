@@ -13,7 +13,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 45%;
+    --primary: 210 90% 55%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 240 3.7% 15.9%;
@@ -63,7 +63,7 @@
     --popover: 255 50% 92%;
     --popover-foreground: 240 50% 10%;
  
-    --primary: 220 90% 45%; /* Darker Bright Blue */
+    --primary: 210 90% 55%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 255 50% 92%; /* Lighter purple */
@@ -78,7 +78,7 @@
     --muted: 255 50% 92%;
     --muted-foreground: 240 30% 40%;
  
-    --border: 0 0% 0%; /* black */
+    --border: 240 3.7% 15.9%;
     --input: 255 30% 90%;
     --ring: 220 90% 45%;
 
@@ -111,7 +111,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 210 90% 45%;
+    --primary: 210 90% 55%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 240 3.7% 15.9%;
@@ -166,6 +166,19 @@
   }
   h1, .heading {
     @apply text-xl font-semibold;
+  }
+  .dark .card {
+    background: rgba(16, 16, 16, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dark [data-sidebar="sidebar"] {
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }
 
