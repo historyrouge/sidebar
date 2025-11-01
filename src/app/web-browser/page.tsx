@@ -4,19 +4,14 @@ import { MainLayout } from "@/components/main-layout";
 import { WebBrowserContent } from '@/components/web-browser-content';
 import { Suspense } from "react";
 
-function WebBrowserPageContent() {
-    return (
-        <MainLayout>
-           <WebBrowserContent />
-        </MainLayout>
-    );
-}
-
-
+// This page is now a fallback for direct navigation.
+// The main browser functionality is integrated into the main dashboard.
 export default function WebBrowserPage() {
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <WebBrowserPageContent />
+            <MainLayout>
+                <WebBrowserContent />
+            </MainLayout>
         </Suspense>
     )
 }

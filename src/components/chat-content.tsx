@@ -818,7 +818,7 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-           <div className="flex items-center justify-center gap-2 mb-3">
+           <div className="flex items-center justify-center gap-2 mb-2">
               <div className="bg-muted p-1 rounded-lg">
                 <ModelSwitcher 
                     selectedModel={currentModel} 
@@ -829,7 +829,7 @@ export function ChatContent() {
               <Button 
                 variant={activeButton === 'deepthink' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2"
+                className="rounded-full gap-2 bg-muted"
                 onClick={() => handleToolButtonClick('deepthink')}
               >
                   <Wand2 className="h-4 w-4" /> DeepThink
@@ -837,7 +837,7 @@ export function ChatContent() {
                <Button 
                 variant={activeButton === 'music' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2"
+                className="rounded-full gap-2 bg-muted"
                 onClick={() => handleToolButtonClick('music')}
               >
                   <Music className="h-4 w-4" /> Music
@@ -845,7 +845,7 @@ export function ChatContent() {
                <Button 
                 variant={activeButton === 'image' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2"
+                className="rounded-full gap-2 bg-muted"
                 onClick={() => handleToolButtonClick('image')}
               >
                   <ImageIcon className="h-4 w-4" /> Image
@@ -875,7 +875,7 @@ export function ChatContent() {
               onSubmit={handleFormSubmit}
               className="relative flex items-center"
           >
-             <div className="relative flex items-center p-2 glassmorphism-chat-bar w-full">
+             <div className="relative flex items-center p-2 rounded-2xl bg-background border w-full">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>

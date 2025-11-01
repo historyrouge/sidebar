@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
+import { WebBrowserContent } from "./web-browser-content";
 
 export function MainDashboard() {
   const { theme, setTheme } = useTheme();
@@ -70,7 +71,6 @@ export function MainDashboard() {
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
-            <h1 className="text-xl font-semibold tracking-tight capitalize">{activeView === 'searnai' ? 'Chat' : 'Stories'}</h1>
         </div>
 
         {activeVideoId && (
@@ -123,31 +123,42 @@ export function MainDashboard() {
             </Button>
         </div>
       </header>
-       <div className="flex justify-center p-2 border-b">
-            <div className="bg-muted p-1 rounded-lg flex gap-1">
+       <div className="flex flex-col items-center p-2 border-b">
+            <div className="flex gap-1">
                  <Button 
-                    variant={activeView === 'stories' ? 'outline' : 'ghost'} 
-                    className={cn("gap-2 flex-1", activeView === 'stories' && 'bg-background')}
+                    variant={activeView === 'stories' ? 'secondary' : 'ghost'} 
+                    className="gap-2"
                     onClick={() => setActiveView('stories')}
                 >
                     <Newspaper className="h-4 w-4" />
                     Stories
                 </Button>
                  <Button 
-                    variant={activeView === 'searnai' ? 'outline' : 'ghost'} 
-                    className={cn("gap-2 flex-1", activeView === 'searnai' && 'bg-background')}
+                    variant={activeView === 'searnai' ? 'secondary' : 'ghost'} 
+                    className="gap-2"
                     onClick={() => setActiveView('searnai')}
                 >
                     <MessageSquare className="h-4 w-4" />
                     Searn AI
                 </Button>
+                 <Button 
+                    variant={activeView === 'browser' ? 'secondary' : 'ghost'} 
+                    className="gap-2"
+                    onClick={() => setActiveView('browser')}
+                >
+                    <Globe className="h-4 w-4" />
+                    Browser
+                </Button>
             </div>
+             <h1 className="text-xl font-semibold tracking-tight mt-2">{activeView === 'searnai' ? 'SearnAI' : ''}</h1>
         </div>
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
             <ChatContent />
-         ) : (
+         ) : activeView === 'stories' ? (
             <NewsContent />
+         ) : (
+            <WebBrowserContent />
          )}
          {activeVideoId && showPlayer && (
              <div className="fixed bottom-4 right-4 z-50 group">
