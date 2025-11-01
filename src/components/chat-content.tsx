@@ -930,10 +930,9 @@ export function ChatContent() {
         content={shareContent || ""}
       />
       {showWelcome ? (
-          <div className="flex h-full flex-col items-center justify-center p-4">
+          <div className="flex h-full flex-col items-center justify-start pt-20 p-4">
              <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
-                
             </div>
         </div>
       ) : (
