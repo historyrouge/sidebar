@@ -326,7 +326,7 @@ export function ChatContent() {
   }, [currentModel, activeButton, toast, user]);
 
 
-  const handleSendMessage = useCallback(async (messageContent?: string) => {
+  const handleSendMessage = useCallback(async (messageContent?: string, currentHistory?: Message[]) => {
     const messageToSend = messageContent ?? input;
     if (!messageToSend.trim() && !imageDataUri && !fileContent) return;
 
@@ -337,8 +337,10 @@ export function ChatContent() {
     const formattedContent = `${messageToSend}`;
     const userMessage: Message = { id: messageId, role: "user", content: formattedContent, image: imageDataUri };
     
+    // Use provided history or the component's state
+    const historyToUse = currentHistory || history;
     // Filter out any existing browser views before adding new message
-    const newHistory = [...history.filter(m => m.role !== 'browser'), userMessage];
+    const newHistory = [...historyToUse.filter(m => m.role !== 'browser'), userMessage];
 
     setHistory(newHistory);
     setInput("");
@@ -454,7 +456,11 @@ export function ChatContent() {
         if (finalTranscript.trim()) {
            setInput(finalTranscript);
            audioSendTimeoutRef.current = setTimeout(() => {
-                handleSendMessage(finalTranscript);
+                // Pass the current history to handleSendMessage
+                setHistory(currentHistory => {
+                    handleSendMessage(finalTranscript, currentHistory);
+                    return currentHistory; // handleSendMessage will update history, so we just return the current one
+                });
            }, 1000);
         }
       };
@@ -819,12 +825,14 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-          <div className="bg-muted p-1 rounded-lg flex items-center justify-center gap-2 mb-2">
-              <ModelSwitcher 
-                  selectedModel={currentModel} 
-                  onModelChange={setCurrentModel} 
-                  disabled={!!activeButton}
-              />
+          <div className="bg-background/80 backdrop-blur-md p-1 rounded-lg flex items-center justify-center gap-2 mb-3 border">
+              <div className="bg-muted p-1 rounded-lg">
+                <ModelSwitcher 
+                    selectedModel={currentModel} 
+                    onModelChange={setCurrentModel} 
+                    disabled={!!activeButton}
+                />
+              </div>
               <Button 
                 variant={activeButton === 'deepthink' ? 'secondary' : 'outline'} 
                 size="sm" 
