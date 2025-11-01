@@ -195,12 +195,12 @@
     .dark .prose code {
       color: hsl(var(--accent));
     }
-    .prose .katex {
-      color: hsl(var(--ring));
+
+    /* Target all elements within a KaTeX block to ensure color override */
+    .prose .katex, .prose .katex * {
+      color: hsl(var(--ring)) !important;
     }
-    .dark .prose .katex {
-      color: hsl(var(--ring));
-    }
+    
     .prose a {
       color: hsl(var(--primary));
     }
