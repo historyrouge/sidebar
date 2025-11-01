@@ -933,6 +933,21 @@ export function ChatContent() {
           <div className="flex h-full flex-col justify-start pt-20 p-4">
              <div className="w-full max-w-3xl mx-auto flex flex-col items-start gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
+                <div className="space-y-4">
+                    <h2 className="text-4xl font-light text-muted-foreground">Hi {user?.displayName?.split(' ')[0] || 'there'},</h2>
+                    <h2 className="text-4xl font-bold">Where should we start?</h2>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                    <Button variant="outline" className="rounded-full" onClick={() => router.push('/image-generation')}>
+                        <span className="mr-2">🍌</span> Create image
+                    </Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => router.push('/ai-editor')}>
+                        Write anything
+                    </Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => setInput('Help me build an idea for a new project')}>
+                        Build an idea
+                    </Button>
+                </div>
             </div>
         </div>
       ) : (
@@ -1004,6 +1019,3 @@ export function ChatContent() {
     </div>
   );
 }
-
-    
-    
