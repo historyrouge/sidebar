@@ -818,14 +818,14 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-           <div className="bg-muted p-1 rounded-lg flex items-center justify-center gap-2 mb-3">
+           <div className="flex items-center justify-center gap-2 mb-3">
               <ModelSwitcher 
                   selectedModel={currentModel} 
                   onModelChange={setCurrentModel} 
                   disabled={!!activeButton}
               />
               <Button 
-                variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
+                variant={activeButton === 'deepthink' ? 'secondary' : 'outline'} 
                 size="sm" 
                 className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('deepthink')}
@@ -833,7 +833,7 @@ export function ChatContent() {
                   <Wand2 className="h-4 w-4" /> DeepThink
               </Button>
                <Button 
-                variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
+                variant={activeButton === 'music' ? 'secondary' : 'outline'} 
                 size="sm" 
                 className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('music')}
@@ -841,7 +841,7 @@ export function ChatContent() {
                   <Music className="h-4 w-4" /> Music
               </Button>
                <Button 
-                variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
+                variant={activeButton === 'image' ? 'secondary' : 'outline'} 
                 size="sm" 
                 className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('image')}
