@@ -818,6 +818,37 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm border-t">
         <div className="p-4 mx-auto w-full max-w-3xl">
+           <div className="flex items-center justify-center gap-2 mb-3">
+              <ModelSwitcher 
+                  selectedModel={currentModel} 
+                  onModelChange={setCurrentModel} 
+                  disabled={!!activeButton}
+              />
+              <Button 
+                variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                className="rounded-full gap-2"
+                onClick={() => handleToolButtonClick('deepthink')}
+              >
+                  <Wand2 className="h-4 w-4" /> DeepThink
+              </Button>
+               <Button 
+                variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                className="rounded-full gap-2"
+                onClick={() => handleToolButtonClick('music')}
+              >
+                  <Music className="h-4 w-4" /> Music
+              </Button>
+               <Button 
+                variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                className="rounded-full gap-2"
+                onClick={() => handleToolButtonClick('image')}
+              >
+                  <ImageIcon className="h-4 w-4" /> Image
+              </Button>
+          </div>
           {(imageDataUri || (fileContent && fileName)) && (
              <div className="relative mb-2 w-fit mx-auto max-w-3xl">
                 {isOcrProcessing && (
@@ -840,53 +871,53 @@ export function ChatContent() {
           )}
            <form
               onSubmit={handleFormSubmit}
-              className="relative flex items-center p-3 glassmorphism-chat-bar max-w-3xl mx-auto"
+              className="relative flex items-center"
           >
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
-                        <Plus className="h-5 w-5" />
-                        <span className="sr-only">Attach file</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+             <div className="relative flex items-center p-2 glassmorphism-chat-bar w-full">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
+                            <Plus className="h-5 w-5" />
+                            <span className="sr-only">Attach file</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Message SearnAI..."
-                disabled={isOcrProcessing}
-                className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
-                rows={1}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                    }
-                }}
-              />
-              <input type="file" ref={fileInputRef} className="hidden" />
-              <div className="flex items-center gap-1">
-                <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
+                <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Message SearnAI..."
+                    disabled={isOcrProcessing}
+                    className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
+                    rows={1}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                        }
+                    }}
+                />
+                <input type="file" ref={fileInputRef} className="hidden" />
+                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
-                <Button 
-                    type="submit" 
-                    size="icon" 
-                    className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" 
-                    disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
-                >
-                    {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                    <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
-                </Button>
-              </div>
+            </div>
+            <Button 
+                type="submit" 
+                size="icon" 
+                className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90 ml-2" 
+                disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
+            >
+                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
+            </Button>
           </form>
         </div>
       </div>
@@ -908,7 +939,7 @@ export function ChatContent() {
                     <h2 className="text-4xl font-light text-muted-foreground">Hi {user?.displayName?.split(' ')[0] || 'there'},</h2>
                     <h2 className="text-4xl font-bold">Where should we start?</h2>
                 </div>
-                <div className="flex flex-col items-start gap-3">
+                 <div className="flex flex-col items-start gap-3">
                     <Button variant="outline" className="rounded-full" onClick={() => router.push('/image-generation')}>
                         <span className="mr-2">🍌</span> Create image
                     </Button>
@@ -923,7 +954,7 @@ export function ChatContent() {
         </div>
       ) : (
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 pb-32">
+            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 pb-48">
                 {history.map((message, index) => (
                     <React.Fragment key={`${message.id}-${index}`}>
                       <div
