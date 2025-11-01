@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -816,174 +815,8 @@ export function ChatContent() {
     );
   };
 
-  if (showWelcome) {
-    return (
-        <div className="flex h-full flex-col items-center justify-center p-4">
-             <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
-                <h1 className="text-4xl font-bold">SearnAI</h1>
-                <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
-                </div>
-                 <div className="w-full max-w-3xl">
-                    <div className="mb-2 w-full flex items-center justify-between gap-2">
-                        <Card className="p-1 flex-grow">
-                            <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
-                        </Card>
-                        <Card className="p-1">
-                            <Button 
-                                variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
-                                className="h-9 px-3"
-                                onClick={() => handleToolButtonClick('deepthink')}
-                            >
-                                <Wand2 className="h-4 w-4 mr-2"/>
-                                DeepThink
-                            </Button>
-                        </Card>
-                        <Card className="p-1">
-                            <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
-                                <Music className="h-5 w-5" />
-                            </Button>
-                        </Card>
-                        <Card className="p-1">
-                            <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
-                                <ImageIcon className="h-5 w-5" />
-                            </Button>
-                        </Card>
-                        <Card className="p-1">
-                            <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
-                                <Globe className="h-5 w-5" />
-                            </Button>
-                        </Card>
-                    </div>
-                    <form
-                        onSubmit={handleFormSubmit}
-                        className="glassmorphism-chat-bar p-2 flex items-center gap-1"
-                    >
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Message SearnAI..."
-                            disabled={isOcrProcessing}
-                            className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
-                            rows={1}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendMessage();
-                                }
-                            }}
-                        />
-                        <input type="file" ref={fileInputRef} className="hidden" />
-                        <div className="flex items-center gap-1">
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
-                                        <Paperclip className="h-5 w-5" />
-                                        <span className="sr-only">Attach file</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
-                                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                                <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                            </Button>
-                            <Button 
-                                type="submit" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90" 
-                                disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
-                            >
-                                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                                <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    )
-  }
-
-  return (
-    <div className="flex h-full flex-col">
-      <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
-      <ShareDialog
-        isOpen={!!shareContent}
-        onOpenChange={(open) => !open && setShareContent(null)}
-        content={shareContent || ""}
-      />
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
-            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 pb-32">
-                {history.map((message, index) => (
-                    <React.Fragment key={`${message.id}-${index}`}>
-                      <div
-                        className={cn(
-                          "flex w-full items-start gap-4",
-                          message.role === "user" ? "justify-end" : "justify-start"
-                        )}
-                      >
-                        {message.role === "user" ? (
-                          <div className="flex items-start gap-4 justify-end">
-                             <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                               <ReactMarkdown
-                                  remarkPlugins={[remarkMath, remarkGfm]}
-                                  rehypePlugins={[rehypeKatex]}
-                                  className="prose dark:prose-invert max-w-none text-sm"
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-full">
-                            {renderMessageContent(message)}
-                            {audioDataUri && isSynthesizing === message.id && (
-                              <audio
-                                ref={audioRef}
-                                src={audioDataUri}
-                                autoPlay
-                                onEnded={() => setIsSynthesizing(null)}
-                                onPause={() => setIsSynthesizing(null)}
-                              />
-                            )}
-                            {message.role === 'model' && message.role !== 'browser' && (
-                              <div className="mt-2 flex items-center gap-1 transition-opacity">
-                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
-                                  <Share2 className="h-4 w-4" />
-                                </Button>
-                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
-                                  {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
-                                </Button>
-                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
-                                  <RefreshCw className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {index < history.length - 1 && (
-                        <Separator className="my-8" />
-                      )}
-                    </React.Fragment>
-                  )
-                )}
-              {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
-            </div>
-          </ScrollArea>
-
-       <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm border-t">
+  const ChatBar = () => (
+     <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm border-t">
         <div className="p-4 mx-auto w-full max-w-3xl">
           {(imageDataUri || (fileContent && fileName)) && (
              <div className="relative mb-2 w-fit mx-auto max-w-3xl">
@@ -1086,14 +919,96 @@ export function ChatContent() {
           </form>
         </div>
       </div>
+  );
+
+  return (
+    <div className="flex h-full flex-col">
+      <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
+      <ShareDialog
+        isOpen={!!shareContent}
+        onOpenChange={(open) => !open && setShareContent(null)}
+        content={shareContent || ""}
+      />
+      {showWelcome ? (
+          <div className="flex h-full flex-col items-center justify-center p-4">
+             <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
+                <h1 className="text-4xl font-bold">SearnAI</h1>
+                <div className="flex flex-wrap justify-center gap-2">
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
+                </div>
+            </div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 pb-32">
+                {history.map((message, index) => (
+                    <React.Fragment key={`${message.id}-${index}`}>
+                      <div
+                        className={cn(
+                          "flex w-full items-start gap-4",
+                          message.role === "user" ? "justify-end" : "justify-start"
+                        )}
+                      >
+                        {message.role === "user" ? (
+                          <div className="flex items-start gap-4 justify-end">
+                             <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
+                               <ReactMarkdown
+                                  remarkPlugins={[remarkMath, remarkGfm]}
+                                  rehypePlugins={[rehypeKatex]}
+                                  className="prose dark:prose-invert max-w-none text-sm"
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full">
+                            {renderMessageContent(message)}
+                            {audioDataUri && isSynthesizing === message.id && (
+                              <audio
+                                ref={audioRef}
+                                src={audioDataUri}
+                                autoPlay
+                                onEnded={() => setIsSynthesizing(null)}
+                                onPause={() => setIsSynthesizing(null)}
+                              />
+                            )}
+                            {message.role === 'model' && message.role !== 'browser' && (
+                              <div className="mt-2 flex items-center gap-1 transition-opacity">
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyToClipboard(message.content)}>
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleShare(message.content)}>
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleTextToSpeech(message.content, message.id)}>
+                                  {isSynthesizing === message.id ? <StopCircle className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" />}
+                                </Button>
+                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={handleRegenerateResponse} disabled={isTyping}>
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {index < history.length - 1 && (
+                        <Separator className="my-8" />
+                      )}
+                    </React.Fragment>
+                  )
+                )}
+              {isTyping && <ThinkingIndicator text={null} duration={generationTime} />}
+            </div>
+          </ScrollArea>
+      )}
+
+      <ChatBar />
     </div>
   );
 }
 
     
-    
-
-
-
-
     
