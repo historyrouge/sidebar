@@ -456,10 +456,9 @@ export function ChatContent() {
         if (finalTranscript.trim()) {
            setInput(finalTranscript);
            audioSendTimeoutRef.current = setTimeout(() => {
-                // Pass the current history to handleSendMessage
                 setHistory(currentHistory => {
                     handleSendMessage(finalTranscript, currentHistory);
-                    return currentHistory; // handleSendMessage will update history, so we just return the current one
+                    return currentHistory;
                 });
            }, 1000);
         }
@@ -472,8 +471,7 @@ export function ChatContent() {
           clearTimeout(audioSendTimeoutRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [handleSendMessage, toast]); 
   
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -825,7 +823,7 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-          <div className="bg-background/80 backdrop-blur-md p-1 rounded-lg flex items-center justify-center gap-2 mb-3 border">
+          <div className="bg-background/80 backdrop-blur-md p-2 rounded-2xl flex items-center justify-center gap-2 mb-3 border">
               <div className="bg-muted p-1 rounded-lg">
                 <ModelSwitcher 
                     selectedModel={currentModel} 
@@ -917,16 +915,16 @@ export function ChatContent() {
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
                 </Button>
+                <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90 ml-2" 
+                    disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
+                >
+                    {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+                    <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
+                </Button>
             </div>
-            <Button 
-                type="submit" 
-                size="icon" 
-                className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90 ml-2" 
-                disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
-            >
-                {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
-            </Button>
           </form>
         </div>
       </div>
@@ -1024,3 +1022,5 @@ export function ChatContent() {
     </div>
   );
 }
+
+    
