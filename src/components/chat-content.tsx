@@ -333,7 +333,7 @@ export function ChatContent() {
       recognitionRef.current?.stop();
     }
     const messageId = `${Date.now()}`;
-    const formattedContent = `**You said:** ${messageToSend}`;
+    const formattedContent = `${messageToSend}`;
     const userMessage: Message = { id: messageId, role: "user", content: formattedContent, image: imageDataUri };
     
     // Filter out any existing browser views before adding new message
@@ -816,7 +816,7 @@ export function ChatContent() {
   };
 
   const ChatBar = () => (
-     <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm border-t">
+     <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm">
         <div className="p-4 mx-auto w-full max-w-3xl">
            <div className="flex items-center justify-center gap-2 mb-3">
               <ModelSwitcher 
@@ -966,13 +966,7 @@ export function ChatContent() {
                         {message.role === "user" ? (
                           <div className="flex items-start gap-4 justify-end">
                              <div className="border bg-transparent inline-block rounded-xl p-3 max-w-md">
-                               <ReactMarkdown
-                                  remarkPlugins={[remarkMath, remarkGfm]}
-                                  rehypePlugins={[rehypeKatex]}
-                                  className="prose dark:prose-invert max-w-none text-sm"
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
+                               <p className="text-sm">{message.content}</p>
                             </div>
                           </div>
                         ) : (
