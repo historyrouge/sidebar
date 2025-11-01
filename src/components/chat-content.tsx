@@ -23,7 +23,7 @@ import { useRouter } from "next/navigation";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "./ui/progress";
 import Tesseract from 'tesseract.js';
 import { ModelSwitcher } from "./model-switcher";
@@ -930,8 +930,8 @@ export function ChatContent() {
         content={shareContent || ""}
       />
       {showWelcome ? (
-          <div className="flex h-full flex-col items-center justify-start pt-20 p-4">
-             <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
+          <div className="flex h-full flex-col justify-start pt-20 p-4">
+             <div className="w-full max-w-3xl mx-auto flex flex-col items-start gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
             </div>
         </div>
