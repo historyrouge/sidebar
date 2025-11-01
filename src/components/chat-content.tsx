@@ -838,40 +838,25 @@ export function ChatContent() {
                 </Button>
             </div>
           )}
-            <div className="mb-2 w-full max-w-3xl mx-auto flex items-center justify-between gap-2">
-                <Card className="p-1 flex-grow">
-                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} disabled={isOcrProcessing} />
-                </Card>
-                <Card className="p-1">
-                    <Button 
-                        variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'}
-                        className="h-9 px-3"
-                        onClick={() => handleToolButtonClick('deepthink')}
-                    >
-                        <Wand2 className="h-4 w-4 mr-2"/>
-                        DeepThink
-                    </Button>
-                </Card>
-                <Card className="p-1">
-                    <Button type="button" size="icon" variant={activeButton === 'music' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('music')}>
-                        <Music className="h-5 w-5" />
-                    </Button>
-                </Card>
-                <Card className="p-1">
-                    <Button type="button" size="icon" variant={activeButton === 'image' ? 'secondary' : 'ghost'} className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleToolButtonClick('image')}>
-                        <ImageIcon className="h-5 w-5" />
-                    </Button>
-                </Card>
-                <Card className="p-1">
-                    <Button type="button" size="icon" variant='ghost' className="h-9 w-9" disabled={isOcrProcessing} onClick={() => handleBrowserToggle("https://www.google.com/webhp?igu=1")}>
-                        <Globe className="h-5 w-5" />
-                    </Button>
-                </Card>
-            </div>
            <form
               onSubmit={handleFormSubmit}
               className="relative flex items-center p-3 glassmorphism-chat-bar max-w-3xl mx-auto"
           >
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
+                        <Plus className="h-5 w-5" />
+                        <span className="sr-only">Attach file</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -888,20 +873,6 @@ export function ChatContent() {
               />
               <input type="file" ref={fileInputRef} className="hidden" />
               <div className="flex items-center gap-1">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
-                            <Paperclip className="h-5 w-5" />
-                            <span className="sr-only">Attach file</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
                 <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
                     {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                     <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -937,7 +908,7 @@ export function ChatContent() {
                     <h2 className="text-4xl font-light text-muted-foreground">Hi {user?.displayName?.split(' ')[0] || 'there'},</h2>
                     <h2 className="text-4xl font-bold">Where should we start?</h2>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col items-start gap-3">
                     <Button variant="outline" className="rounded-full" onClick={() => router.push('/image-generation')}>
                         <span className="mr-2">🍌</span> Create image
                     </Button>
