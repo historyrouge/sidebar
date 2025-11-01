@@ -921,7 +921,7 @@ export function ChatContent() {
         content={shareContent || ""}
       />
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-            <div className="mx-auto w-full max-w-3xl space-y-8 p-4 pb-32">
+            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 pb-32">
                 {history.map((message, index) => (
                     <React.Fragment key={`${message.id}-${index}`}>
                       <div
@@ -983,8 +983,8 @@ export function ChatContent() {
             </div>
           </ScrollArea>
 
-       <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all">
-        <div className="p-4 mx-auto w-full">
+       <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm border-t">
+        <div className="p-4 mx-auto w-full max-w-3xl">
           {(imageDataUri || (fileContent && fileName)) && (
              <div className="relative mb-2 w-fit mx-auto max-w-3xl">
                 {isOcrProcessing && (
@@ -1094,3 +1094,6 @@ export function ChatContent() {
     
 
 
+
+
+    
