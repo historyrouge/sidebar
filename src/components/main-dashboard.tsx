@@ -150,7 +150,6 @@ export function MainDashboard() {
                     Browser
                 </Button>
             </div>
-             <h1 className="text-xl font-semibold tracking-tight mt-2">{activeView === 'searnai' ? 'SearnAI' : ''}</h1>
         </div>
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
