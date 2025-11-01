@@ -151,7 +151,7 @@
         @apply text-primary/80 hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md;
     }
     .code-box pre {
-      @apply my-0 p-4 rounded-b-xl text-sm;
+      @apply my-0 p-4 rounded-b-xl text-sm max-h-96 overflow-auto;
       background-color: #121212 !important; /* Dark background */
       color: hsl(var(--accent)); /* Orange text */
     }
