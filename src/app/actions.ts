@@ -37,18 +37,15 @@ export type ActionResult<T> = {
 
 // Sanitizer function to fix KaTeX issues
 const sanitizeKatex = (text: string): string => {
-    // Rule 1: Replace [ ... ] with $$ ... $$ for block math
-    let sanitizedText = text.replace(/\[\s*([\s\S]*?)\s*\]/g, (match, content) => {
-        // Avoid replacing if it's a markdown link like [text](url)
-        if (/\(https?:\/\//.test(match)) {
-            return match;
-        }
+    // Rule 1: Replace \[ ... \] with $$ ... $$ for block math
+    // This is safer than replacing all square brackets.
+    let sanitizedText = text.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, content) => {
         return `$$${content.trim()}$$`;
     });
 
-    // Rule 2: Replace (...) with $$...$$ if it contains LaTeX commands
-    sanitizedText = sanitizedText.replace(/\(\s*([^)]*\\\w+[^)]*)\s*\)/g, (match, content) => {
-        return `$$${content.trim()}$$`;
+    // Rule 2: Replace \( ... \) with $ ... $ for inline math
+    sanitizedText = sanitizedText.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, content) => {
+        return `$${content.trim()}$`;
     });
     
     // Rule 3: Remove stray commas inside exponents, like ^{,m} -> ^{m}
