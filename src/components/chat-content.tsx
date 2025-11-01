@@ -933,11 +933,7 @@ export function ChatContent() {
           <div className="flex h-full flex-col items-center justify-center p-4">
              <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
-                <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Generate a summary, highlights, and key insights')}>Generate a summary, highlights, and key insights</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('Summarize core points and important details')}>Summarize core points and important details</Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => handleSendMessage('News')}>News</Button>
-                </div>
+                
             </div>
         </div>
       ) : (
