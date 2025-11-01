@@ -3,6 +3,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import Youtube from 'youtube-sr';
 
 export const searchYoutube = ai.defineTool(
   {
@@ -19,18 +20,18 @@ export const searchYoutube = ai.defineTool(
   },
   async ({ query }) => {
     try {
-      // In a production environment, this should be the full absolute URL
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/youtube-search?query=${encodeURIComponent(query)}`);
-      if (!response.ok) {
-        console.error('YouTube search API error:', await response.text());
-        return {};
+      const video = await Youtube.searchOne(query, 'video');
+      if (video) {
+        return {
+          id: video.id,
+          title: video.title,
+          thumbnail: video.thumbnail?.url,
+        };
       }
-      const data = await response.json();
-      return data;
+      return {};
     } catch (error) {
       console.error('YouTube search fetch error:', error);
       return {};
     }
   }
 );
-
