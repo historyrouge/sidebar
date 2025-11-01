@@ -816,9 +816,9 @@ export function ChatContent() {
   };
 
   const ChatBar = () => (
-     <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-background/80 backdrop-blur-sm">
+     <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-           <div className="flex items-center justify-center gap-2 mb-3">
+           <div className="bg-muted p-1 rounded-lg flex items-center justify-center gap-2 mb-3">
               <ModelSwitcher 
                   selectedModel={currentModel} 
                   onModelChange={setCurrentModel} 
