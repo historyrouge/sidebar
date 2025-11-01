@@ -4,56 +4,6 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
- 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
- 
-    --primary: 209 96% 58%; /* Blue */
-    --primary-foreground: 240 5.9% 10%;
- 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
- 
-    --accent: 33 96% 62%; /* Orange */
-    --accent-foreground: 0 0% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%; /* Darker grey for bot messages */
-    --muted-foreground: 0 0% 98%; /* Whiter text for bot messages */
- 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 261 83% 67%; /* Purple */
- 
-    --radius: 0.75rem;
-
-    --chart-1: 210 80% 50%;
-    --chart-2: 30 90% 55%;
-    --chart-3: 160 70% 40%;
-    --chart-4: 280 80% 60%;
-    --chart-5: 0 80% 60%;
-    
-    --sidebar-background: 0 0% 4%; /* #0A0A0A */
-    --sidebar-foreground: 0 0% 90%; /* #E6E6E6 */
-    --sidebar-border: 0 0% 10%; /* #1A1A1A */
-    --sidebar-accent: 0 0% 8%; /* #141414 */
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-active: 0 0% 8%;
-    --sidebar-active-foreground: 0 0% 98%;
-    --sidebar-group-foreground: 0 0% 63%;
-
-    --chat-input-background: 0 0% 10%;
-    --avatar-accent: 225 73% 57%; /* #3B82F6 */
-  }
-
-  .light {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
@@ -81,6 +31,8 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 261 83% 67%; /* Purple */
+ 
+    --radius: 0.75rem;
 
     --chart-1: 220 80% 50%;
     --chart-2: 50 90% 55%;
@@ -243,10 +195,10 @@
     .dark .prose code {
       color: hsl(var(--accent));
     }
-    .prose .katex-html {
+    .prose .katex {
       color: hsl(var(--ring));
     }
-    .dark .prose .katex-html {
+    .dark .prose .katex {
       color: hsl(var(--ring));
     }
     .prose a {
