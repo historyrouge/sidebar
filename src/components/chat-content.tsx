@@ -12,7 +12,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { ShareDialog } from "./share-dialog";
 import Image from "next/image";
@@ -42,6 +41,8 @@ import * as pdfjs from 'pdfjs-dist';
 import wav from 'wav';
 import { Buffer } from 'buffer';
 import { useAuth } from "@/hooks/use-auth";
+import remarkGfm from "remark-gfm";
+
 
 // Required for pdf.js to work
 if (typeof window !== 'undefined') {
@@ -818,18 +819,16 @@ export function ChatContent() {
   const ChatBar = () => (
      <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
         <div className="p-4 mx-auto w-full max-w-3xl">
-           <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="bg-muted p-1 rounded-lg">
-                <ModelSwitcher 
-                    selectedModel={currentModel} 
-                    onModelChange={setCurrentModel} 
-                    disabled={!!activeButton}
-                />
-              </div>
+          <div className="bg-muted p-1 rounded-lg flex items-center justify-center gap-2 mb-2">
+              <ModelSwitcher 
+                  selectedModel={currentModel} 
+                  onModelChange={setCurrentModel} 
+                  disabled={!!activeButton}
+              />
               <Button 
                 variant={activeButton === 'deepthink' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2 bg-muted"
+                className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('deepthink')}
               >
                   <Wand2 className="h-4 w-4" /> DeepThink
@@ -837,7 +836,7 @@ export function ChatContent() {
                <Button 
                 variant={activeButton === 'music' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2 bg-muted"
+                className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('music')}
               >
                   <Music className="h-4 w-4" /> Music
@@ -845,7 +844,7 @@ export function ChatContent() {
                <Button 
                 variant={activeButton === 'image' ? 'secondary' : 'outline'} 
                 size="sm" 
-                className="rounded-full gap-2 bg-muted"
+                className="rounded-full gap-2"
                 onClick={() => handleToolButtonClick('image')}
               >
                   <ImageIcon className="h-4 w-4" /> Image

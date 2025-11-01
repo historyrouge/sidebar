@@ -13,8 +13,8 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 200 87% 55%; /* Blue */
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 209 96% 58%; /* Blue */
+    --primary-foreground: 240 5.9% 10%;
  
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
@@ -30,7 +30,7 @@
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 263 78% 66%; /* Purple */
+    --ring: 261 83% 67%; /* Purple */
  
     --radius: 0.75rem;
 
@@ -63,7 +63,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
  
-    --primary: 200 87% 55%; /* Blue */
+    --primary: 209 96% 58%; /* Blue */
     --primary-foreground: 0 0% 98%;
  
     --secondary: 0 0% 96.1%;
@@ -80,7 +80,7 @@
  
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 263 78% 66%; /* Purple */
+    --ring: 261 83% 67%; /* Purple */
 
     --chart-1: 220 80% 50%;
     --chart-2: 50 90% 55%;
@@ -111,7 +111,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 200 87% 55%; /* Blue */
+    --primary: 209 96% 58%; /* Blue */
     --primary-foreground: 240 5.9% 10%;
  
     --secondary: 240 3.7% 15.9%;
@@ -128,7 +128,7 @@
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 263 78% 66%; /* Purple */
+    --ring: 261 83% 67%; /* Purple */
 
     --chart-1: 210 80% 50%;
     --chart-2: 30 90% 55%;
@@ -182,7 +182,6 @@
   }
 }
 
-
 @layer components {
     .code-box {
         @apply block rounded-xl border border-border my-4;
@@ -202,7 +201,7 @@
     .code-box pre {
       @apply my-0 p-4 rounded-b-xl text-sm;
       background-color: #121212 !important; /* Dark background */
-      color: #eaeaea !important; /* Light gray text */
+      color: hsl(var(--accent)); /* Orange text */
     }
 
     .bg-chat-input {
@@ -227,38 +226,7 @@
     .light .model-response-header {
       @apply bg-white/30 text-black/80 border-black/10;
     }
-
-    /* Glassmorphism Chat Bar */
-    .glassmorphism-chat-bar {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      @apply rounded-2xl shadow-lg transition-all duration-300 ease-in-out;
-    }
-
-    .light .glassmorphism-chat-bar {
-      background: rgba(255, 255, 255, 0.4);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .glassmorphism-chat-bar:focus-within {
-      border-color: #00c6ff;
-      box-shadow: 0 0 25px rgba(0, 198, 255, 0.4);
-    }
-
-    .chat-icon-button {
-      @apply text-muted-foreground transition-colors duration-200 ease-in-out hover:text-primary focus:text-primary;
-    }
     
-    .chat-icon-button:hover {
-        transform: scale(1.1);
-    }
-    
-    .send-button:active {
-        animation: pulse 0.5s;
-    }
-
     .chat-textarea::placeholder {
       color: rgba(255, 255, 255, 0.5);
       font-style: italic;
@@ -267,9 +235,24 @@
       color: rgba(0, 0, 0, 0.4);
     }
 
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(0,198,255, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(0,198,255, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(0,198,255, 0); }
+    /* AI Response Colors */
+    .prose code {
+      color: hsl(var(--accent));
+      font-weight: 600;
+    }
+    .dark .prose code {
+      color: hsl(var(--accent));
+    }
+    .prose .katex-html {
+      color: hsl(var(--ring));
+    }
+    .dark .prose .katex-html {
+      color: hsl(var(--ring));
+    }
+    .prose a {
+      color: hsl(var(--primary));
+    }
+    .dark .prose a {
+      color: hsl(var(--primary));
     }
 }
