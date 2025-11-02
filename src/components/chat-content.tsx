@@ -903,6 +903,14 @@ export function ChatContent() {
                         </code>
                     );
                 },
+                blockquote({ node, ...props }) {
+                    const value = props.children?.toString() || '';
+                    if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note">{value.replace('[!NOTE]', '<strong>💡 Note</strong>')}</blockquote>;
+                    if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip">{value.replace('[!TIP]', '<strong>✨ Tip</strong>')}</blockquote>;
+                    if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning">{value.replace('[!WARNING]', '<strong>⚠️ Warning</strong>')}</blockquote>;
+                    if (value.startsWith('[!SUCCESS]')) return <blockquote {...props} data-type="success">{value.replace('[!SUCCESS]', '<strong>✅ Success</strong>')}</blockquote>;
+                    return <blockquote {...props} />;
+                },
                 p: ({node, ...props}) => <p className="mb-4" {...props} />,
                 table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,
                 thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
@@ -935,6 +943,14 @@ export function ChatContent() {
                                 {children}
                             </code>
                         );
+                    },
+                    blockquote({ node, ...props }) {
+                        const value = props.children?.toString() || '';
+                        if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note"><strong>💡 Note</strong>{value.replace('[!NOTE]', '')}</blockquote>;
+                        if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip"><strong>✨ Tip</strong>{value.replace('[!TIP]', '')}</blockquote>;
+                        if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning"><strong>⚠️ Warning</strong>{value.replace('[!WARNING]', '')}</blockquote>;
+                        if (value.startsWith('[!SUCCESS]')) return <blockquote {...props} data-type="success"><strong>✅ Success</strong>{value.replace('[!SUCCESS]', '')}</blockquote>;
+                        return <blockquote {...props} />;
                     },
                     p: ({node, ...props}) => <p className="mb-4" {...props} />,
                     table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,

@@ -263,6 +263,22 @@ $$
 $$
 **IMPORTANT: Do NOT use square brackets \`[...]\`, parentheses \`(..)\` or any other format for math. Only use \`$\` and \`$$\`. This is a strict requirement.**
 `;
+    
+    const richFormattingInstruction = `
+**Rule 4: Use Rich Markdown Formatting**
+To make your answers more engaging and readable, use the following special markdown formats:
+- **Emojis**: Use relevant emojis to add context and visual appeal. For example: 💡 for a tip, ⚠️ for a warning, ✅ for a success message.
+- **Highlights**: Use bold or italics for emphasis, but also use the \`<u>...</u>\` HTML tag for underlined highlights on key terms. Example: The most important concept is <u>photosynthesis</u>.
+- **Styled Boxes**: Use blockquotes with special markers to create styled boxes for important information.
+    - For a general note: \`> [!NOTE]\`
+    - For a tip or suggestion: \`> [!TIP]\`
+    - For a warning or caution: \`> [!WARNING]\`
+    - For a key takeaway or summary: \`> [!SUCCESS]\`
+
+Example of a styled box:
+> [!TIP]
+> Remember to always check your units! This is a common source of error in physics problems.
+`;
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
 
@@ -270,7 +286,7 @@ $$
         ? `\n\n**User's Provided Context (from OCR or file):**\nThis is the primary context for your answer. Adhere to the OCR handling rules.\n\n---\n${fileContent}\n---` 
         : '';
         
-    return `${basePrompt}\n\n${persona}\n\n${ocrInstruction}\n\n${mathInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
+    return `${basePrompt}\n\n${persona}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
 };
 
 
