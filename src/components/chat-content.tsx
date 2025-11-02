@@ -576,6 +576,14 @@ const ChatBar = React.memo(({
                     </Button>
                     <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} />
                      <Button 
+                        variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
+                        className="gap-2 rounded-full"
+                        onClick={() => handleToolbarButtonClick('music')}
+                    >
+                        <Music className="h-4 w-4" />
+                        <span className="hidden sm:inline">Music</span>
+                    </Button>
+                     <Button 
                         variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
                         className="gap-2 rounded-full"
                         onClick={() => handleToolbarButtonClick('image')}
@@ -688,7 +696,7 @@ export function ChatContent() {
             fileContent: currentFileContent, 
             imageDataUri: currentImageDataUri,
             model: activeButton === 'deepthink' ? 'gpt-oss-120b' : currentModel,
-            isMusicMode: false, // Music mode is disabled
+            isMusicMode: activeButton === 'music',
         });
 
         const endTime = Date.now();
