@@ -28,6 +28,7 @@ declare const puter: any;
 
 export function StudyNowContent() {
   const [content, setContent] = useState("");
+  const [finalTranscript, setFinalTranscript] = useState("");
   const [title, setTitle] = useState("");
   const [analysis, setAnalysis] = useState<AnalyzeContentOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['flashcards'] | null>(null);
@@ -77,30 +78,35 @@ export function StudyNowContent() {
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        const recognition = recognitionRef.current;
-        recognition.continuous = true;
-        recognition.interimResults = true;
+      recognitionRef.current = new SpeechRecognition();
+      const recognition = recognitionRef.current;
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
-        recognition.onstart = () => setIsRecording(true);
-        recognition.onend = () => setIsRecording(false);
-        recognition.onerror = (event: any) => {
-            toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
-            setIsRecording(false);
-        };
-        recognition.onresult = (event: any) => {
-            let fullTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    fullTranscript += event.results[i][0].transcript;
-                }
-            }
-            if (fullTranscript) {
-                setContent(prev => prev + fullTranscript + ' ');
-            }
-        };
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setFinalTranscript("");
+      };
+      recognition.onend = () => setIsRecording(false);
+      recognition.onerror = (event: any) => {
+        toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
+        setIsRecording(false);
+      };
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let currentFinalTranscript = finalTranscript;
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            currentFinalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        setFinalTranscript(currentFinalTranscript);
+        setContent(currentFinalTranscript + interimTranscript);
+      };
     }
-  }, [toast]);
+  }, [toast, finalTranscript]);
 
   const handleToggleRecording = () => {
       if (!recognitionRef.current) {
@@ -114,6 +120,8 @@ export function StudyNowContent() {
       if (isRecording) {
           recognitionRef.current.stop();
       } else {
+          setContent('');
+          setFinalTranscript('');
           recognitionRef.current.start();
       }
   };

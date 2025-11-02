@@ -175,11 +175,20 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
 
 const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void, isTyping: boolean }) => {
   const [input, setInput] = useState('');
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() && !imageDataUri && !fileContent) return;
-    onSendMessage(input, imageDataUri, fileContent);
+  const [finalTranscript, setFinalTranscript] = useState('');
+
+  const handleLocalSendMessage = (messageToSend?: string) => {
+    const message = (messageToSend || input || finalTranscript).trim();
+    if (!message && !imageDataUri && !fileContent) return;
+
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    }
+
+    onSendMessage(message, imageDataUri, fileContent);
+
     setInput('');
+    setFinalTranscript('');
     setImageDataUri(null);
     setFileContent(null);
     setFileName(null);
@@ -198,75 +207,82 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
     const [isOcrProcessing, setIsOcrProcessing] = useState(false);
     const [ocrProgress, setOcrProgress] = useState(0);
 
-    const handleLocalSendMessage = () => {
-        if (!input.trim() && !imageDataUri && !fileContent) return;
+    useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn('Speech recognition not supported in this browser.');
+      return;
+    }
 
+    recognitionRef.current = new SpeechRecognition();
+    const recognition = recognitionRef.current;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      setFinalTranscript('');
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      toast({
+        title: 'Speech Recognition Error',
+        description: event.error,
+        variant: 'destructive',
+      });
+      setIsRecording(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      if (audioSendTimeoutRef.current) {
+        clearTimeout(audioSendTimeoutRef.current);
+      }
+
+      let interimTranscript = '';
+      let currentFinalTranscript = finalTranscript;
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          currentFinalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      setFinalTranscript(currentFinalTranscript);
+      setInput(currentFinalTranscript + interimTranscript);
+
+      audioSendTimeoutRef.current = setTimeout(() => {
         if (isRecording) {
             recognitionRef.current?.stop();
         }
-        
-        onSendMessage(
-            input,
-            imageDataUri,
-            fileContent
-        );
-
-        setInput("");
-        setImageDataUri(null);
-        setFileContent(null);
-        setFileName(null);
-    };
-    
-    useEffect(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognitionRef.current = new SpeechRecognition();
-            const recognition = recognitionRef.current;
-            recognition.continuous = true;
-            recognition.interimResults = true;
-
-            recognition.onstart = () => setIsRecording(true);
-            recognition.onend = () => setIsRecording(false);
-            recognition.onerror = (event: any) => {
-                toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
-                setIsRecording(false);
-            };
-
-            recognition.onresult = (event: any) => {
-                if (audioSendTimeoutRef.current) {
-                    clearTimeout(audioSendTimeoutRef.current);
-                }
-
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
-                }
-
-                setInput(prev => prev + finalTranscript + interimTranscript);
-            };
+        if ((currentFinalTranscript + interimTranscript).trim()) {
+            handleLocalSendMessage(currentFinalTranscript + interimTranscript);
         }
+      }, 1500); // Send after 1.5 seconds of silence
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalTranscript, isRecording]);
 
-        return () => {
-            recognitionRef.current?.abort();
-            if (audioSendTimeoutRef.current) {
-                clearTimeout(audioSendTimeoutRef.current);
-            }
-        };
-    }, []); 
 
     const handleToggleRecording = () => {
         if (!recognitionRef.current) return;
         if (isRecording) {
             recognitionRef.current.stop();
         } else {
+            setInput('');
+            setFinalTranscript('');
             recognitionRef.current.start();
         }
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleLocalSendMessage();
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -680,7 +696,7 @@ export function ChatContent() {
     currentHistory: Message[],
     currentImageDataUri?: string | null,
     currentFileContent?: string | null
-  ): Promise<void> => {
+  ) => {
       setIsTyping(true);
       const startTime = Date.now();
       
@@ -723,47 +739,43 @@ export function ChatContent() {
   }, [currentModel, activeButton, toast, userName]);
 
 
-  const handleSendMessage = useCallback(async (messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
+  const handleSendMessage = useCallback((messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
     const userMessage: Message = { 
         id: `${Date.now()}-user`, 
         role: "user", 
         content: messageContent, 
         image: imageDataUri 
     };
-    
-    setHistory(prevHistory => {
-        const newHistory = [...prevHistory, userMessage];
-        
-        const isImageGenRequest = activeButton === 'image';
 
-        if (isImageGenRequest) {
-            setIsTyping(true);
-            const startTime = Date.now();
-            const prompt = messageContent.trim();
-            generateImageAction({ prompt }).then(result => {
-                const endTime = Date.now();
-                setGenerationTime((endTime - startTime) / 1000);
-                setIsTyping(false);
-                if (result.error) {
-                    toast({ title: "Image Generation Error", description: result.error, variant: "destructive" });
-                } else if (result.data) {
-                    const imagePayload = {
-                        type: 'image',
-                        imageDataUri: result.data.imageDataUri,
-                        prompt: prompt
-                    };
-                    const modelMessageId = `${Date.now()}-model`;
-                    setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: JSON.stringify(imagePayload) }]);
-                }
-            });
-        } else {
-            executeChat(newHistory, imageDataUri, fileContent);
-        }
-        
-        return newHistory;
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeButton, executeChat, toast]);
+    const newHistory = [...history, userMessage];
+    setHistory(newHistory);
+    
+    const isImageGenRequest = activeButton === 'image';
+
+    if (isImageGenRequest) {
+        setIsTyping(true);
+        const startTime = Date.now();
+        const prompt = messageContent.trim();
+        generateImageAction({ prompt }).then(result => {
+            const endTime = Date.now();
+            setGenerationTime((endTime - startTime) / 1000);
+            setIsTyping(false);
+            if (result.error) {
+                toast({ title: "Image Generation Error", description: result.error, variant: "destructive" });
+            } else if (result.data) {
+                const imagePayload = {
+                    type: 'image',
+                    imageDataUri: result.data.imageDataUri,
+                    prompt: prompt
+                };
+                const modelMessageId = `${Date.now()}-model`;
+                setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: JSON.stringify(imagePayload) }]);
+            }
+        });
+    } else {
+        executeChat(newHistory, imageDataUri, fileContent);
+    }
+  }, [activeButton, executeChat, history, toast]);
   
 
   const handleRegenerateResponse = async () => {

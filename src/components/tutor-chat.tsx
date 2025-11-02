@@ -37,6 +37,7 @@ const TutorResponse = ({ message }: { message: Message }) => {
 export function TutorChat({ content, onSendMessage }: TutorChatProps) {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [finalTranscript, setFinalTranscript] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -44,19 +45,19 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
   const recognitionRef = useRef<any>(null);
   const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSendMessage = async (e: React.FormEvent | null, message?: string) => {
-    e?.preventDefault();
-    const messageToSend = message || input;
-    if (!messageToSend.trim()) return;
+  const handleSendMessage = async (messageContent?: string) => {
+    const messageToSend = (messageContent || input || finalTranscript).trim();
+    if (!messageToSend) return;
 
     if (isRecording) {
       recognitionRef.current?.stop();
     }
 
-    const userMessage: Message = { role: "user", content: messageToSend };
+    const userMessage: Message = { role: 'user', content: messageToSend };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
-    setInput("");
+    setInput('');
+    setFinalTranscript('');
 
     startTyping(async () => {
       const result = await onSendMessage(newHistory.map(h => ({role: h.role, content: h.content})));
@@ -78,6 +79,11 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     });
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage();
+  }
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -86,7 +92,10 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onstart = () => setIsRecording(true);
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setFinalTranscript('');
+      };
       recognition.onend = () => setIsRecording(false);
       recognition.onerror = (event: any) => {
         toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
@@ -99,24 +108,27 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
         }
         
         let interimTranscript = '';
-        let finalTranscript = '';
+        let currentFinalTranscript = finalTranscript;
         
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript = event.results[i][0].transcript;
+            currentFinalTranscript += event.results[i][0].transcript;
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
         }
         
-        setInput(interimTranscript);
-
-        if (finalTranscript.trim()) {
-           setInput(finalTranscript);
-           audioSendTimeoutRef.current = setTimeout(() => {
-                handleSendMessage(null, finalTranscript);
-           }, 1000);
-        }
+        setFinalTranscript(currentFinalTranscript);
+        setInput(currentFinalTranscript + interimTranscript);
+        
+        audioSendTimeoutRef.current = setTimeout(() => {
+            if(isRecording) {
+                recognitionRef.current.stop();
+            }
+            if ((currentFinalTranscript + interimTranscript).trim()){
+                handleSendMessage(currentFinalTranscript + interimTranscript);
+            }
+        }, 1500);
       };
     }
     
@@ -124,9 +136,10 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
         if (audioSendTimeoutRef.current) {
             clearTimeout(audioSendTimeoutRef.current);
         }
+        recognitionRef.current?.abort();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]);
+  }, [finalTranscript, isRecording]);
 
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -134,6 +147,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
       recognitionRef.current.stop();
     } else {
       setInput("");
+      setFinalTranscript('');
       recognitionRef.current.start();
     }
   };
@@ -202,7 +216,7 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
         </div>
       </ScrollArea>
       <div className="border-t p-4">
-        <form onSubmit={(e) => handleSendMessage(e, input)} className="flex items-center gap-2">
+        <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -227,4 +241,3 @@ export function TutorChat({ content, onSendMessage }: TutorChatProps) {
     </div>
   );
 }
-

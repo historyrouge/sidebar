@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, Send, User, Mic, MicOff } from "lucide-react";
-import React, { useState, useTransition, useRef, useEffect } from "react";
+import React, { useState, useTransition, useRef, useEffect, useCallback } from "react";
 
 type Message = {
   role: "user" | "model";
@@ -21,6 +21,7 @@ export function HelpChatbot() {
     { role: "model", content: "Hello! How can I help you use SearnAI today?" },
   ]);
   const [input, setInput] = useState("");
+  const [finalTranscript, setFinalTranscript] = useState("");
   const [isTyping, startTyping] = useTransition();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -28,38 +29,43 @@ export function HelpChatbot() {
   const recognitionRef = useRef<any>(null);
   const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSendMessage = async (e: React.FormEvent | null, message?: string) => {
-    e?.preventDefault();
-    const messageToSend = message || input;
-    if (!messageToSend.trim()) return;
-
+  const handleSendMessage = async (messageContent?: string) => {
+    const messageToSend = (messageContent || input || finalTranscript).trim();
+    if (!messageToSend) return;
+  
     if (isRecording) {
       recognitionRef.current?.stop();
     }
-
-    const userMessage: Message = { role: "user", content: messageToSend };
+  
+    const userMessage: Message = { role: 'user', content: messageToSend };
     setHistory((prev) => [...prev, userMessage]);
-    setInput("");
-
+    setInput('');
+    setFinalTranscript('');
+  
     startTyping(async () => {
       const chatInput: HelpChatInput = {
         history: [...history, userMessage],
       };
       const result = await helpChatAction(chatInput);
-
+  
       if (result.error) {
         toast({
-          title: "Chat Error",
+          title: 'Chat Error',
           description: result.error,
-          variant: "destructive",
+          variant: 'destructive',
         });
         setHistory((prev) => prev.slice(0, -1)); // Remove user message on error
       } else if (result.data) {
-        const modelMessage: Message = { role: "model", content: result.data.response };
+        const modelMessage: Message = { role: 'model', content: result.data.response };
         setHistory((prev) => [...prev, modelMessage]);
       }
     });
   };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage();
+  }
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -69,7 +75,10 @@ export function HelpChatbot() {
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onstart = () => setIsRecording(true);
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setFinalTranscript('');
+      };
       recognition.onend = () => setIsRecording(false);
       recognition.onerror = (event: any) => {
         toast({ title: "Speech Recognition Error", description: event.error, variant: "destructive" });
@@ -82,24 +91,27 @@ export function HelpChatbot() {
         }
         
         let interimTranscript = '';
-        let finalTranscript = '';
-        
+        let currentFinalTranscript = finalTranscript;
+
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript = event.results[i][0].transcript;
+            currentFinalTranscript += event.results[i][0].transcript;
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
         }
         
-        setInput(interimTranscript);
-
-        if (finalTranscript.trim()) {
-           setInput(finalTranscript);
-           audioSendTimeoutRef.current = setTimeout(() => {
-                handleSendMessage(null, finalTranscript);
-           }, 1000);
-        }
+        setFinalTranscript(currentFinalTranscript);
+        setInput(currentFinalTranscript + interimTranscript);
+        
+        audioSendTimeoutRef.current = setTimeout(() => {
+            if (isRecording) {
+                recognitionRef.current.stop();
+            }
+            if ((currentFinalTranscript + interimTranscript).trim()){
+                handleSendMessage(currentFinalTranscript + interimTranscript);
+            }
+        }, 1500);
       };
     }
     
@@ -107,9 +119,10 @@ export function HelpChatbot() {
         if (audioSendTimeoutRef.current) {
             clearTimeout(audioSendTimeoutRef.current);
         }
+        recognitionRef.current?.abort();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]);
+  }, [finalTranscript, isRecording]);
 
   const handleToggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -117,6 +130,7 @@ export function HelpChatbot() {
       recognitionRef.current.stop();
     } else {
       setInput("");
+      setFinalTranscript('');
       recognitionRef.current.start();
     }
   };
@@ -180,7 +194,7 @@ export function HelpChatbot() {
         </div>
       </ScrollArea>
       <div className="border-t p-4">
-        <form onSubmit={(e) => handleSendMessage(e, input)} className="flex items-center gap-2">
+        <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
