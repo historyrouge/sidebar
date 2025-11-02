@@ -14,6 +14,8 @@ import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
 import { WebBrowserContent } from "./web-browser-content";
 import { AiEditorContent } from "./ai-editor-content";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
+import { Textarea } from "./ui/textarea";
 
 
 export function MainDashboard() {
@@ -146,16 +148,29 @@ export function MainDashboard() {
           </div>
       </div>
       <main className="flex-1 overflow-hidden relative">
-         {activeView === 'searnai' ? (
+         {activeView === 'playground' ? (
+             <ResizablePanelGroup direction="horizontal" className="h-full">
+                <ResizablePanel defaultSize={50}>
+                    <ChatContent />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={50}>
+                    <div className="flex flex-col h-full">
+                        <div className="p-2 border-b">
+                            <p className="text-sm font-semibold">Canvas</p>
+                        </div>
+                        <div className="flex-1 p-4">
+                             <Textarea placeholder="Write or code..." className="h-full w-full resize-none border-0 focus-visible:ring-0 p-0 bg-transparent"/>
+                        </div>
+                    </div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+         ) : activeView === 'searnai' ? (
             <ChatContent />
          ) : activeView === 'stories' ? (
             <NewsContent />
-         ) : activeView === 'browser' ? (
-            <WebBrowserContent />
          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <AiEditorContent embedded={true} />
-            </div>
+            <WebBrowserContent />
          )}
          {activeVideoId && showPlayer && (
              <div className="fixed bottom-4 right-4 z-50 group">
