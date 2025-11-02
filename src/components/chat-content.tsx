@@ -556,7 +556,10 @@ const ChatBar = React.memo(({
 ChatBar.displayName = "ChatBar";
 
 
-export function ChatContent() {
+export function ChatContent({ activeButton, currentModel }: { 
+    activeButton: 'deepthink' | 'music' | 'image' | null;
+    currentModel: string;
+}) {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -573,9 +576,6 @@ export function ChatContent() {
   
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
   const [userName, setUserName] = useState<string | null>(null);
