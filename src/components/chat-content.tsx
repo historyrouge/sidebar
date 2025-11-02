@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -58,6 +59,8 @@ export type Message = {
 };
 
 const CHAT_HISTORY_STORAGE_KEY = 'chatHistory';
+const USER_NAME_STORAGE_KEY = 'userName';
+
 
 type ChatStore = {
   activeVideoId: string | null;
@@ -170,19 +173,19 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
     );
 };
 
-
-const ChatBar = React.memo(({
-    onSendMessage,
-    isTyping,
-    onStopGeneration,
-}: {
-    onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void;
-    isTyping: boolean;
-    onStopGeneration: () => void;
-}) => {
+const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void, isTyping: boolean }) => {
+  const [input, setInput] = useState('');
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() && !imageDataUri && !fileContent) return;
+    onSendMessage(input, imageDataUri, fileContent);
+    setInput('');
+    setImageDataUri(null);
+    setFileContent(null);
+    setFileName(null);
+  };
+  
     const { toast } = useToast();
-    const { user } = useAuth();
-    const [input, setInput] = useState("");
     const [isRecording, setIsRecording] = useState(false);
     const recognitionRef = useRef<any>(null);
     const audioSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -194,27 +197,6 @@ const ChatBar = React.memo(({
 
     const [isOcrProcessing, setIsOcrProcessing] = useState(false);
     const [ocrProgress, setOcrProgress] = useState(0);
-
-    const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
-    const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
-
-    const handleToolButtonClick = (tool: 'deepthink' | 'music' | 'image') => {
-        const newActiveButton = activeButton === tool ? null : tool;
-        setActiveButton(newActiveButton);
-
-        if (newActiveButton === 'deepthink') {
-            setCurrentModel('gpt-oss-120b');
-            toast({ title: 'Model Switched', description: 'DeepThink activated: Using Gemini 2.5 Pro for complex reasoning.' });
-        } else if (newActiveButton === 'music') {
-            toast({ title: 'Music Mode Activated', description: 'Search for a song to play it from YouTube.' });
-        } else if (newActiveButton === 'image') {
-            toast({ title: 'Image Mode Activated', description: 'Type a prompt to generate an image.' });
-        } else {
-            if (currentModel === 'gpt-oss-120b' && newActiveButton !== 'deepthink') {
-                setCurrentModel(DEFAULT_MODEL_ID);
-            }
-        }
-    };
 
     const handleLocalSendMessage = () => {
         if (!input.trim() && !imageDataUri && !fileContent) return;
@@ -233,9 +215,6 @@ const ChatBar = React.memo(({
         setImageDataUri(null);
         setFileContent(null);
         setFileName(null);
-        if (activeButton) {
-            setActiveButton(null);
-        }
     };
     
     useEffect(() => {
@@ -263,20 +242,13 @@ const ChatBar = React.memo(({
 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        finalTranscript = event.results[i][0].transcript;
+                        finalTranscript += event.results[i][0].transcript;
                     } else {
                         interimTranscript += event.results[i][0].transcript;
                     }
                 }
 
-                setInput(interimTranscript);
-
-                if (finalTranscript.trim()) {
-                    setInput(finalTranscript);
-                    audioSendTimeoutRef.current = setTimeout(() => {
-                        handleLocalSendMessage();
-                    }, 1000);
-                }
+                setInput(prev => prev + finalTranscript + interimTranscript);
             };
         }
 
@@ -293,7 +265,6 @@ const ChatBar = React.memo(({
         if (isRecording) {
             recognitionRef.current.stop();
         } else {
-            setInput("");
             recognitionRef.current.start();
         }
     };
@@ -483,123 +454,101 @@ const ChatBar = React.memo(({
         }
     };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (isTyping) {
-            onStopGeneration();
-        } else {
-            handleLocalSendMessage();
-        }
-    };
+    const isInputDisabled = isOcrProcessing || isTyping;
 
-    const isInputDisabled = isOcrProcessing;
-    
+  return (
+    <div className="relative">
+      {(imageDataUri || (fileContent && fileName)) && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-fit max-w-sm">
+          {isOcrProcessing && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md z-10">
+              <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
+              <Progress value={ocrProgress} className="w-16 h-1 mt-1" />
+            </div>
+          )}
+          {imageDataUri && (
+            <div className="relative">
+              <Image src={imageDataUri} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />
+              <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => { setImageDataUri(null); setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {fileContent && fileName && !imageDataUri && (
+            <div className="relative flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border w-full max-w-sm">
+              {fileName.endsWith('.pdf') ? <FileIcon className="h-5 w-5 flex-shrink-0" /> : <FileText className="h-5 w-5 flex-shrink-0" />}
+              <span className="flex-1 truncate">{fileName}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+      <form onSubmit={handleFormSubmit} className="relative">
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Message SearnAI..."
+          disabled={isInputDisabled}
+          className="chat-textarea h-12 max-h-48 flex-1 border-border bg-background/80 text-base shadow-lg focus-visible:ring-2 ring-primary/50 backdrop-blur-sm resize-none rounded-2xl p-3 pr-24 pl-12"
+          rows={1}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleLocalSendMessage();
+            }
+          }}
+        />
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
+                <Plus className="h-5 w-5" />
+                <span className="sr-only">Attach file</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <input type="file" ref={fileInputRef} className="hidden" />
+        </div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
+            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
+          </Button>
+          <Button
+            type="submit"
+            size="icon"
+            className="h-8 w-8 rounded-full"
+            disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}
+          >
+            <Send className="h-4 w-4" />
+            <span className="sr-only">Send</span>
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+
+const ChatBar = React.memo(({
+    onSendMessage,
+    isTyping,
+}: {
+    onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void;
+    isTyping: boolean;
+}) => {
     return (
         <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
             <div className="p-4 mx-auto w-full max-w-3xl">
-                <div className="bg-background/80 backdrop-blur-md p-2 rounded-2xl flex items-center justify-center gap-2 mb-3 border">
-                    <div className="bg-muted p-1 rounded-lg">
-                        <ModelSwitcher
-                            selectedModel={currentModel}
-                            onModelChange={setCurrentModel}
-                            disabled={!!activeButton}
-                        />
-                    </div>
-                    <Button
-                        variant={activeButton === 'deepthink' ? 'secondary' : 'outline'}
-                        size="sm"
-                        className="rounded-full gap-2"
-                        onClick={() => handleToolButtonClick('deepthink')}
-                    >
-                        <Wand2 className="h-4 w-4" /> DeepThink
-                    </Button>
-                    <Button
-                        variant={activeButton === 'music' ? 'secondary' : 'outline'}
-                        size="sm"
-                        className="rounded-full gap-2"
-                        onClick={() => handleToolButtonClick('music')}
-                    >
-                        <Music className="h-4 w-4" /> Music
-                    </Button>
-                    <Button
-                        variant={activeButton === 'image' ? 'secondary' : 'outline'}
-                        size="sm"
-                        className="rounded-full gap-2"
-                        onClick={() => handleToolButtonClick('image')}
-                    >
-                        <ImageIcon className="h-4 w-4" /> Image
-                    </Button>
-                </div>
-                {(imageDataUri || (fileContent && fileName)) && (
-                    <div className="relative mb-2 w-fit mx-auto max-w-3xl">
-                        {isOcrProcessing && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md z-10">
-                                <p className="text-white font-bold text-sm drop-shadow-md">{Math.round(ocrProgress)}%</p>
-                                <Progress value={ocrProgress} className="w-16 h-1 mt-1" />
-                            </div>
-                        )}
-                        {imageDataUri && <Image src={imageDataUri || ""} alt={fileName || "Image preview"} width={80} height={80} className="rounded-md border object-cover" />}
-                        {fileContent && fileName && !imageDataUri && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border w-full max-w-sm">
-                                {fileName.endsWith('.pdf') ? <FileIcon className="h-5 w-5 flex-shrink-0" /> : <FileText className="h-5 w-5 flex-shrink-0" />}
-                                <span className="flex-1 truncate">{fileName}</span>
-                            </div>
-                        )}
-                        <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full z-10" onClick={() => { setImageDataUri(null); setFileContent(null); setFileName(null); }} disabled={isOcrProcessing}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
-                <form
-                    onSubmit={handleFormSubmit}
-                    className="relative flex items-center"
-                >
-                    <div className="relative flex items-center p-2 rounded-2xl bg-background border w-full">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isOcrProcessing}>
-                                    <Plus className="h-5 w-5" />
-                                    <span className="sr-only">Attach file</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={handleOpenImageDialog}><ImageIcon className="mr-2 h-4 w-4" />Image</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleOpenFileDialog('text')}><FileText className="mr-2 h-4 w-4" />Text File</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleOpenFileDialog('pdf')}><FileIcon className="mr-2 h-4 w-4" />PDF File</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleOpenFileDialog('audio')}><FileAudio className="mr-2 h-4 w-4" />Audio File</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Message SearnAI..."
-                            disabled={isOcrProcessing}
-                            className="chat-textarea h-6 max-h-48 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:ring-0 resize-none"
-                            rows={1}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleLocalSendMessage();
-                                }
-                            }}
-                        />
-                        <input type="file" ref={fileInputRef} className="hidden" />
-                        <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isOcrProcessing}>
-                            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                            <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
-                        </Button>
-                        <Button
-                            type="submit"
-                            size="icon"
-                            className="h-9 w-9 rounded-full send-button text-primary-foreground bg-primary hover:bg-primary/90 ml-2"
-                            disabled={isOcrProcessing || (!isTyping && !input.trim() && !imageDataUri && !fileContent)}
-                        >
-                            {isTyping ? <StopCircle className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                            <span className="sr-only">{isTyping ? 'Stop' : 'Send'}</span>
-                        </Button>
-                    </div>
-                </form>
+                <ChatInput onSendMessage={onSendMessage} isTyping={isTyping} />
             </div>
         </div>
     )
@@ -629,12 +578,18 @@ export function ChatContent() {
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
 
   const { setActiveVideoId } = useChatStore();
+  const [userName, setUserName] = useState<string | null>(null);
+
   
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
       if (savedHistory) {
         setHistory(JSON.parse(savedHistory));
+      }
+      const savedName = localStorage.getItem(USER_NAME_STORAGE_KEY);
+      if (savedName) {
+        setUserName(savedName);
       }
     } catch (error) {
       console.error("Failed to load chat state from localStorage", error);
@@ -694,7 +649,7 @@ export function ChatContent() {
       try {
         const result = await chatAction({ 
             history: genkitHistory, 
-            userName: user?.displayName,
+            userName: userName,
             fileContent: currentFileContent, 
             imageDataUri: currentImageDataUri,
             model: currentModel,
@@ -722,7 +677,7 @@ export function ChatContent() {
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast, user]);
+  }, [currentModel, activeButton, toast, userName]);
 
 
   const handleSendMessage = useCallback(async (messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
@@ -734,7 +689,7 @@ export function ChatContent() {
     };
     
     setHistory(prevHistory => {
-        const newHistory = [...prevHistory.filter(m => m.role !== 'browser'), userMessage];
+        const newHistory = [...prevHistory, userMessage];
         
         const isImageGenRequest = activeButton === 'image';
 
@@ -767,10 +722,6 @@ export function ChatContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeButton, executeChat, toast]);
   
-  const handleStopGeneration = () => {
-    // This is now a no-op as the abort controller has been removed.
-    // Kept for potential future re-implementation.
-  };
 
   const handleRegenerateResponse = async () => {
       const lastUserMessageIndex = history.findLastIndex(m => m.role === 'user');
@@ -958,7 +909,7 @@ export function ChatContent() {
              <div className="w-full max-w-3xl mx-auto flex flex-col items-start gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
                 <div className="space-y-4">
-                    <h2 className="text-4xl font-light text-muted-foreground">Hi {user?.displayName?.split(' ')[0] || 'there'},</h2>
+                    <h2 className="text-4xl font-light text-muted-foreground">Hi {userName || 'there'},</h2>
                     <h2 className="text-4xl font-bold">Where should we start?</h2>
                 </div>
                  <div className="flex flex-col items-start gap-3">
@@ -1033,7 +984,7 @@ export function ChatContent() {
           </ScrollArea>
       )}
 
-      <ChatBar onSendMessage={handleSendMessage} isTyping={isTyping} onStopGeneration={handleStopGeneration} />
+      <ChatBar onSendMessage={handleSendMessage} isTyping={isTyping} />
     </div>
   );
 }

@@ -37,21 +37,29 @@ export type ActionResult<T> = {
 
 // Sanitizer function to fix KaTeX issues
 const sanitizeKatex = (text: string): string => {
-    // Rule 1: Replace \[ ... \] with $$ ... $$ for block math
-    // This is safer than replacing all square brackets.
-    let sanitizedText = text.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, content) => {
-        return `$$${content.trim()}$$`;
-    });
+  // Rule 1: More specific replacement for block math to avoid conflicts
+  // This looks for an optional newline after `\[` and before `\]`
+  let sanitizedText = text.replace(/\\\[\n?([\s\S]*?)\n?\\\]/g, (match, content) => {
+    return `$$${content.trim()}$$`;
+  });
 
-    // Rule 2: Replace \( ... \) with $ ... $ for inline math
-    sanitizedText = sanitizedText.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, content) => {
-        return `$${content.trim()}$`;
-    });
-    
-    // Rule 3: Remove stray commas inside exponents, like ^{,m} -> ^{m}
-    sanitizedText = sanitizedText.replace(/\^{\s*,\s*([a-zA-Z0-9]+)\s*}/g, '^{$1}');
+  // Rule 2: More specific replacement for inline math
+  sanitizedText = sanitizedText.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, content) => {
+    // Avoid capturing markdown links like `(https://...)`
+    if (content.startsWith('http')) {
+      return match; // Don't change it if it looks like a URL
+    }
+    return `$${content.trim()}$`;
+  });
 
-    return sanitizedText;
+  // Rule 3: Correctly handle stray commas inside exponents
+  sanitizedText = sanitizedText.replace(/\^{\s*,\s*([a-zA-Z0-9]+)\s*}/g, '^{$1}');
+  
+  // Rule 4: Prevent misinterpretation of markdown links `[text](url)` as math
+  // This is tricky, but we can try to be less aggressive.
+  // The logic above for `\(` is already a good step.
+
+  return sanitizedText;
 };
 
 
@@ -201,7 +209,7 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
 }
 
 const getSystemPrompt = (modelId: string, userName: string | null, fileContent: string | null | undefined): string => {
-    const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. You are currently speaking with ${userName || 'a student'}. Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
+    const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. You are currently speaking with ${userName || 'a student'}. When addressing the user, use their name if you know it (e.g., "Hi ${userName}, ..."). Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
     const personaPrompts: Record<string, string> = {
         'gpt-oss-120b': `You are an expert AI assistant with a confident and helpful Indian-style personality. You are a powerful vision-capable model. When provided with text extracted from an image, analyze it as if you were looking at the image itself.
@@ -357,7 +365,7 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            const systemPrompt = getSystemPrompt(modelId, "Guest", input.fileContent);
+            const systemPrompt = getSystemPrompt(modelId, input.userName, input.fileContent);
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
             const response = await openai.chat.completions.create({
