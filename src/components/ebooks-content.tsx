@@ -13,19 +13,19 @@ const ebooks = [
   {
     title: "The Art of Programming",
     description: "An essential guide to the fundamentals of computer programming and software design, covering algorithms, data structures, and more.",
-    coverUrl: "https://placehold.co/300x400.png",
+    coverUrl: "https://picsum.photos/seed/programming/300/400",
     aiHint: "programming book"
   },
   {
     title: "A Journey Through the Cosmos",
     description: "Explore the wonders of the universe, from the Big Bang to the most distant galaxies. A captivating read for astronomy enthusiasts.",
-    coverUrl: "https://placehold.co/300x400.png",
+    coverUrl: "https://picsum.photos/seed/cosmos/300/400",
     aiHint: "space galaxy"
   },
   {
     title: "The History of Ancient Civilizations",
     description: "A comprehensive look at the rise and fall of the world's most influential ancient societies, from Mesopotamia to Rome.",
-    coverUrl: "https://placehold.co/300x400.png",
+    coverUrl: "https://picsum.photos/seed/history/300/400",
     aiHint: "ancient history"
   }
 ];
