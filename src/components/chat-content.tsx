@@ -563,7 +563,7 @@ const ChatBar = React.memo(({
     };
 
     return (
-        <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
+        <div className="fixed bottom-0 left-0 lg:left-auto right-0 w-full lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
             <div className="p-4 mx-auto w-full max-w-3xl space-y-2">
                 <div className="flex items-center justify-center gap-2 rounded-full bg-muted p-1">
                      <Button 
@@ -948,14 +948,14 @@ export function ChatContent() {
         content={shareContent || ""}
       />
       {showWelcome ? (
-          <div className="flex h-full flex-col justify-center p-4">
-             <div className="mx-auto w-full max-w-3xl flex flex-col items-center gap-8 text-center">
+          <div className="flex h-full flex-col justify-start p-4 pt-16">
+             <div className="mx-auto w-full max-w-3xl flex flex-col items-start gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
                 <div className="space-y-4">
                     <h2 className="text-4xl font-light text-muted-foreground">Hi {userName || 'there'},</h2>
                     <h2 className="text-4xl font-bold">Where should we start?</h2>
                 </div>
-                 <div className="flex flex-col items-center gap-3">
+                 <div className="flex flex-col items-start gap-3">
                     <Button variant="outline" className="rounded-full" onClick={() => router.push('/image-generation')}>
                         <span className="mr-2">🍌</span> Create image
                     </Button>
