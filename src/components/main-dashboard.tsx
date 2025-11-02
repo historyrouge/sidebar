@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users, FlaskConical } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
 import { WebBrowserContent } from "./web-browser-content";
-import { FriendsContent } from "./friends-content";
+import { AiEditorContent } from "./ai-editor-content";
 
 
 export function MainDashboard() {
@@ -139,9 +139,9 @@ export function MainDashboard() {
                  <Globe className="h-4 w-4" />
                   Browser
               </Button>
-               <Button variant={activeView === 'friends' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('friends')}>
-                 <Users className="h-4 w-4" />
-                  Friends
+               <Button variant={activeView === 'playground' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('playground')}>
+                 <FlaskConical className="h-4 w-4" />
+                  Playground
               </Button>
           </div>
       </div>
@@ -154,7 +154,7 @@ export function MainDashboard() {
             <WebBrowserContent />
          ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <FriendsContent />
+              <AiEditorContent embedded={true} />
             </div>
          )}
          {activeVideoId && showPlayer && (
