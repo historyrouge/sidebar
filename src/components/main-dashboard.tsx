@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users, FlaskConical } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users, FlaskConical, Copy, Trash2, PlayCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
@@ -27,6 +27,7 @@ export function MainDashboard() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
   const [showPricingDialog, setShowPricingDialog] = useState(false);
+  const [canvasContent, setCanvasContent] = useState("");
 
   const handleNewChat = () => {
     try {
@@ -67,6 +68,16 @@ export function MainDashboard() {
       }
     }
   }, [isPlaying, activeVideoId]);
+
+  const handleCopyCanvas = () => {
+    navigator.clipboard.writeText(canvasContent);
+    toast({ title: "Canvas Copied", description: "Content copied to clipboard." });
+  };
+  
+  const handleClearCanvas = () => {
+    setCanvasContent("");
+    toast({ title: "Canvas Cleared" });
+  };
 
 
   return (
@@ -156,17 +167,29 @@ export function MainDashboard() {
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
                     <div className="flex flex-col h-full">
-                        <div className="p-2 border-b">
+                        <div className="p-2 border-b flex items-center justify-between">
                             <p className="text-sm font-semibold">Canvas</p>
+                             <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="sm" disabled><PlayCircle className="h-4 w-4 mr-2"/>Run</Button>
+                                <Button variant="ghost" size="sm" onClick={handleCopyCanvas}><Copy className="h-4 w-4 mr-2"/>Copy</Button>
+                                <Button variant="ghost" size="sm" onClick={handleClearCanvas}><Trash2 className="h-4 w-4 mr-2"/>Clear</Button>
+                            </div>
                         </div>
-                        <div className="flex-1 p-4">
-                             <Textarea placeholder="Write or code..." className="h-full w-full resize-none border-0 focus-visible:ring-0 p-0 bg-transparent"/>
+                        <div className="flex-1 p-4 bg-background">
+                            <Textarea 
+                                placeholder="Write or code..." 
+                                className="h-full w-full resize-none border-0 focus-visible:ring-0 p-0 bg-transparent font-mono text-sm"
+                                value={canvasContent}
+                                onChange={(e) => setCanvasContent(e.target.value)}
+                            />
                         </div>
                     </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
          ) : activeView === 'searnai' ? (
-            <ChatContent />
+            <div className="h-full flex flex-col">
+              <ChatContent />
+            </div>
          ) : activeView === 'stories' ? (
             <NewsContent />
          ) : (
