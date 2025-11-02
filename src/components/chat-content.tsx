@@ -949,7 +949,7 @@ export function ChatContent() {
       />
       {showWelcome ? (
           <div className="flex h-full flex-col justify-start pt-20 p-4">
-             <div className="w-full max-w-3xl mx-auto flex flex-col items-start gap-8">
+             <div className="w-full max-w-3xl pl-12 flex flex-col items-start gap-8">
                 <h1 className="text-4xl font-bold">SearnAI</h1>
                 <div className="space-y-4">
                     <h2 className="text-4xl font-light text-muted-foreground">Hi {userName || 'there'},</h2>
