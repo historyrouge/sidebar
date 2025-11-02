@@ -565,31 +565,23 @@ const ChatBar = React.memo(({
     return (
         <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
             <div className="p-4 mx-auto w-full max-w-3xl space-y-2">
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 rounded-full bg-muted p-1">
                      <Button 
                         variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
-                        className="gap-2"
+                        className="gap-2 rounded-full"
                         onClick={() => handleToolbarButtonClick('deepthink')}
                     >
                         <Wand2 className="h-4 w-4" />
-                        DeepThink
-                    </Button>
-                     <Button 
-                        variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
-                        className="gap-2"
-                        onClick={() => handleToolbarButtonClick('music')}
-                    >
-                        <Music className="h-4 w-4" />
-                        Music
+                        <span className="hidden sm:inline">DeepThink</span>
                     </Button>
                     <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} />
                      <Button 
                         variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
-                        className="gap-2"
+                        className="gap-2 rounded-full"
                         onClick={() => handleToolbarButtonClick('image')}
                     >
                         <ImageIcon className="h-4 w-4" />
-                        Image
+                        <span className="hidden sm:inline">Image</span>
                     </Button>
                 </div>
                 <ChatInput onSendMessage={onSendMessage} isTyping={isTyping} />
@@ -600,12 +592,7 @@ const ChatBar = React.memo(({
 ChatBar.displayName = "ChatBar";
 
 
-export function ChatContent({ activeButton, setActiveButton, currentModel, setCurrentModel }: { 
-    activeButton: 'deepthink' | 'music' | 'image' | null;
-    setActiveButton: (button: 'deepthink' | 'music' | 'image' | null) => void;
-    currentModel: string;
-    setCurrentModel: (model: string) => void;
-}) {
+export function ChatContent() {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -625,6 +612,8 @@ export function ChatContent({ activeButton, setActiveButton, currentModel, setCu
 
   const { setActiveVideoId } = useChatStore();
   const [userName, setUserName] = useState<string | null>(null);
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
+  const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
 
   
   useEffect(() => {
@@ -698,8 +687,8 @@ export function ChatContent({ activeButton, setActiveButton, currentModel, setCu
             userName: userName,
             fileContent: currentFileContent, 
             imageDataUri: currentImageDataUri,
-            model: currentModel,
-            isMusicMode: activeButton === 'music',
+            model: activeButton === 'deepthink' ? 'gpt-oss-120b' : currentModel,
+            isMusicMode: false, // Music mode is disabled
         });
 
         const endTime = Date.now();

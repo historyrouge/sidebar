@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
 import { PricingDialog } from "./pricing-dialog";
 import { WebBrowserContent } from "./web-browser-content";
+import { DEFAULT_MODEL_ID } from "@/lib/models";
 
 
 export function MainDashboard() {
@@ -24,6 +25,9 @@ export function MainDashboard() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
   const [showPricingDialog, setShowPricingDialog] = useState(false);
+  
+  const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
+  const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
 
   const handleNewChat = () => {
     try {
@@ -142,7 +146,12 @@ export function MainDashboard() {
       </div>
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
-            <ChatContent />
+            <ChatContent 
+                activeButton={activeButton} 
+                setActiveButton={setActiveButton}
+                currentModel={currentModel}
+                setCurrentModel={setCurrentModel}
+            />
          ) : activeView === 'stories' ? (
             <NewsContent />
          ) : (
