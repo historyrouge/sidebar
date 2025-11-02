@@ -137,40 +137,13 @@ export function MainDashboard() {
             </Button>
         </div>
       </header>
-      <div className="flex flex-col items-center p-2 border-b">
-            <div className="flex items-center justify-center gap-2">
-                 <Button 
-                    variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
-                    className="gap-2"
-                    onClick={() => handleToolbarButtonClick('deepthink')}
-                >
-                    <Wand2 className="h-4 w-4" />
-                    DeepThink
-                </Button>
-                 <Button 
-                    variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
-                    className="gap-2"
-                    onClick={() => handleToolbarButtonClick('music')}
-                >
-                    <Music className="h-4 w-4" />
-                    Music
-                </Button>
-                <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} />
-                 <Button 
-                    variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
-                    className="gap-2"
-                    onClick={() => handleToolbarButtonClick('image')}
-                >
-                    <ImageIcon className="h-4 w-4" />
-                    Image
-                </Button>
-            </div>
-        </div>
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
             <ChatContent 
                 activeButton={activeButton}
+                setActiveButton={setActiveButton}
                 currentModel={currentModel}
+                setCurrentModel={setCurrentModel}
             />
          ) : activeView === 'stories' ? (
             <NewsContent />

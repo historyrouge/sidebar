@@ -541,13 +541,57 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
 const ChatBar = React.memo(({
     onSendMessage,
     isTyping,
+    activeButton,
+    setActiveButton,
+    currentModel,
+    setCurrentModel
 }: {
     onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void;
     isTyping: boolean;
+    activeButton: 'deepthink' | 'music' | 'image' | null;
+    setActiveButton: (button: 'deepthink' | 'music' | 'image' | null) => void;
+    currentModel: string;
+    setCurrentModel: (model: string) => void;
 }) => {
+
+     const handleToolbarButtonClick = (buttonName: 'deepthink' | 'music' | 'image') => {
+        if (activeButton === buttonName) {
+            setActiveButton(null); // Toggle off
+        } else {
+            setActiveButton(buttonName);
+        }
+    };
+
     return (
         <div className="fixed bottom-0 left-0 lg:left-[16rem] right-0 w-auto lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:left-[3rem] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent">
-            <div className="p-4 mx-auto w-full max-w-3xl">
+            <div className="p-4 mx-auto w-full max-w-3xl space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                     <Button 
+                        variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
+                        className="gap-2"
+                        onClick={() => handleToolbarButtonClick('deepthink')}
+                    >
+                        <Wand2 className="h-4 w-4" />
+                        DeepThink
+                    </Button>
+                     <Button 
+                        variant={activeButton === 'music' ? 'secondary' : 'ghost'} 
+                        className="gap-2"
+                        onClick={() => handleToolbarButtonClick('music')}
+                    >
+                        <Music className="h-4 w-4" />
+                        Music
+                    </Button>
+                    <ModelSwitcher selectedModel={currentModel} onModelChange={setCurrentModel} />
+                     <Button 
+                        variant={activeButton === 'image' ? 'secondary' : 'ghost'} 
+                        className="gap-2"
+                        onClick={() => handleToolbarButtonClick('image')}
+                    >
+                        <ImageIcon className="h-4 w-4" />
+                        Image
+                    </Button>
+                </div>
                 <ChatInput onSendMessage={onSendMessage} isTyping={isTyping} />
             </div>
         </div>
@@ -556,9 +600,11 @@ const ChatBar = React.memo(({
 ChatBar.displayName = "ChatBar";
 
 
-export function ChatContent({ activeButton, currentModel }: { 
+export function ChatContent({ activeButton, setActiveButton, currentModel, setCurrentModel }: { 
     activeButton: 'deepthink' | 'music' | 'image' | null;
+    setActiveButton: (button: 'deepthink' | 'music' | 'image' | null) => void;
     currentModel: string;
+    setCurrentModel: (model: string) => void;
 }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -984,7 +1030,14 @@ export function ChatContent({ activeButton, currentModel }: {
           </ScrollArea>
       )}
 
-      <ChatBar onSendMessage={handleSendMessage} isTyping={isTyping} />
+      <ChatBar 
+        onSendMessage={handleSendMessage} 
+        isTyping={isTyping} 
+        activeButton={activeButton}
+        setActiveButton={setActiveButton}
+        currentModel={currentModel}
+        setCurrentModel={setCurrentModel}
+      />
     </div>
   );
 }
