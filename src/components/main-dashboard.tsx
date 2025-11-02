@@ -72,20 +72,6 @@ export function MainDashboard() {
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
-            <div className="hidden lg:flex items-center gap-1 rounded-full bg-muted p-1">
-                <Button variant={activeView === 'searnai' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('searnai')}>
-                    <MessageSquare className="h-4 w-4" />
-                    SearnAI
-                </Button>
-                <Button variant={activeView === 'stories' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('stories')}>
-                   <Newspaper className="h-4 w-4" />
-                    Stories
-                </Button>
-                 <Button variant={activeView === 'browser' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('browser')}>
-                   <Globe className="h-4 w-4" />
-                    Browser
-                </Button>
-            </div>
         </div>
 
         {activeVideoId && (
@@ -138,6 +124,22 @@ export function MainDashboard() {
             </Button>
         </div>
       </header>
+       <div className="flex justify-center items-center py-2 border-b bg-background">
+          <div className="flex items-center gap-1 rounded-full bg-muted p-1">
+              <Button variant={activeView === 'searnai' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('searnai')}>
+                  <MessageSquare className="h-4 w-4" />
+                  SearnAI
+              </Button>
+              <Button variant={activeView === 'stories' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('stories')}>
+                 <Newspaper className="h-4 w-4" />
+                  Stories
+              </Button>
+               <Button variant={activeView === 'browser' ? 'secondary' : 'ghost'} size="sm" className="rounded-full gap-2" onClick={() => setActiveView('browser')}>
+                 <Globe className="h-4 w-4" />
+                  Browser
+              </Button>
+          </div>
+      </div>
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
             <ChatContent />
