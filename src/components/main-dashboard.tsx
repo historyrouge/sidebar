@@ -151,7 +151,7 @@ export function MainDashboard() {
          {activeView === 'playground' ? (
              <ResizablePanelGroup direction="horizontal" className="h-full">
                 <ResizablePanel defaultSize={50}>
-                    <ChatContent />
+                   <ChatContent isPlayground={true} />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
