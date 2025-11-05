@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,8 @@ export function MainDashboard() {
   const [activeView, setActiveView] = useState('searnai');
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const [canvasContent, setCanvasContent] = useState("");
+  const chatRef = useRef<{ handleReceiveCanvasContent: (content: string) => void }>(null);
+
 
   const handleNewChat = () => {
     try {
@@ -78,7 +81,10 @@ export function MainDashboard() {
     setCanvasContent("");
     toast({ title: "Canvas Cleared" });
   };
-
+  
+  const handleReceiveCanvasContent = (content: string) => {
+    setCanvasContent(content);
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -162,7 +168,7 @@ export function MainDashboard() {
          {activeView === 'playground' ? (
              <ResizablePanelGroup direction="horizontal" className="h-full">
                 <ResizablePanel defaultSize={50}>
-                   <ChatContent isPlayground={true} />
+                   <ChatContent ref={chatRef} isPlayground={true} onCanvasContent={handleReceiveCanvasContent} />
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={50}>
@@ -188,7 +194,7 @@ export function MainDashboard() {
             </ResizablePanelGroup>
          ) : activeView === 'searnai' ? (
             <div className="h-full flex flex-col">
-              <ChatContent />
+              <ChatContent ref={chatRef} onCanvasContent={handleReceiveCanvasContent} />
             </div>
          ) : activeView === 'stories' ? (
             <NewsContent />

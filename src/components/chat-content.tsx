@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bot, User, Copy, Share2, Volume2, RefreshCw, FileText, X, Edit, Save, Download, StopCircle, Paperclip, Mic, MicOff, Send, Layers, Plus, Search, ArrowUp, Wand2, Music, Youtube, MoreVertical, Play, Pause, Rewind, FastForward, Presentation, Video, Image as ImageIcon, ChevronDown, Globe, FileUp, FileAudio, File as FileIcon } from "lucide-react";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -560,7 +560,8 @@ const ChatBar = React.memo(({
     activeButton,
     setActiveButton,
     currentModel,
-    setCurrentModel
+    setCurrentModel,
+    isPlayground = false,
 }: {
     onSendMessage: (message: string, imageDataUri?: string | null, fileContent?: string | null) => void;
     isTyping: boolean;
@@ -568,6 +569,7 @@ const ChatBar = React.memo(({
     setActiveButton: (button: 'deepthink' | 'music' | 'image' | null) => void;
     currentModel: string;
     setCurrentModel: (model: string) => void;
+    isPlayground?: boolean;
 }) => {
 
      const handleToolbarButtonClick = (buttonName: 'deepthink' | 'music' | 'image') => {
@@ -579,7 +581,7 @@ const ChatBar = React.memo(({
     };
 
     return (
-        <div className="p-4 mx-auto w-full max-w-3xl space-y-2">
+        <div className={cn("mx-auto w-full max-w-3xl space-y-2", isPlayground ? "p-2" : "p-4")}>
             <div className="flex items-center justify-center gap-2 rounded-full bg-muted p-1">
                  <Button 
                     variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
@@ -614,7 +616,17 @@ const ChatBar = React.memo(({
 ChatBar.displayName = "ChatBar";
 
 
-export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
+type ChatContentProps = {
+    isPlayground?: boolean;
+    onCanvasContent?: (content: string) => void;
+};
+
+type ChatContentHandle = {
+    handleReceiveCanvasContent: (content: string) => void;
+};
+
+
+export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ isPlayground = false, onCanvasContent }, ref) => {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -721,8 +733,20 @@ export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
         if (result.error) {
             toast({ title: "Chat Error", description: result.error, variant: "destructive" });
         } else if (result.data) {
-            const modelMessageId = `${Date.now()}-model`;
-            setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: result.data.response, duration: duration }]);
+            const { type, content } = result.data;
+            if (type === 'canvas') {
+                onCanvasContent?.(content);
+                const confirmationMessage: Message = {
+                    id: `${Date.now()}-model`,
+                    role: 'model',
+                    content: "Done. I've placed the content in the canvas.",
+                    duration: duration,
+                };
+                setHistory(prev => [...prev, confirmationMessage]);
+            } else {
+                const modelMessageId = `${Date.now()}-model`;
+                setHistory(prev => [...prev, { id: modelMessageId, role: "model", content: content, duration: duration }]);
+            }
         }
       } catch (error: any) {
           if (error.name === 'AbortError') {
@@ -734,7 +758,7 @@ export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast, userName]);
+  }, [currentModel, activeButton, toast, userName, onCanvasContent]);
 
 
   const handleSendMessage = useCallback((messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
@@ -774,6 +798,12 @@ export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
         executeChat(newHistory, imageDataUri, fileContent);
     }
   }, [activeButton, executeChat, history, toast]);
+
+    useImperativeHandle(ref, () => ({
+        handleReceiveCanvasContent(content: string) {
+            setHistory(prev => [...prev, { id: `${Date.now()}-model`, role: 'model', content: "Done. I've placed the content in the canvas." }]);
+        }
+    }));
   
 
   const handleRegenerateResponse = async () => {
@@ -973,6 +1003,7 @@ export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
         setActiveButton={setActiveButton}
         currentModel={currentModel}
         setCurrentModel={setCurrentModel}
+        isPlayground={isPlayground}
     />
   );
 
@@ -1065,11 +1096,18 @@ export function ChatContent({ isPlayground }: { isPlayground?: boolean }) {
             </ScrollArea>
         )}
       </div>
-
-      <div className={cn(isPlayground ? "" : "fixed bottom-0 left-0 lg:left-auto right-0 w-full lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent")}>
-        {chatBar}
-      </div>
+      
+      {isPlayground ? (
+        <div className="border-t">
+          {chatBar}
+        </div>
+      ) : (
+        <div className={cn("fixed bottom-0 left-0 lg:left-auto right-0 w-full lg:w-[calc(100%-16rem)] group-data-[collapsible=icon]:lg:w-[calc(100%-3rem)] transition-all bg-transparent")}>
+            {chatBar}
+        </div>
+      )}
 
     </div>
   );
-}
+});
+ChatContent.displayName = "ChatContent";

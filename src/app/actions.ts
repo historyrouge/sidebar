@@ -289,6 +289,24 @@ Example of a styled box:
     return `${basePrompt}\n\n${persona}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
 };
 
+const getCanvasSystemPrompt = (): string => {
+    return `You are ProGPT, a developer-friendly assistant. Your task is to generate raw, file-like content based on the user's request.
+1.  **Generate ONLY the requested content.** Do not add any conversational text, introductions, or explanations.
+2.  For code, include language tags or filename comments (e.g., \`// file: main.js\`).
+3.  For presentations, use Markdown with slide markers (e.g., \`--- Slide 1: Title ---\`) and include speaker notes.
+4.  The output must be clean, complete, and production-ready.
+User request:
+---
+`;
+}
+
+const CANVAS_TRIGGERS = ['generate', 'create', 'implement', 'write code', 'full source', 'scaffold', 'powerpoint', 'pptx', 'slides', 'presentation', 'export', 'html', 'css', 'js', 'index.html', 'downloadable', 'file', 'project', 'repository', 'zip', 'save as', 'notebook', 'script', 'automation', 'boilerplate'];
+
+const isCanvasIntent = (message: string): boolean => {
+    const lowerCaseMessage = message.toLowerCase();
+    // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
+    return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
+}
 
 // Main non-streaming chat action
 export async function chatAction(input: {
@@ -298,12 +316,15 @@ export async function chatAction(input: {
     imageDataUri?: string | null,
     model?: string,
     isMusicMode?: boolean,
-}): Promise<ActionResult<{ response: string }>> {
-    const isSearch = input.history[input.history.length - 1]?.content.toString().toLowerCase().startsWith("search:");
-    const isMusic = input.isMusicMode;
+}): Promise<ActionResult<{ type: 'chat' | 'canvas', content: string }>> {
+    const userMessageContent = input.history[input.history.length - 1]?.content.toString();
+    const useCanvas = isCanvasIntent(userMessageContent);
+
+    const isSearch = !useCanvas && userMessageContent.toLowerCase().startsWith("search:");
+    const isMusic = !useCanvas && input.isMusicMode;
 
     if (isSearch) {
-        const query = input.history[input.history.length - 1].content.toString().replace(/^search:\s*/i, '');
+        const query = userMessageContent.replace(/^search:\s*/i, '');
         try {
             const searchResults = await webSearch({ query });
             if (searchResults.results && searchResults.results.length > 0) {
@@ -315,9 +336,9 @@ export async function chatAction(input: {
                         snippet: r.snippet,
                     }))
                 };
-                 return { data: { response: JSON.stringify(responsePayload) } };
+                 return { data: { type: 'chat', content: JSON.stringify(responsePayload) } };
             } else {
-                return { data: { response: "I searched the entire internet and couldn't find any relevant websites for that search." } };
+                return { data: { type: 'chat', content: "I searched the entire internet and couldn't find any relevant websites for that search." } };
             }
         } catch (error: any) {
             return { error: `Sorry, an error occurred during the search: ${error.message}` };
@@ -325,7 +346,7 @@ export async function chatAction(input: {
     }
 
     if (isMusic) {
-         const query = input.history[input.history.length - 1].content.toString();
+         const query = userMessageContent;
          try {
             const video = await searchYoutube({ query });
             if (video.id) {
@@ -335,9 +356,9 @@ export async function chatAction(input: {
                     title: video.title,
                     thumbnail: video.thumbnail,
                 };
-                return { data: { response: JSON.stringify(responsePayload) } };
+                return { data: { type: 'chat', content: JSON.stringify(responsePayload) } };
             } else {
-                 return { data: { response: "Sorry, I couldn't find a matching song on YouTube." } };
+                 return { data: { type: 'chat', content: "Sorry, I couldn't find a matching song on YouTube." } };
             }
          } catch (error: any) {
              return { error: `Sorry, an error occurred while searching YouTube: ${error.message}` };
@@ -368,10 +389,9 @@ export async function chatAction(input: {
         finalUserMessage = userMessage;
     }
 
-    const messages: CoreMessage[] = [
-        ...input.history.slice(0, -1),
-        finalUserMessage
-    ];
+    const messages: CoreMessage[] = useCanvas
+        ? [finalUserMessage] // For canvas, only send the user's last message
+        : [...input.history.slice(0, -1), finalUserMessage];
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')
@@ -381,7 +401,10 @@ export async function chatAction(input: {
 
     for (const modelId of modelsToTry) {
         try {
-            const systemPrompt = getSystemPrompt(modelId, input.userName, input.fileContent);
+            const systemPrompt = useCanvas
+                ? getCanvasSystemPrompt()
+                : getSystemPrompt(modelId, input.userName, input.fileContent);
+
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 
             const response = await openai.chat.completions.create({
@@ -396,12 +419,16 @@ export async function chatAction(input: {
                 throw new Error("Received an empty response from the AI model.");
             }
             
+            if (useCanvas) {
+                 return { data: { type: 'canvas', content: responseText } };
+            }
+
             responseText = sanitizeKatex(responseText);
 
             const modelName = AVAILABLE_MODELS.find(m => m.id === modelId)?.name || modelId;
             const finalResponse = `**Response from ${modelName}**\n\n${responseText}`;
 
-            return { data: { response: finalResponse } };
+            return { data: { type: 'chat', content: finalResponse } };
         } catch (e: any) {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
