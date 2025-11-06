@@ -17,14 +17,18 @@ import { useRouter } from "next/navigation";
 export function PlaygroundContent() {
     const { toast } = useToast();
     const router = useRouter();
-    const [canvasContent, setCanvasContent] = useState(`### ⚡️ Electrochemistry: A Visual Guide
+    const [canvasContent, setCanvasContent] = useState(`
+<div style="border: 2px solid #4A90E2; border-radius: 8px; padding: 16px; background-color: rgba(74, 144, 226, 0.1);">
+<h3 style="color: #4A90E2; margin-top: 0;">⚡️ Electrochemistry: A Visual Guide</h3>
 
 > [!NOTE]
 > **Electrochemistry** is the branch of chemistry that studies the relationship between <u>electrical energy</u> and <u>chemical change</u>. It focuses on redox (reduction-oxidation) reactions, where electrons are transferred between species.
+</div>
 
 ---
 
-### Core Concepts
+<div style="border-left: 4px solid #F5A623; padding-left: 16px; margin-top: 20px;">
+<h3 style="color: #F5A623;">Core Concepts</h3>
 
 #### 1. Redox Reactions
 A fundamental concept involving the transfer of electrons.
@@ -60,10 +64,12 @@ Zn(s) | Zn²⁺(aq, 1M)         ||     Cu²⁺(aq, 1M) | Cu(s)
    e⁻ flow → → → → → → → → → → → ||
 \`\`\`
 This represents the reaction $Zn(s) + Cu^{2+}(aq) \rightarrow Zn^{2+}(aq) + Cu(s)$.
+</div>
 
 ---
 
-### 💡 Key Equations
+<div style="border: 2px dashed #50E3C2; border-radius: 8px; padding: 16px; margin-top: 20px; background-color: rgba(80, 227, 194, 0.1);">
+<h3 style="color: #50E3C2; margin-top:0;">💡 Key Equations</h3>
 
 > [!SUCCESS]
 > The **Nernst Equation** is crucial for calculating cell potential under non-standard conditions.
@@ -78,6 +84,7 @@ This represents the reaction $Zn(s) + Cu^{2+}(aq) \rightarrow Zn^{2+}(aq) + Cu(s
 > - $n$ is the number of moles of electrons transferred.
 > - $F$ is Faraday's constant.
 > - $Q$ is the reaction quotient.
+</div>
 
 ---
 
