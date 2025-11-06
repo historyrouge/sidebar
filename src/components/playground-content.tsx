@@ -17,7 +17,73 @@ import { useRouter } from "next/navigation";
 export function PlaygroundContent() {
     const { toast } = useToast();
     const router = useRouter();
-    const [canvasContent, setCanvasContent] = useState("");
+    const [canvasContent, setCanvasContent] = useState(`### ⚡️ Electrochemistry: A Visual Guide
+
+> [!NOTE]
+> **Electrochemistry** is the branch of chemistry that studies the relationship between <u>electrical energy</u> and <u>chemical change</u>. It focuses on redox (reduction-oxidation) reactions, where electrons are transferred between species.
+
+---
+
+### Core Concepts
+
+#### 1. Redox Reactions
+A fundamental concept involving the transfer of electrons.
+> [!TIP]
+> Remember the mnemonic **"OIL RIG"**:
+> - **O**xidation **I**s **L**oss (of electrons)
+> - **R**eduction **I**s **G**ain (of electrons)
+
+- The species that **loses** electrons is the **reductant** (it gets oxidized).
+- The species that **gains** electrons is the **oxidant** (it gets reduced).
+
+#### 2. Electrochemical Cells
+This is where the magic happens! We can harness electron flow.
+
+| Feature | 🔋 Galvanic (Voltaic) Cell | 🔌 Electrolytic Cell |
+| :--- | :--- | :--- |
+| **Energy Conversion** | Chemical → Electrical | Electrical → Chemical |
+| **Spontaneity** | ✅ Spontaneous ($ΔG < 0$) | ❌ Non-spontaneous ($ΔG > 0$) |
+| **Anode Sign** | **-** (Negative) | **+** (Positive) |
+| **Cathode Sign**| **+** (Positive) | **-** (Negative) |
+| **Example** | Battery, Fuel Cell | Electroplating, Water Electrolysis|
+
+#### 3. Standard Cell Notation (ASCII Diagram)
+A shorthand to represent the components of a galvanic cell.
+
+\`\`\`
+  Anode Side (Oxidation)       ||     Cathode Side (Reduction)
+   ┌─────────┐                 ||       ┌─────────┐
+   │         │ Salt Bridge     ||       │         │
+Zn(s) | Zn²⁺(aq, 1M)         ||     Cu²⁺(aq, 1M) | Cu(s)
+   │         ├─────────────────||───────┤         │
+   └─────────┘                 ||       └─────────┘
+   e⁻ flow → → → → → → → → → → → ||
+\`\`\`
+This represents the reaction $Zn(s) + Cu^{2+}(aq) \rightarrow Zn^{2+}(aq) + Cu(s)$.
+
+---
+
+### 💡 Key Equations
+
+> [!SUCCESS]
+> The **Nernst Equation** is crucial for calculating cell potential under non-standard conditions.
+> $$
+> E_{cell} = E^o_{cell} - \frac{RT}{nF} \ln Q
+> $$
+> Where:
+> - $E_{cell}$ is the cell potential.
+> - $E^o_{cell}$ is the standard cell potential.
+> - $R$ is the gas constant.
+> - $T$ is the temperature in Kelvin.
+> - $n$ is the number of moles of electrons transferred.
+> - $F$ is Faraday's constant.
+> - $Q$ is the reaction quotient.
+
+---
+
+### 🤔 Follow-up Question
+
+How does changing the concentration of the reactants in a galvanic cell affect its voltage?`);
     const chatRef = useRef<{ handleReceiveCanvasContent: (content: string) => void }>(null);
 
     const handleCopyCanvas = () => {
@@ -88,3 +154,5 @@ export function PlaygroundContent() {
 }
 
     
+
+  
