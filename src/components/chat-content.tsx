@@ -1111,5 +1111,3 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
   );
 });
 ChatContent.displayName = "ChatContent";
-
-    
