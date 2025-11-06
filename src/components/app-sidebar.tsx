@@ -61,7 +61,7 @@ import { useRouter } from "next/navigation";
 const studyTools = [
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
     { name: "AI Editor", icon: <Brush />, href: "/ai-editor" },
-    { name: "Analyzer", icon: <FlaskConical />, href: "/analyzer" },
+    { name: "Playground", icon: <FlaskConical />, href: "/playground" },
     { name: "Code Analyzer", icon: <Code />, href: "/code-analyzer" },
     { name: "Flashcards", icon: <Layers />, href: "/create-flashcards" },
     { name: "Quiz", icon: <FileQuestion />, href: "/quiz" },

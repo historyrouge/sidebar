@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -21,6 +21,14 @@ export function AiEditorContent({ embedded }: { embedded?: boolean }) {
     const [isGenerating, startGenerating] = useTransition();
     const [error, setError] = useState<string | null>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        const contentFromCanvas = localStorage.getItem('aiEditorContent');
+        if (contentFromCanvas) {
+            setInputContent(contentFromCanvas);
+            localStorage.removeItem('aiEditorContent'); // Clear after use
+        }
+    }, []);
 
     const handleGenerate = () => {
         if (!instruction.trim()) {
