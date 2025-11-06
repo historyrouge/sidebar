@@ -582,7 +582,7 @@ const ChatBar = React.memo(({
 
     return (
         <div className={cn("mx-auto w-full max-w-3xl space-y-2", isPlayground ? "p-2" : "p-4")}>
-            <div className="flex items-center justify-center gap-2 rounded-full border bg-transparent p-1">
+            <div className="flex items-center justify-center gap-2 rounded-full border bg-background/80 p-1 backdrop-blur-sm">
                  <Button 
                     variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
                     className="gap-2 rounded-full"
