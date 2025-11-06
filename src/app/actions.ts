@@ -291,14 +291,6 @@ User request:
 `;
 }
 
-const CANVAS_TRIGGERS = ['generate', 'create', 'implement', 'write code', 'full source', 'scaffold', 'powerpoint', 'pptx', 'slides', 'presentation', 'export', 'html', 'css', 'js', 'index.html', 'downloadable', 'file', 'project', 'repository', 'zip', 'save as', 'notebook', 'script', 'automation', 'boilerplate', 'essay', 'poem', 'story'];
-
-const isCanvasIntent = (message: string): boolean => {
-    const lowerCaseMessage = message.toLowerCase();
-    // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
-    return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
-}
-
 // Main non-streaming chat action
 export async function chatAction(input: {
     history: CoreMessage[],
@@ -312,7 +304,7 @@ export async function chatAction(input: {
     const userMessageContent = input.history[input.history.length - 1]?.content.toString();
     
     // If isPlayground is true, ALL generative requests go to the canvas.
-    const useCanvas = input.isPlayground;
+    const useCanvas = !!input.isPlayground;
 
     const isSearch = !useCanvas && userMessageContent.toLowerCase().startsWith("search:");
     const isMusic = !useCanvas && input.isMusicMode;
@@ -440,3 +432,4 @@ export async function chatAction(input: {
 }
 
     
+
