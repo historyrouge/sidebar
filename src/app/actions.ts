@@ -144,15 +144,6 @@ export async function generateEbookChapterAction(input: GenerateEbookChapterInpu
     }
 }
 
-export async function generatePresentationAction(input: GeneratePresentationInput): Promise<ActionResult<GeneratePresentationOutput>> {
-    try {
-        const data = await generatePresentation(input);
-        return { data };
-    } catch (e: any) {
-        return { error: e.message };
-    }
-}
-
 export async function generateEditedContentAction(input: GenerateEditedContentInput): Promise<ActionResult<GenerateEditedContentOutput>> {
     try {
         const data = await generateEditedContent(input);
@@ -300,12 +291,15 @@ User request:
 `;
 }
 
-const CANVAS_TRIGGERS = ['generate', 'create', 'implement', 'write code', 'full source', 'scaffold', 'powerpoint', 'pptx', 'slides', 'presentation', 'export', 'html', 'css', 'js', 'index.html', 'downloadable', 'file', 'project', 'repository', 'zip', 'save as', 'notebook', 'script', 'automation', 'boilerplate'];
+const CANVAS_TRIGGERS = ['generate', 'create', 'implement', 'write code', 'full source', 'scaffold', 'powerpoint', 'pptx', 'slides', 'presentation', 'export', 'html', 'css', 'js', 'index.html', 'downloadable', 'file', 'project', 'repository', 'zip', 'save as', 'notebook', 'script', 'automation', 'boilerplate', 'essay', 'poem', 'story'];
 
-const isCanvasIntent = (message: string): boolean => {
-    const lowerCaseMessage = message.toLowerCase();
-    // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
-    return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
+const isCanvasIntent = (message: string, isPlayground: boolean): boolean => {
+    if (isPlayground) {
+        const lowerCaseMessage = message.toLowerCase();
+        // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
+        return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
+    }
+    return false;
 }
 
 // Main non-streaming chat action
@@ -316,9 +310,10 @@ export async function chatAction(input: {
     imageDataUri?: string | null,
     model?: string,
     isMusicMode?: boolean,
+    isPlayground?: boolean,
 }): Promise<ActionResult<{ type: 'chat' | 'canvas', content: string }>> {
     const userMessageContent = input.history[input.history.length - 1]?.content.toString();
-    const useCanvas = isCanvasIntent(userMessageContent);
+    const useCanvas = isCanvasIntent(userMessageContent, input.isPlayground || false);
 
     const isSearch = !useCanvas && userMessageContent.toLowerCase().startsWith("search:");
     const isMusic = !useCanvas && input.isMusicMode;

@@ -721,6 +721,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
             imageDataUri: currentImageDataUri,
             model: activeButton === 'deepthink' ? 'gpt-oss-120b' : currentModel,
             isMusicMode: activeButton === 'music',
+            isPlayground: isPlayground,
         });
 
         const endTime = Date.now();
@@ -756,7 +757,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast, userName, onCanvasContent]);
+  }, [currentModel, activeButton, toast, userName, onCanvasContent, isPlayground]);
 
 
   const handleSendMessage = useCallback((messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
