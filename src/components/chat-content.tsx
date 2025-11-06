@@ -931,7 +931,9 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
                     );
                 },
                 blockquote({ node, children, ...props }) {
-                    const value = React.Children.toArray(children).map(child => (child as React.ReactElement)?.props.children).join('') || '';
+                    const value = React.Children.toArray(children).map(child =>
+                        React.isValidElement(child) ? (child.props.children) : child
+                    ).join('') || '';
                     if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note"><strong>💡 Note</strong>{value.replace('[!NOTE]', '')}</blockquote>;
                     if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip"><strong>✨ Tip</strong>{value.replace('[!TIP]', '')}</blockquote>;
                     if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning"><strong>⚠️ Warning</strong>{value.replace('[!WARNING]', '')}</blockquote>;
@@ -972,7 +974,9 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
                         );
                     },
                     blockquote({ node, children, ...props }) {
-                        const value = React.Children.toArray(children).map(child => (child as React.ReactElement)?.props.children).join('') || '';
+                        const value = React.Children.toArray(children).map(child =>
+                            React.isValidElement(child) ? (child.props.children) : child
+                        ).join('') || '';
                         if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note"><strong>💡 Note</strong>{value.replace('[!NOTE]', '')}</blockquote>;
                         if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip"><strong>✨ Tip</strong>{value.replace('[!TIP]', '')}</blockquote>;
                         if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning"><strong>⚠️ Warning</strong>{value.replace('[!WARNING]', '')}</blockquote>;
@@ -1110,5 +1114,3 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
   );
 });
 ChatContent.displayName = "ChatContent";
-
-    
