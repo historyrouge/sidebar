@@ -507,7 +507,7 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
           onChange={(e) => setInput(e.target.value)}
           placeholder="Message SearnAI..."
           disabled={isInputDisabled}
-          className="chat-textarea h-12 max-h-48 flex-1 border-border bg-background/80 text-base shadow-lg focus-visible:ring-2 ring-primary/50 backdrop-blur-sm resize-none rounded-2xl p-3 pr-24 pl-12"
+          className="chat-textarea h-12 max-h-48 flex-1 border-border bg-background/80 text-base shadow-lg focus-visible:ring-2 ring-primary/50 backdrop-blur-sm resize-none rounded-2xl p-3 pr-28"
           rows={1}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -516,7 +516,7 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
             }
           }}
         />
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button type="button" size="icon" variant="ghost" className="chat-icon-button" disabled={isInputDisabled}>
@@ -532,8 +532,6 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
             </DropdownMenuContent>
           </DropdownMenu>
           <input type="file" ref={fileInputRef} className="hidden" />
-        </div>
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
           <Button type="button" size="icon" variant={isRecording ? "destructive" : "ghost"} className="chat-icon-button" onClick={handleToggleRecording} disabled={isInputDisabled}>
             {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             <span className="sr-only">{isRecording ? "Stop recording" : "Start recording"}</span>
@@ -544,7 +542,7 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
             className="h-8 w-8 rounded-full"
             disabled={isInputDisabled || (!input.trim() && !imageDataUri && !fileContent)}
           >
-            <Send className="h-4 w-4" />
+            <ArrowUp className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>
@@ -582,7 +580,7 @@ const ChatBar = React.memo(({
 
     return (
         <div className={cn("mx-auto w-full max-w-3xl space-y-2", isPlayground ? "p-2" : "p-4")}>
-            <div className="flex items-center justify-center gap-2 rounded-full border bg-background/80 p-1 backdrop-blur-sm">
+             <div className="flex items-center justify-center gap-2 rounded-full border bg-background/80 p-1 backdrop-blur-sm">
                  <Button 
                     variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
                     className="gap-2 rounded-full"
