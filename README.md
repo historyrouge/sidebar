@@ -1,97 +1,128 @@
+# 🎓 ScholarSage - The AI-Powered Learning Ecosystem
 
-# Firebase Studio
+ScholarSage is a next-generation study application designed to transform how students learn, collaborate, and master new subjects. By integrating a powerful suite of AI-driven tools into a single, intuitive platform, ScholarSage helps you study smarter, not harder.
 
-This is a NextJS starter in Firebase Studio.
+![ScholarSage Dashboard](https://placehold.co/800x400.png?text=ScholarSage+App+Screenshot)
 
-To get started, take a look at src/app/page.tsx.
+---
 
-## Running with Electron Web Search
+## ✨ Key Features
 
-This project includes an optional Electron wrapper to enable advanced web search features without API keys.
+- **🧠 AI Content Analysis**: Paste any text, upload a document, or use your camera to get an instant AI-powered analysis, including summaries, key concepts, and potential questions.
+- **📚 Multi-Format Study Sessions**: Create study sessions from text, images (with OCR), `.txt` files, PDFs, and even YouTube video transcripts.
+- **📇 Smart Flashcards**: Automatically generate flashcards from your study material, complete with a Spaced Repetition System (SRS) to maximize retention.
+- **❓ Intelligent Quizzes**: Generate custom quizzes with various question types (MCQ, True/False, etc.) and get instant feedback.
+- **🤖 AI Tutor**: Engage in a conversational chat with an AI tutor that has context on your study material to help you understand complex topics.
+- **🗺️ Mind Maps**: Visualize complex information with AI-generated mind maps.
+- **✍️ AI Editor & Playground**: Use the AI Editor for writing assistance or the Playground for a split-screen chat and canvas experience.
+- **🌐 Integrated Resources**: Features a built-in web browser, news reader, and eBook library to keep all your study tools in one place.
 
-### How it Works
+---
 
-The Electron app loads the Next.js development server in a `BrowserWindow`. It uses a `<webview>` tag to open Google search results in a sandboxed environment. A script is then injected into the webview to extract search results from the DOM and send them back to the React application to be displayed in the chat.
+## 🛠️ Tech Stack
 
-### How to Run Locally
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **UI**: React 18, shadcn/ui, Radix UI, Tailwind CSS
+- **State Management**: Zustand
+- **AI/ML**: Google Genkit, SambaNova, Qwen
+- **Backend**: Firebase (Authentication, Firestore, Storage)
+- **Desktop App**: Electron (Optional, for enhanced features)
 
-1.  **Start the Next.js App:**
-    First, get the web application running.
+---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or later)
+- npm or yarn
+
+### 1. Installation
+
+Clone the repository and install the dependencies:
+
+```bash
+git clone <repository-url>
+cd ScholarSage
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env` file in the root of the project and add your Firebase and AI service API keys. Refer to `.env.example` if available.
+
+```bash
+# .env
+FIREBASE_SERVICE_ACCOUNT="..."
+SAMBANOVA_API_KEY="..."
+SAMBANOVA_BASE_URL="..."
+# Add other keys as needed
+```
+
+### 3. Running the Development Server
+
+Start the Next.js development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### 4. Running with Electron (Optional)
+
+The project includes an optional Electron wrapper for enhanced desktop features like the Web Agent.
+
+1.  **Start the Next.js App** (if not already running):
     ```bash
-    npm install
     npm run dev
     ```
 
-2.  **Start the Electron App:**
-    In a separate terminal, install Electron dependencies and start the Electron process.
+2.  **Start the Electron App**:
+    In a separate terminal, start the Electron process.
 
     ```bash
-    # Make sure you are in the root directory
-    npm install electron electron-is-dev
-    npx electron electron/main.js
+    npm run electron
     ```
 
-    A new application window will open, loading your Next.js app from `http://localhost:3000`. You can now use the integrated web search feature.
+This will open a native desktop window loading your local development server.
 
-### How to Build for Production
+---
 
-1.  **Build the Next.js App:**
-    Create a static export of your Next.js application.
+## 📂 Project Structure
 
-    ```bash
-    npm run build
-    # You may need to configure next.config.js for static output: output: 'export'
-    ```
+Here's a brief overview of the key directories:
 
-2.  **Package the Electron App:**
-    Use a tool like `electron-builder` or `electron-packager` to create a distributable application for your target platform (Windows, macOS, Linux).
+```
+.
+├── /src
+│   ├── /app          # Next.js App Router pages and layouts
+│   ├── /ai           # AI-related code (Genkit flows, tools)
+│   ├── /components   # Reusable React components
+│   ├── /hooks        # Custom React hooks (e.g., useAuth)
+│   ├── /lib          # Utility functions, Firebase config, types
+│   └── /styles       # Global CSS and Tailwind config
+├── /docs             # Project documentation and design files
+├── /electron         # Electron-specific files (main process, preloads)
+└── README.md         # You are here!
+```
 
-    ```bash
-    npm install --save-dev electron-builder
-    # Configure electron-builder in your package.json or a config file
-    npx electron-builder
-    ```
-    
-    *TODO: Add detailed `electron-builder` configuration to `package.json`.*
+---
 
-### Security & Privacy Note
+## 🤝 Contributing
 
-The web search feature operates entirely on your local machine. The Electron app reads the content of the Google search page you are viewing to mirror the results into the chat interface. No data is sent to external servers, and no API keys are required or exposed.
+We welcome contributions! If you have suggestions or want to improve the app, please feel free to:
 
-# Google-AI-Agent (Electron + Next)
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/YourFeature`).
+3.  Make your changes.
+4.  Commit your changes (`git commit -m 'Add some feature'`).
+5.  Push to the branch (`git push origin feature/YourFeature`).
+6.  Open a Pull Request.
 
-This patch adds a simple Electron + Next integration that automates Google AI interactions inside a `webview` and mirrors the AI's reply (and cited sources) into the app chat.
+---
 
-> ⚠️ Legal & ethics: This automation controls UI inside the user's local browser session. It requires the user to be signed-in to Google inside the mini-browser. This is fragile and may conflict with Google terms — include a user consent prompt and use official APIs for production.
+## 📜 License
 
-## Files
-- `electron/main.js` — basic Electron main that loads the Next dev server and enables `webviewTag`.
-- `electron/preload.js` — exposes a tiny `electronAPI` to the renderer.
-- `electron/preload-webview.js` — injected into the guest (webview) page; it exposes `window.__celestial.receiveMessage(msg)` so the host can send commands like `send-query`. When responses appear, it forwards `{answerHtml, answerText, sources}` to host via `ipcRenderer.sendToHost('gai-response', payload)`.
-- `web/components/GoogleAIAgent.tsx` — React component (client) that shows a chat UI, opens the webview, sends the user query to the webview and renders the response cards.
-- `web/utils/googleAI-extract.js` — small extraction helper for fallback.
-
-## How to run (dev)
-1. Start your Next dev server: `npm run dev` (assumes it serves at http://localhost:3000).
-2. Start Electron: `node electron/main.js` or add a script in package.json:
-   ```json
-   "scripts": {
-     "electron": "electron ."
-   }
-   ```
-3. Open the app, go to the component that renders `GoogleAIAgent`, and test.
-
-## Notes / Troubleshooting
-
-* If extraction returns nothing, open the guest webview devtools and inspect the DOM. The Google AI page DOM changes often; update selectors in `preload-webview.js` accordingly.
-* If the guest API is not present, the renderer falls back to injecting a helper script; this is less reliable.
-* For production packaging, make sure to copy `preload-webview.js` into the packaged electron assets and update `preload` path.
-
-## TODO
-
-* Add an explicit UI that instructs the user to sign into Google inside the mini-browser.
-* Improve selectors for Google AI page (Bard / ai.google) for more robust extraction.
-* Add rate-limiting debounce and UX improvements (skeleton loading, errors, retry buttons).
-
-    
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
