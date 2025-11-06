@@ -440,7 +440,7 @@ const ChatInput = ({ onSendMessage, isTyping }: { onSendMessage: (message: strin
             });
 
         } catch (error: any) {
-            toast({ title: "OCR or Image processing Failed", description: error.message || "Could not extract text from the image.", variant: "destructive" });
+            toast({ title: "OCR or Image processing Failed", description: error.message || "Could not read or process the image file.", variant: "destructive" });
             setFileContent(null);
             setImageDataUri(null);
             setFileName(null);
@@ -582,7 +582,7 @@ const ChatBar = React.memo(({
 
     return (
         <div className={cn("mx-auto w-full max-w-3xl space-y-2", isPlayground ? "p-2" : "p-4")}>
-            <div className="flex items-center justify-center gap-2 rounded-full bg-muted p-1">
+            <div className="flex items-center justify-center gap-2 rounded-full border bg-transparent p-1">
                  <Button 
                     variant={activeButton === 'deepthink' ? 'secondary' : 'ghost'} 
                     className="gap-2 rounded-full"
@@ -1111,3 +1111,5 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
   );
 });
 ChatContent.displayName = "ChatContent";
+
+    
