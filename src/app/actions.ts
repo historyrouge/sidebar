@@ -293,13 +293,10 @@ User request:
 
 const CANVAS_TRIGGERS = ['generate', 'create', 'implement', 'write code', 'full source', 'scaffold', 'powerpoint', 'pptx', 'slides', 'presentation', 'export', 'html', 'css', 'js', 'index.html', 'downloadable', 'file', 'project', 'repository', 'zip', 'save as', 'notebook', 'script', 'automation', 'boilerplate', 'essay', 'poem', 'story'];
 
-const isCanvasIntent = (message: string, isPlayground: boolean): boolean => {
-    if (isPlayground) {
-        const lowerCaseMessage = message.toLowerCase();
-        // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
-        return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
-    }
-    return false;
+const isCanvasIntent = (message: string): boolean => {
+    const lowerCaseMessage = message.toLowerCase();
+    // Simple keyword check. In a real app, this could be a more sophisticated NLU model.
+    return CANVAS_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
 }
 
 // Main non-streaming chat action
@@ -313,7 +310,9 @@ export async function chatAction(input: {
     isPlayground?: boolean,
 }): Promise<ActionResult<{ type: 'chat' | 'canvas', content: string }>> {
     const userMessageContent = input.history[input.history.length - 1]?.content.toString();
-    const useCanvas = isCanvasIntent(userMessageContent, input.isPlayground || false);
+    
+    // Prioritize the isPlayground flag. If true, it's always a canvas intent.
+    const useCanvas = input.isPlayground && isCanvasIntent(userMessageContent);
 
     const isSearch = !useCanvas && userMessageContent.toLowerCase().startsWith("search:");
     const isMusic = !useCanvas && input.isMusicMode;
@@ -439,3 +438,5 @@ export async function chatAction(input: {
 
     return { error: lastError?.message || "An unknown error occurred with all available AI models." };
 }
+
+    
