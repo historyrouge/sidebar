@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { PartyPopper, Bot, FlaskConical } from "lucide-react";
+import { Separator } from "./ui/separator";
 
 export function WelcomeDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +55,15 @@ export function WelcomeDialog() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
+            </div>
+            <Separator className="my-6" />
+            <div className="space-y-3 not-prose">
+                <h3 className="font-semibold flex items-center gap-2"><PartyPopper className="h-5 w-5 text-primary" /> What's New?</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-5">
+                    <li><strong>AI Playground</strong>: A new split-screen view to chat with the AI and see generative content appear in a separate canvas. Perfect for drafting essays, code, and more!</li>
+                    <li><strong>Smarter Chat Routing</strong>: The AI now knows when you're in the Playground and sends content to the right place.</li>
+                    <li><strong>Agent is now Web Agent</strong>: The "Agent" feature in the sidebar is now the "Web Agent" for interacting with web pages.</li>
+                </ul>
             </div>
              <p className="!mb-0">Thank you for being part of this journey!</p>
              <p className="!mt-2 text-sm">
