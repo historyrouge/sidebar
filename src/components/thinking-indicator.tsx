@@ -18,10 +18,25 @@ export function ThinkingIndicator({ text, duration }: { text: string | null, dur
     const displayText = text || customThinkingText;
 
     const handleAnimationComplete = () => {
-        setTimeout(() => {
-            setIsAnimating(false);
-        }, 3000); // Wait 3 seconds after typing completes
+        // This function will be called when the typewriter effect finishes.
+        // We no longer need a fixed timeout here.
     };
+
+    useEffect(() => {
+      // This effect runs when the component mounts or `duration` changes.
+      // It sets a timeout to stop the animation only after the real duration has passed.
+      if (duration !== null) {
+        const totalDuration = (duration * 1000) + 500; // Add a small buffer
+        const timer = setTimeout(() => {
+          setIsAnimating(false);
+        }, totalDuration);
+
+        return () => clearTimeout(timer);
+      } else {
+        // If duration isn't passed (e.g., for the initial "isTyping" state), keep animating.
+        setIsAnimating(true);
+      }
+    }, [duration]);
     
     const previewLines = displayText.split('\n').slice(0, 3).join('\n');
 
