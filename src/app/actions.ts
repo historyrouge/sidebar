@@ -311,8 +311,8 @@ export async function chatAction(input: {
 }): Promise<ActionResult<{ type: 'chat' | 'canvas', content: string }>> {
     const userMessageContent = input.history[input.history.length - 1]?.content.toString();
     
-    // Prioritize the isPlayground flag. If true, it's always a canvas intent.
-    const useCanvas = input.isPlayground && isCanvasIntent(userMessageContent);
+    // If isPlayground is true, ALL generative requests go to the canvas.
+    const useCanvas = input.isPlayground;
 
     const isSearch = !useCanvas && userMessageContent.toLowerCase().startsWith("search:");
     const isMusic = !useCanvas && input.isMusicMode;
