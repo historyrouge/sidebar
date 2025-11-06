@@ -259,7 +259,7 @@ $$
 **Rule 4: Use Rich Markdown Formatting**
 To make your answers more engaging and readable, use the following special markdown formats:
 - **Emojis**: Use relevant emojis to add context and visual appeal. For example: 💡 for a tip, ⚠️ for a warning, ✅ for a success message.
-- **Highlights**: Use bold or italics for emphasis, but also use the \`<u>...</u>\` HTML tag for underlined highlights on key terms. Example: The most important concept is <u>photosynthesis</u>.
+- **Highlights**: Use bold or italics for emphasis, but also use the <u>...</u> HTML tag for underlined highlights on key terms. Example: The most important concept is <u>photosynthesis</u>.
 - **Styled Boxes**: Use blockquotes with special markers to create styled boxes for important information.
     - For a general note: \`> [!NOTE]\`
     - For a tip or suggestion: \`> [!TIP]\`
@@ -433,3 +433,6 @@ export async function chatAction(input: {
 
     
 
+
+
+    

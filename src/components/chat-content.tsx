@@ -567,7 +567,7 @@ const ChatBar = React.memo(({
     setActiveButton: (button: 'deepthink' | 'music' | 'image' | null) => void;
     currentModel: string;
     setCurrentModel: (model: string) => void;
-    isPlayground?: boolean;
+    isPlayground?: boolean
 }) => {
 
      const handleToolbarButtonClick = (buttonName: 'deepthink' | 'music' | 'image') => {
@@ -930,13 +930,13 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
                         </code>
                     );
                 },
-                blockquote({ node, ...props }) {
-                    const value = props.children?.toString() || '';
-                    if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note">{value.replace('[!NOTE]', '<strong>💡 Note</strong>')}</blockquote>;
-                    if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip">{value.replace('[!TIP]', '<strong>✨ Tip</strong>')}</blockquote>;
-                    if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning">{value.replace('[!WARNING]', '<strong>⚠️ Warning</strong>')}</blockquote>;
-                    if (value.startsWith('[!SUCCESS]')) return <blockquote {...props} data-type="success">{value.replace('[!SUCCESS]', '<strong>✅ Success</strong>')}</blockquote>;
-                    return <blockquote {...props} />;
+                blockquote({ node, children, ...props }) {
+                    const value = React.Children.toArray(children).map(child => (child as React.ReactElement)?.props.children).join('') || '';
+                    if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note"><strong>💡 Note</strong>{value.replace('[!NOTE]', '')}</blockquote>;
+                    if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip"><strong>✨ Tip</strong>{value.replace('[!TIP]', '')}</blockquote>;
+                    if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning"><strong>⚠️ Warning</strong>{value.replace('[!WARNING]', '')}</blockquote>;
+                    if (value.startsWith('[!SUCCESS]')) return <blockquote {...props} data-type="success"><strong>✅ Success</strong>{value.replace('[!SUCCESS]', '')}</blockquote>;
+                    return <blockquote {...props}>{children}</blockquote>;
                 },
                 p: ({node, ...props}) => <p className="mb-4" {...props} />,
                 table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,
@@ -971,13 +971,13 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
                             </code>
                         );
                     },
-                    blockquote({ node, ...props }) {
-                        const value = props.children?.toString() || '';
+                    blockquote({ node, children, ...props }) {
+                        const value = React.Children.toArray(children).map(child => (child as React.ReactElement)?.props.children).join('') || '';
                         if (value.startsWith('[!NOTE]')) return <blockquote {...props} data-type="note"><strong>💡 Note</strong>{value.replace('[!NOTE]', '')}</blockquote>;
                         if (value.startsWith('[!TIP]')) return <blockquote {...props} data-type="tip"><strong>✨ Tip</strong>{value.replace('[!TIP]', '')}</blockquote>;
                         if (value.startsWith('[!WARNING]')) return <blockquote {...props} data-type="warning"><strong>⚠️ Warning</strong>{value.replace('[!WARNING]', '')}</blockquote>;
                         if (value.startsWith('[!SUCCESS]')) return <blockquote {...props} data-type="success"><strong>✅ Success</strong>{value.replace('[!SUCCESS]', '')}</blockquote>;
-                        return <blockquote {...props} />;
+                        return <blockquote {...props}>{children}</blockquote>;
                     },
                     p: ({node, ...props}) => <p className="mb-4" {...props} />,
                     table: ({node, ...props}) => <table className="table-auto w-full my-4" {...props} />,
@@ -1110,3 +1110,5 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
   );
 });
 ChatContent.displayName = "ChatContent";
+
+    
