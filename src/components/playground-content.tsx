@@ -27,7 +27,7 @@ export function PlaygroundContent() {
 
 ---
 
-<div style="border-left: 4px solid #F5A623; padding-left: 16px; margin-top: 20px;">
+<div style="border: 2px solid #F5A623; border-radius: 8px; padding: 16px; background-color: rgba(245, 166, 35, 0.1);">
 <h3 style="color: #F5A623;">Core Concepts</h3>
 
 #### 1. Redox Reactions
@@ -68,7 +68,7 @@ This represents the reaction $Zn(s) + Cu^{2+}(aq) \rightarrow Zn^{2+}(aq) + Cu(s
 
 ---
 
-<div style="border: 2px dashed #50E3C2; border-radius: 8px; padding: 16px; margin-top: 20px; background-color: rgba(80, 227, 194, 0.1);">
+<div style="border: 2px solid #50E3C2; border-radius: 8px; padding: 16px; background-color: rgba(80, 227, 194, 0.1);">
 <h3 style="color: #50E3C2; margin-top:0;">💡 Key Equations</h3>
 
 > [!SUCCESS]
