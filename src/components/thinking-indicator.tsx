@@ -9,9 +9,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const customThinkingText = `At its core, this topic is a knot of cause and consequence: simple mechanics meet human meaning. On the factual layer, the parts interact because of predictable laws and patterns — we can trace inputs to outputs, which gives us control. On the human layer, those same patterns are refracted through hope, fear, habit and imagination — that’s where outcomes feel personal. Historically, what looks new is usually a remix of older survival strategies and social tools; context changes, but the motives often repeat. Technologically, today's tools amplify scale and speed: opportunities become risks, and private choices turn public quickly. Ethically, that creates responsibility — to use knowledge in ways that enlarge dignity rather than erode it.
-
-**Quick takeaway:** this isn’t just a problem to solve or a fact to file — it’s a mirror that shows how we think, what we value, and what future we’re choosing to build.`;
+const customThinkingText = `Wait, let me think... okay, starting from the beginning. No, wait, I think I've got the main concept. The user is asking for a simple explanation... or should I go deeper? Let me think one more time to be sure. Okay, I've got it. Let's dive into the core of the topic.`;
 
 export function ThinkingIndicator({ text, duration }: { text: string | null, duration: number | null }) {
     const [isAnimating, setIsAnimating] = useState(true);
@@ -26,20 +24,6 @@ export function ThinkingIndicator({ text, duration }: { text: string | null, dur
     };
     
     const previewLines = displayText.split('\n').slice(0, 3).join('\n');
-
-    if (text === null) {
-        return (
-            <div className="flex items-start gap-4">
-                 <Avatar className="h-9 w-9 border">
-                    <AvatarFallback className="bg-primary/10 text-primary"><Bot className="size-5" /></AvatarFallback>
-                </Avatar>
-                <div className="flex items-center gap-2 text-muted-foreground p-3 bg-muted rounded-xl">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>The AI is thinking...</span>
-                </div>
-            </div>
-        )
-    }
 
     return (
         <div className="p-3 rounded-lg bg-muted/50 mb-4">
