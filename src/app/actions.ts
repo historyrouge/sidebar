@@ -35,34 +35,6 @@ export type ActionResult<T> = {
     error?: string;
 };
 
-// Sanitizer function to fix KaTeX issues
-const sanitizeKatex = (text: string): string => {
-  // Rule 1: More specific replacement for block math to avoid conflicts
-  // This looks for an optional newline after `\[` and before `\]`
-  let sanitizedText = text.replace(/\\\[\n?([\s\S]*?)\n?\\\]/g, (match, content) => {
-    return `$$${content.trim()}$$`;
-  });
-
-  // Rule 2: More specific replacement for inline math
-  sanitizedText = sanitizedText.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, content) => {
-    // Avoid capturing markdown links like `(https://...)`
-    if (content.startsWith('http')) {
-      return match; // Don't change it if it looks like a URL
-    }
-    return `$${content.trim()}$`;
-  });
-
-  // Rule 3: Correctly handle stray commas inside exponents
-  sanitizedText = sanitizedText.replace(/\^{\s*,\s*([a-zA-Z0-9]+)\s*}/g, '^{$1}');
-  
-  // Rule 4: Prevent misinterpretation of markdown links `[text](url)` as math
-  // This is tricky, but we can try to be less aggressive.
-  // The logic above for `\(` is already a good step.
-
-  return sanitizedText;
-};
-
-
 export async function generateFlashcardsAction(input: GenerateFlashcardsSambaInput): Promise<ActionResult<GenerateFlashcardsSambaOutput>> {
     try {
         const data = await generateFlashcardsSamba(input);
@@ -147,7 +119,7 @@ export async function generateEbookChapterAction(input: GenerateEbookChapterInpu
 export async function generateEditedContentAction(input: GenerateEditedContentInput): Promise<ActionResult<GenerateEditedContentOutput>> {
     try {
         const data = await generateEditedContent(input);
-        return { data: { editedContent: sanitizeKatex(data.editedContent) } };
+        return { data };
     } catch (e: any) {
         return { error: e.message };
     }
@@ -193,7 +165,7 @@ export async function summarizeContentAction(input: SummarizeContentInput): Prom
 export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<ActionResult<ChatWithTutorOutput>> {
     try {
         const data = await chatWithTutor(input);
-        return { data: { response: sanitizeKatex(data.response) } };
+        return { data };
     } catch (e: any) {
         return { error: e.message };
     }
@@ -408,8 +380,6 @@ export async function chatAction(input: {
             if (useCanvas) {
                  return { data: { type: 'canvas', content: responseText } };
             }
-
-            responseText = sanitizeKatex(responseText);
 
             const modelName = AVAILABLE_MODELS.find(m => m.id === modelId)?.name || modelId;
             const finalResponse = `**Response from ${modelName}**\n\n${responseText}`;
