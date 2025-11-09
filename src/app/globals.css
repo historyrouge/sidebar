@@ -189,8 +189,7 @@
 
     /* AI Response Colors & Styling */
     .prose u {
-      @apply no-underline decoration-2 underline-offset-2 decoration-primary/50;
-      text-decoration-skip-ink: none;
+      @apply no-underline bg-yellow-400/30 dark:bg-yellow-600/30 px-1 py-0.5 rounded-sm;
     }
     .prose code {
       color: hsl(var(--accent));
