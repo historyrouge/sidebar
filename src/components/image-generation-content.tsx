@@ -14,6 +14,7 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { Skeleton } from "./ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { z } from "zod";
+import { LimitExhaustedDialog } from "./limit-exhausted-dialog";
 
 export const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A text description of the image to generate.'),
@@ -34,6 +35,7 @@ export function ImageGenerationContent() {
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isGenerating, startGenerating] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    const [showLimitDialog, setShowLimitDialog] = useState(false);
     const { toast } = useToast();
 
     const handleGenerateImage = () => {
@@ -47,8 +49,12 @@ export function ImageGenerationContent() {
             setError(null);
             const result = await generateImageAction({ prompt });
             if (result.error) {
-                setError(result.error);
-                toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
+                if (result.error === "__LIMIT_EXHAUSTED__") {
+                    setShowLimitDialog(true);
+                } else {
+                    setError(result.error);
+                    toast({ title: "Image Generation Failed", description: result.error, variant: "destructive" });
+                }
             } else if (result.data) {
                 setGeneratedImage(result.data.imageDataUri);
                 toast({ title: "Image Generated Successfully!" });
@@ -76,6 +82,7 @@ export function ImageGenerationContent() {
 
     return (
         <div className="flex h-full flex-col bg-muted/20 dark:bg-transparent">
+            <LimitExhaustedDialog isOpen={showLimitDialog} onOpenChange={setShowLimitDialog} />
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />

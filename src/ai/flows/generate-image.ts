@@ -100,6 +100,9 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
 
     } catch (error: any) {
         console.error("AI image generation error:", error);
+        if (error.status === 429) {
+            throw new Error("__LIMIT_EXHAUSTED__");
+        }
         throw new Error(error.message || "An unknown error occurred while generating the image.");
     }
 }
