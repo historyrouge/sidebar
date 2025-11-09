@@ -144,7 +144,7 @@ export function MainDashboard() {
         <div className="flex items-center gap-2">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
+                    <Button>
                         <Pilcrow className="mr-2 h-4 w-4" />
                         Answer Type
                     </Button>
