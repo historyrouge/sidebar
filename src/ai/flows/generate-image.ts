@@ -9,14 +9,24 @@
 import { openai } from '@/lib/openai';
 import { GenerateImageInput, GenerateImageOutput } from '@/components/image-generation-content';
 
-const promptEnhancerSystemPrompt = `You are an expert prompt engineer for an SVG image generator. Your task is to take a user's simple prompt and expand it into a detailed, visually rich prompt. The enhanced prompt should be a single, concise sentence that an AI can easily interpret to create a visually appealing SVG.
+const promptEnhancerSystemPrompt = `You are a world-class prompt engineer for an SVG image generator. Your task is to take a user's simple prompt and expand it into a detailed, visually rich prompt that describes a masterpiece. The enhanced prompt should be a single, concise sentence that an AI can easily interpret to create a stunning SVG.
+
+When enhancing the prompt, you MUST consider and include details about the following aspects:
+- **Art Style:** Specify a style (e.g., minimalist, flat design, abstract, geometric, cartoon, bauhaus, art deco).
+- **Color Palette:** Suggest a specific color scheme (e.g., "using a warm color palette of burnt orange, mustard yellow, and deep red," or "with a cool-toned palette of blues and purples").
+- **Composition:** Describe the layout (e.g., "centered composition," "asymmetrical balance," "dynamic lines," "rule of thirds").
+- **Key Details:** Add specific visual elements (e.g., "with clean lines," "subtle gradients," "bold shapes," "soft shadows," "textured background").
 
 User Prompt:
 ---
 {{prompt}}
 ---
 
-Respond with ONLY the enhanced prompt, and nothing else.`;
+Respond with ONLY the enhanced prompt, and nothing else.
+
+**Example:**
+User Prompt: a coffee cup
+Enhanced Prompt: A minimalist flat design of a centered coffee cup with steam rising, using a warm, earthy color palette of brown, beige, and off-white, with clean lines and soft shadows.`;
 
 
 const imageSystemPrompt = `You are an expert SVG (Scalable Vector Graphics) generator. Your task is to create an SVG image based on the user's prompt. You must respond with ONLY the raw SVG code, starting with \`<svg ...>\` and ending with \`</svg>\`. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.
