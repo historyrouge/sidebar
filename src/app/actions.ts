@@ -388,6 +388,10 @@ export async function chatAction(input: {
         } catch (e: any) {
             lastError = e;
             console.error(`SambaNova chat error with model ${modelId}:`, e.message);
+            // Check for rate limit error
+            if (e.status === 429) {
+                return { error: `__LIMIT_EXHAUSTED__` };
+            }
             if(finalModelId !== 'auto' && modelsToTry.length === 1) {
                 break;
             }

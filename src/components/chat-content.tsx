@@ -730,7 +730,11 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
         setIsTyping(false);
 
         if (result.error) {
-            toast({ title: "Chat Error", description: result.error, variant: "destructive" });
+            if (result.error === "__LIMIT_EXHAUSTED__") {
+                setShowLimitDialog(true);
+            } else {
+                toast({ title: "Chat Error", description: result.error, variant: "destructive" });
+            }
         } else if (result.data) {
             const { type, content } = result.data;
             if (type === 'canvas') {
