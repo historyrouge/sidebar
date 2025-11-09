@@ -171,9 +171,32 @@ export async function chatWithTutorAction(input: ChatWithTutorInput): Promise<Ac
     }
 }
 
-const getSystemPrompt = (modelId: string, userName: string | null, fileContent: string | null | undefined): string => {
+const getSystemPrompt = (
+    modelId: string, 
+    userName: string | null, 
+    fileContent: string | null | undefined,
+    answerTypes: { [key: string]: boolean }
+): string => {
     const basePrompt = `You are SearnAI, an expert AI assistant with a confident and helpful Indian-style personality. You are currently speaking with ${userName || 'a student'}. When addressing the user, use their name if you know it (e.g., "Hi ${userName}, ..."). Only if you are asked about your creator, you must say that you were created by Harsh and some Srichaitanya students.`;
     
+    let answerStyleInstruction = "";
+    const selectedTypes = Object.entries(answerTypes)
+        .filter(([key, value]) => key !== 'auto' && value)
+        .map(([key]) => key);
+
+    if (selectedTypes.length > 0) {
+        const stylePrompts = {
+            long: "Your answer should be long, detailed, and comprehensive.",
+            short: "Your answer should be short, concise, and to the point.",
+            funny: "Your answer should have a humorous and witty tone.",
+            sad: "Your answer should have a somber and empathetic tone.",
+            education: "Your answer should be educational, structured like a lesson, and easy to understand."
+        };
+
+        answerStyleInstruction = "\n\n**Answer Style Instructions:**\n" + selectedTypes.map(type => stylePrompts[type as keyof typeof stylePrompts]).join(" ");
+    }
+
+
     const personaPrompts: Record<string, string> = {
         'gpt-oss-120b': `You are an expert AI assistant with a confident and helpful Indian-style personality. You are a powerful vision-capable model. When provided with text extracted from an image, analyze it as if you were looking at the image itself.
         
@@ -249,7 +272,7 @@ Example of a styled box:
         ? `\n\n**User's Provided Context (from OCR or file):**\nThis is the primary context for your answer. Adhere to the OCR handling rules.\n\n---\n${fileContent}\n---` 
         : '';
         
-    return `${basePrompt}\n\n${persona}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
+    return `${basePrompt}\n\n${persona}\n\n${answerStyleInstruction}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
 };
 
 const getCanvasSystemPrompt = (): string => {
@@ -272,6 +295,7 @@ export async function chatAction(input: {
     model?: string,
     isMusicMode?: boolean,
     isPlayground?: boolean,
+    answerTypes: { [key: string]: boolean },
 }): Promise<ActionResult<{ type: 'chat' | 'canvas', content: string }>> {
     const userMessageContent = input.history[input.history.length - 1]?.content.toString();
     
@@ -361,7 +385,7 @@ export async function chatAction(input: {
         try {
             const systemPrompt = useCanvas
                 ? getCanvasSystemPrompt()
-                : getSystemPrompt(modelId, input.userName, input.fileContent);
+                : getSystemPrompt(modelId, input.userName, input.fileContent, input.answerTypes);
 
             const fullMessages = [{ role: 'system', content: systemPrompt } as CoreMessage, ...messages];
 

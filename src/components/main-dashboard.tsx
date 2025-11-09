@@ -236,7 +236,7 @@ export function MainDashboard() {
       <main className="flex-1 overflow-hidden relative">
          {activeView === 'searnai' ? (
             <div className="h-full flex flex-col">
-              <ChatContent />
+              <ChatContent answerTypes={answerTypes} />
             </div>
          ) : activeView === 'stories' ? (
             <NewsContent />

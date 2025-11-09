@@ -617,6 +617,7 @@ ChatBar.displayName = "ChatBar";
 type ChatContentProps = {
     isPlayground?: boolean;
     onCanvasContent?: (content: string) => void;
+    answerTypes: { [key: string]: boolean };
 };
 
 type ChatContentHandle = {
@@ -624,7 +625,7 @@ type ChatContentHandle = {
 };
 
 
-export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ isPlayground = false, onCanvasContent }, ref) => {
+export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ isPlayground = false, onCanvasContent, answerTypes }, ref) => {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -722,6 +723,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
             model: activeButton === 'deepthink' ? 'gpt-oss-120b' : currentModel,
             isMusicMode: activeButton === 'music',
             isPlayground: isPlayground,
+            answerTypes: answerTypes,
         });
 
         const endTime = Date.now();
@@ -761,7 +763,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
         setIsTyping(false);
       }
       
-  }, [currentModel, activeButton, toast, userName, onCanvasContent, isPlayground]);
+  }, [currentModel, activeButton, toast, userName, onCanvasContent, isPlayground, answerTypes]);
 
 
   const handleSendMessage = useCallback((messageContent: string, imageDataUri?: string | null, fileContent?: string | null) => {
