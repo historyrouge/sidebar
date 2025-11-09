@@ -1,14 +1,13 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users, FlaskConical, Copy, Trash2, PlayCircle, Pilcrow } from "lucide-react";
+import { FileEdit, Moon, Sun, X, MoreVertical, Play, Pause, Rewind, FastForward, Video, Newspaper, MessageSquare, Star, Globe, Users, FlaskConical, Copy, Trash2, PlayCircle, Pilcrow, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import React, { useEffect, useRef, useState } from "react";
 import { ChatContent, useChatStore } from "./chat-content";
 import { SidebarTrigger } from "./ui/sidebar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "./ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { NewsContent } from "./news-content";
@@ -30,6 +29,34 @@ export function MainDashboard() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeView, setActiveView] = useState('searnai');
   const [showPricingDialog, setShowPricingDialog] = useState(false);
+
+  const [answerTypes, setAnswerTypes] = useState({
+    auto: true,
+    long: false,
+    short: false,
+    funny: false,
+    sad: false,
+    education: false,
+  });
+
+  const handleAnswerTypeChange = (type: keyof typeof answerTypes) => {
+    setAnswerTypes(prev => {
+      const isAuto = type === 'auto';
+      const newTypes = {
+        ...prev,
+        auto: isAuto ? true : false,
+        [type]: isAuto ? false : !prev[type],
+      };
+
+      // If all other types are unchecked, default back to auto
+      const otherTypesChecked = Object.entries(newTypes).some(([key, value]) => key !== 'auto' && value);
+      if (!otherTypesChecked) {
+        newTypes.auto = true;
+      }
+      
+      return newTypes;
+    });
+  };
 
 
   const handleNewChat = () => {
@@ -115,10 +142,62 @@ export function MainDashboard() {
         )}
 
         <div className="flex items-center gap-2">
-            <Button variant="outline">
-                <Pilcrow className="mr-2 h-4 w-4" />
-                Answer Type
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                        <Pilcrow className="mr-2 h-4 w-4" />
+                        Answer Type
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                    <DropdownMenuLabel>AI Response Style</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                        checked={answerTypes.auto}
+                        onCheckedChange={() => handleAnswerTypeChange('auto')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Auto (Default)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                        checked={answerTypes.long}
+                        onCheckedChange={() => handleAnswerTypeChange('long')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Long
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        checked={answerTypes.short}
+                        onCheckedChange={() => handleAnswerTypeChange('short')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Short
+                    </DropdownMenuCheckboxItem>
+                     <DropdownMenuCheckboxItem
+                        checked={answerTypes.funny}
+                        onCheckedChange={() => handleAnswerTypeChange('funny')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Funny
+                    </DropdownMenuCheckboxItem>
+                     <DropdownMenuCheckboxItem
+                        checked={answerTypes.sad}
+                        onCheckedChange={() => handleAnswerTypeChange('sad')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Sad
+                    </DropdownMenuCheckboxItem>
+                     <DropdownMenuCheckboxItem
+                        checked={answerTypes.education}
+                        onCheckedChange={() => handleAnswerTypeChange('education')}
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        Education
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button onClick={() => setShowPricingDialog(true)}>
                 <Star className="mr-2 h-4 w-4" />
                 Get Pro
