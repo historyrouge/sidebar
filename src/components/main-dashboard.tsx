@@ -145,7 +145,6 @@ export function MainDashboard() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button>
-                        <Pilcrow className="mr-2 h-4 w-4" />
                         Answer Type
                     </Button>
                 </DropdownMenuTrigger>
