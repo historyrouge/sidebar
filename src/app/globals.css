@@ -28,8 +28,8 @@
     --muted: 0 0% 96.1%;
     --muted-foreground: 240 5.9% 10%;
  
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
+    --border: 240 10% 3.9%;
+    --input: 240 10% 3.9%;
     --ring: 261 83% 67%; /* Purple */
  
     --radius: 0.75rem;
@@ -42,7 +42,7 @@
     
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 10% 3.9%;
-    --sidebar-border: 0 0% 89.8%;
+    --sidebar-border: 240 10% 3.9%;
     --sidebar-accent: 0 0% 96.1%;
     --sidebar-accent-foreground: 240 10% 3.9%;
     --sidebar-active: 240 5.9% 10%;
