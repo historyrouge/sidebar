@@ -52,11 +52,12 @@ import {
 import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 const studyTools = [
     { name: "Study Session", icon: <GraduationCap />, href: "/study-now" },
@@ -121,6 +122,7 @@ export function AppSidebar() {
   const router = useRouter();
   const currentPathname = usePathname();
   const [pathname, setPathname] = useState("");
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     setPathname(currentPathname);
@@ -280,6 +282,12 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={signOut} className="w-full justify-start gap-2.5 px-3">
+                    <LogOut />
+                    <span className="text-sm">Log Out</span>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
         </SidebarFooter>
       </SidebarContent>
