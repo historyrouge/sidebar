@@ -142,60 +142,6 @@ export function MainDashboard() {
         )}
 
         <div className="flex items-center gap-2">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button>
-                        Answer Type
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>AI Response Style</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                        checked={answerTypes.auto}
-                        onCheckedChange={() => handleAnswerTypeChange('auto')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Auto (Default)
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                        checked={answerTypes.long}
-                        onCheckedChange={() => handleAnswerTypeChange('long')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Long
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                        checked={answerTypes.short}
-                        onCheckedChange={() => handleAnswerTypeChange('short')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Short
-                    </DropdownMenuCheckboxItem>
-                     <DropdownMenuCheckboxItem
-                        checked={answerTypes.funny}
-                        onCheckedChange={() => handleAnswerTypeChange('funny')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Funny
-                    </DropdownMenuCheckboxItem>
-                     <DropdownMenuCheckboxItem
-                        checked={answerTypes.sad}
-                        onCheckedChange={() => handleAnswerTypeChange('sad')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Sad
-                    </DropdownMenuCheckboxItem>
-                     <DropdownMenuCheckboxItem
-                        checked={answerTypes.education}
-                        onCheckedChange={() => handleAnswerTypeChange('education')}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        Education
-                    </DropdownMenuCheckboxItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
 
             <Button onClick={() => setShowPricingDialog(true)}>
                 <Star className="mr-2 h-4 w-4" />
