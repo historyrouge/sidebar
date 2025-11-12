@@ -370,10 +370,13 @@ export async function chatAction(input: {
     } else {
         finalUserMessage = userMessage;
     }
+    
+    const RECENT_MESSAGE_COUNT = 10;
+    const recentHistory = input.history.slice(-RECENT_MESSAGE_COUNT);
 
     const messages: CoreMessage[] = useCanvas
         ? [finalUserMessage] // For canvas, only send the user's last message
-        : [...input.history.slice(0, -1), finalUserMessage];
+        : [...recentHistory.slice(0, -1), finalUserMessage];
 
     const modelsToTry = (finalModelId === 'auto' || !finalModelId)
       ? AVAILABLE_MODELS.map(m => m.id).filter(id => id !== 'auto')

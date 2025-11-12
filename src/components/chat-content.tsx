@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { chatAction, generateImageAction } from "@/app/actions";
@@ -648,7 +647,8 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
   const [activeButton, setActiveButton] = useState<'deepthink' | 'music' | 'image' | null>(null);
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL_ID);
 
-  
+  const lastBotMessageId = useRef<string | null>(null);
+
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
@@ -671,6 +671,38 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
       console.error("Failed to save chat history to localStorage", error);
     }
   }, [history]);
+  
+  const isUserNearBottom = useCallback(() => {
+    const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
+    if (!viewport) return true; // Default to true if viewport isn't ready
+    return viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight) < 150;
+  }, []);
+
+  useEffect(() => {
+    if (!history?.length || !scrollAreaRef?.current) return;
+    const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+    
+    const latestBotMsg = [...history].reverse().find(m => m.role === "model");
+
+    if (!latestBotMsg || lastBotMessageId.current === latestBotMsg.id) return;
+    
+    lastBotMessageId.current = latestBotMsg.id;
+
+    const node = document.querySelector(`[data-message-id="${latestBotMsg.id}"]`);
+
+    if (node && isUserNearBottom()) {
+      // Use a timeout to ensure the element is fully rendered before scrolling
+      setTimeout(() => {
+        node.scrollIntoView({ behavior: "smooth", block: "center" });
+        node.classList.add("searn-highlight");
+        setTimeout(() => node.classList.remove("searn-highlight"), 800);
+      }, 100);
+    } else if (isUserNearBottom()) {
+       viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    }
+
+  }, [history, isUserNearBottom]);
 
   const handleTextToSpeech = useCallback(async (text: string, id: string) => {
       if (isSynthesizing === id) {
@@ -843,13 +875,6 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
     });
   };
 
-  useEffect(() => {
-    const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
-    if (viewport) {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-    }
-  }, [history, isTyping]);
-  
   const showWelcome = history.length === 0 && !isTyping;
 
   const renderMessageContent = (message: Message) => {
@@ -1052,6 +1077,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
                   {history.map((message, index) => (
                       <React.Fragment key={`${message.id}-${index}`}>
                         <div
+                          data-message-id={message.id}
                           className={cn(
                             "flex w-full items-start gap-4",
                             message.role === "user" ? "justify-end" : "justify-start"

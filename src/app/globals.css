@@ -222,7 +222,7 @@
     }
     
     .prose blockquote[data-type="note"] {
-        @apply border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/40 text-yellow-900 dark:text-yellow-200 rounded-lg p-4;
+        @apply border-yellow-400 bg-yellow-50 dark:bg-yellow-900/40 text-yellow-900 dark:text-yellow-200 rounded-lg p-4;
         border-left-width: 4px;
     }
     .prose blockquote[data-type="tip"] {
@@ -240,5 +240,16 @@
 
     .prose blockquote strong { /* The [!NOTE] part */
         @apply font-semibold flex items-center gap-2 mb-2;
+    }
+    
+    .searn-highlight {
+      animation: flash 0.8s ease-in-out;
+      background: rgba(120, 100, 255, 0.12);
+      border-radius: 10px;
+    }
+    @keyframes flash {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
     }
 }
