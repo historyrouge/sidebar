@@ -4,11 +4,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from '@/components/theme-provider';
-import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/hooks/use-auth';
 import { WelcomeDialog } from '@/components/welcome-dialog';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'SearnAI',
@@ -22,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-body antialiased", inter.variable)} suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-body antialiased")} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

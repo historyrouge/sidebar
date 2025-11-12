@@ -21,8 +21,8 @@ export default {
         'glow-primary': '0 0 12px 1px hsl(var(--primary) / 0.3)',
       },
       fontFamily: {
-        body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['var(--font-inter)', 'sans-serif'],
+        body: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        headline: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
