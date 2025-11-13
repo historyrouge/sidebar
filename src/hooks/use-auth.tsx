@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -47,17 +46,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Add scopes to request access to Gmail and Google Drive.
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    provider.setCustomParameters({
+        'prompt': 'consent'
+    });
+    
     try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
+        // This is a crucial piece for backend access.
+        // In a real app, we would securely store this OAuth token.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const accessToken = credential?.accessToken;
+
         // Create or update user profile in Firestore
         await setDoc(doc(db, "users", user.uid), {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
             provider: 'google',
-            lastSignIn: serverTimestamp()
+            lastSignIn: serverTimestamp(),
+            // Storing access token directly is not recommended for production.
+            // This is a simplification for the prototype.
+            accessToken: accessToken, 
         }, { merge: true });
 
         return user;

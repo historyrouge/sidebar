@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -36,6 +35,7 @@ import {
   View,
   FlaskConical,
   Users,
+  Inbox, // Added Inbox icon
 } from "lucide-react";
 import {
   Sidebar,
@@ -217,6 +217,20 @@ export function AppSidebar() {
                             )}
                             <Calendar />
                             <span className="text-sm">Planner</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/inbox" passHref>
+                        <SidebarMenuButton
+                            isActive={pathname === '/inbox'}
+                            className="justify-start w-full gap-2.5 px-3 relative"
+                        >
+                             {pathname === "/inbox" && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-accent"></span>
+                            )}
+                            <Inbox />
+                            <span className="text-sm">Inbox</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
