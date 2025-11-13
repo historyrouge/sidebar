@@ -15,3 +15,5 @@ if (!admin.apps.length) {
         console.warn('FIREBASE_SERVICE_ACCOUNT environment variable not set. Firebase Admin SDK not initialized.');
     }
 }
+
+export default admin;

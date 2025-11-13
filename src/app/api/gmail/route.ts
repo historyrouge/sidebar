@@ -1,25 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { credential } from 'firebase-admin';
-
-// Initialize Firebase Admin SDK
-if (!getApps().length) {
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (serviceAccount) {
-         try {
-            initializeApp({
-                credential: credential.cert(JSON.parse(serviceAccount)),
-            });
-        } catch (e: any) {
-            console.error('Firebase admin initialization error', e.stack);
-        }
-    } else {
-        console.warn('FIREBASE_SERVICE_ACCOUNT is not set.');
-    }
-}
-
+import admin from '@/lib/firebase-admin'; // Import the initialized admin instance
 
 export async function GET(request: Request) {
     try {
@@ -34,7 +15,7 @@ export async function GET(request: Request) {
         }
         
         // This step is just for verification and not used to get the access token
-        await getAuth().verifyIdToken(token);
+        await admin.auth().verifyIdToken(token);
 
         // NOTE: In a production app, you would securely get the user's OAuth access token.
         // For this prototype, we're returning a static error because the server
@@ -47,6 +28,9 @@ export async function GET(request: Request) {
         console.error('API Error:', error);
         if (error.code === 'auth/id-token-expired') {
             return NextResponse.json({ error: 'Token expired, please sign in again.' }, { status: 401 });
+        }
+        if (error.code === 'app/no-app') {
+            return NextResponse.json({ error: 'Firebase Admin SDK not initialized on the server.' }, { status: 500 });
         }
         return NextResponse.json({ error: error.message || 'An internal server error occurred.' }, { status: 500 });
     }
