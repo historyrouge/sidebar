@@ -44,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signInWithGoogle = async (): Promise<User | null> => {
     const provider = new GoogleAuthProvider();
+    // Add scopes to request access to Gmail and Google Drive.
+    provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
     try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
