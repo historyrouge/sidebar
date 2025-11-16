@@ -8,7 +8,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { User, onAuthStateChanged, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { User, onAuthStateChanged, signOut as firebaseSignOut, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
@@ -18,6 +18,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<User | null>;
+  signInWithGitHub: () => Promise<User | null>;
   signOut: () => Promise<void>;
 };
 
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signInWithGoogle: async () => null,
+  signInWithGitHub: async () => null,
   signOut: async () => {},
 });
 
@@ -42,26 +44,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
   
-  const signInWithGoogle = async (): Promise<User | null> => {
-    const provider = new GoogleAuthProvider();
+  const handleSignIn = async (provider: GoogleAuthProvider | GithubAuthProvider): Promise<User | null> => {
     try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
-        // Create or update user profile in Firestore
         await setDoc(doc(db, "users", user.uid), {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            provider: 'google',
+            provider: provider.providerId,
             lastSignIn: serverTimestamp()
         }, { merge: true });
 
         return user;
-    } catch (error) {
-        console.error("Google Sign-In Error:", error);
+    } catch (error: any) {
+        console.error(`${provider.providerId} Sign-In Error:`, error);
         return null;
     }
+  };
+
+  const signInWithGoogle = async (): Promise<User | null> => {
+    const provider = new GoogleAuthProvider();
+    return handleSignIn(provider);
+  };
+  
+  const signInWithGitHub = async (): Promise<User | null> => {
+    const provider = new GithubAuthProvider();
+    return handleSignIn(provider);
   };
 
   const signOut = async () => {
@@ -77,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     signInWithGoogle,
+    signInWithGitHub,
     signOut,
   };
 

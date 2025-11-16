@@ -18,6 +18,13 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    </svg>
+);
+
+
 const AppLogo = () => (
     <svg
       className="h-10 w-10 text-white"
@@ -47,37 +54,48 @@ const AppLogo = () => (
   );
 
 export function LoginContent() {
-    const { signInWithGoogle } = useAuth();
+    const { signInWithGoogle, signInWithGitHub } = useAuth();
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState<null | 'google' | 'github'>(null);
 
     const handleGoogleSignIn = async () => {
-        setIsLoading(true);
+        setIsLoading('google');
         const user = await signInWithGoogle();
         if (user) {
             router.push('/');
         } else {
-            setIsLoading(false);
+            setIsLoading(null);
+        }
+    };
+    
+    const handleGitHubSignIn = async () => {
+        setIsLoading('github');
+        const user = await signInWithGitHub();
+        if (user) {
+            router.push('/');
+        } else {
+            setIsLoading(null);
         }
     };
 
     return (
         <div className="relative flex min-h-screen items-center justify-center bg-black p-4">
-            <Image
-                src="https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop"
-                alt="Starry sky background"
-                fill
-                className="z-0 object-cover opacity-50 blur-sm"
-                data-ai-hint="starry sky"
-            />
+            <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+            <div id="stars"></div>
+            <div id="stars2"></div>
+            <div id="stars3"></div>
             <div className="z-10 flex flex-col items-center text-center text-white">
                 <AppLogo />
                 <h1 className="mt-6 text-4xl font-bold tracking-tight">Welcome to SearnAI</h1>
                 <p className="mt-2 text-lg text-white/80">Your AI-powered study companion.</p>
                 <div className="mt-10 w-full max-w-xs space-y-4">
-                     <Button onClick={handleGoogleSignIn} className="w-full h-12 text-base bg-white/90 text-black hover:bg-white" disabled={isLoading}>
-                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-2" />}
+                     <Button onClick={handleGoogleSignIn} className="w-full h-12 text-base bg-white/90 text-black hover:bg-white" disabled={!!isLoading}>
+                        {isLoading === 'google' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-2" />}
                         Continue with Google
+                    </Button>
+                     <Button onClick={handleGitHubSignIn} className="w-full h-12 text-base bg-neutral-800/80 text-white hover:bg-neutral-700" disabled={!!isLoading}>
+                        {isLoading === 'github' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GithubIcon className="mr-2" />}
+                        Continue with GitHub
                     </Button>
                     <Button variant="outline" className="w-full h-12 text-base bg-transparent text-white border-white/50 hover:bg-white/10" disabled={true}>
                         Continue with Email
