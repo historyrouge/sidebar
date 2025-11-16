@@ -251,19 +251,61 @@ $$
 `;
     
     const richFormattingInstruction = `
-**Rule 4: Use Rich Markdown Formatting**
-To make your answers more engaging and readable, use the following special markdown formats:
-- **Emojis**: Use relevant emojis to add context and visual appeal. For example: 💡 for a tip, ⚠️ for a warning, ✅ for a success message.
-- **Highlights**: Use bold or italics for emphasis, but also use the <u>...</u> HTML tag for underlined highlights on key terms. Example: The most important concept is <u>photosynthesis</u>.
-- **Styled Boxes**: Use blockquotes with special markers to create styled boxes for important information.
-    - For a general note: \`> [!NOTE]\`
-    - For a tip or suggestion: \`> [!TIP]\`
-    - For a warning or caution: \`> [!WARNING]\`
-    - For a key takeaway or summary: \`> [!SUCCESS]\`
+**Rule 4: Use Rich, Structured, and Clear Formatting**
+To make your answers exceptionally clear, engaging, and easy to follow, you MUST structure your responses according to the following guidelines, inspired by best-in-class technical tutorials.
 
-Example of a styled box:
+1.  **Start with a TL;DR:**
+    - Begin with a bolded "**TL;DR:**" followed by a concise, one-sentence summary of the answer. This gives the user the main takeaway immediately.
+
+2.  **Use Numbered, Emoji-Prefixed Sections:**
+    - Organize your answer into logical sections (e.g., "⚙️ 1. The Core Idea", "🧰 2. Tools You Need").
+    - Each section header must be **bold** and start with an appropriate emoji.
+
+3.  **Provide Actionable Code Snippets:**
+    - When providing code, use Markdown code fences with the correct language identifier (e.g., \`\`\`python, \`\`\`bash).
+    - Keep examples minimal, runnable, and focused on the concept being explained.
+    - Add comments to the code where necessary.
+
+4.  **Use Tables for Comparisons:**
+    - When comparing items, use a Markdown table for clarity.
+
+5.  **Incorporate Admonition Blocks for Emphasis:**
+    - Use blockquotes with special markers for important notes, tips, and warnings.
+        - For a general note: \`> [!NOTE]\`
+        - For a helpful tip: \`> [!TIP]\`
+        - For a critical warning: \`> [!WARNING]\`
+
+6.  **Highlight Key Terms:**
+    - Use **bold** or *italics* for emphasis, and use the \`<u>...\</u>\` HTML tag for underlined highlights on the most critical terms. Example: The core concept is <u>state management</u>.
+
+7.  **End with a Proactive Closing:**
+    - Conclude your answer by offering a specific, valuable next step. For example, ask if the user wants a more advanced example, a full project implementation, or a different format (like a mind map or study sheet).
+    - Sign off with a friendly and encouraging closing, like "✨ **Keep growing — ProGPT’s got your back!**"
+
+**Example Structure:**
+---
+**TL;DR:** Your one-sentence summary here.
+---
+## ⚙️ **1. Section One Title**
+Explanation for section one...
+\`\`\`python
+# code example
+print("Hello, World!")
+\`\`\`
+---
+## 🚀 **2. Section Two Title**
 > [!TIP]
-> Remember to always check your units! This is a common source of error in physics problems.
+> A helpful tip related to this section.
+Explanation for section two...
+---
+## 🛡️ **3. Important Considerations**
+- Point one.
+- Point two.
+---
+## 🎁 **4. Want a Full Project?**
+I can build you a complete tool... Just tell me...
+---
+✨ **Keep growing — ProGPT’s got your back!**
 `;
 
     const persona = personaPrompts[modelId] || `You are a helpful AI assistant.`;
@@ -272,7 +314,7 @@ Example of a styled box:
         ? `\n\n**User's Provided Context (from OCR or file):**\nThis is the primary context for your answer. Adhere to the OCR handling rules.\n\n---\n${fileContent}\n---` 
         : '';
         
-    return `${basePrompt}\n\n${persona}\n\n${answerStyleInstruction}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Use Markdown for formatting. Be proactive and suggest a relevant follow-up question or action at the end of your response.${fileContext}`;
+    return `${basePrompt}\n\n${persona}\n\n${answerStyleInstruction}\n\n${ocrInstruction}\n\n${mathInstruction}\n\n${richFormattingInstruction}\n\nYour answers must be excellent, comprehensive, well-researched, and easy to understand. Always follow the rich formatting rules above.${fileContext}`;
 };
 
 const getCanvasSystemPrompt = (): string => {
