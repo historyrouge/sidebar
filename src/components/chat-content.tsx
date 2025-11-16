@@ -950,7 +950,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
           <ReactMarkdown
             remarkPlugins={[remarkMath, remarkGfm]}
             rehypePlugins={[rehypeKatex]}
-            className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+            className="prose dark:prose-invert max-w-none leading-relaxed"
             components={{
                 code({ node, inline, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
@@ -993,7 +993,7 @@ export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ is
             <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex]}
-                className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                className="prose dark:prose-invert max-w-none leading-relaxed"
                 components={{
                     code({ node, inline, className, children, ...props }) {
                         const match = /language-(\w+)/.exec(className || '');
