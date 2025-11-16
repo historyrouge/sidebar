@@ -157,7 +157,6 @@ const CodeBox = ({ language, code: initialCode }: { language: string, code: stri
                         {isEditing ? 'Save' : 'Edit'}
                     </Button>
                     <Button type="button" variant="ghost" size="sm" onClick={handleDownload}><Download className="mr-1 h-4 w-4" /> Download</Button>
-                    <Button type="button" variant="ghost" size="sm" disabled>Run</Button>
                 </div>
             </div>
             {isEditing ? (
@@ -617,7 +616,7 @@ ChatBar.displayName = "ChatBar";
 type ChatContentProps = {
     isPlayground?: boolean;
     onCanvasContent?: (content: string) => void;
-    answerTypes: { [key: string]: boolean };
+    answerTypes?: { [key: string]: boolean };
 };
 
 type ChatContentHandle = {
@@ -625,7 +624,7 @@ type ChatContentHandle = {
 };
 
 
-export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ isPlayground = false, onCanvasContent, answerTypes }, ref) => {
+export const ChatContent = forwardRef<ChatContentHandle, ChatContentProps>(({ isPlayground = false, onCanvasContent, answerTypes = {auto: true} }, ref) => {
   const { toast } = useToast();
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);

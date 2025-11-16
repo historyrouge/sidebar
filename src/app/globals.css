@@ -107,7 +107,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground text-base;
+    @apply bg-background text-foreground text-sm;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   .prose {
@@ -139,24 +139,26 @@
 
 @layer components {
     .code-box {
-        @apply block rounded-xl border border-border my-4;
+        @apply block rounded-xl border border-border my-4 bg-black/20;
     }
     .code-box-header {
-        @apply flex items-center justify-between px-4 py-2 bg-primary/10 border-b border-primary/20 rounded-t-xl;
+        @apply flex items-center justify-between px-4 py-2 border-b border-border/50;
     }
     .code-box-language {
-        @apply text-sm font-semibold text-primary/80;
+        @apply text-xs font-semibold text-muted-foreground uppercase;
     }
     .code-box-actions {
         @apply flex items-center gap-1;
     }
     .code-box-actions button {
-        @apply text-primary/80 hover:text-primary bg-transparent hover:bg-primary/10 text-xs px-2 py-1 rounded-md;
+        @apply text-muted-foreground hover:text-foreground bg-transparent hover:bg-white/10 text-xs px-2 py-1 rounded-md;
     }
     .code-box pre {
-      @apply my-0 p-4 rounded-b-xl text-sm max-h-96 overflow-auto;
-      background-color: #121212 !important; /* Dark background */
-      color: hsl(var(--accent)); /* Orange text */
+      @apply my-0 p-4 rounded-b-xl text-sm max-h-96 overflow-auto bg-transparent;
+      color: hsl(var(--foreground));
+    }
+    .dark .code-box pre {
+        color: hsl(var(--foreground));
     }
 
     .bg-chat-input {
