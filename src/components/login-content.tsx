@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Input } from "./ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
@@ -54,9 +57,14 @@ const AppLogo = () => (
   );
 
 export function LoginContent() {
-    const { signInWithGoogle, signInWithGitHub } = useAuth();
+    const { signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail } = useAuth();
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState<null | 'google' | 'github'>(null);
+    const [isLoading, setIsLoading] = useState<null | 'google' | 'github' | 'email'>(null);
+    const [showEmailForm, setShowEmailForm] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { toast } = useToast();
 
     const handleGoogleSignIn = async () => {
         setIsLoading('google');
@@ -77,6 +85,24 @@ export function LoginContent() {
             setIsLoading(null);
         }
     };
+    
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) {
+            toast({ title: "Email and password are required.", variant: "destructive" });
+            return;
+        }
+        setIsLoading('email');
+        const action = isSignUp ? signUpWithEmail : signInWithEmail;
+        const user = await action(email, password);
+        
+        if (user) {
+            router.push('/');
+        } else {
+            // Error is handled in useAuth, toast will be shown
+            setIsLoading(null);
+        }
+    };
 
     return (
         <div className="relative flex min-h-screen items-center justify-center bg-black p-4">
@@ -88,7 +114,8 @@ export function LoginContent() {
                 <AppLogo />
                 <h1 className="mt-6 text-4xl font-bold tracking-tight">Welcome to SearnAI</h1>
                 <p className="mt-2 text-lg text-white/80">Your AI-powered study companion.</p>
-                <div className="mt-10 w-full max-w-xs space-y-4">
+                
+                <div className={cn("mt-10 w-full max-w-xs space-y-4 transition-all duration-300", showEmailForm && "opacity-0 pointer-events-none -translate-y-4")}>
                      <Button onClick={handleGoogleSignIn} className="w-full h-12 text-base bg-white/90 text-black hover:bg-white" disabled={!!isLoading}>
                         {isLoading === 'google' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-2" />}
                         Continue with Google
@@ -97,10 +124,29 @@ export function LoginContent() {
                         {isLoading === 'github' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GithubIcon className="mr-2" />}
                         Continue with GitHub
                     </Button>
-                    <Button variant="outline" className="w-full h-12 text-base bg-transparent text-white border-white/50 hover:bg-white/10" disabled={true}>
+                    <Button variant="outline" onClick={() => setShowEmailForm(true)} className="w-full h-12 text-base bg-transparent text-white border-white/50 hover:bg-white/10" disabled={!!isLoading}>
                         Continue with Email
                     </Button>
                 </div>
+                
+                <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs space-y-4 transition-all duration-300", !showEmailForm && "opacity-0 pointer-events-none translate-y-4")}>
+                    <h2 className="text-xl font-semibold">{isSignUp ? 'Create an Account' : 'Sign In'}</h2>
+                    <form onSubmit={handleEmailSubmit} className="space-y-4">
+                        <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="h-12 bg-black/30 text-white border-white/30" required />
+                        <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="h-12 bg-black/30 text-white border-white/30" required />
+                        <Button type="submit" className="w-full h-12" disabled={isLoading === 'email'}>
+                            {isLoading === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                            {isSignUp ? 'Sign Up' : 'Sign In'}
+                        </Button>
+                    </form>
+                    <Button variant="link" className="text-white/70" onClick={() => setIsSignUp(!isSignUp)}>
+                        {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+                    </Button>
+                     <Button variant="link" className="text-white/70" onClick={() => setShowEmailForm(false)}>
+                        Back to other login options
+                    </Button>
+                </div>
+                
                  <div className="mt-8 max-w-xs text-xs text-white/60">
                     <p>
                         By signing up, you agree to our{' '}
