@@ -16,7 +16,7 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -25,5 +25,5 @@ export default function LoginPage() {
   }
   
   // Render login page only if not loading and no user
-  return !user ? <LoginContent /> : null;
+  return <LoginContent />;
 }
