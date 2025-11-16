@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,24 @@ export function MainDashboard() {
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="lg:hidden" />
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-1">
+                  Answer Style
+                  <Pilcrow className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Response Style</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem checked={answerTypes.auto} onCheckedChange={() => handleAnswerTypeChange('auto')}>Auto</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={answerTypes.long} onCheckedChange={() => handleAnswerTypeChange('long')}>Long</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={answerTypes.short} onCheckedChange={() => handleAnswerTypeChange('short')}>Short</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={answerTypes.funny} onCheckedChange={() => handleAnswerTypeChange('funny')}>Funny</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={answerTypes.sad} onCheckedChange={() => handleAnswerTypeChange('sad')}>Sad</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={answerTypes.education} onCheckedChange={() => handleAnswerTypeChange('education')}>Educational</DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
         {activeVideoId && (
