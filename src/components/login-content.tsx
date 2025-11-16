@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
@@ -65,9 +66,8 @@ export function LoginContent() {
             <Image
                 src="https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop"
                 alt="Starry sky background"
-                layout="fill"
-                objectFit="cover"
-                className="z-0 opacity-50 blur-sm"
+                fill
+                className="z-0 object-cover opacity-50 blur-sm"
                 data-ai-hint="starry sky"
             />
             <div className="z-10 flex flex-col items-center text-center text-white">
@@ -82,6 +82,19 @@ export function LoginContent() {
                     <Button variant="outline" className="w-full h-12 text-base bg-transparent text-white border-white/50 hover:bg-white/10" disabled={true}>
                         Continue with Email
                     </Button>
+                </div>
+                 <div className="mt-8 max-w-xs text-xs text-white/60">
+                    <p>
+                        By signing up, you agree to our{' '}
+                        <Link href="/terms" className="underline hover:text-white">
+                            Terms and Conditions
+                        </Link>{' '}
+                        and{' '}
+                        <Link href="/privacy" className="underline hover:text-white">
+                            Privacy Policy
+                        </Link>
+                        .
+                    </p>
                 </div>
             </div>
         </div>
